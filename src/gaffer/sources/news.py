@@ -15,7 +15,9 @@ import httpx
 FEEDS = [
     ("BBC", "https://feeds.bbci.co.uk/sport/football/rss.xml"),
     ("Sky Sports", "https://www.skysports.com/rss/12040"),
-    ("Guardian", "https://www.theguardian.com/football/transferwindow/rss"),
+    # The Guardian's transferwindow feed 404s out of window; the main football
+    # feed is live year-round and we filter to transfer items anyway.
+    ("Guardian", "https://www.theguardian.com/football/rss"),
 ]
 
 # transfer-relevant keywords (word-ish boundaries to cut false positives)
@@ -69,14 +71,23 @@ def fetch_transfer_news(
     — so relegated/non-PL clubs (West Ham, Scottish sides, etc.) are dropped."""
     kws = [k.lower() for k in club_keywords] if club_keywords else None
     items: list[dict[str, Any]] = []
+    failed: list[str] = []
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=15.0, follow_redirects=True) as c:
         for source, url in FEEDS:
             try:
                 r = c.get(url)
                 r.raise_for_status()
                 items.extend(_parse_feed(source, r.text))
-            except (httpx.HTTPError, Exception):
+            except httpx.HTTPError:
+                # one feed being down (or a seasonal 404) shouldn't sink the rest;
+                # a genuine bug in parsing now surfaces instead of being swallowed
+                failed.append(source)
                 continue
+    if failed and len(failed) == len(FEEDS):
+        # every feed failed — surface it rather than silently returning nothing
+        import logging
+
+        logging.getLogger(__name__).warning("all news feeds failed: %s", ", ".join(failed))
     seen: set[str] = set()
     deduped = []
     for it in items:

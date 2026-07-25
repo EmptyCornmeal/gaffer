@@ -7,13 +7,13 @@ Writes ``news.json``.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from gaffer import config
 from gaffer.ai import llm
+from gaffer.io import write_json_atomic
 from gaffer.sources.news import fetch_transfer_news
 
 # Match keywords per FPL short_name (only shorts present in the current 20 are used).
@@ -91,7 +91,5 @@ def generate(
         "count": len(items),
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
-    (data_dir / "news.json").write_text(
-        json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    write_json_atomic(data_dir / "news.json", out)
     return out

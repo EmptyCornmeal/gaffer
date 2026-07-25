@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from gaffer import config
+from gaffer.io import write_json_atomic
 
 VERDICT_MODEL = os.environ.get("GAFFER_VERDICT_MODEL", "claude-opus-4-8")
 
@@ -183,7 +184,5 @@ def generate(data_dir: Path | None = None, model: str | None = None) -> dict[str
         "source": source,
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
-    (data_dir / "verdict.json").write_text(
-        json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    write_json_atomic(data_dir / "verdict.json", out)
     return out

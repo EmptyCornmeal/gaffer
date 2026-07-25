@@ -6,13 +6,13 @@ Keep the shapes stable; the Svelte app depends on them.
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from gaffer import config
+from gaffer.io import write_json_atomic
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
 from gaffer.solver.optimize import Solution
 
@@ -283,6 +283,6 @@ def write_all(
     written = []
     for fname, data in artifacts.items():
         path = out_dir / fname
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        write_json_atomic(path, data)
         written.append(str(path))
     return written

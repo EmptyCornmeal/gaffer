@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from gaffer import config, ml
+from gaffer.io import write_json_atomic
 from gaffer.model import features as F
 from gaffer.model import projection
 
@@ -161,11 +162,13 @@ def run(data_dir: Path | None = None) -> dict[str, Any]:
             "never trained on. DEFCON is excluded here — it did not score in "
             "2024-25. Rank correlation = ordering quality (higher better); MAE = "
             "points error (lower better); lift = avg actual points of the top-20% "
-            "vs bottom-20% projected."
+            "vs bottom-20% projected. Caveat: team strength is a static "
+            "end-of-season snapshot applied to every GW, a mild optimism that "
+            "affects all fixture-based methods equally."
         ),
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }
-    (data_dir / "backtest.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+    write_json_atomic(data_dir / "backtest.json", out)
     return out
 
 
