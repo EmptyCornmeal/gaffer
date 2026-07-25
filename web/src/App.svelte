@@ -4,6 +4,7 @@
   import type { Player } from './lib/types'
   import Topbar from './components/Topbar.svelte'
   import Sidebar from './components/Sidebar.svelte'
+  import BottomNav from './components/BottomNav.svelte'
   import PlayerDetail from './components/PlayerDetail.svelte'
   import Overview from './pages/Overview.svelte'
   import MyTeam from './pages/MyTeam.svelte'
@@ -65,11 +66,16 @@
       meta={bundle?.meta ?? null}
       playerCount={bundle?.players.length ?? 0}
       open={sidebarOpen}
+      {route}
+      onnav={nav}
       onclose={() => (sidebarOpen = false)}
       onsaved={() => (reloadKey += 1)}
     />
 
-    <main class="flex-1 min-w-0 overflow-y-auto p-3 sm:p-5">
+    <main
+      class="flex-1 min-w-0 overflow-y-auto p-3 sm:p-5"
+      style="padding-bottom: calc(var(--gaffer-bottomnav) + env(safe-area-inset-bottom) + 1rem);"
+    >
       {#if error}
         <div class="card p-4 text-red text-sm max-w-lg mx-auto">Couldn't load data — run the pipeline so <code>data/*.json</code> is served.<div class="mt-1 text-muted2">{error}</div></div>
       {:else if !bundle}
@@ -109,5 +115,7 @@
     </main>
   </div>
 </div>
+
+<BottomNav {route} onnav={nav} onmore={() => (sidebarOpen = true)} />
 
 <PlayerDetail player={selected} onclose={() => (selectedId = null)} />

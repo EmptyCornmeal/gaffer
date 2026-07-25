@@ -5,17 +5,22 @@
     apiBase, setApiBase,
   } from '../lib/config'
   import { GLOSSARY } from '../lib/glossary'
+  import { NAV_TABS } from '../lib/nav'
 
   let {
     meta,
     playerCount,
     open,
+    route,
+    onnav,
     onsaved,
     onclose,
   }: {
     meta: Meta | null
     playerCount: number
     open: boolean
+    route: string
+    onnav: (r: string) => void
     onsaved: () => void
     onclose: () => void
   } = $props()
@@ -52,9 +57,25 @@
   style="width: var(--gaffer-sidebar);"
 >
   <div class="flex items-center justify-between mb-3">
-    <h3 class="font-bold">Settings</h3>
+    <h3 class="font-bold">Menu</h3>
     <button class="lg:hidden text-muted" onclick={onclose} aria-label="close">✕</button>
   </div>
+
+  <!-- Page navigation — mobile only (the topbar carries it on ≥lg). Without this
+       the drawer had zero nav links, trapping phone users on Overview. -->
+  <nav class="lg:hidden mb-4 grid gap-0.5">
+    {#each NAV_TABS as t}
+      <button
+        onclick={() => onnav(t.key)}
+        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-left transition
+          {route === t.key ? 'bg-accent/15 text-accent-light' : 'text-muted hover:text-text hover:bg-card2'}"
+      >
+        <span aria-hidden="true">{t.icon}</span>{t.label}
+      </button>
+    {/each}
+  </nav>
+
+  <h3 class="font-bold text-sm text-muted mb-2">Settings</h3>
 
   <div class="block text-xs text-muted mb-1">FPL Entry ID</div>
   <input

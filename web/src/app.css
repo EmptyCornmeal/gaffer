@@ -23,6 +23,13 @@
 
   --gaffer-topbar: 54px;
   --gaffer-sidebar: 270px;
+  --gaffer-bottomnav: 56px;
+}
+
+/* Bottom bar only exists on phones; reclaim the space on ≥lg so the main
+   content's reserved padding-bottom collapses to normal. */
+@media (min-width: 1024px) {
+  :root { --gaffer-bottomnav: 0px; }
 }
 
 html { color-scheme: dark; -webkit-text-size-adjust: 100%; }

@@ -3,6 +3,7 @@
   import { countdown } from '../lib/data'
   import { getTheme, setTheme } from '../lib/config'
   import { matches } from '../lib/search'
+  import { NAV_TABS } from '../lib/nav'
 
   let {
     meta,
@@ -22,18 +23,7 @@
     onmenu: () => void
   } = $props()
 
-  const tabs = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'my-team', label: 'My Team' },
-    { key: 'planner', label: 'Planner' },
-    { key: 'players', label: 'Players' },
-    { key: 'fixtures', label: 'Fixtures' },
-    { key: 'chips', label: 'Chips' },
-    { key: 'league', label: 'League' },
-    { key: 'news', label: 'News' },
-    { key: 'accuracy', label: 'Accuracy' },
-    { key: 'help', label: 'Help' },
-  ]
+  const tabs = NAV_TABS
 
   let theme = $state(getTheme())
   function toggleTheme() {
