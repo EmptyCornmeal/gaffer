@@ -21,11 +21,82 @@ import numpy as np
 import pandas as pd
 
 from gaffer import config, ml
+from gaffer.model import features as F
+from gaffer.model import projection
 
 TEST_SEASON = "2024-25"
 MIN_GW = ml.ROLL + 1
-_GOAL_ISH = 5.0
-_CS_PTS = {"GKP": 4, "GK": 4, "DEF": 4, "MID": 1, "AM": 1, "FWD": 0}
+# CSV position label -> the model's position code
+_POS = {"GK": "GKP", "GKP": "GKP", "DEF": "DEF", "MID": "MID", "AM": "MID", "FWD": "FWD"}
+
+
+class _RowCtx:
+    """Stand-in for TeamContext: returns this fixture's precomputed multipliers so
+    the *shipped* projection maths runs unchanged on historical rows."""
+
+    __slots__ = ("att", "lam")
+
+    def __init__(self, att: float, lam: float) -> None:
+        self.att = att
+        self.lam = lam
+
+    def attack_multiplier(self, opponent_id: int, at_home: bool) -> float:
+        return self.att
+
+    def expected_conceded(self, team_id: int, opponent_id: int, at_home: bool) -> float:
+        return self.lam
+
+
+def _season_to_date(df: pd.DataFrame) -> pd.DataFrame:
+    """Cumulative, leak-free (shift(1)) season-to-date inputs the shipped
+    projection expects — mirrors what the live pipeline feeds it in production."""
+    df = df.sort_values(["element", "GW"]).copy()
+    g = df.groupby("element")
+
+    def cum(col: str) -> pd.Series:
+        if col not in df:
+            return pd.Series(0.0, index=df.index)
+        return g[col].transform(lambda x: x.shift(1).cumsum())
+
+    df["min_td"] = cum("minutes")
+    df["starts_td"] = cum("starts")
+    per90 = np.where(df["min_td"] > 0, 90.0 / df["min_td"].replace(0, np.nan), 0.0)
+    df["xg90_td"] = (cum("expected_goals") * per90).fillna(0.0)
+    df["xa90_td"] = (cum("expected_assists") * per90).fillna(0.0)
+    return df
+
+
+def _shipped(df: pd.DataFrame) -> pd.Series:
+    """Run the REAL ``projection._project_one_fixture`` on each historical row, so
+    the backtest scores the shipped model (per-position goal points, appearance
+    model, CS Poisson, bonus proxy, minutes gating) — not a reimplementation.
+
+    DEFCON is 0 here: it did not score in 2024-25, so a faithful backtest of that
+    season omits it. Last-season ``base_*`` are 0 (no prior-season join in this
+    harness); once games_played>=3 the season-to-date rate dominates anyway.
+    """
+    out = np.zeros(len(df))
+    for pos_i, row in enumerate(df.itertuples(index=False)):
+        player = {
+            "position": _POS.get(str(row.position), "MID"),
+            "minutes": float(row.min_td),
+            "base_minutes": 0,
+            "starts": float(row.starts_td),
+            "base_starts": 0,
+            "price": float(row.value),
+            "base_xg90": 0.0,
+            "base_xa90": 0.0,
+            "xg_per_90": float(row.xg90_td),
+            "xa_per_90": float(row.xa90_td),
+            "defcon_per_90": 0.0,
+            "team_id": 0,
+        }
+        fx = F.Fixture(gw=int(row.GW), opponent_id=0, at_home=bool(row.home), fdr=3)
+        ctx = _RowCtx(float(row.att_mult), float(row.cs_lambda))
+        games_played = int(row.GW) - 1
+        parts = projection._project_one_fixture(player, fx, ctx, 1.0, games_played)
+        out[pos_i] = parts["exp_points"]
+    return pd.Series(out, index=df.index)
 
 
 def _mae(pred: pd.Series, actual: pd.Series) -> float:
@@ -54,24 +125,15 @@ def _lift(df: pd.DataFrame, col: str) -> dict[str, float]:
             "bottom": round(float(pd.Series(bots).mean()), 2)}
 
 
-def _heuristic(df: pd.DataFrame) -> pd.Series:
-    exp_min = df["r_min"].clip(0, 90).fillna(0)
-    appearance = (exp_min >= 60).astype(float) * 2 + ((exp_min > 0) & (exp_min < 60)).astype(float)
-    attack = df["xgi90"] * (exp_min / 90.0) * _GOAL_ISH * df["att_mult"]
-    p_cs = np.exp(-np.clip(df["cs_lambda"], 0.15, 4.0))
-    cs_pts = df["position"].map(lambda p: _CS_PTS.get(str(p), 0)).astype(float)
-    cs = p_cs * cs_pts * (exp_min >= 60).astype(float)
-    return appearance + attack + cs
-
-
 def run(data_dir: Path | None = None) -> dict[str, Any]:
     data_dir = data_dir or config.DATA_DIR
     if not ml.MODEL_PATH.exists():
         ml.train()
 
     df = ml.build_features(TEST_SEASON)
-    df["gaffer"] = _heuristic(df)
+    df = _season_to_date(df)
     df["ml"] = ml.predict(df)
+    df["gaffer"] = _shipped(df)  # the actual shipped projection, not a stand-in
 
     ev = df[(df["GW"] >= MIN_GW) & (df["minutes"] > 0) & df["r_minsum"].notna()].copy()
     ev = ev.dropna(subset=["total_points"])
@@ -92,11 +154,14 @@ def run(data_dir: Path | None = None) -> dict[str, Any]:
             "fpl_xp": _lift(ev, "fpl"),
         },
         "note": (
-            "Trained gradient-boosted model vs the transparent heuristic vs FPL's "
-            "own xP vs a naive recent-form baseline, on a season the model never "
-            "trained on. Rank correlation = ordering quality (higher better); "
-            "MAE = points error (lower better); lift = avg actual points of the "
-            "top-20% vs bottom-20% projected."
+            "The trained gradient-boosted model vs Gaffer's *shipped* component "
+            "projection (the exact code the site runs, incl. per-position goal "
+            "points, appearance model, clean-sheet Poisson and bonus proxy) vs "
+            "FPL's own xP vs a naive recent-form baseline, on a season the model "
+            "never trained on. DEFCON is excluded here — it did not score in "
+            "2024-25. Rank correlation = ordering quality (higher better); MAE = "
+            "points error (lower better); lift = avg actual points of the top-20% "
+            "vs bottom-20% projected."
         ),
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }

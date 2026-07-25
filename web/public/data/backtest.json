@@ -4,13 +4,13 @@
   "gameweeks": "GW6\u2013GW38",
   "trained_on": "2022-23 + 2023-24",
   "mae": {
-    "gaffer": 1.961,
+    "gaffer": 1.889,
     "ml": 1.858,
     "fpl_xp": 1.804,
     "naive": 2.064
   },
   "rank_corr": {
-    "gaffer": 0.308,
+    "gaffer": 0.3,
     "ml": 0.379,
     "fpl_xp": 0.572,
     "naive": 0.308
@@ -21,14 +21,14 @@
       "bottom": 1.58
     },
     "gaffer": {
-      "top": 3.93,
-      "bottom": 1.7
+      "top": 3.91,
+      "bottom": 1.79
     },
     "fpl_xp": {
       "top": 5.06,
       "bottom": 1.19
     }
   },
-  "note": "Trained gradient-boosted model vs the transparent heuristic vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected.",
-  "generated_at": "2026-07-25T09:47:51+00:00"
+  "note": "The trained gradient-boosted model vs Gaffer's *shipped* component projection (the exact code the site runs, incl. per-position goal points, appearance model, clean-sheet Poisson and bonus proxy) vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. DEFCON is excluded here \u2014 it did not score in 2024-25. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected.",
+  "generated_at": "2026-07-25T10:28:41+00:00"
 }
