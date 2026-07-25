@@ -35,7 +35,7 @@
   })
 
   function toRec(p: Player): RecPlayer {
-    return { id: p.id, code: p.code, name: p.name, team: p.team, pos: p.pos, price: p.price, next_gw_xp: p.next_gw_xp, confidence: p.confidence }
+    return { id: p.id, code: p.code, team_code: p.team_code, name: p.name, team: p.team, pos: p.pos, price: p.price, next_gw_xp: p.next_gw_xp, confidence: p.confidence }
   }
   const squad = $derived(
     picks

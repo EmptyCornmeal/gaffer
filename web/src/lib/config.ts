@@ -9,6 +9,32 @@ const LS = {
   theme: 'gaffer.theme',
 }
 
+// localStorage throws in private mode / when storage is disabled. These wrappers
+// degrade to "no persisted setting" instead of crashing the whole app on mount.
+const safeLS = {
+  get(key: string): string | null {
+    try {
+      return localStorage.getItem(key)
+    } catch {
+      return null
+    }
+  },
+  set(key: string, val: string) {
+    try {
+      localStorage.setItem(key, val)
+    } catch {
+      /* ignore */
+    }
+  },
+  remove(key: string) {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      /* ignore */
+    }
+  },
+}
+
 declare global {
   interface Window {
     __GAFFER_API__?: string
@@ -18,16 +44,16 @@ declare global {
 export function apiBase(): string | null {
   try {
     const q = new URLSearchParams(location.search).get('api')
-    if (q) localStorage.setItem(LS.api, q)
+    if (q) safeLS.set(LS.api, q)
   } catch {
     /* ignore */
   }
   if (typeof window !== 'undefined' && window.__GAFFER_API__) return window.__GAFFER_API__
-  return localStorage.getItem(LS.api)
+  return safeLS.get(LS.api)
 }
 
 export function setApiBase(v: string) {
-  localStorage.setItem(LS.api, v.replace(/\/$/, ''))
+  safeLS.set(LS.api, v.replace(/\/$/, ''))
 }
 
 /** Extract a numeric id from a raw value or a pasted FPL URL. */
@@ -37,26 +63,26 @@ export function parseId(raw: string): number | null {
 }
 
 export function getEntryId(): number | null {
-  const v = localStorage.getItem(LS.entry)
+  const v = safeLS.get(LS.entry)
   return v ? Number(v) : null
 }
 export function setEntryId(v: number | null) {
-  if (v) localStorage.setItem(LS.entry, String(v))
-  else localStorage.removeItem(LS.entry)
+  if (v) safeLS.set(LS.entry, String(v))
+  else safeLS.remove(LS.entry)
 }
 
 export function getLeagueIds(): number[] {
-  const v = localStorage.getItem(LS.leagues)
+  const v = safeLS.get(LS.leagues)
   return v ? v.split(',').map(Number).filter(Boolean) : []
 }
 export function setLeagueIds(ids: number[]) {
-  localStorage.setItem(LS.leagues, ids.join(','))
+  safeLS.set(LS.leagues, ids.join(','))
 }
 
 export function getTheme(): 'dark' | 'light' {
-  return (localStorage.getItem(LS.theme) as 'dark' | 'light') || 'dark'
+  return (safeLS.get(LS.theme) as 'dark' | 'light') || 'dark'
 }
 export function setTheme(t: 'dark' | 'light') {
-  localStorage.setItem(LS.theme, t)
+  safeLS.set(LS.theme, t)
   document.documentElement.setAttribute('data-theme', t)
 }

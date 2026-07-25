@@ -4,7 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>web</title>
+    <meta name="theme-color" content="#080e1a" />
+    <title>Gaffer — FPL decision engine</title>
+    <!-- Apply the saved theme before first paint to avoid a flash of the wrong
+         theme (FOUC). Mirrors getTheme()/setTheme() in lib/config.ts. -->
+    <script>
+      try {
+        var t = localStorage.getItem('gaffer.theme') || 'dark'
+        document.documentElement.setAttribute('data-theme', t)
+        document.documentElement.style.colorScheme = t
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark')
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

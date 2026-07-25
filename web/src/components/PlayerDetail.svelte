@@ -19,11 +19,26 @@
       : [],
   )
   const total = $derived(player?.next_gw_xp ?? 0)
+  // Guard the stacked bar against divide-by-zero when xP≈0 (breakdown parts can
+  // still be non-zero and mismatch the headline total slightly).
+  const denom = $derived(Math.max(total, ...parts.map((p) => p.v), 0.001))
   const photo = $derived(player ? playerPhoto(player.code, '250x250') : '')
+  let photoBroken = $state(false)
+  $effect(() => {
+    player // reset when the player changes
+    photoBroken = false
+  })
 </script>
 
+<svelte:window onkeydown={(e) => player && e.key === 'Escape' && onclose()} />
+
 {#if player}
-  <div class="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center" role="dialog">
+  <div
+    class="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center"
+    role="dialog"
+    aria-modal="true"
+    aria-label="{player.name} details"
+  >
     <button class="absolute inset-0 bg-black/60" aria-label="close" onclick={onclose}></button>
     <div
       class="relative w-full sm:max-w-lg card rounded-t-2xl sm:rounded-2xl p-5 rise max-h-[88vh] overflow-y-auto"
@@ -31,8 +46,13 @@
       <div class="w-10 h-1 rounded-full bg-line2 mx-auto mb-4 sm:hidden"></div>
 
       <div class="flex items-start gap-3">
-        {#if photo}
-          <img src={photo} alt={player.name} class="w-16 h-16 rounded-lg object-cover object-top bg-bg3 border border-line" />
+        {#if photo && !photoBroken}
+          <img
+            src={photo}
+            alt={player.name}
+            onerror={() => (photoBroken = true)}
+            class="w-16 h-16 rounded-lg object-cover object-top bg-bg3 border border-line"
+          />
         {/if}
         <div class="flex-1">
           <div class="text-xl font-bold">{player.name}</div>
@@ -64,7 +84,7 @@
       <div class="mt-4">
         <div class="text-xs font-bold uppercase text-muted mb-1">Where the points come from</div>
         <div class="flex h-4 rounded-full overflow-hidden bg-bg3">
-          {#each parts as p}<div class={p.c} style="width: {(p.v / total) * 100}%" title={p.label}></div>{/each}
+          {#each parts as p}<div class={p.c} style="width: {(p.v / denom) * 100}%" title={p.label}></div>{/each}
         </div>
         <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
           {#each parts as p}

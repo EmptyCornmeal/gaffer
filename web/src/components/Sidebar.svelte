@@ -44,6 +44,8 @@
   const glossaryEntries = Object.entries(GLOSSARY)
 </script>
 
+<svelte:window onkeydown={(e) => open && e.key === 'Escape' && onclose()} />
+
 <!-- backdrop for mobile drawer -->
 {#if open}
   <button class="fixed inset-0 bg-black/50 z-30 lg:hidden" aria-label="close" onclick={onclose}></button>

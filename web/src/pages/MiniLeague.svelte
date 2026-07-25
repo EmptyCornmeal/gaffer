@@ -21,11 +21,10 @@
     }
     const id = ids[active]
     phase = 'loading'
-    fpl
-      .league(id)
-      .then((data) => {
-        name = data?.league?.name ?? `League ${id}`
-        rows = (data?.standings?.results ?? []) as LeagueStanding[]
+    loadLeague(id)
+      .then(({ leagueName, results }) => {
+        name = leagueName
+        rows = results
         phase = 'ok'
       })
       .catch((e) => {
@@ -33,6 +32,23 @@
         msg = String(e?.message ?? e)
       })
   })
+
+  // The classic-standings endpoint pages 50 at a time; walk `has_next` so leagues
+  // bigger than 50 aren't silently truncated. Capped so a 10k-manager league
+  // can't hammer the proxy — we only need enough to place the user + rivals.
+  const MAX_PAGES = 20
+  async function loadLeague(id: number) {
+    let leagueName = `League ${id}`
+    const results: LeagueStanding[] = []
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const data = await fpl.league(id, page)
+      leagueName = data?.league?.name ?? leagueName
+      const chunk = (data?.standings?.results ?? []) as LeagueStanding[]
+      results.push(...chunk)
+      if (!data?.standings?.has_next || chunk.length === 0) break
+    }
+    return { leagueName, results }
+  }
 
   const maxTotal = $derived(rows.length ? Math.max(...rows.map((r) => r.total)) : 1)
 </script>
