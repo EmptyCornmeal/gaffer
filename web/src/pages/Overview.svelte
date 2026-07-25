@@ -5,6 +5,7 @@
   import FixtureStrip from '../components/FixtureStrip.svelte'
   import { mdLite } from '../lib/mdlite'
   import { loadCurrent, lineupErrors, formationOf, planPoints } from '../lib/squad'
+  import { generateTeamBrief } from '../lib/teamBrief'
 
   let { bundle, onpick, onnav }: { bundle: Bundle; onpick: (id: number) => void; onnav: (r: string) => void } = $props()
   const rec = $derived(bundle.recommendation)
@@ -28,6 +29,10 @@
   $effect(() => {
     if (planValid) view = 'your'
   })
+  const teamBrief = $derived(
+    planValid ? generateTeamBrief(planSquad, plan.starters, plan.captainId, bundle.players) : '',
+  )
+  const showYourBrief = $derived(view === 'your' && planValid)
   const P = $derived(bundle.players)
 
   const topCaptains = $derived([...P].sort((a, b) => b.next_gw_xp - a.next_gw_xp).slice(0, 5))
@@ -53,15 +58,18 @@
 
 <div class="flex flex-col gap-4 rise">
   <!-- Gaffer's Verdict (AI briefing) -->
-  {#if verdict}
+  {#if verdict || showYourBrief}
     <div class="card p-4 border-brand/40 bg-brand/8">
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-light">
           <span>🧠 The Gaffer's Verdict</span>
+          <span class="chip {showYourBrief ? 'chip-good' : 'chip-info'}">{showYourBrief ? 'your team' : 'model'}</span>
         </div>
-        <span class="text-[10px] text-muted2">{verdict.source.startsWith('ai') ? verdict.model : 'auto'}</span>
+        <span class="text-[10px] text-muted2">{showYourBrief ? 'live' : verdict && verdict.source.startsWith('ai') ? verdict.model : 'auto'}</span>
       </div>
-      <div class="verdict text-[15px] leading-relaxed text-text">{@html mdLite(verdict.briefing_md)}</div>
+      <div class="verdict text-[15px] leading-relaxed text-text">
+        {@html mdLite(showYourBrief ? teamBrief : (verdict?.briefing_md ?? ''))}
+      </div>
     </div>
   {/if}
 

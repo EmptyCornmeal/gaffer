@@ -24,6 +24,11 @@ _KW = re.compile(
     r"unveil(?:ed)?|complete[sd]?|seal(?:s|ed)?|move(?:s)?|swoop|target|£\d)",
     re.IGNORECASE,
 )
+# exclude women's football (not relevant to men's FPL)
+_EXCLUDE = re.compile(
+    r"\b(women|women's|wsl|women’s super league|lioness(?:es)?|ladies|girls)\b",
+    re.IGNORECASE,
+)
 _TAG = re.compile(r"<[^>]+>")
 
 USER_AGENT = "Mozilla/5.0 (compatible; gaffer/0.1)"
@@ -46,6 +51,8 @@ def _parse_feed(source: str, xml_text: str) -> list[dict[str, Any]]:
         pub = (item.findtext("pubDate") or "").strip()
         if not title:
             continue
+        if _EXCLUDE.search(title) or _EXCLUDE.search(desc):
+            continue  # skip women's football
         if _KW.search(title) or _KW.search(desc):
             out.append(
                 {"source": source, "title": title, "summary": desc[:220],

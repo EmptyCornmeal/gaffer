@@ -35,9 +35,10 @@ SYSTEM_TMPL = (
     "From these real-world transfer headlines, write a short GitHub-flavoured "
     "markdown digest of ONLY the moves relevant to those clubs and Fantasy "
     "Premier League — new PL signings to watch, who gains or loses, and any "
-    "role/price implications. IGNORE any club not in that list (e.g. relegated "
-    "sides, Scottish/EFL/women's clubs). Use only the headlines provided; do not "
-    "invent transfers. Bullet points, under 140 words, no preamble."
+    "role/price implications. This is MEN'S football only — ignore women's/WSL "
+    "moves entirely. IGNORE any club not in that list (relegated sides, "
+    "Scottish/EFL clubs). Use only the headlines provided; do not invent "
+    "transfers. Bullet points, under 140 words, no preamble."
 )
 
 
