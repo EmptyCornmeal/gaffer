@@ -110,6 +110,19 @@
         </div>
         <FixtureStrip fixtures={player.fixtures} />
       </div>
+
+      {#if player.set_pieces || player.price_pred.dir !== 'stable'}
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          {#if player.set_pieces}
+            <span class="chip chip-info">⚽ {player.set_pieces}</span>
+          {/if}
+          {#if player.price_pred.dir === 'up'}
+            <span class="chip chip-good" title="Net transfers this GW">▲ price rising · {(player.price_pred.momentum / 1000).toFixed(0)}k in</span>
+          {:else if player.price_pred.dir === 'down'}
+            <span class="chip chip-bad" title="Net transfers this GW">▼ price falling · {(Math.abs(player.price_pred.momentum) / 1000).toFixed(0)}k out</span>
+          {/if}
+        </div>
+      {/if}
     </div>
   </div>
 {/if}

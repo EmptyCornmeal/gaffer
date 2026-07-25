@@ -47,10 +47,3 @@ export function countdown(deadline: string, nowMs: number = Date.now()): string 
   if (h > 0) return `${h}h ${m}m`
   return `${m}m`
 }
-
-export const posColor: Record<string, string> = {
-  GKP: 'text-amber',
-  DEF: 'text-cyan',
-  MID: 'text-green',
-  FWD: 'text-magenta',
-}

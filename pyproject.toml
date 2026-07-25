@@ -11,7 +11,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["ruff>=0.16", "pytest>=8.0"]
-ai = ["anthropic>=0.40"]
+ai = ["anthropic>=0.69"]  # floor for thinking={"adaptive"} + output_config effort
 ml = ["scikit-learn>=1.5", "joblib>=1.3"]
 
 [build-system]
