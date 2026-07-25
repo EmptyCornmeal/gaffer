@@ -28,6 +28,7 @@
     { key: 'planner', label: 'Planner' },
     { key: 'players', label: 'Players' },
     { key: 'fixtures', label: 'Fixtures' },
+    { key: 'chips', label: 'Chips' },
     { key: 'league', label: 'League' },
     { key: 'news', label: 'News' },
     { key: 'accuracy', label: 'Accuracy' },

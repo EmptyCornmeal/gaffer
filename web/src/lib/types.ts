@@ -55,6 +55,7 @@ export interface Player {
   next_gw_xp: number
   horizon_xp: number
   xp_window: number
+  gw_xp: { gw: number; xp: number }[]
   p_start: number
   confidence: number
   xmins_badge: XminsBadge

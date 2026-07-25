@@ -66,6 +66,17 @@ def build_players(
     ):
         horizon_sum[r["player_id"]] = round(r["s"], 2)
 
+    # per-GW projection across the horizon (for the chip planner)
+    per_gw: dict[int, list[dict[str, Any]]] = {}
+    for r in conn.execute(
+        "SELECT player_id, gw, exp_points FROM projections "
+        "WHERE gw>=? AND gw<? ORDER BY gw",
+        (from_gw, from_gw + horizon),
+    ):
+        per_gw.setdefault(r["player_id"], []).append(
+            {"gw": r["gw"], "xp": round(r["exp_points"], 2)}
+        )
+
     out = []
     q = """
         SELECT pl.*, pr.exp_points, pr.p_start, pr.confidence, pr.exp_goal_pts,
@@ -123,6 +134,7 @@ def build_players(
                 "next_gw_xp": round(r["exp_points"], 2) if r["exp_points"] is not None else 0.0,
                 "horizon_xp": horizon_sum.get(r["id"], 0.0),
                 "xp_window": horizon_sum.get(r["id"], 0.0),
+                "gw_xp": per_gw.get(r["id"], []),
                 "p_start": round(r["p_start"], 2) if r["p_start"] is not None else 0.0,
                 "confidence": round(r["confidence"], 2) if r["confidence"] is not None else 0.0,
                 "xmins_badge": xmins_badge(r["exp_minutes"] or 0, r["p_start"] or 0),

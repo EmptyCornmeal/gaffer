@@ -13,6 +13,7 @@
   import MiniLeague from './pages/MiniLeague.svelte'
   import News from './pages/News.svelte'
   import Accuracy from './pages/Accuracy.svelte'
+  import Chips from './pages/Chips.svelte'
   import { GLOSSARY } from './lib/glossary'
 
   let bundle = $state<Bundle | null>(null)
@@ -86,6 +87,8 @@
         <Players players={bundle.players} onpick={(id) => (selectedId = id)} />
       {:else if route === 'fixtures'}
         <Fixtures fixtures={bundle.fixtures} />
+      {:else if route === 'chips'}
+        <Chips {bundle} onnav={nav} />
       {:else if route === 'league'}
         {#key reloadKey}<MiniLeague ongoSettings={() => (sidebarOpen = true)} />{/key}
       {:else if route === 'news'}
