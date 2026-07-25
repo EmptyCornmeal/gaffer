@@ -50,6 +50,7 @@ export interface Player {
   news: string
   set_pieces: string
   form: number
+  ict: number
   xgi90: number
   defcon90: number
   next_gw_xp: number

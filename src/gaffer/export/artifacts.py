@@ -38,6 +38,8 @@ def build_meta(conn: sqlite3.Connection, model_version: str) -> dict[str, Any]:
     keys = [
         "current_gw", "gw_name", "deadline", "last_finished_gw", "squad_status",
         "entry_name", "manager_name", "overall_rank", "bank", "team_value", "active_chip",
+        "free_transfers", "rule_budget", "rule_club_limit", "rule_squad_size",
+        "rule_sell_on_fee", "rule_max_extra_ft", "rule_transfers_cap",
     ]
     meta = {}
     for k in keys:
@@ -129,6 +131,7 @@ def build_players(
                 "news": r["news"] or "",
                 "set_pieces": r["set_piece_notes"] or "",
                 "form": r["form"],
+                "ict": round(r["ict_index"] or 0, 1),
                 "xgi90": round(r["xgi_per_90"], 2),
                 "defcon90": round(r["defcon_per_90"], 2),
                 "next_gw_xp": round(r["exp_points"], 2) if r["exp_points"] is not None else 0.0,

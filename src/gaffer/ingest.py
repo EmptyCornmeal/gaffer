@@ -91,6 +91,7 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
                 "form": _f(e.get("form")),
                 "points_per_game": _f(e.get("points_per_game")),
                 "ep_next": _f(e.get("ep_next")),
+                "ict_index": _f(e.get("ict_index")),
                 "xg_per_90": _f(e.get("expected_goals_per_90")),
                 "xa_per_90": _f(e.get("expected_assists_per_90")),
                 "xgi_per_90": _f(e.get("expected_goal_involvements_per_90")),
@@ -122,6 +123,26 @@ def ingest_fixtures(conn: sqlite3.Connection, fixtures: list[dict[str, Any]]) ->
             }
         )
     return db.upsert(conn, "fixtures", rows, ["id"])
+
+
+def ingest_game_settings(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> None:
+    """Persist the season's rules from the API so we stop hardcoding them.
+
+    Stored in ``meta`` (rule_*) and read by the solver with config fallbacks, so
+    Gaffer self-adjusts if FPL changes the budget, club limit, sell-on fee, etc.
+    """
+    gs = bootstrap.get("game_settings", {}) or {}
+    mapping = {
+        "rule_squad_size": gs.get("squad_squadsize"),
+        "rule_budget": gs.get("squad_total_spend"),
+        "rule_club_limit": gs.get("squad_team_limit"),
+        "rule_transfers_cap": gs.get("transfers_cap"),
+        "rule_sell_on_fee": gs.get("transfers_sell_on_fee"),
+        "rule_max_extra_ft": gs.get("max_extra_free_transfers"),
+    }
+    for key, val in mapping.items():
+        if val is not None:
+            db.set_meta(conn, key, val)
 
 
 def ingest_my_squad(
@@ -238,6 +259,7 @@ def run(db_path=None, skip_enrich: bool = False) -> dict[str, int]:
         summary["teams"] = ingest_teams(conn, bootstrap)
         summary["players"] = ingest_players(conn, bootstrap)
         summary["fixtures"] = ingest_fixtures(conn, client.fixtures())
+        ingest_game_settings(conn, bootstrap)
         gw = client.current_gw()
         db.set_meta(conn, "current_gw", gw)
         db.set_meta(conn, "last_finished_gw", client.last_finished_gw() or "")

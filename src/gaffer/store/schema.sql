@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS players (
     form                REAL DEFAULT 0,
     points_per_game     REAL DEFAULT 0,
     ep_next             REAL,                  -- FPL's own expected points (baseline to beat)
+    ict_index           REAL DEFAULT 0,        -- FPL's ICT composite (influence/creativity/threat)
     xg_per_90           REAL DEFAULT 0,
     xa_per_90           REAL DEFAULT 0,
     xgi_per_90          REAL DEFAULT 0,

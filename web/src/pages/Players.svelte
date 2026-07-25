@@ -21,6 +21,7 @@
     { key: 'price', label: '£' },
     { key: 'owned_by', label: 'Own%' },
     { key: 'form', label: 'Form' },
+    { key: 'ict', label: 'ICT' },
     { key: 'xgi90', label: 'xGI90' },
     { key: 'defcon90', label: 'DC90' },
   ]
@@ -96,9 +97,14 @@
             <td class="font-bold text-brand-light">{p.next_gw_xp.toFixed(1)}</td>
             <td class="text-accent-light">{p.xp_window.toFixed(0)}</td>
             <td>{p.price ? (p.next_gw_xp / p.price).toFixed(2) : '—'}</td>
-            <td>{p.price.toFixed(1)}</td>
+            <td>
+              <span class="tabular-nums">{p.price.toFixed(1)}</span>
+              {#if p.price_pred.dir === 'up'}<span class="text-brand ml-0.5" title="Price rising">▲</span>
+              {:else if p.price_pred.dir === 'down'}<span class="text-red ml-0.5" title="Price falling">▼</span>{/if}
+            </td>
             <td class="text-muted">{p.owned_by}</td>
             <td class="text-muted">{p.form.toFixed(1)}</td>
+            <td class="text-muted">{p.ict.toFixed(0)}</td>
             <td class="text-muted">{p.xgi90.toFixed(2)}</td>
             <td class="text-muted">{p.defcon90 ? p.defcon90.toFixed(1) : '—'}</td>
           </tr>

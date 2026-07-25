@@ -22,5 +22,8 @@ export const GLOSSARY: Record<string, string> = {
   CS: 'Clean Sheet — 4 pts for DEF/GKP, 1 for MID if the team concedes 0.',
   Form: 'Average points over the last 5 GWs — current hot/cold streak.',
   BPS: 'Bonus Points System — underlying score that awards 1-3 bonus points per match.',
+  ICT: "FPL's Influence-Creativity-Threat index — a composite of a player's on-ball involvement. A useful cross-check on xGI.",
   Value: 'Expected points per £million — find the efficient picks, not just the best.',
+  Differential: 'A low-owned player (roughly under 12%). If they return, you gain rank on the crowd who don’t own them.',
+  Template: 'The highly-owned core (25%+). Not owning a template pick is effectively a punt against the field.',
 }

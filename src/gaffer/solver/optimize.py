@@ -146,9 +146,12 @@ def optimise(
         prob += cap[i] <= start[i]
 
     # --- club limit -------------------------------------------------------
+    # Prefer the live rule (ingested from the API's game_settings); fall back to
+    # the hardcoded constant so the solver still runs on a bare DB.
+    club_limit = _meta_int(conn, "rule_club_limit", config.CLUB_LIMIT)
     teams = {players[i].team_id for i in ids}
     for t in teams:
-        prob += pulp.lpSum(squad[i] for i in ids if players[i].team_id == t) <= config.CLUB_LIMIT
+        prob += pulp.lpSum(squad[i] for i in ids if players[i].team_id == t) <= club_limit
 
     # --- budget -----------------------------------------------------------
     # Transfer mode models real cash: money spent buying new players can't exceed
@@ -164,9 +167,10 @@ def optimise(
         )
         prob += spend_on_buys <= bank + recouped
     else:
-        # build / wildcard: total squad market price under the cap
+        # build / wildcard: total squad market price under the cap (live rule
+        # from game_settings, else the constant)
         if budget is None:
-            budget = config.BUDGET_TENTHS
+            budget = _meta_int(conn, "rule_budget", config.BUDGET_TENTHS)
         prob += pulp.lpSum(squad[i] * players[i].price for i in ids) <= budget
 
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
