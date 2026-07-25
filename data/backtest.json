@@ -2,19 +2,26 @@
   "season": "2024-25",
   "n_predictions": 10011,
   "gameweeks": "GW6\u2013GW38",
+  "trained_on": "2022-23 + 2023-24",
   "mae": {
     "gaffer": 1.961,
+    "ml": 1.858,
     "fpl_xp": 1.804,
     "naive": 2.064
   },
   "rank_corr": {
-    "gaffer": 0.309,
+    "gaffer": 0.308,
+    "ml": 0.379,
     "fpl_xp": 0.572,
     "naive": 0.308
   },
   "lift": {
+    "ml": {
+      "top": 4.16,
+      "bottom": 1.58
+    },
     "gaffer": {
-      "top": 3.96,
+      "top": 3.93,
       "bottom": 1.7
     },
     "fpl_xp": {
@@ -22,6 +29,6 @@
       "bottom": 1.19
     }
   },
-  "note": "Backtest of a heuristic-0.1-style projection (fixture-adjusted, but pre-DEFCON \u2014 that scoring is new for 2025/26). Rank correlation = how well a method orders players by points (higher better); MAE = average points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected. FPL's own xP is the benchmark to beat \u2014 the gap is why the trained model (Phase 2) is the priority.",
-  "generated_at": "2026-07-25T09:25:23+00:00"
+  "note": "Trained gradient-boosted model vs the transparent heuristic vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected.",
+  "generated_at": "2026-07-25T09:47:51+00:00"
 }

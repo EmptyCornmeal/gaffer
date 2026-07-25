@@ -143,13 +143,18 @@ export interface News {
   generated_at: string
 }
 
+interface Lift {
+  top: number
+  bottom: number
+}
 export interface Backtest {
   season: string
   n_predictions: number
   gameweeks: string
-  mae: { gaffer: number; fpl_xp: number; naive: number }
-  rank_corr: { gaffer: number; fpl_xp: number; naive: number }
-  lift: { gaffer: { top: number; bottom: number }; fpl_xp: { top: number; bottom: number } }
+  trained_on: string
+  mae: { gaffer: number; ml: number; fpl_xp: number; naive: number }
+  rank_corr: { gaffer: number; ml: number; fpl_xp: number; naive: number }
+  lift: { ml: Lift; gaffer: Lift; fpl_xp: Lift }
   note: string
   generated_at: string
 }
