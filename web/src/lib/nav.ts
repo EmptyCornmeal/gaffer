@@ -10,6 +10,7 @@ export const NAV_TABS: Tab[] = [
   { key: 'players', label: 'Players', icon: '📋' },
   { key: 'fixtures', label: 'Fixtures', icon: '🗓️' },
   { key: 'chips', label: 'Chips', icon: '🎴' },
+  { key: 'meta', label: 'Meta', icon: '📊' },
   { key: 'league', label: 'League', icon: '🏆' },
   { key: 'news', label: 'News', icon: '📰' },
   { key: 'accuracy', label: 'Accuracy', icon: '🎯' },

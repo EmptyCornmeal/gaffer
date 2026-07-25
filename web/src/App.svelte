@@ -15,6 +15,7 @@
   import News from './pages/News.svelte'
   import Accuracy from './pages/Accuracy.svelte'
   import Chips from './pages/Chips.svelte'
+  import Meta from './pages/Meta.svelte'
   import { GLOSSARY } from './lib/glossary'
 
   let bundle = $state<Bundle | null>(null)
@@ -95,6 +96,8 @@
         <Fixtures fixtures={bundle.fixtures} />
       {:else if route === 'chips'}
         <Chips {bundle} onnav={nav} />
+      {:else if route === 'meta'}
+        <Meta {bundle} onpick={(id) => (selectedId = id)} />
       {:else if route === 'league'}
         {#key reloadKey}<MiniLeague ongoSettings={() => (sidebarOpen = true)} />{/key}
       {:else if route === 'news'}
