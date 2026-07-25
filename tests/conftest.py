@@ -35,6 +35,10 @@ def _players():
                     "selected_by_pct": 5.0,
                     "minutes": 2500,
                     "starts": 30,
+                    "base_minutes": 2500,  # enriched last-season baseline
+                    "base_starts": 30,
+                    "base_xg90": xgi * 0.6,
+                    "base_xa90": xgi * 0.4,
                     "form": 4.0,
                     "points_per_game": 4.0,
                     "ep_next": 4.0,

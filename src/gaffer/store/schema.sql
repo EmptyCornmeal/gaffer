@@ -37,6 +37,10 @@ CREATE TABLE IF NOT EXISTS players (
     xgi_per_90          REAL DEFAULT 0,
     xgc_per_90          REAL DEFAULT 0,        -- expected_goals_conceded_per_90 (team defence proxy)
     defcon_per_90       REAL DEFAULT 0,        -- defensive_contribution_per_90 from FPL
+    base_xg90           REAL DEFAULT 0,        -- last-season xG/90 (survives the FPL stats reset)
+    base_xa90           REAL DEFAULT 0,        -- last-season xA/90
+    base_minutes        INTEGER DEFAULT 0,     -- last-season minutes (reliability baseline)
+    base_starts         INTEGER DEFAULT 0,     -- last-season starts
     news                TEXT,
     set_piece_notes     TEXT
 );

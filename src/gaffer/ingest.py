@@ -68,6 +68,8 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
     }
     rows = []
     for e in bootstrap["elements"]:
+        if e["element_type"] not in _POSITION:
+            continue  # skip non-squad assets (e.g. element_type 5 = managers)
         rows.append(
             {
                 "id": e["id"],
@@ -156,17 +158,17 @@ def ingest_my_squad(
     return n
 
 
-def enrich_defcon(
-    conn: sqlite3.Connection, client: FplClient, min_minutes: int = 900
-) -> int:
-    """Populate ``defcon_per_90`` from last season's totals.
+def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
+    """Persist a last-season baseline from each relevant player's ``history_past``.
 
-    The bootstrap zeroes defensive-contribution pre-season, so we read each
-    regular's ``history_past`` (one cached call per player) and compute the rate.
-    Capped to players with meaningful minutes to keep call volume sane (~250).
+    Captures DEFCON *and* last-season xG/xA/minutes/starts (``base_*``). This is
+    the projection's fallback so it keeps using real underlying numbers once FPL
+    resets the bootstrap stats to zero for the new season. Gated on price/ownership
+    (NOT current minutes, which reset to 0) so the enrichment still selects players
+    after the reset. One cached call per player (~350).
     """
     targets = conn.execute(
-        "SELECT id FROM players WHERE minutes>=? AND defcon_per_90=0", (min_minutes,)
+        "SELECT id FROM players WHERE (price>=45 OR selected_by_pct>=0.5) AND base_minutes=0"
     ).fetchall()
     updated = 0
     for row in targets:
@@ -180,11 +182,24 @@ def enrich_defcon(
             continue
         last = past[-1]  # most recent prior season
         mins = last.get("minutes") or 0
-        dc = last.get("defensive_contribution") or 0
-        if mins >= 450 and dc:
-            rate = round(dc / mins * 90, 3)
-            conn.execute("UPDATE players SET defcon_per_90=? WHERE id=?", (rate, pid))
-            updated += 1
+        if mins < 300:
+            continue
+        per90 = 90.0 / mins  # FPL returns expected_* as strings -> cast with _f
+        vals = {
+            "base_minutes": mins,
+            "base_starts": last.get("starts") or 0,
+            "base_xg90": round(_f(last.get("expected_goals")) * per90, 3),
+            "base_xa90": round(_f(last.get("expected_assists")) * per90, 3),
+        }
+        dc = _f(last.get("defensive_contribution"))
+        cols = "base_minutes=?, base_starts=?, base_xg90=?, base_xa90=?"
+        params = [vals["base_minutes"], vals["base_starts"], vals["base_xg90"], vals["base_xa90"]]
+        if dc:
+            cols += ", defcon_per_90=?"
+            params.append(round(dc * per90, 3))
+        params.append(pid)
+        conn.execute(f"UPDATE players SET {cols} WHERE id=?", params)
+        updated += 1
     conn.commit()
     return updated
 
@@ -231,7 +246,7 @@ def run(db_path=None, skip_enrich: bool = False) -> dict[str, int]:
             db.set_meta(conn, "deadline", ev.get("deadline_time") or "")
             db.set_meta(conn, "gw_name", ev.get("name") or f"Gameweek {gw}")
         if not skip_enrich:
-            summary["defcon_enriched"] = enrich_defcon(conn, client)
+            summary["enriched"] = enrich_history(conn, client)
         if settings.entry_id:
             ingest_entry_meta(conn, client, settings.entry_id)
             summary["my_squad"] = ingest_my_squad(conn, client, settings.entry_id, gw)

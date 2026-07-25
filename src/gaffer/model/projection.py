@@ -61,13 +61,19 @@ def _start_prior(position: str, price: int) -> float:
 
 
 def _project_one_fixture(
-    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float
+    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float, games_played: int = 0
 ) -> dict[str, float]:
     pos = player["position"]
+    cur_min = player["minutes"] or 0
+    base_min = player["base_minutes"] or 0
 
     # --- minutes gate ---------------------------------------------------
-    if player["minutes"] and player["starts"] is not None and player["minutes"] > 90:
-        base_start = clamp(player["starts"] / 38.0, 0.0, 0.98)
+    # start prob: current-season starts/games once enough games; else last-season
+    # starts/38; else a price-based prior. (starts/38 mid-season is wrong.)
+    if games_played >= 3 and cur_min and player["starts"] is not None:
+        base_start = clamp(player["starts"] / games_played, 0.0, 0.98)
+    elif base_min > 90 and player["base_starts"]:
+        base_start = clamp(player["base_starts"] / 38.0, 0.0, 0.98)
     else:
         base_start = _start_prior(pos, player["price"])
     p_start = clamp(base_start * avail, 0.0, 0.98)
@@ -76,9 +82,13 @@ def _project_one_fixture(
     p60 = p_start  # starters are the ones who reach 60'
 
     # --- attacking ------------------------------------------------------
+    # Shrink current-season rate toward the LAST-SEASON rate (survives the FPL
+    # stats reset), falling back to a flat position prior for players with none.
     prior = F.XGI_PRIOR[pos]
-    xg90 = F.shrink(player["xg_per_90"], player["minutes"], prior * 0.55)
-    xa90 = F.shrink(player["xa_per_90"], player["minutes"], prior * 0.45)
+    tgt_xg = player["base_xg90"] or (prior * 0.55)
+    tgt_xa = player["base_xa90"] or (prior * 0.45)
+    xg90 = F.shrink(player["xg_per_90"] or 0, cur_min, tgt_xg)
+    xa90 = F.shrink(player["xa_per_90"] or 0, cur_min, tgt_xa)
     att_mult = ctx.attack_multiplier(fx.opponent_id, fx.at_home)
     mins_frac = exp_minutes / 90.0
     exp_goals = xg90 * mins_frac * att_mult
@@ -133,7 +143,8 @@ def _project_one_fixture(
 def _confidence(player: sqlite3.Row, avail: float) -> float:
     """0-1: how much to trust this projection. Driven by minutes reliability,
     availability certainty, and news flags."""
-    minutes_rel = player["minutes"] / (player["minutes"] + F.XGI_SHRINK_K)
+    rel = max(player["minutes"] or 0, player["base_minutes"] or 0)
+    minutes_rel = rel / (rel + F.XGI_SHRINK_K)
     conf = 0.55 * minutes_rel + 0.35 * avail + 0.10
     if player["news"]:
         conf *= 0.85
@@ -151,6 +162,9 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
     fixtures = F.upcoming_fixtures_by_team(conn, from_gw, horizon)
     players = conn.execute("SELECT * FROM players").fetchall()
     now = datetime.now(UTC).isoformat(timespec="seconds")
+    # current-season games played (for start-probability denominator); 0 pre-season
+    lf = conn.execute("SELECT value FROM meta WHERE key='last_finished_gw'").fetchone()
+    games_played = int(lf["value"]) if lf and str(lf["value"]).isdigit() else 0
 
     rows: list[dict] = []
     for p in players:
@@ -166,7 +180,10 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
             "exp_bonus_pts", "exp_appearance", "exp_points", "exp_minutes",
         ]
         for gw in range(from_gw, from_gw + horizon):
-            parts = [_project_one_fixture(p, fx, ctx, avail) for fx in by_gw.get(gw, [])]
+            parts = [
+                _project_one_fixture(p, fx, ctx, avail, games_played)
+                for fx in by_gw.get(gw, [])
+            ]
             acc = {k: sum(part[k] for part in parts) for k in additive}
             # p_start is a per-match property, not additive across a double.
             acc["p_start"] = max((part["p_start"] for part in parts), default=0.0)
