@@ -21,7 +21,11 @@
   const squad = $derived(squadIds.map((id) => byId.get(id)).filter((p): p is Player => !!p))
   const starters = $derived(squad.filter((p) => starterIds.includes(p.id)))
 
-  const gws = $derived(squad[0]?.gw_xp.map((g) => g.gw) ?? [])
+  // union of GWs across the squad (a blank/short player list shouldn't drop
+  // columns); per-player gw_xp already sums doubles into one per-GW value.
+  const gws = $derived(
+    [...new Set(squad.flatMap((p) => p.gw_xp.map((g) => g.gw)))].sort((a, b) => a - b),
+  )
   function xpAt(p: Player, gw: number) {
     return p.gw_xp.find((g) => g.gw === gw)?.xp ?? 0
   }

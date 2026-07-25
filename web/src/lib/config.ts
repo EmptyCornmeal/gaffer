@@ -41,6 +41,11 @@ declare global {
   }
 }
 
+// The proxy that's already deployed (Val Town). Baked in so live data works out
+// of the box — the Settings field is only an optional override for a self-hosted
+// proxy. Resolution order: ?api= → window.__GAFFER_API__ → saved override → this.
+export const DEFAULT_API_BASE = 'https://gaffer-proxy.val.run/api'
+
 export function apiBase(): string | null {
   try {
     const q = new URLSearchParams(location.search).get('api')
@@ -49,11 +54,16 @@ export function apiBase(): string | null {
     /* ignore */
   }
   if (typeof window !== 'undefined' && window.__GAFFER_API__) return window.__GAFFER_API__
-  return safeLS.get(LS.api)
+  return safeLS.get(LS.api) || DEFAULT_API_BASE
 }
 
 export function setApiBase(v: string) {
   safeLS.set(LS.api, v.replace(/\/$/, ''))
+}
+
+/** The user's explicitly-saved override, or null when running on the default. */
+export function getApiOverride(): string | null {
+  return safeLS.get(LS.api)
 }
 
 /** Extract a numeric id from a raw value or a pasted FPL URL. */

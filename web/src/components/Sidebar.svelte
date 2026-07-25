@@ -2,7 +2,7 @@
   import type { Meta } from '../lib/types'
   import {
     getEntryId, setEntryId, getLeagueIds, setLeagueIds, parseId,
-    apiBase, setApiBase,
+    getApiOverride, setApiBase,
   } from '../lib/config'
   import { GLOSSARY } from '../lib/glossary'
   import { NAV_TABS } from '../lib/nav'
@@ -27,7 +27,7 @@
 
   let entry = $state(getEntryId()?.toString() ?? '')
   let leagues = $state(getLeagueIds().join(', '))
-  let api = $state(apiBase() ?? '')
+  let api = $state(getApiOverride() ?? '')
   let saved = $state(false)
 
   function save() {
@@ -93,10 +93,12 @@
     class="w-full rounded-lg bg-card border border-line px-3 py-2 text-sm mb-3 focus:outline-none focus:border-accent"
   />
 
-  <div class="block text-xs text-muted mb-1">Proxy API base (for live data)</div>
+  <div class="block text-xs text-muted mb-1">
+    Proxy API base <span class="text-muted2">(optional — a proxy is already set up)</span>
+  </div>
   <input
     bind:value={api}
-    placeholder="https://gaffer-proxy.…workers.dev/api"
+    placeholder="Default: gaffer-proxy.val.run/api"
     class="w-full rounded-lg bg-card border border-line px-3 py-2 text-xs mb-3 focus:outline-none focus:border-accent"
   />
 
