@@ -56,9 +56,9 @@
          {open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0"
   style="width: var(--gaffer-sidebar);"
 >
-  <div class="flex items-center justify-between mb-3">
+  <div class="lg:hidden flex items-center justify-between mb-3">
     <h3 class="font-bold">Menu</h3>
-    <button class="lg:hidden text-muted" onclick={onclose} aria-label="close">✕</button>
+    <button class="text-muted" onclick={onclose} aria-label="close">✕</button>
   </div>
 
   <!-- Page navigation — mobile only (the topbar carries it on ≥lg). Without this
