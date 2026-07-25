@@ -30,6 +30,7 @@
     { key: 'fixtures', label: 'Fixtures' },
     { key: 'league', label: 'League' },
     { key: 'news', label: 'News' },
+    { key: 'accuracy', label: 'Accuracy' },
     { key: 'help', label: 'Help' },
   ]
 

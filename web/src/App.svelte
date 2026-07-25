@@ -12,6 +12,7 @@
   import Fixtures from './pages/Fixtures.svelte'
   import MiniLeague from './pages/MiniLeague.svelte'
   import News from './pages/News.svelte'
+  import Accuracy from './pages/Accuracy.svelte'
   import { GLOSSARY } from './lib/glossary'
 
   let bundle = $state<Bundle | null>(null)
@@ -89,6 +90,8 @@
         {#key reloadKey}<MiniLeague ongoSettings={() => (sidebarOpen = true)} />{/key}
       {:else if route === 'news'}
         <News {bundle} />
+      {:else if route === 'accuracy'}
+        <Accuracy {bundle} />
       {:else if route === 'help'}
         <div class="rise max-w-3xl">
           <h2 class="font-bold text-lg mb-1">How Gaffer works</h2>

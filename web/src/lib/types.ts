@@ -141,3 +141,14 @@ export interface News {
   count: number
   generated_at: string
 }
+
+export interface Backtest {
+  season: string
+  n_predictions: number
+  gameweeks: string
+  mae: { gaffer: number; fpl_xp: number; naive: number }
+  rank_corr: { gaffer: number; fpl_xp: number; naive: number }
+  lift: { gaffer: { top: number; bottom: number }; fpl_xp: { top: number; bottom: number } }
+  note: string
+  generated_at: string
+}
