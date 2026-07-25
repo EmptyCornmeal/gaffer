@@ -16,13 +16,28 @@ from gaffer import config
 from gaffer.ai import llm
 from gaffer.sources.news import fetch_transfer_news
 
-SYSTEM = (
-    "You are an FPL analyst. From these real-world football transfer headlines, "
-    "write a short GitHub-flavoured markdown digest of the moves that matter for "
-    "Fantasy Premier League 2026/27 — new Premier League signings to watch, who "
-    "gains or loses from a move, and any role/price implications. Use only the "
-    "headlines provided; do not invent transfers. Bullet points, under 140 words, "
-    "no preamble."
+# Match keywords per FPL short_name (only shorts present in the current 20 are used).
+_CLUB_ALIASES: dict[str, list[str]] = {
+    "ARS": ["arsenal"], "AVL": ["aston villa", "villa"], "BOU": ["bournemouth"],
+    "BRE": ["brentford"], "BHA": ["brighton"], "BUR": ["burnley"], "CHE": ["chelsea"],
+    "CRY": ["crystal palace", "palace"], "EVE": ["everton"], "FUL": ["fulham"],
+    "IPS": ["ipswich"], "LEE": ["leeds"], "LEI": ["leicester"], "LIV": ["liverpool"],
+    "MCI": ["man city", "manchester city"], "MUN": ["man utd", "man united", "manchester united"],
+    "NEW": ["newcastle"], "NFO": ["nottingham forest", "nott'm forest", "forest"],
+    "SHU": ["sheffield united"], "SOU": ["southampton"], "SUN": ["sunderland"],
+    "TOT": ["tottenham", "spurs"], "WHU": ["west ham"], "WOL": ["wolves", "wolverhampton"],
+    "LUT": ["luton"], "COV": ["coventry"], "HUL": ["hull"], "NOR": ["norwich"],
+    "WBA": ["west brom", "west bromwich"], "MID": ["middlesbrough"], "BIR": ["birmingham"],
+}
+
+SYSTEM_TMPL = (
+    "You are an FPL analyst. The Premier League 2026/27 clubs are: {clubs}. "
+    "From these real-world transfer headlines, write a short GitHub-flavoured "
+    "markdown digest of ONLY the moves relevant to those clubs and Fantasy "
+    "Premier League — new PL signings to watch, who gains or loses, and any "
+    "role/price implications. IGNORE any club not in that list (e.g. relegated "
+    "sides, Scottish/EFL/women's clubs). Use only the headlines provided; do not "
+    "invent transfers. Bullet points, under 140 words, no preamble."
 )
 
 
@@ -35,16 +50,34 @@ def _template_digest(items: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def generate(data_dir: Path | None = None, model: str | None = None) -> dict[str, Any]:
+def _keywords_for(clubs: list[tuple[str, str]]) -> list[str]:
+    """Build lowercase match keywords for the current PL clubs (name + aliases)."""
+    kws: set[str] = set()
+    for name, short in clubs:
+        kws.update(_CLUB_ALIASES.get(short, []))
+        n = (name or "").lower()
+        if len(n) > 3:
+            kws.add(n)
+    return sorted(kws)
+
+
+def generate(
+    data_dir: Path | None = None,
+    model: str | None = None,
+    clubs: list[tuple[str, str]] | None = None,
+) -> dict[str, Any]:
     data_dir = data_dir or config.DATA_DIR
-    items = fetch_transfer_news()
+    keywords = _keywords_for(clubs) if clubs else None
+    club_names = ", ".join(sorted(n for n, _ in clubs)) if clubs else "the 20 Premier League clubs"
+    items = fetch_transfer_news(club_keywords=keywords)
 
     source = "template"
     digest = _template_digest(items)
     if items and llm.has_credentials():
         try:
             headlines = "\n".join(f"- [{it['source']}] {it['title']}" for it in items)
-            digest = llm.complete(SYSTEM, headlines, model=model, max_tokens=900)
+            system = SYSTEM_TMPL.format(clubs=club_names)
+            digest = llm.complete(system, headlines, model=model, max_tokens=900)
             source = "ai"
         except Exception as exc:  # graceful fallback
             digest = _template_digest(items)

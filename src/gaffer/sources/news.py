@@ -54,7 +54,13 @@ def _parse_feed(source: str, xml_text: str) -> list[dict[str, Any]]:
     return out
 
 
-def fetch_transfer_news(limit: int = 24) -> list[dict[str, Any]]:
+def fetch_transfer_news(
+    limit: int = 24, club_keywords: list[str] | None = None
+) -> list[dict[str, Any]]:
+    """Fetch transfer stories, optionally filtered to a set of club keywords
+    (lowercase). When provided, only items mentioning a current PL club are kept
+    — so relegated/non-PL clubs (West Ham, Scottish sides, etc.) are dropped."""
+    kws = [k.lower() for k in club_keywords] if club_keywords else None
     items: list[dict[str, Any]] = []
     with httpx.Client(headers={"User-Agent": USER_AGENT}, timeout=15.0, follow_redirects=True) as c:
         for source, url in FEEDS:
@@ -64,12 +70,16 @@ def fetch_transfer_news(limit: int = 24) -> list[dict[str, Any]]:
                 items.extend(_parse_feed(source, r.text))
             except (httpx.HTTPError, Exception):
                 continue
-    # dedupe by title, keep order
     seen: set[str] = set()
     deduped = []
     for it in items:
         key = it["title"].lower()
-        if key not in seen:
-            seen.add(key)
-            deduped.append(it)
+        if key in seen:
+            continue
+        if kws is not None:
+            hay = f"{it['title']} {it['summary']}".lower()
+            if not any(k in hay for k in kws):
+                continue
+        seen.add(key)
+        deduped.append(it)
     return deduped[:limit]

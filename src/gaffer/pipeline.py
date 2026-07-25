@@ -56,7 +56,8 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
 
     v = verdict_mod.generate()
     log["verdict"] = v["source"]
-    n = news_mod.generate()
+    clubs = [(r["name"], r["short"]) for r in conn.execute("SELECT name, short FROM teams")]
+    n = news_mod.generate(clubs=clubs)
     log["news"] = f"{n['count']} items ({n['source']})"
     log["entry_id"] = settings.entry_id
     log["elapsed_s"] = round(time.time() - t0, 1)

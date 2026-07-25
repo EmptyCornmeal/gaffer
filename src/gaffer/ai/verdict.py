@@ -23,17 +23,21 @@ VERDICT_MODEL = os.environ.get("GAFFER_VERDICT_MODEL", "claude-opus-4-8")
 
 SYSTEM = (
     "You are 'The Gaffer', a sharp, confident FPL analyst writing a short weekly "
-    "briefing for a Fantasy Premier League dashboard used by many managers. "
-    "Write in plain English with a bit of touchline swagger, but stay strictly "
-    "grounded in the numbers you are given — never invent players, prices, "
-    "fixtures, injuries, or stats not present in the data. Be decisive.\n\n"
-    "Output GitHub-flavoured markdown, under ~180 words, in this shape:\n"
-    "- A bold one-line headline (the week's single biggest call).\n"
-    "- 2-3 short paragraphs or bullets covering: the recommended squad/transfer "
-    "and captain (with the why), one differential worth a look, and one risk to "
-    "watch (rotation/injury/tough fixtures).\n"
+    "briefing for a Fantasy Premier League dashboard. Write in plain English with "
+    "a bit of touchline swagger, but stay strictly grounded in the numbers given "
+    "— never invent players, prices, fixtures, injuries, or stats. Be decisive.\n\n"
+    "If a 'your_team' is provided, the briefing is about THAT squad. Otherwise it "
+    "is about the model's recommended squad.\n\n"
+    "Output GitHub-flavoured markdown, under ~190 words, in exactly this shape:\n"
+    "- A bold one-line headline (the single biggest call this week).\n"
+    "- **✅ What's strong** — the best things about the squad right now (key "
+    "assets, captain, defensive/DEFCON value, fixtures). Explicitly flag any "
+    "injury/fitness doubts on important players (use the 'flagged_news' data).\n"
+    "- **🔄 What I'd change** — the transfer(s)/tweaks you'd make and why "
+    "(who out → who in), or say 'roll it' if nothing beats a -4. If building from "
+    "scratch, make this the key picks to prioritise.\n"
     "- A final bold 'Bottom line:' sentence.\n"
-    "Do not include a preamble or restate these instructions."
+    "No preamble; do not restate these instructions."
 )
 
 
@@ -58,12 +62,23 @@ def build_context(data_dir: Path) -> dict[str, Any]:
         slim(p) for p in players
         if 0 < (p.get("owned_by") or 0) < 8 and p["next_gw_xp"] >= 3.5
     ][:4]
+
+    # your actual team (in-season, once picks are available)
+    my = _load(data_dir, "my_team.json")
+    your_team = None
+    flag_pool = players[:40]
+    if my and my.get("players"):
+        your_team = [slim(p) for p in my["players"]]
+        flag_pool = my["players"]  # prioritise injuries in YOUR squad
+
     flagged = [
-        {"name": p["name"], "news": p["news"]}
-        for p in players[:40] if p.get("news")
-    ][:5]
+        {"name": p["name"], "news": p.get("news"), "status": p.get("status")}
+        for p in flag_pool
+        if p.get("news") or (p.get("status") and p.get("status") != "a")
+    ][:6]
 
     return {
+        "your_team": your_team,
         "gameweek": meta.get("gw_name") or f"GW{meta.get('current_gw')}",
         "deadline": meta.get("deadline"),
         "recommendation": {
@@ -113,29 +128,32 @@ def _ai_briefing(ctx: dict[str, Any], model: str) -> str:
 def _template_briefing(ctx: dict[str, Any]) -> str:
     rec = ctx["recommendation"]
     cap = rec.get("captain", {})
-    lines: list[str] = []
-    lines.append(f"**{ctx['gameweek']}: {rec.get('summary', 'Set your team.')}**")
-    lines.append("")
-    if rec.get("mode") == "build":
-        lines.append(
-            f"The model's optimal {rec.get('formation')} squad comes in at "
-            f"£{rec.get('squad_value')}m for a projected {rec.get('xi_expected')} pts."
-        )
-    elif rec.get("transfers_in"):
-        lines.append(
-            f"Move: out {', '.join(rec['transfers_out'])} → in "
-            f"{', '.join(rec['transfers_in'])}."
-        )
-    else:
-        lines.append("No transfer clears its hit — roll it.")
+    lines: list[str] = [f"**{ctx['gameweek']}: {rec.get('summary', 'Set your team.')}**", ""]
+
+    lines.append("**✅ What's strong**")
     if cap.get("name"):
-        lines.append(f"**Captain {cap['name']}** — {cap.get('why', '')}")
-    if ctx["differentials"]:
+        lines.append(f"- Captain **{cap['name']}** — {cap.get('why', '')}")
+    if ctx.get("differentials"):
         d = ctx["differentials"][0]
-        lines.append(f"Differential: **{d['name']}** ({d['team']}, £{d['price']}m, {d['xp']} xP).")
-    if ctx["flagged_news"]:
+        lines.append(
+            f"- Value/differential: **{d['name']}** ({d['team']}, £{d['price']}m, {d['xp']} xP)."
+        )
+    if ctx.get("flagged_news"):
         n = ctx["flagged_news"][0]
-        lines.append(f"Watch: {n['name']} — {n['news']}")
+        note = n.get("news") or "fitness doubt"
+        lines.append(f"- ⚠️ Watch: **{n['name']}** — {note}")
+    lines.append("")
+
+    lines.append("**🔄 What I'd change**")
+    if rec.get("mode") == "build":
+        lines.append(f"- Build the {rec.get('formation')} for £{rec.get('squad_value')}m "
+                     f"(projected {rec.get('xi_expected')} pts); prioritise the value defenders.")
+    elif rec.get("transfers_in"):
+        outs = ", ".join(rec["transfers_out"])
+        ins = ", ".join(rec["transfers_in"])
+        lines.append(f"- Out {outs} → in {ins}.")
+    else:
+        lines.append("- Nothing beats a -4 — roll the transfer.")
     lines.append("")
     cap_name = cap.get("name", "your best pick")
     lines.append(f"**Bottom line: captain {cap_name} and trust the process.**")
