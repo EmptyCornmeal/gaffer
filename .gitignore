@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Data — keep JSON artifacts, ignore the working DB, cache, and bulky history
+data/*.db
+data/*.sqlite
+data/.cache/
+data/history/
+
+# Node / front-end
+web/node_modules/
+web/dist/
+web/.svelte-kit/
+
+# Local secrets
+.env
+gaffer.local.toml
+
+# dev-only screenshot output
+web/shots/
+
+web/shot*.mjs

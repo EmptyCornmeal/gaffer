@@ -1,0 +1,34 @@
+[project]
+name = "gaffer"
+version = "0.1.0"
+description = "FPL decision engine — projects points, plans transfers/captain/chips, explains the move."
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28",
+    "pandas>=2.2",
+    "pulp>=3.0,<4.0",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.16", "pytest>=8.0"]
+ai = ["anthropic>=0.40"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gaffer = ["store/*.sql"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
