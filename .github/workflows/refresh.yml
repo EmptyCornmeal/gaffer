@@ -1,0 +1,73 @@
+name: Refresh Gaffer data
+
+# Runs the pipeline on a schedule and commits fresh data/*.json so the deployed
+# site is never a stale snapshot. Replaces the Mac-Mini cron (scripts/refresh.sh).
+#
+# Times are UTC. ~02:00 UTC catches the overnight FPL price changes; ~11:00 and
+# ~17:00 UTC keep projections/news current through the day and before the typical
+# Friday/Saturday deadlines. Trigger manually any time via "Run workflow".
+on:
+  schedule:
+    - cron: '0 2 * * *'    # after overnight price changes
+    - cron: '0 11 * * *'   # midday
+    - cron: '0 17 * * *'   # pre-evening / pre-deadline
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit + push refreshed data
+  actions: write    # dispatch the deploy workflow
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Gaffer
+        # Include the [ai] extra so the AI Verdict/News run when the secret is set
+        # (without it the anthropic SDK is absent and the pipeline uses templates).
+        run: pip install ".[ai]"
+
+      - name: Run pipeline
+        env:
+          # Optional: set this repo secret to get the AI-written Verdict/News.
+          # Without it the pipeline falls back to deterministic templates.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PYTHONUTF8: '1'
+        run: python -m gaffer.pipeline
+
+      - name: Stage artifacts for the front-end
+        run: |
+          mkdir -p web/public/data
+          cp data/*.json web/public/data/
+
+      - name: Commit + push if data changed
+        id: commit
+        run: |
+          if [ -z "$(git status --porcelain data web/public/data)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No data changes."
+            exit 0
+          fi
+          git config user.name  "gaffer-bot"
+          git config user.email "gaffer-bot@users.noreply.github.com"
+          git add data web/public/data
+          git commit -m "data: scheduled refresh $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy the site with the fresh data
+        # A push made with GITHUB_TOKEN does not itself trigger deploy.yml, so we
+        # dispatch it explicitly (only when the data actually changed).
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml
