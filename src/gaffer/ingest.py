@@ -247,6 +247,8 @@ def run(db_path=None, skip_enrich: bool = False) -> dict[str, int]:
             db.set_meta(conn, "gw_name", ev.get("name") or f"Gameweek {gw}")
         if not skip_enrich:
             summary["enriched"] = enrich_history(conn, client)
+        # Free transfers: not in the public API, so trust the user-set value.
+        db.set_meta(conn, "free_transfers", settings.free_transfers)
         if settings.entry_id:
             ingest_entry_meta(conn, client, settings.entry_id)
             summary["my_squad"] = ingest_my_squad(conn, client, settings.entry_id, gw)

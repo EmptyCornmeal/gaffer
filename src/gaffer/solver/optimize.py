@@ -27,10 +27,11 @@ class Player:
     name: str
     position: str
     team_id: int
-    price: int
+    price: int            # current market price (cost to buy)
     value: float          # decayed horizon expected points
     next_gw_points: float
     in_squad: bool = False  # currently owned (transfer mode)
+    sell_value: int = 0   # what we'd recoup if sold (FPL selling price; owned only)
 
 
 @dataclass
@@ -52,9 +53,12 @@ class Solution:
 
 def load_players(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict[int, Player]:
     """Aggregate each player's decayed horizon value and next-GW points."""
+    # owned player_id -> selling price (None until we have purchase data)
     owned = {
-        r["player_id"]
-        for r in conn.execute("SELECT player_id FROM my_squad WHERE gw=?", (from_gw,))
+        r["player_id"]: r["selling_price"]
+        for r in conn.execute(
+            "SELECT player_id, selling_price FROM my_squad WHERE gw=?", (from_gw,)
+        )
     }
     players: dict[int, Player] = {}
     rows = conn.execute(
@@ -66,10 +70,13 @@ def load_players(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict[i
     for r in rows:
         p = players.get(r["player_id"])
         if p is None:
+            is_owned = r["player_id"] in owned
+            # sell value = FPL selling price when known, else current market price
+            sell = owned.get(r["player_id"]) if is_owned else 0
             p = Player(
                 id=r["player_id"], name=r["web_name"], position=r["position"],
                 team_id=r["team_id"], price=r["price"], value=0.0, next_gw_points=0.0,
-                in_squad=r["player_id"] in owned,
+                in_squad=is_owned, sell_value=int(sell) if sell else r["price"],
             )
             players[r["player_id"]] = p
         weight = HORIZON_DECAY ** (r["gw"] - from_gw)
@@ -87,7 +94,7 @@ def optimise(
     conn: sqlite3.Connection,
     from_gw: int,
     horizon: int | None = None,
-    max_transfers: int = 2,
+    max_transfers: int | None = None,
     free_transfers: int = 1,
     budget: int | None = None,
 ) -> Solution:
@@ -95,6 +102,10 @@ def optimise(
     players = load_players(conn, from_gw, horizon)
     ids = list(players)
     have_squad = any(p.in_squad for p in players.values())
+    # No hard cap by default — the -4 hit cost self-limits how many transfers are
+    # ever worth making. (Was hardcoded to 2, which blocked profitable big moves.)
+    if max_transfers is None:
+        max_transfers = config.SQUAD_SIZE
 
     prob = pulp.LpProblem("gaffer", pulp.LpMaximize)
     squad = {i: pulp.LpVariable(f"sq_{i}", cat="Binary") for i in ids}
@@ -140,17 +151,31 @@ def optimise(
         prob += pulp.lpSum(squad[i] for i in ids if players[i].team_id == t) <= config.CLUB_LIMIT
 
     # --- budget -----------------------------------------------------------
-    if budget is None:
-        if have_squad:
-            owned_value = sum(players[i].price for i in ids if players[i].in_squad)
-            bank = int(_meta_int(conn, "bank", 0))
-            budget = owned_value + bank
-        else:
+    # Transfer mode models real cash: money spent buying new players can't exceed
+    # the bank plus what selling the dropped players actually recoups (their FPL
+    # *selling* price, not market) — so it never suggests moves you can't afford.
+    if have_squad and budget is None:
+        bank = int(_meta_int(conn, "bank", 0))
+        spend_on_buys = pulp.lpSum(
+            players[i].price * squad[i] for i in ids if not players[i].in_squad
+        )
+        recouped = pulp.lpSum(
+            players[i].sell_value * (1 - squad[i]) for i in ids if players[i].in_squad
+        )
+        prob += spend_on_buys <= bank + recouped
+    else:
+        # build / wildcard: total squad market price under the cap
+        if budget is None:
             budget = config.BUDGET_TENTHS
-    prob += pulp.lpSum(squad[i] * players[i].price for i in ids) <= budget
+        prob += pulp.lpSum(squad[i] * players[i].price for i in ids) <= budget
 
     prob.solve(pulp.PULP_CBC_CMD(msg=False))
     status = pulp.LpStatus[prob.status]
+
+    # Degrade gracefully rather than IndexError if the solve is infeasible/timed
+    # out (e.g. an over-tight budget): keep the current squad in transfer mode.
+    if status != "Optimal":
+        return _degraded(conn, players, from_gw, horizon, have_squad, status)
 
     chosen = [i for i in ids if squad[i].value() and squad[i].value() > 0.5]
     starting = [i for i in ids if start[i].value() and start[i].value() > 0.5]
@@ -176,6 +201,64 @@ def optimise(
         xi_expected=round(xi_expected, 2), transfers_in=t_in, transfers_out=t_out,
         hits=int(hits_var.value()) if hits_var is not None else 0,
         status=status, meta={"mode": "transfer" if have_squad else "build"},
+    )
+
+
+def _pick_xi(players: dict[int, Player], squad_ids: list[int]) -> list[int]:
+    """Best-effort legal starting XI from a fixed squad: 1 GKP + the highest-value
+    outfielders that satisfy the formation minimums, filling to 11 by value."""
+    by_pos: dict[str, list[int]] = {p: [] for p in config.POSITIONS}
+    for i in squad_ids:
+        by_pos[players[i].position].append(i)
+    for pos in by_pos:
+        by_pos[pos].sort(key=lambda i: players[i].value, reverse=True)
+    xi = by_pos["GKP"][:1]
+    for pos, lo in config.FORMATION_MIN.items():
+        if pos == "GKP":
+            continue
+        xi += by_pos[pos][:lo]
+    remaining = sorted(
+        (i for i in squad_ids if i not in xi and players[i].position != "GKP"),
+        key=lambda i: players[i].value, reverse=True,
+    )
+    xi += remaining[: 11 - len(xi)]
+    return xi
+
+
+def _degraded(
+    conn: sqlite3.Connection, players: dict[int, Player], from_gw: int,
+    horizon: int, have_squad: bool, status: str,
+) -> Solution:
+    """No optimal solve — return a safe, non-crashing solution. In transfer mode
+    we hold the current squad and just set a legal XI/captain; in build mode there
+    is nothing to hold, so we return an empty solution flagged with the status."""
+    if not have_squad:
+        return Solution(
+            squad=[], starting=[], captain=0, vice=0, bench=[], formation="-",
+            squad_value=0, xi_expected=0.0, status=status, meta={"mode": "build"},
+        )
+    chosen = [i for i in players if players[i].in_squad]
+    starting = _pick_xi(players, chosen)
+    captain = max(starting, key=lambda i: players[i].next_gw_points, default=0)
+    vice = max(
+        (i for i in starting if i != captain), key=lambda i: players[i].value,
+        default=captain,
+    )
+    bench = sorted(
+        (i for i in chosen if i not in starting),
+        key=lambda i: (players[i].position != "GKP", -players[i].value),
+    )
+    counts = {pos: sum(1 for i in starting if players[i].position == pos)
+              for pos in config.POSITIONS}
+    xi_expected = (
+        sum(players[i].next_gw_points for i in starting)
+        + (players[captain].next_gw_points if captain else 0.0)
+    )
+    return Solution(
+        squad=chosen, starting=starting, captain=captain, vice=vice, bench=bench,
+        formation=_formation(counts), squad_value=sum(players[i].price for i in chosen),
+        xi_expected=round(xi_expected, 2), transfers_in=[], transfers_out=[],
+        hits=0, status=status, meta={"mode": "transfer", "degraded": True},
     )
 
 

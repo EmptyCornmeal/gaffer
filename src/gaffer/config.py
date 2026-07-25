@@ -68,11 +68,16 @@ DEFCON_THRESHOLD = {"GKP": 999, "DEF": 10, "MID": 12, "FWD": 12}
 class Settings:
     entry_id: int | None = None
     league_ids: list[int] = field(default_factory=list)
+    # Free transfers available this GW. The public FPL API doesn't expose this
+    # (it needs the authenticated my-team endpoint), so it's a user-set value the
+    # solver trusts; clamped to [1, MAX_FREE_TRANSFERS]. Planner can override live.
+    free_transfers: int = 1
 
     @classmethod
     def load(cls) -> Settings:
         entry_id: int | None = None
         league_ids: list[int] = []
+        free_transfers = 1
 
         local = REPO_ROOT / "gaffer.local.toml"
         if local.exists():
@@ -81,13 +86,30 @@ class Settings:
             if fpl.get("entry_id") is not None:
                 entry_id = int(fpl["entry_id"])
             league_ids = [int(x) for x in fpl.get("league_ids", [])]
+            if fpl.get("free_transfers") is not None:
+                free_transfers = int(fpl["free_transfers"])
 
         if os.environ.get("GAFFER_ENTRY_ID"):
             entry_id = int(os.environ["GAFFER_ENTRY_ID"])
         if os.environ.get("GAFFER_LEAGUE_IDS"):
             league_ids = [int(x) for x in os.environ["GAFFER_LEAGUE_IDS"].split(",") if x.strip()]
+        if os.environ.get("GAFFER_FREE_TRANSFERS"):
+            free_transfers = int(os.environ["GAFFER_FREE_TRANSFERS"])
 
-        return cls(entry_id=entry_id, league_ids=league_ids)
+        free_transfers = max(1, min(free_transfers, MAX_FREE_TRANSFERS))
+        return cls(entry_id=entry_id, league_ids=league_ids, free_transfers=free_transfers)
+
+
+def fpl_selling_price(purchase: int, now: int) -> int:
+    """FPL's selling-price rule (all in tenths of a million).
+
+    You get your purchase price back plus half of any *rise*, rounded DOWN to the
+    nearest 0.1m; a price fall is taken in full. So a £6.0m buy now worth £6.5m
+    sells for £6.2m (0.5 rise -> +0.2); worth £5.7m sells for £5.7m.
+    """
+    if now <= purchase:
+        return now
+    return purchase + (now - purchase) // 2
 
 
 def ensure_dirs() -> None:
