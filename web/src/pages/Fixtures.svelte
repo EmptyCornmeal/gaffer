@@ -3,6 +3,17 @@
 
   let { fixtures }: { fixtures: Fixtures } = $props()
 
+  // Split fixture difficulty: overall, attack (ease of scoring — opponent defence)
+  // or defence (ease of a clean sheet — opponent attack). Scoriness/Porosity.
+  type Mode = 'difficulty' | 'att' | 'def'
+  let mode = $state<Mode>('difficulty')
+  const MODES: { key: Mode; label: string; hint: string }[] = [
+    { key: 'difficulty', label: 'Overall', hint: 'blend of both' },
+    { key: 'att', label: 'Attack', hint: 'ease of scoring' },
+    { key: 'def', label: 'Defence', hint: 'ease of a clean sheet' },
+  ]
+  const diffOf = (f: TeamFixture): number => (f[mode] ?? f.difficulty) as number
+
   // Union of every GW any team plays in — so doubles/blanks don't shift the grid.
   const gws = $derived(
     [...new Set(Object.values(fixtures).flatMap((v) => v.fixtures.map((f) => f.gw)))].sort(
@@ -24,7 +35,7 @@
         const played = v.fixtures.length
         // ease = mean difficulty, with blanks penalised and doubles rewarded so
         // the sort still means "best run" once BGWs/DGWs appear.
-        const sumDiff = v.fixtures.reduce((s, f) => s + f.difficulty, 0)
+        const sumDiff = v.fixtures.reduce((s, f) => s + diffOf(f), 0)
         const blanks = cells.filter((c) => c.length === 0).length
         const ease = (sumDiff + blanks * 6) / (gws.length || 1)
         return { short, cells, played, blanks, doubles: cells.filter((c) => c.length > 1).length, ease }
@@ -34,9 +45,21 @@
 </script>
 
 <div class="rise">
-  <div class="flex items-center justify-between mb-3">
+  <div class="flex items-center justify-between mb-3 gap-2 flex-wrap">
     <h2 class="font-bold text-lg">Fixture ticker</h2>
-    <span class="text-xs text-muted">xGC-based difficulty · easiest run → hardest</span>
+    <div class="flex items-center gap-2">
+      <div class="inline-flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5">
+        {#each MODES as m}
+          <button
+            onclick={() => (mode = m.key)}
+            title={m.hint}
+            class="px-2.5 py-1 rounded-md text-xs font-bold transition
+              {mode === m.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+          >{m.label}</button>
+        {/each}
+      </div>
+      <span class="text-xs text-muted hidden sm:inline">{MODES.find((m) => m.key === mode)?.hint} · easiest → hardest</span>
+    </div>
   </div>
 
   <div class="card overflow-x-auto">
@@ -59,7 +82,7 @@
           {:else}
             <div class="m-0.5 flex flex-col gap-0.5">
               {#each cell as f}
-                <div class="fdr-{f.difficulty} rounded text-center py-1.5" title="{f.opp} {f.home ? 'Home' : 'Away'} · difficulty {f.difficulty}">
+                <div class="fdr-{diffOf(f)} rounded text-center py-1.5" title="{f.opp} {f.home ? 'Home' : 'Away'} · difficulty {diffOf(f)}">
                   <div class="text-[11px] font-bold leading-none">{f.opp}</div>
                   <div class="text-[8px] opacity-80 leading-none mt-0.5">{f.home ? 'H' : 'A'}</div>
                 </div>

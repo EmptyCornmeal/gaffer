@@ -25,6 +25,8 @@ export interface TeamFixture {
   opp: string
   home: boolean
   difficulty: number
+  att?: number
+  def?: number
 }
 
 export interface PricePred {

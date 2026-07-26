@@ -220,21 +220,33 @@ def build_fixtures(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict
 
     per_team: dict[int, list[dict[str, Any]]] = {tid: [] for tid in teams}
 
-    def difficulty(team_id: int, opp: int, home: bool) -> int:
-        """1 (easy) .. 5 (hard): expected goals conceded by this team vs opp."""
+    def def_difficulty(team_id: int, opp: int, home: bool) -> int:
+        """1 (easy) .. 5 (hard) to keep a clean sheet: expected goals conceded."""
         lam = ctx.expected_conceded(team_id, opp, home)
-        # map ~0.6..2.2 xGC onto 1..5
         return int(max(1, min(5, round(1 + (lam - 0.6) / 0.4))))
+
+    def att_difficulty(opp: int, home: bool) -> int:
+        """1 (easy) .. 5 (hard) to score: the opponent-defence multiplier, inverted
+        (a high attack multiplier = a soft defence = easy = 1)."""
+        mult = ctx.attack_multiplier(opp, home)  # ~0.6 (hard) .. 1.7 (easy)
+        return int(max(1, min(5, round(1 + (1.7 - mult) / 0.275))))
 
     for r in rows:
         sides = ((r["team_h"], r["team_a"], True), (r["team_a"], r["team_h"], False))
         for team_id, opp, home in sides:
+            att = att_difficulty(opp, home)
+            dfc = def_difficulty(team_id, opp, home)
             per_team[team_id].append(
                 {
                     "gw": r["gw"],
                     "opp": teams[opp]["short"],
                     "home": home,
-                    "difficulty": difficulty(team_id, opp, home),
+                    # `difficulty` stays the overall (attack+defence) blend so the
+                    # per-player fixture strips are unchanged; att/def let the ticker
+                    # split scoring vs clean-sheet ease (Scoriness/Porosity).
+                    "difficulty": int(round((att + dfc) / 2)),
+                    "att": att,
+                    "def": dfc,
                 }
             )
     return {
