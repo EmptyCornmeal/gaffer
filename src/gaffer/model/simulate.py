@@ -61,11 +61,16 @@ def _sample_fixture(r: dict[str, float], n: int, rng: np.random.Generator) -> np
 
 
 def _summarise(totals: np.ndarray) -> dict[str, float]:
+    mean = round(float(totals.mean()), 2)
+    floor = round(float(np.percentile(totals, 25)), 1)  # a bad-but-plausible week
+    ceiling = round(float(np.percentile(totals, 90)), 1)  # the upside you captain for
+    # For low-minutes players the percentiles collapse to a point and rounding can
+    # leave floor>mean or mean>ceiling; keep the invariant floor ≤ mean ≤ ceiling.
     return {
-        "mean": round(float(totals.mean()), 2),
-        "floor": round(float(np.percentile(totals, 25)), 1),   # a bad-but-plausible week
-        "ceiling": round(float(np.percentile(totals, 90)), 1),  # the upside you captain for
-        "boom": round(float((totals >= 10).mean()) * 100, 1),   # P(double-digit haul)
+        "mean": mean,
+        "floor": round(min(floor, mean), 1),
+        "ceiling": round(max(ceiling, mean), 1),
+        "boom": round(float((totals >= 10).mean()) * 100, 1),  # P(double-digit haul)
         "std": round(float(totals.std()), 2),
     }
 

@@ -3,8 +3,28 @@
   import { playerPhoto } from '../lib/img'
   import Crest from './Crest.svelte'
   import FixtureStrip from './FixtureStrip.svelte'
+  import Icon from './Icon.svelte'
 
   let { player, onclose }: { player: Player | null; onclose: () => void } = $props()
+
+  // Focus management: focus the close button on open, and trap Tab inside the
+  // dialog so keyboard focus can't wander to the page behind it (WCAG 2.4.3).
+  let closeBtn = $state<HTMLButtonElement | null>(null)
+  let card = $state<HTMLElement | null>(null)
+  $effect(() => {
+    if (player) closeBtn?.focus()
+  })
+  function trap(e: KeyboardEvent) {
+    if (e.key !== 'Tab' || !card) return
+    const f = card.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+    if (!f.length) return
+    const first = f[0]
+    const last = f[f.length - 1]
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+  }
 
   const parts = $derived(
     player
@@ -39,11 +59,19 @@
     aria-modal="true"
     aria-label="{player.name} details"
   >
-    <button class="absolute inset-0 bg-black/60" aria-label="close" onclick={onclose}></button>
+    <button class="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-label="Close" onclick={onclose}></button>
     <div
+      bind:this={card}
+      onkeydown={trap}
       class="relative w-full sm:max-w-lg card rounded-t-2xl sm:rounded-2xl p-5 rise max-h-[88vh] overflow-y-auto"
     >
       <div class="w-10 h-1 rounded-full bg-line2 mx-auto mb-4 sm:hidden"></div>
+      <button
+        bind:this={closeBtn}
+        onclick={onclose}
+        aria-label="Close"
+        class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-bg2 border border-line text-muted hover:text-text flex items-center justify-center"
+      ><Icon name="x" size={16} /></button>
 
       <div class="flex items-start gap-3">
         {#if photo && !photoBroken}

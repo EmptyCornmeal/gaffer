@@ -1,12 +1,13 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
+  import Icon from '../components/Icon.svelte'
   let { bundle }: { bundle: Bundle } = $props()
   const bt = $derived(bundle.backtest)
   const gain = $derived(bt ? Math.round(((bt.rank_corr.ml - bt.rank_corr.gaffer) / bt.rank_corr.gaffer) * 100) : 0)
 </script>
 
 <div class="rise max-w-4xl">
-  <h2 class="font-bold text-lg mb-1">📊 Model Accuracy — backtested</h2>
+  <h2 class="font-bold text-lg mb-1 flex items-center gap-2"><Icon name="target" size={18} /> Model Accuracy — backtested</h2>
   <p class="text-sm text-muted mb-4">
     We hold ourselves accountable. Every method below was tested on a season it
     never trained on — no tool should ask you to trust a number it can't stand behind.
@@ -23,7 +24,7 @@
 
     <!-- the Phase-2 headline -->
     <div class="card p-4 mb-4 border-brand/40 bg-brand/8">
-      <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-1">🤖 The trained model (Phase 2) is here</div>
+      <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-1 flex items-center gap-1.5"><Icon name="zap" size={13} /> The trained model (Phase 2) is here</div>
       <p class="text-[15px] text-text">
         A gradient-boosted model trained on <b>{bt.trained_on}</b> and tested on
         <b>{bt.season}</b> (never seen in training) beats the transparent heuristic on

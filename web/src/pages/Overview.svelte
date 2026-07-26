@@ -5,7 +5,7 @@
   import FixtureStrip from '../components/FixtureStrip.svelte'
   import Icon from '../components/Icon.svelte'
   import { mdLite } from '../lib/mdlite'
-  import { loadCurrent, lineupErrors, formationOf, planPoints } from '../lib/squad'
+  import { loadCurrent, lineupErrors, formationOf, planPoints, captainScore } from '../lib/squad'
   import { generateTeamBrief } from '../lib/teamBrief'
 
   let { bundle, onpick, onnav }: { bundle: Bundle; onpick: (id: number) => void; onnav: (r: string) => void } = $props()
@@ -36,7 +36,9 @@
   const showYourBrief = $derived(view === 'your' && planValid)
   const P = $derived(bundle.players)
 
-  const topCaptains = $derived([...P].sort((a, b) => b.next_gw_xp - a.next_gw_xp).slice(0, 5))
+  // EO-aware so the widget agrees with the model/verdict (the rank-safe armband,
+  // e.g. Haaland), not a raw-points list that would omit him.
+  const topCaptains = $derived([...P].sort((a, b) => captainScore(b) - captainScore(a)).slice(0, 5))
   const bestValue = $derived(
     [...P]
       .filter((p) => p.p_start > 0.6 && p.price >= 4.5)

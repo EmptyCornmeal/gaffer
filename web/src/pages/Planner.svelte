@@ -177,15 +177,15 @@
   const sortedStart = $derived([...starters].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]))
 </script>
 
-<div class="grid lg:grid-cols-2 gap-4 rise">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 rise">
   <!-- LEFT: your squad -->
-  <div class="flex flex-col gap-3">
+  <div class="flex flex-col gap-3 min-w-0">
     <div class="card p-3">
       <div class="flex items-center justify-between mb-1 gap-2 flex-wrap">
         <h2 class="font-bold">Squad Planner</h2>
         <div class="flex gap-2 flex-wrap">
           <button class="btn text-xs" onclick={importTeam}>Import my team</button>
-          <div class="inline-flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Load the model's optimal squad for a planning window">
+          <div class="flex flex-wrap items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Load the model's optimal squad for a planning window">
             <span class="text-[10px] uppercase text-muted px-1.5 font-bold">Optimal</span>
             {#each HORIZONS as o}
               <button
@@ -195,7 +195,7 @@
               >{o.label}</button>
             {/each}
           </div>
-          <div class="inline-flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
+          <div class="flex flex-wrap items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
             {#each RISKS as o}
               <button
                 onclick={() => loadOptimal(optimalHorizon, o.key)}
@@ -204,7 +204,7 @@
               >{o.label}</button>
             {/each}
           </div>
-          <button class="btn-ghost btn text-xs" onclick={autofill} disabled={squad.length < 11}>Auto-pick XI</button>
+          <button class="btn-ghost btn text-xs" onclick={autofill} disabled={squad.length < 11} title="Pick the best starting XI + captain from your current 15 (doesn't change your squad)">Auto-pick XI</button>
           <button class="btn-ghost btn text-xs" onclick={clearAll}>Clear</button>
         </div>
       </div>
@@ -212,12 +212,12 @@
       {#if importMsg}<div class="text-xs chip-info rounded px-2 py-1 mb-2">{importMsg}</div>{/if}
 
       <!-- budget + counts -->
-      <div class="flex items-center gap-3 text-sm mb-1">
-        <span class="text-muted">Budget</span>
-        <div class="flex-1 h-2 rounded-full bg-bg3 overflow-hidden">
+      <div class="flex items-center gap-3 text-sm mb-1 min-w-0">
+        <span class="text-muted shrink-0">Budget</span>
+        <div class="flex-1 min-w-0 h-2 rounded-full bg-bg3 overflow-hidden">
           <div class="h-full {t.cost > BUDGET ? 'bg-red' : 'bg-brand'}" style="width:{Math.min(100, (t.cost / BUDGET) * 100)}%"></div>
         </div>
-        <span class="tabular-nums {BUDGET - t.cost < 0 ? 'text-red' : ''}">£{t.cost.toFixed(1)} / {BUDGET}m</span>
+        <span class="tabular-nums shrink-0 whitespace-nowrap {BUDGET - t.cost < 0 ? 'text-red' : ''}">£{t.cost.toFixed(1)} / {BUDGET}m</span>
       </div>
       <div class="flex gap-3 text-xs text-muted">
         {#each ['GKP', 'DEF', 'MID', 'FWD'] as pos}
@@ -235,9 +235,9 @@
       {/if}
 
       <!-- save / load plans -->
-      <div class="mt-3 flex items-center gap-2">
-        <input bind:value={planName} placeholder="Plan name" class="flex-1 rounded-lg bg-bg2 border border-line px-3 py-1.5 text-sm focus:outline-none focus:border-accent" />
-        <button class="btn text-xs" onclick={doSave}>Save plan</button>
+      <div class="mt-3 flex items-center gap-2 flex-wrap">
+        <input bind:value={planName} placeholder="Plan name" aria-label="Plan name" class="flex-1 min-w-[7rem] rounded-lg bg-bg2 border border-line px-3 py-1.5 text-sm focus:outline-none focus:border-accent" />
+        <button class="btn text-xs shrink-0" onclick={doSave}>Save plan</button>
       </div>
       {#if plans.length}
         <div class="mt-2 flex flex-wrap gap-1.5">
@@ -306,10 +306,10 @@
   </div>
 
   <!-- RIGHT: picker -->
-  <div class="flex flex-col gap-3">
-    <div class="flex gap-2">
-      <input bind:value={query} placeholder="Add players… (accent-insensitive)" class="flex-1 rounded-lg bg-card border border-line px-3 py-1.5 text-sm focus:outline-none focus:border-accent" />
-      <div class="flex gap-1">
+  <div class="flex flex-col gap-3 min-w-0">
+    <div class="flex flex-wrap gap-2">
+      <input bind:value={query} placeholder="Add players… (accent-insensitive)" class="flex-1 min-w-[8rem] rounded-lg bg-card border border-line px-3 py-1.5 text-sm focus:outline-none focus:border-accent" />
+      <div class="flex flex-wrap gap-1">
         {#each ['ALL', 'GKP', 'DEF', 'MID', 'FWD'] as p}
           <button onclick={() => (pickPos = p as 'ALL' | Pos)} class="px-2 py-1 rounded-lg text-xs font-bold border {pickPos === p ? 'bg-accent/15 text-accent-light border-accent/40' : 'bg-card border-line text-muted'}">{p}</button>
         {/each}

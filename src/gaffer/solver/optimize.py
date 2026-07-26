@@ -39,6 +39,12 @@ RISK_WEIGHTS = {"differential": 0.0, "balanced": 8.0, "template": 11.0}
 # horizon consistently.
 CEILING_WEIGHT = 0.30
 
+# Budget-keeper lean: the consensus is a cheap playing GK (£4.5) + a £4.0 bench,
+# spending the saving outfield — a premium keeper's ~1pt/season edge rarely beats
+# what that £1.5m buys elsewhere. Penalise GK spend above the £4.5 tier so the
+# solver only takes a pricier keeper when he's clearly worth it. (per £0.1m)
+GK_SPEND_PENALTY = 0.10
+
 
 @dataclass
 class Player:
@@ -184,6 +190,13 @@ def optimise(
             start[i] * upside[i] for i in ids
         )
         obj += CEILING_WEIGHT * 2.0 * pulp.lpSum(cap[i] * upside[i] for i in ids)
+
+    # --- budget-keeper lean (scaled by horizon so it stays proportional to value)
+    obj -= GK_SPEND_PENALTY * horizon_factor * pulp.lpSum(
+        squad[i] * max(0, players[i].price - 45)
+        for i in ids
+        if players[i].position == "GKP"
+    )
 
     hits_var = None
     if have_squad:

@@ -74,15 +74,18 @@
 
   <h3 class="font-bold text-sm text-muted mb-2">Settings</h3>
 
-  <div class="block text-xs text-muted mb-1">FPL Entry ID</div>
+  <label for="fpl-entry-id" class="block text-xs text-muted mb-1">FPL Entry ID</label>
   <input
+    id="fpl-entry-id"
     bind:value={entry}
+    inputmode="numeric"
     placeholder="e.g. 1234567 or paste team URL"
     class="w-full rounded-lg bg-card border border-line px-3 py-2 text-sm mb-3 focus:outline-none focus:border-accent"
   />
 
-  <div class="block text-xs text-muted mb-1">Classic League IDs</div>
+  <label for="fpl-league-ids" class="block text-xs text-muted mb-1">Classic League IDs</label>
   <input
+    id="fpl-league-ids"
     bind:value={leagues}
     placeholder="e.g. 12345, 67890"
     class="w-full rounded-lg bg-card border border-line px-3 py-2 text-sm mb-3 focus:outline-none focus:border-accent"

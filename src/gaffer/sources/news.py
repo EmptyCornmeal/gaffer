@@ -91,13 +91,16 @@ def fetch_transfer_news(
     seen: set[str] = set()
     deduped = []
     for it in items:
-        key = it["title"].lower()
-        if key in seen:
+        # Dedup by link first (two feeds/rewordings can share one story with
+        # different titles — e.g. "X signs Y" vs "Y completes switch"), then title.
+        key = (it["link"].strip().lower() or it["title"].lower())
+        if key in seen or it["title"].lower() in seen:
             continue
         if kws is not None:
             hay = f"{it['title']} {it['summary']}".lower()
             if not any(k in hay for k in kws):
                 continue
         seen.add(key)
+        seen.add(it["title"].lower())
         deduped.append(it)
     return deduped[:limit]

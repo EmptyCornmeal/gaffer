@@ -103,4 +103,11 @@ export function getTheme(): 'dark' | 'light' {
 export function setTheme(t: 'dark' | 'light') {
   safeLS.set(LS.theme, t)
   document.documentElement.setAttribute('data-theme', t)
+  // keep the mobile browser-chrome colour in sync with the theme
+  try {
+    const m = document.querySelector('meta[name="theme-color"]')
+    if (m) m.setAttribute('content', t === 'light' ? '#eef2f7' : '#080e1a')
+  } catch {
+    /* ignore */
+  }
 }

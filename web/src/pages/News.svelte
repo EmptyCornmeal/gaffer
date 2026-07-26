@@ -1,14 +1,15 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
   import { mdLite } from '../lib/mdlite'
+  import Icon from '../components/Icon.svelte'
 
   let { bundle }: { bundle: Bundle } = $props()
   const news = $derived(bundle.news)
 </script>
 
-<div class="rise flex flex-col gap-4">
+<div class="rise flex flex-col gap-4 max-w-3xl">
   <div class="flex items-center justify-between">
-    <h2 class="font-bold text-lg">📰 Transfer News</h2>
+    <h2 class="font-bold text-lg flex items-center gap-2"><Icon name="news" size={18} /> Transfer News</h2>
     {#if news}<span class="text-xs text-muted2">{news.count} stories · {news.source.startsWith('ai') ? 'AI digest' : 'headline feed'}</span>{/if}
   </div>
 

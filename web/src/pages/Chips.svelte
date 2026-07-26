@@ -2,6 +2,7 @@
   import type { Bundle } from '../lib/data'
   import type { Player } from '../lib/types'
   import { loadCurrent, lineupErrors } from '../lib/squad'
+  import Icon from '../components/Icon.svelte'
 
   let { bundle, onnav }: { bundle: Bundle; onnav: (r: string) => void } = $props()
 
@@ -54,7 +55,7 @@
 
 <div class="rise flex flex-col gap-4 max-w-4xl">
   <div>
-    <h2 class="font-bold text-lg">♟️ Chip Strategy</h2>
+    <h2 class="font-bold text-lg flex items-center gap-2"><Icon name="layers" size={18} /> Chip Strategy</h2>
     <p class="text-sm text-muted">
       Best gameweeks to play each chip across the next {gws.length}, based on your
       {planValid ? 'team' : "team (showing the model squad — build yours in the Planner)"}'s
@@ -65,17 +66,17 @@
   <!-- chip recommendations -->
   <div class="grid sm:grid-cols-3 gap-3">
     <div class="card p-3">
-      <div class="text-xs font-bold uppercase text-brand-light mb-1">🅲 Triple Captain</div>
+      <div class="text-xs font-bold uppercase text-brand-light mb-1">Triple Captain</div>
       <div class="text-2xl font-black">GW{tc?.gw}</div>
       <div class="text-sm text-muted">{tc?.bestCap.name} projects {tc?.bestCap.xp.toFixed(1)} — highest ceiling.</div>
     </div>
     <div class="card p-3">
-      <div class="text-xs font-bold uppercase text-accent-light mb-1">🅱 Bench Boost</div>
+      <div class="text-xs font-bold uppercase text-accent-light mb-1">Bench Boost</div>
       <div class="text-2xl font-black">GW{bb?.gw}</div>
       <div class="text-sm text-muted">Bench adds ~{bb?.bench.toFixed(1)} pts — your strongest bench week.</div>
     </div>
     <div class="card p-3">
-      <div class="text-xs font-bold uppercase text-yellow mb-1">🅵 Free Hit</div>
+      <div class="text-xs font-bold uppercase text-yellow mb-1">Free Hit</div>
       <div class="text-2xl font-black">GW{fh?.gw}</div>
       <div class="text-sm text-muted">Weakest XI week (~{fh?.starters.toFixed(1)}) — a candidate to field a one-off side.</div>
     </div>

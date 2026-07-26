@@ -72,7 +72,9 @@ def build_meta(conn: sqlite3.Connection, model_version: str) -> dict[str, Any]:
     meta = {}
     for k in keys:
         row = conn.execute("SELECT value FROM meta WHERE key=?", (k,)).fetchone()
-        meta[k] = row["value"] if row else None
+        v = row["value"] if row else None
+        # str(None)/empty from unset entry fields → real null (never leak "None")
+        meta[k] = None if v in (None, "", "None") else v
     meta["model_version"] = model_version
     meta["generated_at"] = datetime.now(UTC).isoformat(timespec="seconds")
     meta["season"] = config.SEASON
@@ -227,9 +229,10 @@ def build_fixtures(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict
 
     def att_difficulty(opp: int, home: bool) -> int:
         """1 (easy) .. 5 (hard) to score: the opponent-defence multiplier, inverted
-        (a high attack multiplier = a soft defence = easy = 1)."""
-        mult = ctx.attack_multiplier(opp, home)  # ~0.6 (hard) .. 1.7 (easy)
-        return int(max(1, min(5, round(1 + (1.7 - mult) / 0.275))))
+        (a high attack multiplier = a soft defence = easy = 1). Mapped over the full
+        de-compressed multiplier range so every 1-5 bucket is reachable."""
+        mult = ctx.attack_multiplier(opp, home)  # ~0.5 (hard) .. 1.85 (easy)
+        return int(max(1, min(5, round(1 + (1.85 - mult) / 0.34))))
 
     for r in rows:
         sides = ((r["team_h"], r["team_a"], True), (r["team_a"], r["team_h"], False))

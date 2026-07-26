@@ -9,7 +9,6 @@
   let leagueIds = $state(getLeagueIds())
   let active = $state(0)
   let phase = $state<'idle' | 'loading' | 'ok' | 'error' | 'nosetup'>('idle')
-  let msg = $state('')
   let name = $state('')
   let rows = $state<LeagueStanding[]>([])
   let preseason = $state(false)
@@ -60,9 +59,8 @@
         }
         phase = 'ok'
       })
-      .catch((e) => {
+      .catch(() => {
         phase = 'error'
-        msg = String(e?.message ?? e)
       })
   })
 
@@ -191,7 +189,10 @@
     {#if phase === 'loading'}
       <div class="flex justify-center py-24 text-muted"><div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div></div>
     {:else if phase === 'error'}
-      <div class="card p-6 text-center"><h2 class="font-bold">Couldn't load league</h2><p class="text-xs text-muted2 mt-1">{msg}</p></div>
+      <div class="card p-6 text-center rise max-w-lg mx-auto">
+        <h2 class="font-bold">Couldn't load that league</h2>
+        <p class="text-sm text-muted mt-2">Double-check your <b>Classic League ID</b> in Settings — it's the number in your league's URL on the FPL site.</p>
+      </div>
     {:else if phase === 'ok'}
       <div class="flex items-center gap-2 flex-wrap">
         <h2 class="font-bold text-lg">{name}</h2>

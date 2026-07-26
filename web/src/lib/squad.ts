@@ -114,7 +114,16 @@ export function formationOf(squad: Player[], starterIds: number[]): string {
   return `${by.DEF}-${by.MID}-${by.FWD}`
 }
 
-/** Auto-pick the best legal XI + captain/vice from the 15 (by expected points). */
+// Captaincy is EO-aware to match the model/solver + the verdict: a heavily-owned
+// premium is the rank-safe armband even when a differential out-projects it on
+// raw points. Without this the UI captained by raw xP (Bruno) while the verdict
+// said Haaland — a self-contradiction. Weight ~ the solver's balanced stance.
+const CAPTAIN_EO_WEIGHT = 8
+export function captainScore(p: Player): number {
+  return p.next_gw_xp * (1 + CAPTAIN_EO_WEIGHT * ((p.owned_by || 0) / 100))
+}
+
+/** Auto-pick the best legal XI (by expected points) + EO-aware captain/vice. */
 export function autoLineup(squad: Player[]): { starters: number[]; captainId: number; viceId: number } {
   const by: Record<Pos, Player[]> = { GKP: [], DEF: [], MID: [], FWD: [] }
   for (const p of squad) by[p.pos].push(p)
@@ -133,7 +142,7 @@ export function autoLineup(squad: Player[]): { starters: number[]; captainId: nu
   }
   const ranked = squad
     .filter((p) => best.ids.includes(p.id))
-    .sort((a, b) => b.next_gw_xp - a.next_gw_xp)
+    .sort((a, b) => captainScore(b) - captainScore(a))
   return {
     starters: best.ids,
     captainId: ranked[0]?.id ?? -1,

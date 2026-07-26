@@ -83,9 +83,10 @@
     <input
       bind:value={q}
       placeholder="Search players…"
+      aria-label="Search players"
       class="w-full rounded-lg bg-card border border-line px-3 py-1.5 text-sm placeholder:text-muted2 focus:outline-none focus:border-accent"
     />
-    {#if results.length}
+    {#if q.length >= 2}
       <div class="absolute right-0 mt-1 w-64 card shadow-xl z-50 overflow-hidden">
         {#each results as p}
           <button
@@ -96,6 +97,9 @@
             <span class="text-brand-light font-bold tabular-nums">{p.next_gw_xp.toFixed(1)}</span>
           </button>
         {/each}
+        {#if results.length === 0}
+          <div class="px-3 py-2 text-sm text-muted2">No players found</div>
+        {/if}
       </div>
     {/if}
   </div>

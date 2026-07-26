@@ -8,7 +8,10 @@
 
   let query = $state('')
   let pos = $state<'ALL' | Pos>('ALL')
-  let maxPrice = $state(15)
+  // Cap tracks the actual most-expensive player so premiums (Haaland £15.5) are
+  // never clamped out of the list — the old fixed max=15 hid him entirely.
+  const priceCap = Math.max(15, ...players.map((p) => p.price))
+  let maxPrice = $state(priceCap)
   let onlyStarters = $state(false)
   let sortKey = $state<keyof Player | 'value'>('next_gw_xp')
   let sortDir = $state<1 | -1>(-1)
@@ -36,16 +39,20 @@
       sortDir = -1
     }
   }
-  const rows = $derived(
+  const filtered = $derived(
     players
       .filter((p) => pos === 'ALL' || p.pos === pos)
       .filter((p) => p.price <= maxPrice)
       .filter((p) => !onlyStarters || p.p_start >= 0.6)
       .filter((p) => matches(p, query))
       .slice()
-      .sort((a, b) => (val(a, sortKey) - val(b, sortKey)) * sortDir)
-      .slice(0, 100),
+      .sort((a, b) =>
+        sortKey === 'name'
+          ? a.name.localeCompare(b.name) * -sortDir
+          : (val(a, sortKey) - val(b, sortKey)) * sortDir,
+      ),
   )
+  const rows = $derived(filtered.slice(0, 200))
 </script>
 
 <div class="flex flex-col gap-3 rise">
@@ -58,12 +65,12 @@
     </div>
     <label class="flex items-center gap-2 text-xs text-muted">
       max £{maxPrice.toFixed(1)}
-      <input type="range" min="4" max="15" step="0.5" bind:value={maxPrice} class="accent-brand" />
+      <input type="range" min="4" max={priceCap} step="0.5" bind:value={maxPrice} class="accent-brand" />
     </label>
     <label class="flex items-center gap-1.5 text-xs text-muted">
       <input type="checkbox" bind:checked={onlyStarters} class="accent-brand" /> likely starters
     </label>
-    <span class="text-xs text-muted2 ml-auto">{rows.length} shown</span>
+    <span class="text-xs text-muted2 ml-auto">{filtered.length} of {players.length}{filtered.length > rows.length ? ` (top ${rows.length})` : ''}</span>
   </div>
 
   <div class="card overflow-x-auto">
@@ -103,7 +110,7 @@
               {:else if p.price_pred.dir === 'down'}<span class="text-red ml-0.5" title="Price falling">▼</span>{/if}
             </td>
             <td class="text-muted">{p.owned_by}</td>
-            <td class="text-muted">{p.form.toFixed(1)}</td>
+            <td class="text-muted">{p.form ? p.form.toFixed(1) : '—'}</td>
             <td class="text-muted">{p.ict.toFixed(0)}</td>
             <td class="text-muted">{p.xgi90.toFixed(2)}</td>
             <td class="{p.defcon && p.defcon.p_hit >= 0.5 ? 'text-brand-light font-semibold' : 'text-muted'}">
@@ -112,6 +119,9 @@
             </td>
           </tr>
         {/each}
+        {#if rows.length === 0}
+          <tr><td colspan="11" class="!text-center text-muted py-6">No players match — try a different search or raise the price filter.</td></tr>
+        {/if}
       </tbody>
     </table>
   </div>
