@@ -180,6 +180,7 @@ export interface PlanStep {
   free_transfers: number
   hits: number
   captain: RecPlayer
+  vice: RecPlayer
   transfers_in: RecPlayer[]
   transfers_out: RecPlayer[]
   starting: RecPlayer[]

@@ -39,6 +39,21 @@ FT_CAP = 5                 # max rollable free transfers (2026/27 rule)
 # so the plan doesn't churn the squad for zero benefit (e.g. in the final week,
 # where a banked FT has no future value). Far below any genuine transfer gain.
 TRANSFER_EPS = 0.05
+# Soft weights: value a stronger bench (in case of a start not happening) and a
+# strong vice-captain (armband insurance), without letting them outweigh the XI.
+BENCH_WEIGHT = 0.15
+VICE_WEIGHT = 0.10
+
+
+def _pick_solver():
+    """Prefer HiGHS (faster on the multi-week binary model); fall back to CBC."""
+    try:
+        s = pulp.HiGHS_CMD(msg=False)
+        if s.available():
+            return s
+    except Exception:  # HiGHS not installed / not on PATH
+        pass
+    return pulp.PULP_CBC_CMD(msg=False)
 # Pool sizes per position — enough to find real moves, small enough to solve fast.
 POOL = {"GKP": 6, "DEF": 40, "MID": 45, "FWD": 25}
 
@@ -62,6 +77,7 @@ class GwStep:
     squad: list[int]
     starting: list[int]
     captain: int
+    vice: int
     transfers_in: list[int]
     transfers_out: list[int]
     hits: int
@@ -148,6 +164,7 @@ def optimise_path(
     sq = {(i, w): pulp.LpVariable(f"sq_{i}_{w}", cat="Binary") for i in ids for w in W}
     st = {(i, w): pulp.LpVariable(f"st_{i}_{w}", cat="Binary") for i in ids for w in W}
     cap = {(i, w): pulp.LpVariable(f"cp_{i}_{w}", cat="Binary") for i in ids for w in W}
+    vic = {(i, w): pulp.LpVariable(f"vc_{i}_{w}", cat="Binary") for i in ids for w in W}
     buy = {(i, w): pulp.LpVariable(f"by_{i}_{w}", cat="Binary") for i in ids for w in W}
     sell = {(i, w): pulp.LpVariable(f"sl_{i}_{w}", cat="Binary") for i in ids for w in W}
     # free transfers available entering week w, and paid (hit) transfers in week w
@@ -163,6 +180,8 @@ def optimise_path(
         decay = HORIZON_DECAY ** w
         obj.append(decay * pulp.lpSum(st[i, w] * ep(i, w) for i in ids))
         obj.append(decay * pulp.lpSum(cap[i, w] * ep(i, w) for i in ids))  # captain doubles
+        obj.append(decay * VICE_WEIGHT * pulp.lpSum(vic[i, w] * ep(i, w) for i in ids))
+        obj.append(decay * BENCH_WEIGHT * pulp.lpSum((sq[i, w] - st[i, w]) * ep(i, w) for i in ids))
         obj.append(-config.HIT_COST * paid[w])
         obj.append(decay * FT_VALUE * ft[w])  # value carrying a free transfer
         obj.append(-TRANSFER_EPS * decay * pulp.lpSum(buy[i, w] for i in ids))  # friction
@@ -182,10 +201,13 @@ def optimise_path(
             prob += st[i, w] <= sq[i, w]
             if players[i].position == "GKP" and players[i].price < 45:
                 prob += st[i, w] == 0  # never start a £4.0 backup keeper
-        # captain
+        # captain + vice (distinct starters)
         prob += pulp.lpSum(cap[i, w] for i in ids) == 1
+        prob += pulp.lpSum(vic[i, w] for i in ids) == 1
         for i in ids:
             prob += cap[i, w] <= st[i, w]
+            prob += vic[i, w] <= st[i, w]
+            prob += cap[i, w] + vic[i, w] <= 1  # captain ≠ vice
         # club limit + budget
         for t in teams:
             prob += pulp.lpSum(sq[i, w] for i in ids if players[i].team_id == t) <= club_limit
@@ -220,7 +242,7 @@ def optimise_path(
             prob += ft[w + 1] <= ft[w] - (tm - paid[w]) + 1
             prob += ft[w + 1] <= FT_CAP
 
-    prob.solve(pulp.PULP_CBC_CMD(msg=False))
+    prob.solve(_pick_solver())
     status = pulp.LpStatus[prob.status]
     if status != "Optimal":
         return Plan(steps=[], total_expected=0.0, status=status, meta={"reason": "infeasible"})
@@ -233,6 +255,10 @@ def optimise_path(
         squad_w = chosen(sq, w)
         start_w = chosen(st, w)
         cap_w = next((i for i in ids if cap[i, w].value() and cap[i, w].value() > 0.5), start_w[0])
+        vic_w = next(
+            (i for i in ids if vic[i, w].value() and vic[i, w].value() > 0.5),
+            next((i for i in start_w if i != cap_w), cap_w),
+        )
         t_in = chosen(buy, w)
         t_out = chosen(sell, w)
         # week 0 in build mode is the initial assembly, not "transfers"
@@ -240,7 +266,7 @@ def optimise_path(
             t_in, t_out = [], []
         xi = sum(ep(i, w) for i in start_w) + ep(cap_w, w)
         steps.append(GwStep(
-            gw=gws[w], squad=squad_w, starting=start_w, captain=cap_w,
+            gw=gws[w], squad=squad_w, starting=start_w, captain=cap_w, vice=vic_w,
             transfers_in=t_in, transfers_out=t_out,
             hits=int(round(paid[w].value() or 0)),
             free_transfers=int(round(ft[w].value() or 0)),

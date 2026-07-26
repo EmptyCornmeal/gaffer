@@ -505,6 +505,7 @@ def build_plan(plan: Any, players_index: list[dict[str, Any]]) -> dict[str, Any]
             "free_transfers": s.free_transfers,
             "hits": s.hits,
             "captain": _rec_card(s.captain, idx),
+            "vice": _rec_card(s.vice, idx),
             "transfers_in": cards(s.transfers_in),
             "transfers_out": cards(s.transfers_out),
             "starting": cards(s.starting),
