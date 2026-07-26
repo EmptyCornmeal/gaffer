@@ -1,5 +1,5 @@
 import type {
-  Backtest, Fixtures, Meta, MyTeam, News, Player, Recommendation, Verdict,
+  Backtest, Fixtures, Meta, MyTeam, News, Player, Recommendation, TransferPlan, Verdict,
 } from './types'
 
 const BASE = import.meta.env.BASE_URL // './' in prod, '/' in dev
@@ -16,24 +16,26 @@ export interface Bundle {
   fixtures: Fixtures
   recommendation: Recommendation
   myTeam: MyTeam | null
+  plan: TransferPlan | null
   verdict: Verdict | null
   news: News | null
   backtest: Backtest | null
 }
 
 export async function loadBundle(): Promise<Bundle> {
-  const [meta, players, fixtures, recommendation, myTeam, verdict, news, backtest] =
+  const [meta, players, fixtures, recommendation, myTeam, plan, verdict, news, backtest] =
     await Promise.all([
       load<Meta>('meta.json'),
       load<Player[]>('players.json'),
       load<Fixtures>('fixtures.json'),
       load<Recommendation>('recommendation.json'),
       load<MyTeam | null>('my_team.json').catch(() => null),
+      load<TransferPlan | null>('plan.json').catch(() => null),
       load<Verdict | null>('verdict.json').catch(() => null),
       load<News | null>('news.json').catch(() => null),
       load<Backtest | null>('backtest.json').catch(() => null),
     ])
-  return { meta, players, fixtures, recommendation, myTeam, verdict, news, backtest }
+  return { meta, players, fixtures, recommendation, myTeam, plan, verdict, news, backtest }
 }
 
 export function countdown(deadline: string, nowMs: number = Date.now()): string {

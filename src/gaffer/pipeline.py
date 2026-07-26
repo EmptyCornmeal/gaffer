@@ -18,7 +18,7 @@ import time
 from gaffer import config, ingest
 from gaffer.export import artifacts
 from gaffer.model import projection, simulate
-from gaffer.solver import optimize
+from gaffer.solver import multiperiod, optimize
 from gaffer.store import db
 
 
@@ -69,9 +69,20 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
         for h in (1, 3, 5)
     }
 
+    # Multi-GW transfer path: the optimal *sequence* of moves (when to transfer,
+    # roll a free transfer, or take a -4) across a 5-GW window — the planner half
+    # of the engine, distinct from the single-window optimal squad above.
+    plan_horizon = min(5, horizon)
+    plan = multiperiod.optimise_path(conn, from_gw, horizon=plan_horizon, free_transfers=ft)
+    log["plan"] = {
+        "status": plan.status, "mode": plan.meta.get("mode"),
+        "total_expected": plan.total_expected,
+        "moves": sum(len(s.transfers_in) for s in plan.steps),
+    }
+
     written = artifacts.write_all(
         conn, sol, from_gw, horizon, projection.MODEL_VERSION,
-        horizon_solutions=horizon_solutions, distributions=distributions,
+        horizon_solutions=horizon_solutions, distributions=distributions, plan=plan,
     )
     log["artifacts"] = written
 

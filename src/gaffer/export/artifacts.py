@@ -487,6 +487,38 @@ def _summarise(sol: Solution, idx: dict[int, dict]) -> str:
     return f"Transfer: {outs} -> {ins}{hit}. Captain {cap}."
 
 
+def build_plan(plan: Any, players_index: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Serialise a multi-GW transfer path (solver.multiperiod.Plan) for the UI."""
+    if plan is None or not getattr(plan, "steps", None):
+        return None
+    idx = {p["id"]: p for p in players_index}
+
+    def cards(ids: list[int]) -> list[dict[str, Any]]:
+        return [_rec_card(i, idx) for i in ids]
+
+    steps = []
+    for s in plan.steps:
+        bench = [i for i in s.squad if i not in s.starting]
+        steps.append({
+            "gw": s.gw,
+            "xi_expected": s.xi_expected,
+            "free_transfers": s.free_transfers,
+            "hits": s.hits,
+            "captain": _rec_card(s.captain, idx),
+            "transfers_in": cards(s.transfers_in),
+            "transfers_out": cards(s.transfers_out),
+            "starting": cards(s.starting),
+            "bench": cards(bench),
+        })
+    return {
+        "status": plan.status,
+        "mode": plan.meta.get("mode"),
+        "horizon": plan.meta.get("horizon"),
+        "total_expected": plan.total_expected,
+        "steps": steps,
+    }
+
+
 def build_my_team(
     conn: sqlite3.Connection, from_gw: int, players_index: list[dict[str, Any]]
 ) -> dict[str, Any] | None:
@@ -506,6 +538,7 @@ def write_all(
     horizon: int, model_version: str, out_dir: Path | None = None,
     horizon_solutions: dict[int, dict[str, Solution]] | None = None,
     distributions: dict[int, dict[str, float]] | None = None,
+    plan: Any = None,
 ) -> list[str]:
     out_dir = out_dir or config.DATA_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -536,6 +569,7 @@ def write_all(
         "fixtures.json": fixtures,
         "recommendation.json": reco,
         "my_team.json": build_my_team(conn, from_gw, players),
+        "plan.json": build_plan(plan, players),
     }
     written = []
     for fname, data in artifacts.items():

@@ -174,6 +174,26 @@ export interface Recommendation {
   by_horizon?: Record<string, HorizonBlock>
 }
 
+export interface PlanStep {
+  gw: number
+  xi_expected: number
+  free_transfers: number
+  hits: number
+  captain: RecPlayer
+  transfers_in: RecPlayer[]
+  transfers_out: RecPlayer[]
+  starting: RecPlayer[]
+  bench: RecPlayer[]
+}
+
+export interface TransferPlan {
+  status: string
+  mode: string
+  horizon: number
+  total_expected: number
+  steps: PlanStep[]
+}
+
 export type Fixtures = Record<string, { team: string; fixtures: TeamFixture[] }>
 
 export interface MyTeam {

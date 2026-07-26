@@ -15,6 +15,7 @@
   let { bundle, onpick }: { bundle: Bundle; onpick: (id: number) => void } = $props()
 
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
+  const modelPlan = $derived(bundle.plan) // the model's optimal multi-GW transfer path
   const initialPlan = loadCurrent()
   let plan = $state<Plan>(initialPlan)
   let plans = $state<Plan[]>(listPlans())
@@ -194,6 +195,42 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 rise">
   <!-- LEFT: your squad -->
   <div class="flex flex-col gap-3 min-w-0">
+    {#if modelPlan && modelPlan.steps?.length}
+      <div class="card p-3">
+        <div class="flex items-baseline justify-between mb-2 gap-2 flex-wrap">
+          <h2 class="font-bold flex items-center gap-2">Model transfer plan
+            <span class="text-xs text-muted font-normal">next {modelPlan.steps.length} GWs · {modelPlan.total_expected} pts</span>
+          </h2>
+          <span class="text-[10px] chip {modelPlan.mode === 'build' ? 'chip-info' : 'chip-good'}">{modelPlan.mode === 'build' ? 'from scratch' : 'from your team'}</span>
+        </div>
+        <div class="space-y-1.5">
+          {#each modelPlan.steps as s, si}
+            <div class="flex items-start gap-2">
+              <span class="text-[11px] font-bold text-muted w-9 shrink-0 pt-1">GW{s.gw}</span>
+              <div class="flex-1 min-w-0">
+                {#if s.transfers_in.length}
+                  <div class="flex flex-wrap items-center gap-1">
+                    {#each s.transfers_out as p}
+                      <button onclick={() => onpick(p.id)} class="chip chip-bad hover:opacity-80">− {p.name}</button>
+                    {/each}
+                    {#each s.transfers_in as p}
+                      <button onclick={() => onpick(p.id)} class="chip chip-good hover:opacity-80">+ {p.name}</button>
+                    {/each}
+                    {#if s.hits}<span class="text-red text-[11px] font-bold">−{s.hits * 4}</span>{/if}
+                  </div>
+                {:else if si === 0 && modelPlan.mode === 'build'}
+                  <span class="text-xs text-muted">Build the initial 15 (see below)</span>
+                {:else}
+                  <span class="text-xs text-muted">Roll — bank the free transfer (now {s.free_transfers})</span>
+                {/if}
+              </div>
+              <span class="text-[11px] tabular-nums text-brand-light shrink-0 pt-0.5">(C){s.captain.name} · {s.xi_expected}</span>
+            </div>
+          {/each}
+        </div>
+        <p class="text-[10px] text-muted2 mt-2">The optimal <b>sequence</b> of moves — when to transfer, when to bank a free transfer, when a −4 pays — maximising decayed points over the window (a banked FT is valued at ~1.5 pts, so a move must beat that).</p>
+      </div>
+    {/if}
     <div class="card p-3">
       <div class="flex items-center justify-between mb-1 gap-2 flex-wrap">
         <h2 class="font-bold">Squad Planner</h2>
