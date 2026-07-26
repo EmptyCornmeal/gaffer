@@ -27,6 +27,20 @@
   const bench = $derived(squad.filter((p) => !plan.starters.includes(p.id)))
   const xiErrs = $derived(lineupErrors(squad, plan.starters))
   const isValid = $derived(squad.length === 15 && squadErrs.length === 0 && xiErrs.length === 0)
+  // Availability watch: planned players who are flagged (injury/suspension, status
+  // ≠ available) or a rotation risk (xMins badge 'bad'). A plan that leans on a
+  // doubtful asset should say so before the deadline.
+  const flagged = $derived(
+    squad
+      .filter((p) => (p.status && p.status !== 'a') || p.xmins_badge?.kind === 'bad')
+      .map((p) => ({
+        p,
+        reason: p.status && p.status !== 'a'
+          ? (p.news?.trim() || 'flagged — check status')
+          : 'rotation risk',
+        starting: plan.starters.includes(p.id),
+      })),
+  )
 
   $effect(() => saveCurrent(plan))
 
@@ -232,6 +246,17 @@
         <div class="mt-2 text-xs chip-warn rounded px-2 py-1">{[...squadErrs, ...xiErrs].join(' · ')}</div>
       {:else}
         <div class="mt-2 text-xs chip-warn rounded px-2 py-1">Add players ({squad.length}/15){squadErrs.length ? ' · ' + squadErrs.join(' · ') : ''}</div>
+      {/if}
+
+      {#if flagged.length}
+        <div class="mt-2 text-xs chip-warn rounded px-2 py-1.5">
+          <div class="font-bold mb-0.5">⚠ {flagged.length} availability {flagged.length === 1 ? 'flag' : 'flags'} in your squad{flagged.some((f) => f.starting) ? ` · ${flagged.filter((f) => f.starting).length} starting` : ''}</div>
+          {#each flagged as f}
+            <div class="leading-tight">
+              <span class="font-semibold">{f.p.name}</span>{f.starting ? ' (XI)' : ' (bench)'} — {f.reason}
+            </div>
+          {/each}
+        </div>
       {/if}
 
       <!-- save / load plans -->

@@ -13,6 +13,9 @@
   const priceCap = Math.max(15, ...players.map((p) => p.price))
   let maxPrice = $state(priceCap)
   let onlyStarters = $state(false)
+  // Differentials finder: sub-10%-owned players with a real projection, so the
+  // list surfaces punts the crowd hasn't found rather than 0-minute noise.
+  let onlyDiff = $state(false)
   let sortKey = $state<keyof Player | 'value'>('next_gw_xp')
   let sortDir = $state<1 | -1>(-1)
 
@@ -44,6 +47,7 @@
       .filter((p) => pos === 'ALL' || p.pos === pos)
       .filter((p) => p.price <= maxPrice)
       .filter((p) => !onlyStarters || p.p_start >= 0.6)
+      .filter((p) => !onlyDiff || (p.owned_by < 10 && p.next_gw_xp >= 3 && p.p_start >= 0.5))
       .filter((p) => matches(p, query))
       .slice()
       .sort((a, b) =>
@@ -69,6 +73,9 @@
     </label>
     <label class="flex items-center gap-1.5 text-xs text-muted">
       <input type="checkbox" bind:checked={onlyStarters} class="accent-brand" /> likely starters
+    </label>
+    <label class="flex items-center gap-1.5 text-xs text-muted" title="Sub-10% owned, likely to start, with a real projection">
+      <input type="checkbox" bind:checked={onlyDiff} class="accent-brand" /> differentials
     </label>
     <span class="text-xs text-muted2 ml-auto">{filtered.length} of {players.length}{filtered.length > rows.length ? ` (top ${rows.length})` : ''}</span>
   </div>

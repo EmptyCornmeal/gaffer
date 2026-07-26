@@ -14,6 +14,14 @@
   ]
   const diffOf = (f: TeamFixture): number => (f[mode] ?? f.difficulty) as number
 
+  // Rotation-pair planner: pin 2–3 teams and see the *best-of* their fixtures each
+  // GW — i.e. the effective difficulty if you rotated them through one squad slot.
+  let pinned = $state<string[]>([])
+  function togglePin(short: string) {
+    if (pinned.includes(short)) pinned = pinned.filter((s) => s !== short)
+    else if (pinned.length < 3) pinned = [...pinned, short]
+  }
+
   // Union of every GW any team plays in — so doubles/blanks don't shift the grid.
   const gws = $derived(
     [...new Set(Object.values(fixtures).flatMap((v) => v.fixtures.map((f) => f.gw)))].sort(
@@ -42,6 +50,28 @@
       })
       .sort((a, b) => a.ease - b.ease),
   )
+
+  // For each header GW, the easiest of the pinned teams' fixtures (a blank counts
+  // as difficulty 6). The row shows which team you'd field and how the rotation
+  // smooths the run vs owning either team alone.
+  const rotation = $derived.by(() => {
+    if (pinned.length < 2) return null
+    const cells = gws.map((gw) => {
+      let best: { short: string; f: TeamFixture } | null = null
+      for (const short of pinned) {
+        const fx = (fixtures[short]?.fixtures ?? []).filter((f) => f.gw === gw)
+        for (const f of fx) {
+          if (!best || diffOf(f) < diffOf(best.f)) best = { short, f }
+        }
+      }
+      return best
+    })
+    const rated = cells.filter((c): c is { short: string; f: TeamFixture } => !!c)
+    const ease = rated.length
+      ? rated.reduce((s, c) => s + diffOf(c.f), 0) / rated.length
+      : 6
+    return { cells, ease: Math.round(ease * 10) / 10 }
+  })
 </script>
 
 <div class="rise">
@@ -62,6 +92,36 @@
     </div>
   </div>
 
+  {#if rotation}
+    <div class="card p-3 mb-3">
+      <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+        <div class="text-sm font-bold flex items-center gap-2">
+          Rotation: {pinned.join(' / ')}
+          <span class="text-xs font-normal text-muted">best-of each GW · avg {rotation.ease}</span>
+        </div>
+        <button onclick={() => (pinned = [])} class="text-xs text-muted hover:text-text">clear</button>
+      </div>
+      <div class="overflow-x-auto">
+        <div class="grid" style="grid-template-columns: repeat({gws.length}, minmax(46px,1fr));">
+          {#each rotation.cells as c, i}
+            <div class="m-0.5">
+              <div class="text-[10px] text-muted text-center leading-none mb-0.5">GW{gws[i]}</div>
+              {#if c}
+                <div class="fdr-{diffOf(c.f)} rounded text-center py-1.5" title="Field {c.short}: {c.f.opp} {c.f.home ? 'Home' : 'Away'} · difficulty {diffOf(c.f)}">
+                  <div class="text-[10px] font-bold leading-none">{c.short}</div>
+                  <div class="text-[8px] opacity-80 leading-none mt-0.5">v {c.f.opp} · {diffOf(c.f)}</div>
+                </div>
+              {:else}
+                <div class="rounded text-center py-1.5 bg-bg3/60 text-muted2" title="Both blank"><div class="text-[11px] font-bold leading-none">–</div></div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </div>
+      <div class="text-[11px] text-muted mt-1.5">Pin up to 3 teams (📌) to plan a rotation slot — each GW shows the easier fixture you'd field.</div>
+    </div>
+  {/if}
+
   <div class="card overflow-x-auto">
     <div class="grid text-[11px] text-muted bg-bg2 border-b border-line" style="grid-template-columns: 60px repeat({gws.length}, minmax(46px,1fr));">
       <div class="py-2 px-2 font-semibold">Team</div>
@@ -70,6 +130,11 @@
     {#each rows as r}
       <div class="grid items-stretch border-b border-line/50" style="grid-template-columns: 60px repeat({gws.length}, minmax(46px,1fr));">
         <div class="py-1.5 px-2 text-sm font-bold flex items-center gap-1">
+          <button
+            onclick={() => togglePin(r.short)}
+            title={pinned.includes(r.short) ? 'Remove from rotation' : 'Pin to rotation (max 3)'}
+            class="text-[10px] leading-none {pinned.includes(r.short) ? 'text-brand' : 'text-muted2 hover:text-muted'}"
+          >{pinned.includes(r.short) ? '📌' : '+'}</button>
           {r.short}
           {#if r.doubles}<span class="text-[8px] text-brand-light" title="Double gameweek">×2</span>{/if}
         </div>
@@ -84,7 +149,8 @@
               {#each cell as f}
                 <div class="fdr-{diffOf(f)} rounded text-center py-1.5" title="{f.opp} {f.home ? 'Home' : 'Away'} · difficulty {diffOf(f)}">
                   <div class="text-[11px] font-bold leading-none">{f.opp}</div>
-                  <div class="text-[8px] opacity-80 leading-none mt-0.5">{f.home ? 'H' : 'A'}</div>
+                  <!-- number alongside colour so difficulty is legible without relying on hue (colour-blind a11y) -->
+                  <div class="text-[8px] opacity-80 leading-none mt-0.5">{f.home ? 'H' : 'A'} · {diffOf(f)}</div>
                 </div>
               {/each}
             </div>
