@@ -48,6 +48,17 @@
   const hasMarket = $derived(risers.length > 0 || fallers.length > 0)
   const fmtK = (n: number) => (Math.abs(n) >= 1000 ? `${(n / 1000).toFixed(0)}k` : `${n}`)
 
+  // Template check: high-owned players the value-optimizer punts. The model
+  // maximises points-per-£ and is EO-blind, so it can leave out a near-must-own
+  // like Haaland — a big rank risk. Surface it honestly.
+  const modelSquadIds = $derived(new Set([...rec.starting, ...rec.bench].map((p) => p.id)))
+  const templateMissing = $derived(
+    [...P]
+      .filter((p) => p.owned_by >= 30 && !modelSquadIds.has(p.id) && p.p_start > 0.5)
+      .sort((a, b) => b.owned_by - a.owned_by)
+      .slice(0, 5),
+  )
+
   // projected DEFCON hitters (defenders/mids likely to bank the +2)
   const defconWatch = $derived(
     [...P]
@@ -179,6 +190,26 @@
       </div>
     </div>
   </div>
+
+  <!-- template check: high-owned picks the value model leaves out -->
+  {#if templateMissing.length}
+    <div class="card p-3 border-yellow/30">
+      <h2 class="font-bold mb-1 flex items-center gap-1.5"><Icon name="shield" size={15} class="text-yellow" /> Template check <span class="text-xs text-muted font-normal">(popular picks the model leaves out)</span></h2>
+      <p class="text-xs text-muted mb-2">The model optimises points-per-£ and doesn't weigh ownership — so it punts these heavily-owned picks. If they haul (and you don't own them), your rank slips. Owning them is the safer play against the field; backing the model's alternatives is the differential bet.</p>
+      <div class="divide-y divide-line/60">
+        {#each templateMissing as p}
+          <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
+            <span class="text-sm min-w-0"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span></span>
+            <span class="flex items-center gap-3 shrink-0 tabular-nums">
+              {#if p.dist}<span class="text-[11px] text-muted2">ceil {p.dist.ceiling}</span>{/if}
+              <span class="text-[11px] text-muted">{p.next_gw_xp.toFixed(1)} xP</span>
+              <span class="font-bold text-yellow w-12 text-right">{p.owned_by}%</span>
+            </span>
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   <!-- DEFCON watch + highest ceiling -->
   <div class="grid md:grid-cols-2 gap-4">
