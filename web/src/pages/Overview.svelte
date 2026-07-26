@@ -3,6 +3,7 @@
   import type { Player, RecPlayer } from '../lib/types'
   import Pitch from '../components/Pitch.svelte'
   import FixtureStrip from '../components/FixtureStrip.svelte'
+  import Icon from '../components/Icon.svelte'
   import { mdLite } from '../lib/mdlite'
   import { loadCurrent, lineupErrors, formationOf, planPoints } from '../lib/squad'
   import { generateTeamBrief } from '../lib/teamBrief'
@@ -47,6 +48,21 @@
   const hasMarket = $derived(risers.length > 0 || fallers.length > 0)
   const fmtK = (n: number) => (Math.abs(n) >= 1000 ? `${(n / 1000).toFixed(0)}k` : `${n}`)
 
+  // projected DEFCON hitters (defenders/mids likely to bank the +2)
+  const defconWatch = $derived(
+    [...P]
+      .filter((p) => p.defcon && p.defcon.p_hit >= 0.2 && p.p_start > 0.5)
+      .sort((a, b) => (b.defcon?.p_hit ?? 0) - (a.defcon?.p_hit ?? 0))
+      .slice(0, 6),
+  )
+  // highest ceiling — the boom picks, ranked by 90th-percentile outcome
+  const topCeiling = $derived(
+    [...P]
+      .filter((p) => p.dist && p.dist.ceiling > 0 && p.p_start > 0.5)
+      .sort((a, b) => (b.dist?.ceiling ?? 0) - (a.dist?.ceiling ?? 0))
+      .slice(0, 6),
+  )
+
   const hasForm = $derived(P.some((p) => p.form > 0))
   const inForm = $derived(
     hasForm
@@ -62,7 +78,7 @@
     <div class="card p-4 border-brand/40 bg-brand/8">
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-light">
-          <span>🧠 The Gaffer's Verdict</span>
+          <span class="flex items-center gap-1.5"><Icon name="zap" size={14} /> The Gaffer's Verdict</span>
           <span class="chip {showYourBrief ? 'chip-good' : 'chip-info'}">{showYourBrief ? 'your team' : 'model'}</span>
         </div>
         <span class="text-[10px] text-muted2">{showYourBrief ? 'live' : verdict && verdict.source.startsWith('ai') ? verdict.model : 'auto'}</span>
@@ -127,8 +143,11 @@
       <div class="divide-y divide-line/60">
         {#each topCaptains as p}
           <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
-            <span class="text-sm"><b>{p.name}</b> <span class="text-muted">{p.team}</span></span>
-            <span class="font-bold text-brand-light tabular-nums">{p.next_gw_xp.toFixed(1)}</span>
+            <span class="text-sm min-w-0"><b>{p.name}</b> <span class="text-muted">{p.team}</span></span>
+            <span class="flex items-center gap-2 tabular-nums shrink-0">
+              {#if p.dist}<span class="text-[11px] text-muted">ceil {p.dist.ceiling}</span>{/if}
+              <span class="font-bold text-brand-light w-8 text-right">{p.next_gw_xp.toFixed(1)}</span>
+            </span>
           </button>
         {/each}
       </div>
@@ -161,9 +180,46 @@
     </div>
   </div>
 
+  <!-- DEFCON watch + highest ceiling -->
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="card p-3">
+      <h2 class="font-bold mb-2 flex items-center gap-1.5"><Icon name="shield" size={15} class="text-brand-light" /> DEFCON watch <span class="text-xs text-muted font-normal">(projected +2 this GW)</span></h2>
+      {#if defconWatch.length}
+        <div class="divide-y divide-line/60">
+          {#each defconWatch as p}
+            <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
+              <span class="text-sm min-w-0 flex items-center gap-1.5"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span>{#if p.defcon?.near_hit}<span class="chip chip-warn">near-hit</span>{/if}</span>
+              <span class="flex items-center gap-2 shrink-0 tabular-nums">
+                <span class="text-[11px] text-muted2">{p.defcon?.per90}/{p.defcon?.threshold}</span>
+                <span class="font-bold text-brand-light w-9 text-right">{Math.round((p.defcon?.p_hit ?? 0) * 100)}%</span>
+              </span>
+            </button>
+          {/each}
+        </div>
+      {:else}
+        <p class="text-sm text-muted">No standout defensive-contribution picks this week.</p>
+      {/if}
+    </div>
+
+    <div class="card p-3">
+      <h2 class="font-bold mb-2 flex items-center gap-1.5"><Icon name="flame" size={15} class="text-brand-light" /> Highest ceiling <span class="text-xs text-muted font-normal">(boom potential)</span></h2>
+      <div class="divide-y divide-line/60">
+        {#each topCeiling as p}
+          <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
+            <span class="text-sm min-w-0"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></span>
+            <span class="flex items-center gap-2 shrink-0 tabular-nums">
+              <span class="text-[11px] text-muted2">{p.dist?.boom}% haul</span>
+              <span class="font-bold text-brand-light w-8 text-right">{p.dist?.ceiling}</span>
+            </span>
+          </button>
+        {/each}
+      </div>
+    </div>
+  </div>
+
   <!-- price watch -->
   <div class="card p-3">
-    <h2 class="font-bold mb-2">💰 Price watch <span class="text-xs text-muted font-normal">(transfer momentum this GW)</span></h2>
+    <h2 class="font-bold mb-2 flex items-center gap-1.5"><Icon name="flame" size={15} /> Price watch <span class="text-xs text-muted font-normal">(transfer momentum this GW)</span></h2>
     {#if !hasMarket}
       <p class="text-sm text-muted">No transfer activity yet — the market is quiet pre-season. This lights up with predicted risers &amp; fallers once the season is under way.</p>
     {:else}

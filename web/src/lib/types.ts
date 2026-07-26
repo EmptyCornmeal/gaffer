@@ -40,6 +40,21 @@ export interface LastSeason {
   xa90: number
 }
 
+export interface Dist {
+  mean: number
+  floor: number
+  ceiling: number
+  boom: number
+  std: number
+}
+
+export interface DefconView {
+  p_hit: number
+  per90: number
+  threshold: number
+  near_hit: boolean
+}
+
 export interface Player {
   id: number
   code: number | null
@@ -60,6 +75,8 @@ export interface Player {
   form: number
   ict: number
   last_season: LastSeason | null
+  dist: Dist | null
+  defcon: DefconView | null
   xgi90: number
   defcon90: number
   next_gw_xp: number

@@ -96,6 +96,50 @@
         </div>
       </div>
 
+      <!-- distribution: floor / expected / ceiling (Monte-Carlo, next GW) -->
+      {#if player.dist && player.dist.ceiling > 0}
+        {@const d = player.dist}
+        {@const span = Math.max(d.ceiling, total) || 1}
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-1">
+            <div class="text-xs font-bold uppercase text-muted">Range this week</div>
+            {#if d.boom >= 8}<span class="chip chip-good">🔥 {d.boom}% haul chance</span>{/if}
+          </div>
+          <div class="relative h-6 rounded-full bg-bg3 overflow-hidden">
+            <!-- floor..ceiling band -->
+            <div
+              class="absolute top-0 bottom-0 bg-brand/25"
+              style="left:{(d.floor / span) * 100}%; right:{100 - (d.ceiling / span) * 100}%"
+            ></div>
+            <!-- expected marker -->
+            <div class="absolute top-0 bottom-0 w-0.5 bg-brand-light" style="left:{(total / span) * 100}%"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-muted mt-1 tabular-nums">
+            <span>Floor <b class="text-text">{d.floor}</b></span>
+            <span>Expected <b class="text-brand-light">{total.toFixed(1)}</b></span>
+            <span>Ceiling <b class="text-text">{d.ceiling}</b></span>
+          </div>
+        </div>
+      {/if}
+
+      <!-- projected DEFCON (defensive contribution +2) -->
+      {#if player.defcon}
+        {@const dc = player.defcon}
+        <div class="mt-3 rounded-lg bg-bg2 border border-line px-3 py-2">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-bold uppercase text-muted flex items-center gap-1.5">
+              DEFCON projection
+              {#if dc.near_hit}<span class="chip chip-warn">near-hit</span>{/if}
+            </div>
+            <div class="text-sm font-bold tabular-nums {dc.p_hit >= 0.5 ? 'text-brand-light' : 'text-text'}">{Math.round(dc.p_hit * 100)}% <span class="text-muted font-normal">to hit +2</span></div>
+          </div>
+          <div class="mt-1.5 h-2 rounded-full bg-bg3 overflow-hidden">
+            <div class="h-full {dc.p_hit >= 0.5 ? 'bg-brand' : 'bg-accent'}" style="width:{Math.round(dc.p_hit * 100)}%"></div>
+          </div>
+          <div class="text-[11px] text-muted2 mt-1">{dc.per90} actions/90 · needs {dc.threshold} for +2</div>
+        </div>
+      {/if}
+
       <div class="mt-4 grid grid-cols-4 gap-2 text-center text-xs">
         <div class="card py-2"><div class="text-muted">Start</div><div class="font-bold">{Math.round(player.p_start * 100)}%</div></div>
         <div class="card py-2"><div class="text-muted">Conf.</div><div class="font-bold">{Math.round(player.confidence * 100)}%</div></div>

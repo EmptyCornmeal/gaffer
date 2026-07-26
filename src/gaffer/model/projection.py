@@ -60,9 +60,15 @@ def _start_prior(position: str, price: int) -> float:
     return 0.25 + frac * (ceiling - 0.25)
 
 
-def _project_one_fixture(
+def fixture_rates(
     player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float, games_played: int = 0
 ) -> dict[str, float]:
+    """The underlying per-fixture rate bundle the projection is built from.
+
+    Exposed so the Monte-Carlo layer (``model.simulate``) samples from the *same*
+    rates the deterministic projection sums — the point estimate and the
+    distribution can never drift apart.
+    """
     pos = player["position"]
     cur_min = player["minutes"] or 0
     base_min = player["base_minutes"] or 0
@@ -80,6 +86,7 @@ def _project_one_fixture(
     p_play = clamp(p_start + (1 - p_start) * 0.35 * avail, 0.0, 0.99)  # inc. cameo chance
     exp_minutes = p_start * _START_MINUTES + (p_play - p_start) * _CAMEO_MINUTES
     p60 = p_start  # starters are the ones who reach 60'
+    mins_frac = exp_minutes / 90.0
 
     # --- attacking ------------------------------------------------------
     # Shrink current-season rate toward the LAST-SEASON rate (survives the FPL
@@ -90,34 +97,61 @@ def _project_one_fixture(
     xg90 = F.shrink(player["xg_per_90"] or 0, cur_min, tgt_xg)
     xa90 = F.shrink(player["xa_per_90"] or 0, cur_min, tgt_xa)
     att_mult = ctx.attack_multiplier(fx.opponent_id, fx.at_home)
-    mins_frac = exp_minutes / 90.0
     exp_goals = xg90 * mins_frac * att_mult
     exp_assists = xa90 * mins_frac * att_mult
-    exp_goal_pts = exp_goals * config.GOAL_POINTS[pos]
-    exp_assist_pts = exp_assists * config.ASSIST_POINTS
 
     # --- clean sheet ----------------------------------------------------
-    exp_cs_pts = 0.0
+    p_cs = 0.0
     if config.CS_POINTS[pos] > 0:
         lam = ctx.expected_conceded(player["team_id"], fx.opponent_id, fx.at_home)
         p_cs = F.poisson_p0(lam)
-        exp_cs_pts = p_cs * config.CS_POINTS[pos] * p60
 
     # --- DEFCON ---------------------------------------------------------
-    exp_defcon_pts = 0.0
     thr = config.DEFCON_THRESHOLD[pos]
+    defcon_mu = 0.0
+    p_hit = 0.0
     if player["defcon_per_90"] and thr < 99:
-        mu = player["defcon_per_90"] * mins_frac
-        p_hit = F.poisson_sf(thr, mu)
-        exp_defcon_pts = p_hit * config.DEFCON_POINTS
+        defcon_mu = player["defcon_per_90"] * mins_frac
+        p_hit = F.nbinom_sf(thr, defcon_mu, F.DEFCON_NB_DISPERSION)
+
+    return {
+        "pos": pos,
+        "p_start": p_start,
+        "p_play": p_play,
+        "p60": p60,
+        "exp_minutes": exp_minutes,
+        "mins_frac": mins_frac,
+        "exp_goals": exp_goals,
+        "exp_assists": exp_assists,
+        "goal_pts_per": float(config.GOAL_POINTS[pos]),
+        "assist_pts_per": float(config.ASSIST_POINTS),
+        "p_cs": p_cs,
+        "cs_pts_per": float(config.CS_POINTS[pos]),
+        "defcon_mu": defcon_mu,
+        "defcon_thr": float(thr),
+        "defcon_p_hit": p_hit,
+        "defcon_pts": float(config.DEFCON_POINTS),
+    }
+
+
+def _project_one_fixture(
+    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float, games_played: int = 0
+) -> dict[str, float]:
+    r = fixture_rates(player, fx, ctx, avail, games_played)
+    pos = r["pos"]
+
+    exp_goal_pts = r["exp_goals"] * r["goal_pts_per"]
+    exp_assist_pts = r["exp_assists"] * r["assist_pts_per"]
+    exp_cs_pts = r["p_cs"] * r["cs_pts_per"] * r["p60"]
+    exp_defcon_pts = r["defcon_p_hit"] * r["defcon_pts"]
 
     # --- appearance -----------------------------------------------------
-    exp_appearance = p60 * 2.0 + (p_play - p60) * 1.0
+    exp_appearance = r["p60"] * 2.0 + (r["p_play"] - r["p60"]) * 1.0
 
     # --- bonus (light proxy: bonus tracks returns + defensive workload) --
-    exp_bonus_pts = 0.55 * (exp_goals + exp_assists) + 0.25 * exp_defcon_pts
+    exp_bonus_pts = 0.55 * (r["exp_goals"] + r["exp_assists"]) + 0.25 * exp_defcon_pts
     if pos in ("GKP", "DEF"):
-        exp_bonus_pts += 0.35 * exp_cs_pts / max(config.CS_POINTS[pos], 1)
+        exp_bonus_pts += 0.35 * exp_cs_pts / max(r["cs_pts_per"], 1)
 
     exp_points = (
         exp_appearance
@@ -128,8 +162,8 @@ def _project_one_fixture(
         + exp_bonus_pts
     )
     return {
-        "p_start": p_start,
-        "exp_minutes": exp_minutes,
+        "p_start": r["p_start"],
+        "exp_minutes": r["exp_minutes"],
         "exp_goal_pts": exp_goal_pts,
         "exp_assist_pts": exp_assist_pts,
         "exp_cs_pts": exp_cs_pts,

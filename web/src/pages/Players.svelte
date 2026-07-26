@@ -106,7 +106,10 @@
             <td class="text-muted">{p.form.toFixed(1)}</td>
             <td class="text-muted">{p.ict.toFixed(0)}</td>
             <td class="text-muted">{p.xgi90.toFixed(2)}</td>
-            <td class="text-muted">{p.defcon90 ? p.defcon90.toFixed(1) : '—'}</td>
+            <td class="{p.defcon && p.defcon.p_hit >= 0.5 ? 'text-brand-light font-semibold' : 'text-muted'}">
+              {p.defcon90 ? p.defcon90.toFixed(1) : '—'}
+              {#if p.defcon?.near_hit}<span class="text-yellow ml-0.5" title="Near-hit — one tick from a consistent +2">•</span>{/if}
+            </td>
           </tr>
         {/each}
       </tbody>

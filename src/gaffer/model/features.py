@@ -41,11 +41,39 @@ def poisson_p0(mu: float) -> float:
 
 
 def poisson_sf(threshold: int, mu: float) -> float:
-    """P(N >= threshold) for N ~ Poisson(mu). Used for DEFCON."""
+    """P(N >= threshold) for N ~ Poisson(mu)."""
     if threshold <= 0:
         return 1.0
     cdf = sum(poisson_pmf(i, mu) for i in range(threshold))
     return max(0.0, 1.0 - cdf)
+
+
+# Negative-binomial dispersion (size r) for defensive-action counts. CBIT/CBIRT
+# are over-dispersed (game-to-game variance > mean), so a NegBin threshold model
+# fits the "does he hit 10/12?" question better than Poisson. Smaller r = fatter
+# tail; ~6 is a mild, defensible over-dispersion.
+DEFCON_NB_DISPERSION = 6.0
+
+
+def nbinom_pmf(k: int, mu: float, r: float) -> float:
+    """P(X = k) for X ~ NegBin(mean=mu, size=r). variance = mu + mu^2/r."""
+    if mu <= 0:
+        return 1.0 if k == 0 else 0.0
+    p = r / (r + mu)
+    # C(k+r-1, k) p^r (1-p)^k  — via lgamma for non-integer r
+    log_coef = math.lgamma(k + r) - math.lgamma(r) - math.lgamma(k + 1)
+    return math.exp(log_coef + r * math.log(p) + k * math.log(1 - p))
+
+
+def nbinom_sf(threshold: float, mu: float, r: float = DEFCON_NB_DISPERSION) -> float:
+    """P(X >= threshold) for X ~ NegBin(mean=mu, size=r). Used for DEFCON hits."""
+    thr = int(math.ceil(threshold))
+    if thr <= 0:
+        return 1.0
+    if mu <= 0:
+        return 0.0
+    cdf = sum(nbinom_pmf(i, mu, r) for i in range(thr))
+    return max(0.0, min(1.0, 1.0 - cdf))
 
 
 def clamp(x: float, lo: float, hi: float) -> float:

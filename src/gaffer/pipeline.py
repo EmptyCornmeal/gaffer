@@ -17,7 +17,7 @@ import time
 
 from gaffer import config, ingest
 from gaffer.export import artifacts
-from gaffer.model import projection
+from gaffer.model import projection, simulate
 from gaffer.solver import optimize
 from gaffer.store import db
 
@@ -35,6 +35,10 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
     log["from_gw"] = from_gw
 
     log["projection_rows"] = projection.project(conn, from_gw, horizon)
+
+    # Monte-Carlo next-GW distribution (floor/ceiling/boom%) over the same rates.
+    distributions = simulate.simulate_next_gw(conn, from_gw)
+    log["simulated"] = len(distributions)
 
     ft = _free_transfers(conn)
     sol = optimize.optimise(conn, from_gw, horizon, free_transfers=ft)
@@ -54,7 +58,7 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
 
     written = artifacts.write_all(
         conn, sol, from_gw, horizon, projection.MODEL_VERSION,
-        horizon_solutions=horizon_solutions,
+        horizon_solutions=horizon_solutions, distributions=distributions,
     )
     log["artifacts"] = written
 

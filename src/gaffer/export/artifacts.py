@@ -79,14 +79,31 @@ def build_meta(conn: sqlite3.Connection, model_version: str) -> dict[str, Any]:
     return meta
 
 
+def _defcon_view(pos: str, defcon90: float, exp_defcon_pts: float) -> dict[str, Any] | None:
+    """Projected DEFCON for the next GW: P(+2 hit), per-90 rate, and a 'near-hit'
+    flag (≥80% of the position threshold but under it — one tactical tick away)."""
+    thr = config.DEFCON_THRESHOLD.get(pos, 99)
+    if thr >= 99 or not defcon90:
+        return None
+    p_hit = round(min(1.0, (exp_defcon_pts or 0) / config.DEFCON_POINTS), 3)
+    return {
+        "p_hit": p_hit,
+        "per90": round(defcon90, 1),
+        "threshold": thr,
+        "near_hit": bool(0.8 * thr <= defcon90 < thr),
+    }
+
+
 def build_players(
     conn: sqlite3.Connection,
     from_gw: int,
     horizon: int,
     team_fixtures: dict[str, Any] | None = None,
+    distributions: dict[int, dict[str, float]] | None = None,
 ) -> list[dict[str, Any]]:
     teams = _teams(conn)
     team_fixtures = team_fixtures or {}
+    distributions = distributions or {}
     # horizon sum + next-GW row per player
     horizon_sum: dict[int, float] = {}
     for r in conn.execute(
@@ -161,6 +178,8 @@ def build_players(
                 "form": r["form"],
                 "ict": round(r["ict_index"] or 0, 1),
                 "last_season": _last_season(r),
+                "dist": distributions.get(r["id"]),
+                "defcon": _defcon_view(r["position"], r["defcon_per_90"], r["exp_defcon_pts"]),
                 "xgi90": round(r["xgi_per_90"], 2),
                 "defcon90": round(r["defcon_per_90"], 2),
                 "next_gw_xp": round(r["exp_points"], 2) if r["exp_points"] is not None else 0.0,
@@ -426,11 +445,14 @@ def write_all(
     conn: sqlite3.Connection, sol: Solution, from_gw: int,
     horizon: int, model_version: str, out_dir: Path | None = None,
     horizon_solutions: dict[int, Solution] | None = None,
+    distributions: dict[int, dict[str, float]] | None = None,
 ) -> list[str]:
     out_dir = out_dir or config.DATA_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
     fixtures = build_fixtures(conn, from_gw, horizon)
-    players = build_players(conn, from_gw, horizon, team_fixtures=fixtures)
+    players = build_players(
+        conn, from_gw, horizon, team_fixtures=fixtures, distributions=distributions
+    )
     reco = build_recommendation(conn, sol, players)
     # Per-horizon optimal squads (this GW / next 3 / next 5) + a fact-grounded
     # explanation for each, so the Planner can toggle the planning window and show
