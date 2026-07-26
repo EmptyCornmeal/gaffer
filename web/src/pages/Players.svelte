@@ -2,9 +2,23 @@
   import type { Player, Pos } from '../lib/types'
   import FixtureStrip from '../components/FixtureStrip.svelte'
   import Crest from '../components/Crest.svelte'
+  import Compare from '../components/Compare.svelte'
   import { matches } from '../lib/search'
 
   let { players, onpick }: { players: Player[]; onpick: (id: number) => void } = $props()
+
+  // Compare tray: pick up to 3 players (checkbox per row) → radar + percentile
+  // comparison overlay. Stops the row-click (which opens the single-player modal).
+  let compareIds = $state<number[]>([])
+  let showCompare = $state(false)
+  const compareSet = $derived(new Set(compareIds))
+  function toggleCompare(id: number) {
+    if (compareSet.has(id)) compareIds = compareIds.filter((x) => x !== id)
+    else if (compareIds.length < 3) compareIds = [...compareIds, id]
+  }
+  const comparePlayers = $derived(
+    compareIds.map((id) => players.find((p) => p.id === id)).filter((p): p is Player => !!p),
+  )
 
   let query = $state('')
   let pos = $state<'ALL' | Pos>('ALL')
@@ -84,6 +98,7 @@
     <table class="data">
       <thead>
         <tr>
+          <th class="!text-center" title="Add to comparison (up to 3)">⇄</th>
           <th onclick={() => sort('name')}>Player</th>
           <th class="!text-center">Fixtures</th>
           {#each cols as c}
@@ -94,6 +109,16 @@
       <tbody>
         {#each rows as p (p.id)}
           <tr onclick={() => onpick(p.id)}>
+            <td class="!text-center" onclick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                class="accent-brand"
+                checked={compareSet.has(p.id)}
+                disabled={!compareSet.has(p.id) && compareIds.length >= 3}
+                onchange={() => toggleCompare(p.id)}
+                aria-label="Compare {p.name}"
+              />
+            </td>
             <td>
               <div class="flex items-center gap-2">
                 <Crest code={p.team_code} short={p.team} size={22} />
@@ -127,9 +152,28 @@
           </tr>
         {/each}
         {#if rows.length === 0}
-          <tr><td colspan="11" class="!text-center text-muted py-6">No players match — try a different search or raise the price filter.</td></tr>
+          <tr><td colspan="12" class="!text-center text-muted py-6">No players match — try a different search or raise the price filter.</td></tr>
         {/if}
       </tbody>
     </table>
   </div>
 </div>
+
+{#if compareIds.length}
+  <div class="fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-full border border-line bg-card2 shadow-lg px-4 py-2 text-sm"
+    style="bottom: calc(var(--gaffer-bottomnav, 0px) + env(safe-area-inset-bottom) + 1rem);">
+    <span class="text-muted">{compareIds.length} selected</span>
+    <button onclick={() => (showCompare = true)} disabled={compareIds.length < 2} class="btn text-xs disabled:opacity-40">Compare</button>
+    <button onclick={() => (compareIds = [])} class="text-xs text-muted hover:text-text">clear</button>
+  </div>
+{/if}
+
+{#if showCompare && comparePlayers.length >= 2}
+  <Compare
+    players={comparePlayers}
+    pool={players}
+    onclose={() => (showCompare = false)}
+    onremove={(id) => { compareIds = compareIds.filter((x) => x !== id); if (compareIds.length < 2) showCompare = false }}
+    onpick={(id) => { showCompare = false; onpick(id) }}
+  />
+{/if}
