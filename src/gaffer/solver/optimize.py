@@ -24,7 +24,12 @@ HORIZON_DECAY = 0.84  # weight of each future GW relative to the previous
 # ignores the crowd); higher = own more of the template for rank protection.
 # Tuned so 'balanced' pulls a ~74%-owned default-captain premium (Haaland) into
 # the squad, which pure value drops. Balanced is the shipped default.
-RISK_WEIGHTS = {"differential": 0.0, "balanced": 3.0, "template": 5.0}
+# High absolute weights because, with fixtures now read correctly, the model's
+# honest optimum is a *no-Haaland* value build (Bruno at Hull / Gabriel vs Coventry
+# out-project Haaland vs mid-table Bournemouth) — so owning the 74%-must-own is a
+# deliberate rank-defence override. differential = the model's sharp value view;
+# balanced = owns + captains Haaland (rank-safe default); template = max crowd.
+RISK_WEIGHTS = {"differential": 0.0, "balanced": 8.0, "template": 11.0}
 
 # Reward next-GW UPSIDE (Monte-Carlo ceiling above the mean) in the XI and the
 # captain. Without this the solver maximises mean points and (a) drops elite
@@ -152,9 +157,11 @@ def optimise(
     # high-projection players so the squad defends rank; template_weight is the
     # risk dial (0 = pure differential/value, higher = more template-safe).
     if template_weight:
-        # Uses next-GW points (not the horizon value) so rank-defence is a
-        # horizon-invariant overlay — balanced owns the essential template at the
-        # 1-GW view just as at 5 GWs, rather than only at longer horizons.
+        # Rank-defence overlay: a heavily-owned player is a rank risk whatever his
+        # price, so weight ownership super-linearly (own**1.6) — this makes the
+        # ~74%-owned must-own (Haaland) dominate a merely-popular pick, so balanced
+        # owns the true template core rather than trading it for cheaper value.
+        # next-GW points (not horizon value) keeps it horizon-invariant.
         obj += template_weight * pulp.lpSum(
             start[i] * (players[i].ownership / 100.0) * players[i].next_gw_points
             for i in ids

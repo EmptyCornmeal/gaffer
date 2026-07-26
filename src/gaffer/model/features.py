@@ -80,6 +80,16 @@ def clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
 
 
+# Pre-season, FPL only ships a coarse 1-5 team strength, so fixture ratios cluster
+# near 1.0 and every matchup looks average — premiums vs weak sides never get the
+# boost they deserve and trap fixtures aren't punished. Raise the coarse ratio to
+# this power to de-compress the spread (a soft opener reads soft, a tough one tough).
+# Only applied in the coarse regime; the in-season 1000-scale ratings are already
+# well-spread and left linear.
+STRENGTH_GAMMA = 1.7
+STRENGTH_CLAMP = (0.5, 1.85)
+
+
 @dataclass
 class TeamContext:
     """Precomputed team-level defensive/attacking context for a season."""
@@ -94,6 +104,11 @@ class TeamContext:
     league_att: float = 1.0
     league_def: float = 1.0
     league_xgc: float = 1.3
+    coarse: bool = False  # True when using the pre-season 1-5 strength scale
+
+    def _spread(self, ratio: float) -> float:
+        """De-compress a strength ratio in the coarse pre-season regime."""
+        return ratio**STRENGTH_GAMMA if self.coarse else ratio
 
     @classmethod
     def build(cls, conn: sqlite3.Connection) -> TeamContext:
@@ -123,6 +138,8 @@ class TeamContext:
         ctx.league_def = sum(dvals) / len(dvals) if dvals else 1.0
         if ctx.team_xgc:
             ctx.league_xgc = sum(ctx.team_xgc.values()) / len(ctx.team_xgc)
+        # Coarse regime = the small 1-5 pre-season scale (fine ratings are ~1000s).
+        ctx.coarse = ctx.league_att < 100
         return ctx
 
     def attack_multiplier(self, opponent_id: int, at_home: bool) -> float:
@@ -132,18 +149,17 @@ class TeamContext:
         opponent is at home.
         """
         opp_def = self.def_home[opponent_id] if not at_home else self.def_away[opponent_id]
-        mult = self.league_def / opp_def if opp_def else 1.0
-        # Small home advantage for the attacking side.
-        mult *= 1.08 if at_home else 0.94
-        return clamp(mult, 0.6, 1.7)
+        ratio = self.league_def / opp_def if opp_def else 1.0
+        mult = self._spread(ratio) * (1.08 if at_home else 0.94)  # small home edge
+        return clamp(mult, *STRENGTH_CLAMP)
 
     def expected_conceded(self, team_id: int, opponent_id: int, at_home: bool) -> float:
         """Expected goals conceded by ``team_id`` this fixture (for clean sheets)."""
         base = self.team_xgc.get(team_id, self.league_xgc)
         opp_att = self.att_away[opponent_id] if at_home else self.att_home[opponent_id]
-        mult = opp_att / self.league_att if self.league_att else 1.0
-        mult *= 0.90 if at_home else 1.12  # harder to keep a CS away
-        return max(0.15, base * mult)
+        ratio = opp_att / self.league_att if self.league_att else 1.0
+        mult = self._spread(ratio) * (0.90 if at_home else 1.12)  # harder CS away
+        return max(0.12, base * mult)
 
 
 @dataclass
