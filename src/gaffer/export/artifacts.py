@@ -49,17 +49,32 @@ def _last_season(r: Any) -> dict[str, Any] | None:
     }
 
 
-def _price_pred(net: int) -> dict[str, Any]:
-    """Momentum-based price-change signal from net transfers this GW.
+def _price_pred(net: int, owned_pct: float = 0.0, total_players: int = 0) -> dict[str, Any]:
+    """Estimated price-change signal from net transfers this GW.
 
-    FPL's exact thresholds are secret; net transfers are the dominant driver, so
-    we surface momentum + a directional flag when it's decisively one-way.
+    FPL's exact thresholds are secret, but the dominant driver is net transfers
+    relative to how many managers own the player: a rise/fall needs movement
+    proportional to the owner base. We approximate the threshold as a fraction of
+    owner count (with a floor for low-owned players) and report `progress` — the
+    share of that threshold covered so far — clearly as an estimate, not a promise.
     """
-    if net >= 60000:
-        return {"dir": "up", "momentum": net}
-    if net <= -60000:
-        return {"dir": "down", "momentum": net}
-    return {"dir": "stable", "momentum": net}
+    owned = max(0.0, owned_pct) / 100.0 * (total_players or 0)
+    # ~7.5% of the owner base of net movement per day is a rough public heuristic;
+    # floor keeps very low-owned players from tripping on tiny absolute numbers.
+    threshold = max(30000.0, owned * 0.075)
+    progress = round(min(1.0, abs(net) / threshold), 2) if threshold else 0.0
+    if net > 0 and progress >= 0.6:
+        direction = "up"
+    elif net < 0 and progress >= 0.6:
+        direction = "down"
+    else:
+        direction = "stable"
+    return {
+        "dir": direction,
+        "momentum": net,
+        "progress": progress,  # 0..1 estimated share of the change threshold
+        "threshold": int(threshold),
+    }
 
 
 def build_meta(conn: sqlite3.Connection, model_version: str) -> dict[str, Any]:
@@ -106,6 +121,8 @@ def build_players(
     teams = _teams(conn)
     team_fixtures = team_fixtures or {}
     distributions = distributions or {}
+    tp_row = conn.execute("SELECT value FROM meta WHERE key='total_players'").fetchone()
+    total_players = int(tp_row["value"]) if tp_row and str(tp_row["value"]).isdigit() else 0
     # horizon sum + next-GW row per player
     horizon_sum: dict[int, float] = {}
     for r in conn.execute(
@@ -170,7 +187,9 @@ def build_players(
                 "net_transfers": (r["transfers_in_event"] or 0) - (r["transfers_out_event"] or 0),
                 "cost_change_event": r["cost_change_event"] or 0,
                 "price_pred": _price_pred(
-                    (r["transfers_in_event"] or 0) - (r["transfers_out_event"] or 0)
+                    (r["transfers_in_event"] or 0) - (r["transfers_out_event"] or 0),
+                    r["selected_by_pct"] or 0.0,
+                    total_players,
                 ),
                 "price": r["price"] / 10.0,
                 "owned_by": r["selected_by_pct"],

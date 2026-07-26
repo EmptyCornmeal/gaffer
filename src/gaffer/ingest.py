@@ -161,6 +161,11 @@ def ingest_game_settings(conn: sqlite3.Connection, bootstrap: dict[str, Any]) ->
     for key, val in mapping.items():
         if val is not None:
             db.set_meta(conn, key, val)
+    # Total active managers — scales the price-change threshold (a rise/fall needs
+    # net transfers proportional to the number of people who own the player).
+    tp = bootstrap.get("total_players")
+    if tp is not None:
+        db.set_meta(conn, "total_players", tp)
 
 
 def ingest_my_squad(

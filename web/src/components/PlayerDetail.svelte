@@ -210,6 +210,20 @@
           {/if}
         </div>
       {/if}
+
+      {#if player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0}
+        {@const up = player.price_pred.momentum > 0}
+        <div class="mt-2">
+          <div class="flex items-center justify-between text-[11px] text-muted mb-0.5">
+            <span>Est. progress to price {up ? 'rise' : 'fall'}</span>
+            <span class="tabular-nums">{Math.round(player.price_pred.progress * 100)}%</span>
+          </div>
+          <div class="h-1.5 rounded-full bg-bg3 overflow-hidden">
+            <div class="h-full {up ? 'bg-brand' : 'bg-red'}" style="width:{Math.min(100, player.price_pred.progress * 100)}%"></div>
+          </div>
+          <div class="text-[10px] text-muted2 mt-0.5">Estimate: net {up ? 'in' : 'out'} vs an ownership-scaled threshold — FPL's exact cutoff is secret.</div>
+        </div>
+      {/if}
     </div>
   </div>
 {/if}

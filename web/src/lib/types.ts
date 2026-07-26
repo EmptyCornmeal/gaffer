@@ -32,6 +32,8 @@ export interface TeamFixture {
 export interface PricePred {
   dir: 'up' | 'down' | 'stable'
   momentum: number
+  progress?: number // 0..1 estimated share of the price-change threshold
+  threshold?: number
 }
 
 export interface LastSeason {
