@@ -228,6 +228,12 @@ interface Lift {
   top: number
   bottom: number
 }
+export interface CalBin {
+  pred: number
+  actual: number
+  haul_rate: number
+  n: number
+}
 export interface Backtest {
   season: string
   n_predictions: number
@@ -236,6 +242,7 @@ export interface Backtest {
   mae: { gaffer: number; ml: number; fpl_xp: number; naive: number }
   rank_corr: { gaffer: number; ml: number; fpl_xp: number; naive: number }
   lift: { ml: Lift; gaffer: Lift; fpl_xp: Lift }
+  calibration?: { gaffer: CalBin[]; ml: CalBin[] }
   note: string
   generated_at: string
 }

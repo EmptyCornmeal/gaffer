@@ -114,6 +114,29 @@ def _avg_rank_corr(df: pd.DataFrame, col: str) -> float:
     return float(pd.Series(corrs).mean()) if corrs else 0.0
 
 
+def _calibration(df: pd.DataFrame, col: str, bins: int = 8) -> list[dict[str, float]]:
+    """Reliability curve: bin players by predicted points, then report the mean
+    prediction, mean actual, and actual haul-rate (≥10 pts) per bin. A calibrated
+    model sits on the diagonal (predicted ≈ actual) and concentrates hauls in the
+    top bins — the distribution check most tools never publish."""
+    d = df[[col, "total_points"]].dropna()
+    if len(d) < bins * 5 or d[col].std() == 0:
+        return []
+    try:
+        d = d.assign(_b=pd.qcut(d[col], bins, duplicates="drop"))
+    except ValueError:
+        return []
+    out = []
+    for _, g in d.groupby("_b", observed=True):
+        out.append({
+            "pred": round(float(g[col].mean()), 2),
+            "actual": round(float(g["total_points"].mean()), 2),
+            "haul_rate": round(float((g["total_points"] >= 10).mean()) * 100, 1),
+            "n": int(len(g)),
+        })
+    return sorted(out, key=lambda x: x["pred"])
+
+
 def _lift(df: pd.DataFrame, col: str) -> dict[str, float]:
     tops, bots = [], []
     for _, grp in df.groupby("GW"):
@@ -153,6 +176,10 @@ def run(data_dir: Path | None = None) -> dict[str, Any]:
             "ml": _lift(ev, "ml"),
             "gaffer": _lift(ev, "gaffer"),
             "fpl_xp": _lift(ev, "fpl"),
+        },
+        "calibration": {
+            "gaffer": _calibration(ev, "gaffer"),
+            "ml": _calibration(ev, "ml"),
         },
         "note": (
             "The trained gradient-boosted model vs Gaffer's *shipped* component "

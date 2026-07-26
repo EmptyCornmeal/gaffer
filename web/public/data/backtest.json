@@ -1,7 +1,7 @@
 {
   "season": "2024-25",
   "n_predictions": 10011,
-  "gameweeks": "GW6\u2013GW38",
+  "gameweeks": "GW6–GW38",
   "trained_on": "2022-23 + 2023-24",
   "mae": {
     "gaffer": 1.889,
@@ -29,6 +29,108 @@
       "bottom": 1.19
     }
   },
-  "note": "The trained gradient-boosted model vs Gaffer's *shipped* component projection (the exact code the site runs, incl. per-position goal points, appearance model, clean-sheet Poisson and bonus proxy) vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. DEFCON is excluded here \u2014 it did not score in 2024-25. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected.",
-  "generated_at": "2026-07-25T10:28:41+00:00"
+  "calibration": {
+    "gaffer": [
+      {
+        "pred": 0.53,
+        "actual": 1.7,
+        "haul_rate": 1.1,
+        "n": 1252
+      },
+      {
+        "pred": 0.99,
+        "actual": 2.0,
+        "haul_rate": 1.5,
+        "n": 1251
+      },
+      {
+        "pred": 1.47,
+        "actual": 2.22,
+        "haul_rate": 2.4,
+        "n": 1251
+      },
+      {
+        "pred": 1.98,
+        "actual": 2.4,
+        "haul_rate": 2.2,
+        "n": 1252
+      },
+      {
+        "pred": 2.47,
+        "actual": 2.85,
+        "haul_rate": 3.7,
+        "n": 1251
+      },
+      {
+        "pred": 2.89,
+        "actual": 3.08,
+        "haul_rate": 4.9,
+        "n": 1251
+      },
+      {
+        "pred": 3.26,
+        "actual": 3.36,
+        "haul_rate": 5.2,
+        "n": 1251
+      },
+      {
+        "pred": 3.88,
+        "actual": 4.16,
+        "haul_rate": 8.9,
+        "n": 1252
+      }
+    ],
+    "ml": [
+      {
+        "pred": 0.42,
+        "actual": 1.51,
+        "haul_rate": 0.5,
+        "n": 1252
+      },
+      {
+        "pred": 1.07,
+        "actual": 1.85,
+        "haul_rate": 1.1,
+        "n": 1251
+      },
+      {
+        "pred": 1.51,
+        "actual": 2.12,
+        "haul_rate": 2.0,
+        "n": 1251
+      },
+      {
+        "pred": 1.9,
+        "actual": 2.46,
+        "haul_rate": 2.8,
+        "n": 1252
+      },
+      {
+        "pred": 2.3,
+        "actual": 2.71,
+        "haul_rate": 2.6,
+        "n": 1251
+      },
+      {
+        "pred": 2.74,
+        "actual": 3.17,
+        "haul_rate": 4.4,
+        "n": 1251
+      },
+      {
+        "pred": 3.3,
+        "actual": 3.5,
+        "haul_rate": 6.0,
+        "n": 1251
+      },
+      {
+        "pred": 4.55,
+        "actual": 4.45,
+        "haul_rate": 10.5,
+        "n": 1252
+      }
+    ]
+  },
+  "note": "The trained gradient-boosted model vs Gaffer's *shipped* component projection (the exact code the site runs, incl. per-position goal points, appearance model, clean-sheet Poisson and bonus proxy) vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. DEFCON is excluded here — it did not score in 2024-25. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected. Caveat: team strength is a static end-of-season snapshot applied to every GW, a mild optimism that affects all fixture-based methods equally.",
+  "generated_at": "2026-07-26T15:09:21+00:00"
 }
