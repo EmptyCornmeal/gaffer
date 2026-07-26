@@ -88,8 +88,15 @@
           >{m.label}</button>
         {/each}
       </div>
-      <span class="text-xs text-muted hidden sm:inline">{MODES.find((m) => m.key === mode)?.hint} · easiest → hardest</span>
+      <span class="text-xs text-muted hidden sm:inline">{MODES.find((m) => m.key === mode)?.hint}</span>
     </div>
+  </div>
+
+  <!-- legend + hints up top, where they're needed (not buried under 20 rows) -->
+  <div class="flex items-center gap-x-4 gap-y-1.5 mb-3 text-[11px] text-muted flex-wrap">
+    <span class="flex items-center gap-1">Difficulty {#each [1, 2, 3, 4, 5] as d}<span class="fdr-{d} w-5 h-5 rounded flex items-center justify-center font-bold">{d}</span>{/each}</span>
+    <span class="text-muted2">×2 = double · – = blank</span>
+    <span class="text-muted2">Rows sorted best fixture-run → worst · tap <span class="text-muted">+</span> to plan a rotation</span>
   </div>
 
   {#if rotation}
@@ -147,10 +154,11 @@
           {:else}
             <div class="m-0.5 flex flex-col gap-0.5">
               {#each cell as f}
-                <div class="fdr-{diffOf(f)} rounded text-center py-1.5" title="{f.opp} {f.home ? 'Home' : 'Away'} · difficulty {diffOf(f)}">
+                <div class="fdr-{diffOf(f)} rounded relative text-center py-1.5" title="{f.opp} {f.home ? 'Home' : 'Away'} · difficulty {diffOf(f)}">
+                  <!-- difficulty number in the corner so it's legible without relying on hue (colour-blind a11y) -->
+                  <div class="absolute top-0.5 right-1 text-[9px] font-black leading-none opacity-90">{diffOf(f)}</div>
                   <div class="text-[11px] font-bold leading-none">{f.opp}</div>
-                  <!-- number alongside colour so difficulty is legible without relying on hue (colour-blind a11y) -->
-                  <div class="text-[8px] opacity-80 leading-none mt-0.5">{f.home ? 'H' : 'A'} · {diffOf(f)}</div>
+                  <div class="text-[8px] opacity-75 leading-none mt-0.5">{f.home ? 'Home' : 'Away'}</div>
                 </div>
               {/each}
             </div>
@@ -158,12 +166,5 @@
         {/each}
       </div>
     {/each}
-  </div>
-
-  <div class="flex items-center gap-3 mt-3 text-xs text-muted flex-wrap">
-    <span>Difficulty:</span>
-    {#each [1, 2, 3, 4, 5] as d}<span class="fdr-{d} px-2 py-0.5 rounded">{d}</span>{/each}
-    <span class="ml-2">×2 = double</span>
-    <span>– = blank</span>
   </div>
 </div>

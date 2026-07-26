@@ -16,7 +16,7 @@
   import Accuracy from './pages/Accuracy.svelte'
   import Chips from './pages/Chips.svelte'
   import Meta from './pages/Meta.svelte'
-  import { GLOSSARY } from './lib/glossary'
+  import Help from './pages/Help.svelte'
 
   let bundle = $state<Bundle | null>(null)
   let error = $state<string | null>(null)
@@ -87,7 +87,7 @@
       {:else if route === 'overview'}
         <Overview {bundle} onpick={(id) => (selectedId = id)} onnav={nav} />
       {:else if route === 'my-team'}
-        {#key reloadKey}<MyTeam {bundle} onpick={(id) => (selectedId = id)} ongoSettings={() => (sidebarOpen = true)} />{/key}
+        {#key reloadKey}<MyTeam {bundle} onpick={(id) => (selectedId = id)} ongoSettings={() => (sidebarOpen = true)} onnav={nav} />{/key}
       {:else if route === 'planner'}
         <Planner {bundle} onpick={(id) => (selectedId = id)} />
       {:else if route === 'players'}
@@ -105,15 +105,7 @@
       {:else if route === 'accuracy'}
         <Accuracy {bundle} />
       {:else if route === 'help'}
-        <div class="rise max-w-3xl">
-          <h2 class="font-bold text-lg mb-1">How Gaffer works</h2>
-          <p class="text-sm text-muted mb-4">Every projection is a transparent sum of parts — appearance, goals, assists, clean sheet, DEFCON and bonus — gated by projected minutes, and each pick comes with a plain-English reason. Glossary below.</p>
-          <div class="grid sm:grid-cols-2 gap-3">
-            {#each Object.entries(GLOSSARY) as [term, def]}
-              <div class="card p-3"><span class="chip chip-info">{term}</span><p class="text-sm text-muted mt-1">{def}</p></div>
-            {/each}
-          </div>
-        </div>
+        <Help />
       {/if}
     </main>
   </div>

@@ -87,6 +87,7 @@
 
   // Shareable image of whichever XI is on screen (your team or the model's).
   let sharing = $state(false)
+  let toast = $state('')
   async function share() {
     sharing = true
     try {
@@ -104,6 +105,8 @@
         players,
       })
       downloadBlob(blob, 'gaffer-team.png')
+      toast = 'Team image downloaded ↓'
+      setTimeout(() => (toast = ''), 2600)
     } finally {
       sharing = false
     }
@@ -119,7 +122,7 @@
           <span class="flex items-center gap-1.5"><Icon name="zap" size={14} /> The Gaffer's Verdict</span>
           <span class="chip {showYourBrief ? 'chip-good' : 'chip-info'}">{showYourBrief ? 'your team' : 'model'}</span>
         </div>
-        <span class="text-[10px] text-muted2">{showYourBrief ? 'live' : verdict && verdict.source.startsWith('ai') ? verdict.model : 'auto'}</span>
+        <span class="text-[10px] text-muted2">{showYourBrief ? 'live' : verdict && verdict.source.startsWith('ai') ? 'AI' : 'auto'}</span>
       </div>
       <div class="verdict text-[15px] leading-relaxed text-text">
         {@html mdLite(showYourBrief ? teamBrief : (verdict?.briefing_md ?? ''))}
@@ -182,7 +185,10 @@
 
     <!-- top captains -->
     <div class="card p-3">
-      <h2 class="font-bold mb-2">Top captain picks</h2>
+      <div class="flex items-baseline justify-between mb-2">
+        <h2 class="font-bold">Top captain picks</h2>
+        <span class="text-[10px] text-muted2">ceiling · xP</span>
+      </div>
       <div class="divide-y divide-line/60">
         {#each topCaptains as p}
           <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
@@ -303,3 +309,8 @@
     {/if}
   </div>
 </div>
+
+{#if toast}
+  <div class="fixed left-1/2 -translate-x-1/2 z-50 rounded-full bg-brand text-[#05210f] text-sm font-semibold px-4 py-2 shadow-lg rise"
+    style="bottom: calc(var(--gaffer-bottomnav, 0px) + env(safe-area-inset-bottom) + 1.25rem);" role="status">{toast}</div>
+{/if}

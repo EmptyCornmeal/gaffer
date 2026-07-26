@@ -155,7 +155,7 @@
       </div>
       <p class="text-[11px] text-muted2 mb-2">Low-owned, high-projected — where you gain rank on the crowd.</p>
       {#each differentials as p}
-        {@render row(p, `${p.owned_by.toFixed(1)}%`, p.xp_window)}
+        {@render row(p, `${p.owned_by.toFixed(1)}%`, p.xp_window, ' xP')}
       {:else}
         <p class="text-xs text-muted2">No clear differentials right now.</p>
       {/each}
@@ -165,11 +165,11 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-2">
         <h3 class="font-bold text-accent-light">Template</h3>
-        <span class="text-[10px] text-muted">≥{TEMPLATE_MIN_OWN}% owned</span>
+        <span class="text-[10px] text-muted">≥{TEMPLATE_MIN_OWN}% owned · next-GW xP</span>
       </div>
       <p class="text-[11px] text-muted2 mb-2">The essential core — not owning these is itself a punt.</p>
       {#each template as p}
-        {@render row(p, `${p.owned_by.toFixed(1)}%`, p.next_gw_xp)}
+        {@render row(p, `${p.owned_by.toFixed(1)}%`, p.next_gw_xp, ' xP')}
       {:else}
         <p class="text-xs text-muted2">Ownership settles once the season starts.</p>
       {/each}

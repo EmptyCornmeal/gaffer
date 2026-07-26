@@ -7,9 +7,10 @@
   import FixtureStrip from '../components/FixtureStrip.svelte'
   import Icon from '../components/Icon.svelte'
 
-  let { bundle, onpick, ongoSettings }: { bundle: Bundle; onpick: (id: number) => void; ongoSettings: () => void } = $props()
+  let { bundle, onpick, ongoSettings, onnav }: { bundle: Bundle; onpick: (id: number) => void; ongoSettings: () => void; onnav: (r: string) => void } = $props()
 
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
+  const entryId = getEntryId()
   let phase = $state<'idle' | 'loading' | 'ok' | 'error' | 'nosetup' | 'preseason'>('idle')
   let msg = $state('')
   let picks = $state<PicksResponse | null>(null)
@@ -77,17 +78,21 @@
 {:else if phase === 'loading'}
   <div class="flex justify-center py-24 text-muted"><div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div></div>
 {:else if phase === 'preseason'}
-  <div class="card p-6 text-center rise max-w-lg mx-auto">
-    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/12 text-accent-light mb-3"><Icon name="hourglass" size={22} /></div>
-    <h2 class="font-bold text-lg">Your squad isn't public yet</h2>
-    <p class="text-sm text-muted mt-2">
-      FPL keeps everyone's team private until the <b>GW1 deadline ({deadlineStr})</b>. Your
-      live XI will load here automatically once it passes.
+  <div class="rise max-w-xl mx-auto flex flex-col items-center text-center py-10">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/12 text-accent-light mb-4"><Icon name="hourglass" size={26} /></div>
+    <h2 class="font-black text-xl">Your squad isn't public yet</h2>
+    <p class="text-sm text-muted mt-2 max-w-md">
+      FPL keeps everyone's team private until the <b>GW1 deadline ({deadlineStr})</b> — your
+      live XI, per-player xP, badges and fixtures load here automatically once it passes.
     </p>
-    <p class="text-sm text-muted mt-2">
-      In the meantime, head to the <b>Planner</b> — it's pre-loaded with the model's
-      optimal squad, and you can build and compare your own.
-    </p>
+    <button class="btn mt-5" onclick={() => onnav('planner')}>Build a team in the Planner →</button>
+    <button class="text-xs text-muted2 mt-3 hover:text-muted" onclick={ongoSettings}>Watching entry #{entryId} · change</button>
+    <div class="mt-8 grid grid-cols-3 gap-3 w-full max-w-md">
+      {#each [{ i: 'shirt', t: 'Your XI on the pitch' }, { i: 'zap', t: 'Per-player xP & badges' }, { i: 'calendar', t: 'Next-5 fixtures' }] as f}
+        <div class="card p-3 text-left"><Icon name={f.i} size={16} class="text-brand-light" /><div class="text-xs text-muted mt-1.5">{f.t}</div></div>
+      {/each}
+    </div>
+    <div class="text-[11px] text-muted2 mt-6">In-season, this page becomes your live team, scored and explained.</div>
   </div>
 {:else if phase === 'error'}
   <div class="card p-6 text-center rise max-w-lg mx-auto">
