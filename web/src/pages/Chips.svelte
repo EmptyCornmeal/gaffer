@@ -48,9 +48,23 @@
   )
   const maxStart = $derived(Math.max(1, ...rows.map((r) => r.starters)))
 
+  // Chip EV = the extra points the chip banks that week, so we rank on *value
+  // gained*, not just which GW looks busy:
+  //   Triple Captain — the captain already doubles, so TC adds one more ×captain.
+  //   Bench Boost    — the bench points that would otherwise be discarded.
+  //   Free Hit       — best measured as (optimal one-off XI − your XI); without a
+  //                    per-GW solve we surface the weakest XI week as the trigger.
   const tc = $derived([...rows].sort((a, b) => b.bestCap.xp - a.bestCap.xp)[0])
   const bb = $derived([...rows].sort((a, b) => b.bench - a.bench)[0])
   const fh = $derived([...rows].sort((a, b) => a.starters - b.starters)[0])
+  const avgStart = $derived(rows.length ? rows.reduce((s, r) => s + r.starters, 0) / rows.length : 0)
+  // The immediate-GW captain's Monte-Carlo ceiling/boom — the one week we have a
+  // distribution for, so Triple Captain can be framed on upside, not just mean.
+  const nextCap = $derived(
+    gws.length && tc?.gw === gws[0]
+      ? [...starters].map((p) => byId.get(p.id)).sort((a, b) => xpAt(b!, gws[0]) - xpAt(a!, gws[0]))[0]
+      : null,
+  )
 </script>
 
 <div class="rise flex flex-col gap-4 max-w-4xl">
@@ -66,19 +80,30 @@
   <!-- chip recommendations -->
   <div class="grid sm:grid-cols-3 gap-3">
     <div class="card p-3">
-      <div class="text-xs font-bold uppercase text-brand-light mb-1">Triple Captain</div>
+      <div class="flex items-baseline justify-between">
+        <div class="text-xs font-bold uppercase text-brand-light mb-1">Triple Captain</div>
+        <div class="text-sm font-bold text-brand-light tabular-nums">+{tc?.bestCap.xp.toFixed(1)} pts</div>
+      </div>
       <div class="text-2xl font-black">GW{tc?.gw}</div>
-      <div class="text-sm text-muted">{tc?.bestCap.name} projects {tc?.bestCap.xp.toFixed(1)} — highest ceiling.</div>
+      <div class="text-sm text-muted">
+        {tc?.bestCap.name} — the extra ×1 captain haul.{#if nextCap?.dist} Boom {nextCap.dist.boom}%, ceiling {nextCap.dist.ceiling}.{/if}
+      </div>
     </div>
     <div class="card p-3">
-      <div class="text-xs font-bold uppercase text-accent-light mb-1">Bench Boost</div>
+      <div class="flex items-baseline justify-between">
+        <div class="text-xs font-bold uppercase text-accent-light mb-1">Bench Boost</div>
+        <div class="text-sm font-bold text-accent-light tabular-nums">+{bb?.bench.toFixed(1)} pts</div>
+      </div>
       <div class="text-2xl font-black">GW{bb?.gw}</div>
-      <div class="text-sm text-muted">Bench adds ~{bb?.bench.toFixed(1)} pts — your strongest bench week.</div>
+      <div class="text-sm text-muted">Your bench's points, otherwise discarded — strongest bench week.</div>
     </div>
     <div class="card p-3">
-      <div class="text-xs font-bold uppercase text-yellow mb-1">Free Hit</div>
+      <div class="flex items-baseline justify-between">
+        <div class="text-xs font-bold uppercase text-yellow mb-1">Free Hit</div>
+        <div class="text-sm font-bold text-yellow tabular-nums">{(avgStart - (fh?.starters ?? 0)).toFixed(1)} vs avg</div>
+      </div>
       <div class="text-2xl font-black">GW{fh?.gw}</div>
-      <div class="text-sm text-muted">Weakest XI week (~{fh?.starters.toFixed(1)}) — a candidate to field a one-off side.</div>
+      <div class="text-sm text-muted">Weakest XI week (~{fh?.starters.toFixed(1)}) — field a one-off side, or save for a blank/double.</div>
     </div>
   </div>
 
