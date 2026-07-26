@@ -114,6 +114,37 @@ def _avg_rank_corr(df: pd.DataFrame, col: str) -> float:
     return float(pd.Series(corrs).mean()) if corrs else 0.0
 
 
+def _team_points(df: pd.DataFrame, col: str) -> float:
+    """Decision-level test: each GW, field the best legal XI (1 GK, 3-5 DEF, 2-5
+    MID, 1-3 FWD) ranked by the method's projection, then sum the ACTUAL points it
+    scored. Averaged over gameweeks — 'if you picked this model's team, what would
+    you have banked?'. The metric that actually matters, not per-player error."""
+    mn = {"GKP": 1, "DEF": 3, "MID": 2, "FWD": 1}
+    mx = {"GKP": 1, "DEF": 5, "MID": 5, "FWD": 3}
+    weekly = []
+    for _, grp in df.groupby("GW"):
+        g = grp[[col, "total_points", "position"]].copy()
+        g["_pos"] = g["position"].map(lambda p: _POS.get(str(p), "MID"))
+        g = g.sort_values(col, ascending=False)
+        counts = {"GKP": 0, "DEF": 0, "MID": 0, "FWD": 0}
+        chosen: list[Any] = []
+        for pos in ("GKP", "DEF", "MID", "FWD"):  # satisfy minimums first
+            for idx in g.index[g["_pos"] == pos][: mn[pos]]:
+                chosen.append(idx)
+                counts[pos] += 1
+        for idx, row in g.iterrows():  # fill to 11 by projection, within maxes
+            if len(chosen) >= 11:
+                break
+            if idx in chosen:
+                continue
+            if counts[row["_pos"]] < mx[row["_pos"]]:
+                chosen.append(idx)
+                counts[row["_pos"]] += 1
+        if len(chosen) == 11:
+            weekly.append(float(g.loc[chosen, "total_points"].sum()))
+    return round(float(np.mean(weekly)), 1) if weekly else 0.0
+
+
 def _calibration(df: pd.DataFrame, col: str, bins: int = 8) -> list[dict[str, float]]:
     """Reliability curve: bin players by predicted points, then report the mean
     prediction, mean actual, and actual haul-rate (≥10 pts) per bin. A calibrated
@@ -181,6 +212,7 @@ def run(data_dir: Path | None = None) -> dict[str, Any]:
             "gaffer": _calibration(ev, "gaffer"),
             "ml": _calibration(ev, "ml"),
         },
+        "team_points": {k: _team_points(ev, c) for k, c in methods.items()},
         "note": (
             "The trained gradient-boosted model vs Gaffer's *shipped* component "
             "projection (the exact code the site runs, incl. per-position goal "
@@ -189,9 +221,11 @@ def run(data_dir: Path | None = None) -> dict[str, Any]:
             "never trained on. DEFCON is excluded here — it did not score in "
             "2024-25. Rank correlation = ordering quality (higher better); MAE = "
             "points error (lower better); lift = avg actual points of the top-20% "
-            "vs bottom-20% projected. Caveat: team strength is a static "
-            "end-of-season snapshot applied to every GW, a mild optimism that "
-            "affects all fixture-based methods equally."
+            "vs bottom-20% projected. Top-XI actual pts/GW is the decision-level "
+            "test — field each model's best legal XI and count what it really "
+            "scored (a relative ordering test among players who featured). Caveat: "
+            "team strength is a static end-of-season snapshot applied to every GW, "
+            "a mild optimism that affects all fixture-based methods equally."
         ),
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }

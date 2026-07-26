@@ -77,6 +77,15 @@
             <td>{bt.lift.fpl_xp.bottom}</td>
             <td class="text-muted2">—</td>
           </tr>
+          {#if bt.team_points}
+            <tr>
+              <td>Top-XI actual pts / GW <span class="text-muted2">(field this model's picks)</span></td>
+              <td class="font-bold text-brand-light">{bt.team_points.ml}</td>
+              <td>{bt.team_points.gaffer}</td>
+              <td>{bt.team_points.fpl_xp}</td>
+              <td class="text-muted2">{bt.team_points.naive}</td>
+            </tr>
+          {/if}
         </tbody>
       </table>
     </div>

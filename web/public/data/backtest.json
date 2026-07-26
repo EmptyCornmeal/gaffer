@@ -131,6 +131,12 @@
       }
     ]
   },
-  "note": "The trained gradient-boosted model vs Gaffer's *shipped* component projection (the exact code the site runs, incl. per-position goal points, appearance model, clean-sheet Poisson and bonus proxy) vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. DEFCON is excluded here — it did not score in 2024-25. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected. Caveat: team strength is a static end-of-season snapshot applied to every GW, a mild optimism that affects all fixture-based methods equally.",
-  "generated_at": "2026-07-26T15:09:21+00:00"
+  "team_points": {
+    "gaffer": 55.3,
+    "ml": 55.7,
+    "fpl_xp": 76.0,
+    "naive": 47.9
+  },
+  "note": "The trained gradient-boosted model vs Gaffer's *shipped* component projection (the exact code the site runs, incl. per-position goal points, appearance model, clean-sheet Poisson and bonus proxy) vs FPL's own xP vs a naive recent-form baseline, on a season the model never trained on. DEFCON is excluded here — it did not score in 2024-25. Rank correlation = ordering quality (higher better); MAE = points error (lower better); lift = avg actual points of the top-20% vs bottom-20% projected. Top-XI actual pts/GW is the decision-level test — field each model's best legal XI and count what it really scored (a relative ordering test among players who featured). Caveat: team strength is a static end-of-season snapshot applied to every GW, a mild optimism that affects all fixture-based methods equally.",
+  "generated_at": "2026-07-26T15:32:54+00:00"
 }

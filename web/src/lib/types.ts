@@ -244,6 +244,7 @@ export interface Backtest {
   rank_corr: { gaffer: number; ml: number; fpl_xp: number; naive: number }
   lift: { ml: Lift; gaffer: Lift; fpl_xp: Lift }
   calibration?: { gaffer: CalBin[]; ml: CalBin[] }
+  team_points?: { gaffer: number; ml: number; fpl_xp: number; naive: number }
   note: string
   generated_at: string
 }
