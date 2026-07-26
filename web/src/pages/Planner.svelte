@@ -16,6 +16,16 @@
 
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
   const modelPlan = $derived(bundle.plan) // the model's optimal multi-GW transfer path
+  const planIsBuild = $derived(modelPlan?.mode === 'build')
+  let showBlueprint = $state(false) // expand the initial XV in the model plan
+  // Pair each week's outgoings with incomings into readable "out → in" swaps.
+  function swapsOf(step: { transfers_out: RecPlayer[]; transfers_in: RecPlayer[] }) {
+    const n = Math.max(step.transfers_out.length, step.transfers_in.length)
+    return Array.from({ length: n }, (_, i) => ({
+      out: step.transfers_out[i] ?? null,
+      inp: step.transfers_in[i] ?? null,
+    }))
+  }
   const initialPlan = loadCurrent()
   let plan = $state<Plan>(initialPlan)
   let plans = $state<Plan[]>(listPlans())
@@ -197,38 +207,54 @@
   <div class="flex flex-col gap-3 min-w-0">
     {#if modelPlan && modelPlan.steps?.length}
       <div class="card p-3">
-        <div class="flex items-baseline justify-between mb-2 gap-2 flex-wrap">
-          <h2 class="font-bold flex items-center gap-2">Model transfer plan
+        <div class="flex items-baseline justify-between mb-1 gap-2 flex-wrap">
+          <h2 class="font-bold flex items-center gap-2">{planIsBuild ? "Model blueprint" : 'Your transfer plan'}
             <span class="text-xs text-muted font-normal">next {modelPlan.steps.length} GWs · {modelPlan.total_expected} pts</span>
           </h2>
-          <span class="text-[10px] chip {modelPlan.mode === 'build' ? 'chip-info' : 'chip-good'}">{modelPlan.mode === 'build' ? 'from scratch' : 'from your team'}</span>
+          <span class="text-[10px] chip {planIsBuild ? 'chip-info' : 'chip-good'}">{planIsBuild ? 'not your team' : 'from your team'}</span>
         </div>
-        <div class="space-y-1.5">
+        {#if planIsBuild}
+          <p class="text-[11px] text-accent-light bg-accent/8 border border-accent/25 rounded-lg px-2.5 py-1.5 mb-2">
+            How the model would <b>build a squad from scratch and evolve it</b> — a reference, <b>not</b> based on your imported team below. It shows off your real picks once your FPL squad locks at the GW1 deadline.
+          </p>
+        {/if}
+        <div class="space-y-1">
           {#each modelPlan.steps as s, si}
-            <div class="flex items-start gap-2">
-              <span class="text-[11px] font-bold text-muted w-9 shrink-0 pt-1">GW{s.gw}</span>
+            <div class="flex items-start gap-2 py-0.5">
+              <span class="text-[11px] font-bold text-muted2 w-9 shrink-0 pt-1">GW{s.gw}</span>
               <div class="flex-1 min-w-0">
-                {#if s.transfers_in.length}
-                  <div class="flex flex-wrap items-center gap-1">
-                    {#each s.transfers_out as p}
-                      <button onclick={() => onpick(p.id)} class="chip chip-bad hover:opacity-80">− {p.name}</button>
+                {#if si === 0 && planIsBuild}
+                  <button onclick={() => (showBlueprint = !showBlueprint)} class="text-xs text-text hover:text-brand-light flex items-center gap-1">
+                    Draft the starting XV
+                    <span class="text-muted2">{showBlueprint ? '▴ hide' : '▾ show'}</span>
+                  </button>
+                  {#if showBlueprint}
+                    <div class="mt-1 flex flex-wrap gap-1">
+                      {#each [...s.starting, ...s.bench] as p}
+                        <button onclick={() => onpick(p.id)} class="text-[11px] px-1.5 py-0.5 rounded bg-bg3 text-muted hover:text-text">{p.name}</button>
+                      {/each}
+                    </div>
+                  {/if}
+                {:else if s.transfers_in.length}
+                  <div class="flex flex-wrap items-center gap-x-1 gap-y-1">
+                    {#each swapsOf(s) as sw}
+                      <span class="inline-flex items-center gap-1 rounded-md bg-bg3 px-1.5 py-0.5 text-[11px]">
+                        {#if sw.out}<button onclick={() => onpick(sw.out.id)} class="text-red hover:opacity-80">{sw.out.name}</button>{/if}
+                        <span class="text-muted2">→</span>
+                        {#if sw.inp}<button onclick={() => onpick(sw.inp.id)} class="text-brand-light hover:opacity-80">{sw.inp.name}</button>{/if}
+                      </span>
                     {/each}
-                    {#each s.transfers_in as p}
-                      <button onclick={() => onpick(p.id)} class="chip chip-good hover:opacity-80">+ {p.name}</button>
-                    {/each}
-                    {#if s.hits}<span class="text-red text-[11px] font-bold">−{s.hits * 4}</span>{/if}
+                    {#if s.hits}<span class="chip chip-bad">−{s.hits * 4} hit</span>{/if}
                   </div>
-                {:else if si === 0 && modelPlan.mode === 'build'}
-                  <span class="text-xs text-muted">Build the initial 15 (see below)</span>
                 {:else}
-                  <span class="text-xs text-muted">Roll — bank the free transfer (now {s.free_transfers})</span>
+                  <span class="text-xs text-muted2">Roll — bank the free transfer <span class="text-muted">(now {s.free_transfers})</span></span>
                 {/if}
               </div>
-              <span class="text-[11px] tabular-nums text-brand-light shrink-0 pt-0.5">(C){s.captain.name} · {s.xi_expected}</span>
+              <span class="text-[11px] tabular-nums text-brand-light shrink-0 pt-0.5" title="Captain + projected XI points">(C) {s.captain.name} · {s.xi_expected}</span>
             </div>
           {/each}
         </div>
-        <p class="text-[10px] text-muted2 mt-2">The optimal <b>sequence</b> of moves — when to transfer, when to bank a free transfer, when a −4 pays — maximising decayed points over the window (a banked FT is valued at ~1.5 pts, so a move must beat that).</p>
+        <p class="text-[10px] text-muted2 mt-2 pt-2 border-t border-line/60">The optimal <b>sequence</b> — when to swap, bank a free transfer, or take a −4 — maximising points over the window (a banked transfer is worth ~1.5 pts, so a swap must beat that).</p>
       </div>
     {/if}
     <div class="card p-3">

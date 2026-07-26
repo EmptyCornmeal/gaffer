@@ -32,12 +32,23 @@ _EXCLUDE = re.compile(
     re.IGNORECASE,
 )
 _TAG = re.compile(r"<[^>]+>")
+# RSS feeds concatenate the headline into the body with no space ("crowdDane
+# Scarlett", "victory40,112"). Split a word→Word or word→number collision, but
+# only when the lowercase run is ≥2 so real names ("McTominay") are untouched.
+_CAMEL = re.compile(r"([a-z]{2,})([A-Z][a-z]{2,})")
+_NUMSTICK = re.compile(r"([a-z]{3,})(\d)")
+_SPAM = re.compile(r"(?:sign up now[!.]?\s*){2,}", re.IGNORECASE)
+_WS = re.compile(r"\s{2,}")
 
 USER_AGENT = "Mozilla/5.0 (compatible; gaffer/0.1)"
 
 
 def _clean(text: str | None) -> str:
-    return _TAG.sub("", (text or "")).strip()
+    t = _TAG.sub("", (text or ""))
+    t = _SPAM.sub("", t)
+    t = _CAMEL.sub(r"\1 \2", t)
+    t = _NUMSTICK.sub(r"\1 \2", t)
+    return _WS.sub(" ", t).strip()
 
 
 def _parse_feed(source: str, xml_text: str) -> list[dict[str, Any]]:

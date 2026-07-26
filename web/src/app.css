@@ -13,8 +13,8 @@
   --color-line: #1e2a41;    /* hairline separators (~rgba(255,255,255,.08)) */
   --color-line2: #2b3a56;   /* stronger borders */
   --color-text: #f4f7fb;    /* ~92% white, not pure #fff */
-  --color-muted: #a9b4c6;   /* secondary labels */
-  --color-muted2: #6b7688;  /* captions, axis ticks */
+  --color-muted: #b2bccd;   /* secondary labels (lifted for AA on navy) */
+  --color-muted2: #8b98ad;  /* captions, axis ticks (lifted from #6b7688 — was <AA) */
   --color-brand: #10b981;
   --color-brand-light: #34d399;
   --color-accent: #3b82f6;
@@ -150,11 +150,12 @@ body {
 .btn-ghost { background: transparent; color: var(--color-text); border: 1px solid var(--color-line2); }
 .btn-ghost:hover { background: var(--color-card2); filter: none; }
 
-/* fixture difficulty — green(easy) -> slate(neutral) -> red(hard); slate at 3
-   reads calmer on navy than yellow, per the FDR-heatmap convention. */
+/* fixture difficulty — green(easy) -> slate(neutral) -> red(hard). The neutral 3
+   is lifted to a clearly-filled mid-slate so an average fixture never recedes
+   into the navy background and reads as a blank (a recurring legibility bug). */
 .fdr-1 { background: #0f7a52; color: #eafff5; }
-.fdr-2 { background: #10b981; color: #04180f; }
-.fdr-3 { background: #334155; color: #e6edf7; }
+.fdr-2 { background: #17a877; color: #eafff5; }
+.fdr-3 { background: #55627b; color: #f1f4fa; }
 .fdr-4 { background: #e06a3b; color: #fff; }
 .fdr-5 { background: #d03b3b; color: #fff; }
 
