@@ -73,9 +73,9 @@
   <div>
     <h2 class="font-bold text-lg flex items-center gap-2"><Icon name="layers" size={18} /> Chip Strategy</h2>
     <p class="text-sm text-muted">
-      Best gameweeks to play each chip across the next {gws.length}, based on your
-      {planValid ? 'team' : "team (showing the model squad — build yours in the Planner)"}'s
-      projected points. {#if !planValid}<button class="text-accent-light hover:underline" onclick={() => onnav('planner')}>Build your team →</button>{/if}
+      Best gameweeks to play each chip across the next {gws.length}, from the projected points of
+      {planValid ? 'your team' : 'the model squad'}.
+      {#if !planValid}<button class="text-accent-light hover:underline" onclick={() => onnav('planner')}>Build your own team →</button>{/if}
     </p>
   </div>
 

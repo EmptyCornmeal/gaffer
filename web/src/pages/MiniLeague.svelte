@@ -177,7 +177,7 @@
     <button class="btn mt-4" onclick={ongoSettings}>Open settings</button>
   </div>
 {:else}
-  <div class="flex flex-col gap-3 rise">
+  <div class="flex flex-col gap-3 rise max-w-5xl mx-auto w-full">
     {#if leagueIds.length > 1}
       <div class="flex gap-1">
         {#each leagueIds as id, i}
