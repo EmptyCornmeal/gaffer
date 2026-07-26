@@ -29,25 +29,45 @@
   const parts = $derived(
     player
       ? [
-          { label: 'Appearance', v: player.breakdown.appearance, c: 'bg-slate-400' },
-          { label: 'Goals', v: player.breakdown.goals, c: 'bg-red' },
-          { label: 'Assists', v: player.breakdown.assists, c: 'bg-yellow' },
-          { label: 'Clean sheet', v: player.breakdown.clean_sheet, c: 'bg-accent' },
-          { label: 'DEFCON', v: player.breakdown.defcon, c: 'bg-brand' },
-          { label: 'Bonus', v: player.breakdown.bonus, c: 'bg-brand-light' },
+          { label: 'Appearance', v: player.breakdown.appearance, c: '#94a3b8' },
+          { label: 'Goals', v: player.breakdown.goals, c: '#f04452' },
+          { label: 'Assists', v: player.breakdown.assists, c: '#fab219' },
+          { label: 'Clean sheet', v: player.breakdown.clean_sheet, c: '#60a5fa' },
+          { label: 'DEFCON', v: player.breakdown.defcon, c: '#10b981' },
+          { label: 'Bonus', v: player.breakdown.bonus, c: '#34d399' },
         ].filter((p) => p.v > 0.001)
       : [],
   )
   const total = $derived(player?.next_gw_xp ?? 0)
-  // Guard the stacked bar against divide-by-zero when xP≈0 (breakdown parts can
-  // still be non-zero and mismatch the headline total slightly).
-  const denom = $derived(Math.max(total, ...parts.map((p) => p.v), 0.001))
+  const hasProjection = $derived(total > 0.05 && parts.length > 0)
+  const partsSum = $derived(parts.reduce((s, p) => s + p.v, 0) || 1)
   const photo = $derived(player ? playerPhoto(player.code, '250x250') : '')
   let photoBroken = $state(false)
   $effect(() => {
     player // reset when the player changes
     photoBroken = false
   })
+
+  // Distribution scaled from 0 so it reads as a real range, not a progress bar.
+  const dist = $derived(player?.dist ?? null)
+  const distSpan = $derived(dist ? (Math.max(dist.ceiling, total) * 1.08 || 1) : 1)
+  const pct = (v: number) => `${Math.max(0, Math.min(100, (v / distSpan) * 100))}%`
+
+  // Header pills: the xMins badge + tags, deduped (drop any tag that just repeats
+  // the minutes badge) and rendered as one consistent pill row.
+  const pills = $derived(
+    player
+      ? [
+          { label: `${player.xmins_badge.label} ${player.xmins_badge.hint}`.trim(), kind: player.xmins_badge.kind },
+          ...player.tags.filter(
+            (t) => t.label.toLowerCase() !== player.xmins_badge.label.toLowerCase(),
+          ),
+        ]
+      : [],
+  )
+  const kindClass: Record<string, string> = {
+    good: 'chip-good', warn: 'chip-warn', bad: 'chip-bad', info: 'chip-info',
+  }
 </script>
 
 <svelte:window onkeydown={(e) => player && e.key === 'Escape' && onclose()} />
@@ -63,167 +83,189 @@
     <div
       bind:this={card}
       onkeydown={trap}
-      class="relative w-full sm:max-w-lg card rounded-t-2xl sm:rounded-2xl p-5 rise max-h-[88vh] overflow-y-auto"
+      class="relative w-full sm:max-w-lg card rounded-t-2xl sm:rounded-2xl rise max-h-[90vh] overflow-y-auto"
     >
-      <div class="w-10 h-1 rounded-full bg-line2 mx-auto mb-4 sm:hidden"></div>
       <button
         bind:this={closeBtn}
         onclick={onclose}
         aria-label="Close"
-        class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-bg2 border border-line text-muted hover:text-text flex items-center justify-center"
+        class="absolute top-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-bg3/80 border border-line text-muted hover:text-text flex items-center justify-center"
       ><Icon name="x" size={16} /></button>
 
-      <div class="flex items-start gap-3">
-        {#if photo && !photoBroken}
-          <img
-            src={photo}
-            alt={player.name}
-            onerror={() => (photoBroken = true)}
-            class="w-16 h-16 rounded-lg object-cover object-top bg-bg3 border border-line"
-          />
+      <!-- ===== HERO ===== -->
+      <div class="aura px-5 pt-5 pb-4 border-b border-line">
+        <div class="w-9 h-1 rounded-full bg-line2 mx-auto mb-3 sm:hidden"></div>
+        <div class="relative flex items-start gap-3.5 pr-8">
+          {#if photo && !photoBroken}
+            <img src={photo} alt={player.name} onerror={() => (photoBroken = true)}
+              class="w-16 h-16 rounded-xl object-cover object-top bg-bg3 border border-line shrink-0" />
+          {:else}
+            <div class="w-16 h-16 rounded-xl bg-bg3 border border-line flex items-center justify-center shrink-0"><Crest code={player.team_code} short={player.team} size={34} /></div>
+          {/if}
+          <div class="flex-1 min-w-0">
+            <div class="text-xl font-black leading-tight truncate">{player.name}</div>
+            <div class="text-sm text-muted flex items-center gap-1.5 mt-0.5">
+              <Crest code={player.team_code} short={player.team} size={15} />
+              <span>{player.pos} · {player.team}</span>
+            </div>
+            <div class="text-[13px] text-muted2 mt-0.5">£{player.price.toFixed(1)}m · {player.owned_by}% owned</div>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="text-4xl font-black text-brand-light tabular-nums leading-none">{total.toFixed(1)}</div>
+            <div class="text-[10px] uppercase tracking-wide text-muted2 mt-1">xP next GW</div>
+            {#if dist && dist.ceiling > 0}
+              <div class="text-[11px] text-muted2 mt-1 tabular-nums">{dist.floor}–{dist.ceiling} range</div>
+            {/if}
+          </div>
+        </div>
+        <div class="relative mt-2.5 flex flex-wrap gap-1">
+          {#each pills as p}<span class="chip {kindClass[p.kind] ?? 'chip-info'}">{p.label}</span>{/each}
+        </div>
+      </div>
+
+      <div class="p-5 flex flex-col gap-4">
+        <!-- WHY -->
+        <p class="text-sm leading-relaxed text-text">
+          <span class="text-brand-light font-semibold">Why:</span>{' '}{player.rationale}
+        </p>
+        {#if player.news}
+          <div class="text-xs chip-bad rounded-lg px-3 py-2 -mt-1">{player.news}</div>
         {/if}
-        <div class="flex-1">
-          <div class="text-xl font-bold">{player.name}</div>
-          <div class="text-sm text-muted flex items-center gap-1.5">
-            <Crest code={player.team_code} short={player.team} size={16} />
-            {player.pos} · {player.team} · £{player.price.toFixed(1)}m · {player.owned_by}% owned
+
+        <!-- ===== PROJECTION ===== -->
+        <section class="rounded-xl bg-bg2 border border-line p-3.5">
+          <div class="flex items-center justify-between mb-2.5">
+            <h3 class="text-[11px] font-bold uppercase tracking-wide text-muted2">Projection · next GW</h3>
+            {#if dist && dist.boom >= 8}<span class="chip chip-good">🔥 {dist.boom}% haul</span>{/if}
           </div>
-          <div class="mt-1 flex flex-wrap gap-1">
-            <span class="badge badge-{player.xmins_badge.kind}">{player.xmins_badge.label} {player.xmins_badge.hint}</span>
-            {#each player.tags as t}<span class="chip chip-{t.kind}">{t.label}</span>{/each}
-          </div>
-        </div>
-        <div class="text-right">
-          <div class="text-2xl font-black text-brand-light tabular-nums">{total.toFixed(2)}</div>
-          <div class="text-[10px] uppercase text-muted">next-GW xP</div>
-        </div>
-      </div>
 
-      <!-- WHY -->
-      <div class="mt-3 rounded-lg bg-bg2 border border-line px-3 py-2 text-sm">
-        <span class="text-brand-light font-semibold">Why: </span>{player.rationale}
-      </div>
-
-      {#if player.news}
-        <div class="mt-2 text-xs chip-bad rounded-lg px-3 py-2">{player.news}</div>
-      {/if}
-
-      <!-- stacked contribution -->
-      <div class="mt-4">
-        <div class="text-xs font-bold uppercase text-muted mb-1">Where the points come from</div>
-        <div class="flex h-4 rounded-full overflow-hidden bg-bg3">
-          {#each parts as p}<div class={p.c} style="width: {(p.v / denom) * 100}%" title={p.label}></div>{/each}
-        </div>
-        <div class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-          {#each parts as p}
-            <div class="flex items-center justify-between">
-              <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded {p.c}"></span>{p.label}</span>
-              <span class="tabular-nums text-muted">{p.v.toFixed(2)}</span>
+          {#if hasProjection}
+            <!-- stacked contribution -->
+            <div class="flex h-2.5 rounded-full overflow-hidden bg-bg3">
+              {#each parts as p}<div style="width:{(p.v / partsSum) * 100}%; background:{p.c}" title="{p.label} {p.v.toFixed(2)}"></div>{/each}
             </div>
-          {/each}
-        </div>
-      </div>
-
-      <!-- distribution: floor / expected / ceiling (Monte-Carlo, next GW) -->
-      {#if player.dist && player.dist.ceiling > 0}
-        {@const d = player.dist}
-        {@const span = Math.max(d.ceiling, total) || 1}
-        <div class="mt-4">
-          <div class="flex items-center justify-between mb-1">
-            <div class="text-xs font-bold uppercase text-muted">Range this week</div>
-            {#if d.boom >= 8}<span class="chip chip-good">🔥 {d.boom}% haul chance</span>{/if}
-          </div>
-          <div class="relative h-6 rounded-full bg-bg3 overflow-hidden">
-            <!-- floor..ceiling band -->
-            <div
-              class="absolute top-0 bottom-0 bg-brand/25"
-              style="left:{(d.floor / span) * 100}%; right:{100 - (d.ceiling / span) * 100}%"
-            ></div>
-            <!-- expected marker -->
-            <div class="absolute top-0 bottom-0 w-0.5 bg-brand-light" style="left:{(total / span) * 100}%"></div>
-          </div>
-          <div class="flex justify-between text-[11px] text-muted mt-1 tabular-nums">
-            <span>Floor <b class="text-text">{d.floor}</b></span>
-            <span>Expected <b class="text-brand-light">{total.toFixed(1)}</b></span>
-            <span>Ceiling <b class="text-text">{d.ceiling}</b></span>
-          </div>
-        </div>
-      {/if}
-
-      <!-- projected DEFCON (defensive contribution +2) -->
-      {#if player.defcon}
-        {@const dc = player.defcon}
-        <div class="mt-3 rounded-lg bg-bg2 border border-line px-3 py-2">
-          <div class="flex items-center justify-between">
-            <div class="text-xs font-bold uppercase text-muted flex items-center gap-1.5">
-              DEFCON projection
-              {#if dc.near_hit}<span class="chip chip-warn">near-hit</span>{/if}
+            <div class="mt-2.5 grid grid-cols-2 gap-x-5 gap-y-1.5 text-[13px]">
+              {#each parts as p}
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-2 text-muted"><span class="w-2.5 h-2.5 rounded-sm" style="background:{p.c}"></span>{p.label}</span>
+                  <span class="tabular-nums text-text">{p.v.toFixed(2)}</span>
+                </div>
+              {/each}
             </div>
-            <div class="text-sm font-bold tabular-nums {dc.p_hit >= 0.5 ? 'text-brand-light' : 'text-text'}">{Math.round(dc.p_hit * 100)}% <span class="text-muted font-normal">to hit +2</span></div>
-          </div>
-          <div class="mt-1.5 h-2 rounded-full bg-bg3 overflow-hidden">
-            <div class="h-full {dc.p_hit >= 0.5 ? 'bg-brand' : 'bg-accent'}" style="width:{Math.round(dc.p_hit * 100)}%"></div>
-          </div>
-          <div class="text-[11px] text-muted2 mt-1">{dc.per90} actions/90 · needs {dc.threshold} for +2</div>
-        </div>
-      {/if}
 
-      <div class="mt-4 grid grid-cols-4 gap-2 text-center text-xs">
-        <div class="card py-2"><div class="text-muted">Start</div><div class="font-bold">{Math.round(player.p_start * 100)}%</div></div>
-        <div class="card py-2"><div class="text-muted">Conf.</div><div class="font-bold">{Math.round(player.confidence * 100)}%</div></div>
-        <div class="card py-2"><div class="text-muted">6-GW</div><div class="font-bold text-accent-light">{player.xp_window.toFixed(0)}</div></div>
-        <div class="card py-2"><div class="text-muted">Form</div><div class="font-bold">{player.form.toFixed(1)}</div></div>
-      </div>
-
-      <div class="mt-3 flex items-center justify-between">
-        <div class="flex gap-4 text-xs text-muted">
-          <span>xGI/90 <b class="text-text">{player.xgi90.toFixed(2)}</b></span>
-          <span>DEFCON/90 <b class="text-text">{player.defcon90.toFixed(1)}</b></span>
-        </div>
-        <FixtureStrip fixtures={player.fixtures} />
-      </div>
-
-      <!-- last-season baseline (the projection's fallback; survives FPL's reset) -->
-      {#if player.last_season}
-        <div class="mt-3 rounded-lg bg-bg2 border border-line px-3 py-2">
-          <div class="text-[10px] uppercase text-muted mb-1">Last season · {player.last_season.season}</div>
-          <div class="grid grid-cols-4 gap-2 text-center text-xs">
-            <div><div class="font-bold tabular-nums">{player.last_season.minutes.toLocaleString()}</div><div class="text-muted2">mins</div></div>
-            <div><div class="font-bold tabular-nums">{player.last_season.starts}</div><div class="text-muted2">starts</div></div>
-            <div><div class="font-bold tabular-nums text-brand-light">{player.last_season.xg90.toFixed(2)}</div><div class="text-muted2">xG/90</div></div>
-            <div><div class="font-bold tabular-nums text-accent-light">{player.last_season.xa90.toFixed(2)}</div><div class="text-muted2">xA/90</div></div>
-          </div>
-        </div>
-      {:else}
-        <div class="mt-3 text-[11px] text-muted2">No Premier League history last season — projection leans on a position/price prior.</div>
-      {/if}
-
-      {#if player.set_pieces || player.price_pred.dir !== 'stable'}
-        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          {#if player.set_pieces}
-            <span class="chip chip-info">⚽ {player.set_pieces}</span>
+            {#if dist && dist.ceiling > 0}
+              <!-- distribution, scaled from 0 -->
+              <div class="mt-4">
+                <div class="text-[11px] text-muted2 mb-1.5">Likely range this week</div>
+                <div class="relative h-7 rounded-lg bg-bg3 overflow-hidden">
+                  <div class="absolute inset-y-1 rounded bg-brand/25 border-x border-brand/40" style="left:{pct(dist.floor)}; right:calc(100% - {pct(dist.ceiling)})"></div>
+                  <div class="absolute inset-y-0 w-[3px] rounded bg-brand-light" style="left:{pct(total)}"></div>
+                </div>
+                <div class="flex justify-between text-[11px] mt-1.5 tabular-nums">
+                  <span class="text-muted2">Floor <b class="text-muted">{dist.floor}</b></span>
+                  <span class="text-muted2">Median <b class="text-brand-light">{total.toFixed(1)}</b></span>
+                  <span class="text-muted2">Ceiling <b class="text-muted">{dist.ceiling}</b></span>
+                </div>
+              </div>
+            {/if}
+          {:else}
+            <div class="text-sm text-muted py-1">
+              No projected points this week{player.status && player.status !== 'a' ? ` — ${player.news || 'flagged / not expected to feature'}` : ' — not expected to feature'}.
+            </div>
           {/if}
-          {#if player.price_pred.dir === 'up'}
-            <span class="chip chip-good" title="Net transfers this GW">▲ price rising · {(player.price_pred.momentum / 1000).toFixed(0)}k in</span>
-          {:else if player.price_pred.dir === 'down'}
-            <span class="chip chip-bad" title="Net transfers this GW">▼ price falling · {(Math.abs(player.price_pred.momentum) / 1000).toFixed(0)}k out</span>
-          {/if}
-        </div>
-      {/if}
+        </section>
 
-      {#if player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0}
-        {@const up = player.price_pred.momentum > 0}
-        <div class="mt-2">
-          <div class="flex items-center justify-between text-[11px] text-muted mb-0.5">
-            <span>Est. progress to price {up ? 'rise' : 'fall'}</span>
-            <span class="tabular-nums">{Math.round(player.price_pred.progress * 100)}%</span>
+        <!-- ===== UNDERLYING ===== -->
+        <section>
+          <h3 class="text-[11px] font-bold uppercase tracking-wide text-muted2 mb-2">Underlying</h3>
+          <div class="grid grid-cols-4 gap-2 text-center">
+            {#each [
+              { k: 'Start', v: `${Math.round(player.p_start * 100)}%` },
+              { k: 'Form', v: player.form.toFixed(1) },
+              { k: '6-GW xP', v: player.xp_window.toFixed(0), accent: true },
+              { k: 'Conf.', v: `${Math.round(player.confidence * 100)}%` },
+            ] as s}
+              <div class="rounded-lg bg-bg2 border border-line py-2">
+                <div class="text-[10px] uppercase tracking-wide text-muted2">{s.k}</div>
+                <div class="font-black tabular-nums {s.accent ? 'text-accent-light' : 'text-text'}">{s.v}</div>
+              </div>
+            {/each}
           </div>
-          <div class="h-1.5 rounded-full bg-bg3 overflow-hidden">
-            <div class="h-full {up ? 'bg-brand' : 'bg-red'}" style="width:{Math.min(100, player.price_pred.progress * 100)}%"></div>
+          <div class="grid grid-cols-2 gap-2 mt-2 text-center">
+            <div class="rounded-lg bg-bg2 border border-line py-2">
+              <div class="text-[10px] uppercase tracking-wide text-muted2">xGI / 90</div>
+              <div class="font-black tabular-nums text-text">{player.xgi90.toFixed(2)}</div>
+            </div>
+            <div class="rounded-lg bg-bg2 border border-line py-2">
+              <div class="text-[10px] uppercase tracking-wide text-muted2">DEFCON / 90</div>
+              <div class="font-black tabular-nums text-text">{player.defcon90.toFixed(1)}</div>
+            </div>
           </div>
-          <div class="text-[10px] text-muted2 mt-0.5">Estimate: net {up ? 'in' : 'out'} vs an ownership-scaled threshold — FPL's exact cutoff is secret.</div>
-        </div>
-      {/if}
+
+          <!-- DEFCON projection (only where it's a real returns source, not 0% noise) -->
+          {#if player.defcon && player.defcon.p_hit >= 0.05}
+            {@const dc = player.defcon}
+            <div class="mt-2 rounded-lg bg-bg2 border border-line px-3 py-2.5">
+              <div class="flex items-center justify-between">
+                <div class="text-[11px] font-bold uppercase tracking-wide text-muted2 flex items-center gap-1.5">
+                  DEFCON +2 chance
+                  {#if dc.near_hit}<span class="chip chip-warn">near-hit</span>{/if}
+                </div>
+                <div class="text-sm font-black tabular-nums {dc.p_hit >= 0.5 ? 'text-brand-light' : 'text-text'}">{Math.round(dc.p_hit * 100)}%</div>
+              </div>
+              <div class="mt-1.5 h-1.5 rounded-full bg-bg3 overflow-hidden">
+                <div class="h-full {dc.p_hit >= 0.5 ? 'bg-brand' : 'bg-accent'}" style="width:{Math.round(dc.p_hit * 100)}%"></div>
+              </div>
+              <div class="text-[11px] text-muted2 mt-1">{dc.per90} defensive actions/90 · needs {dc.threshold} for the +2</div>
+            </div>
+          {/if}
+        </section>
+
+        <!-- ===== CONTEXT ===== -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-[11px] font-bold uppercase tracking-wide text-muted2">Next fixtures</h3>
+            <FixtureStrip fixtures={player.fixtures} />
+          </div>
+
+          {#if player.last_season}
+            <div class="rounded-lg bg-bg2 border border-line px-3 py-2.5">
+              <div class="text-[10px] uppercase tracking-wide text-muted2 mb-1.5">Last season · {player.last_season.season}</div>
+              <div class="grid grid-cols-4 gap-2 text-center text-[13px]">
+                <div><div class="font-bold tabular-nums">{player.last_season.minutes.toLocaleString()}</div><div class="text-[10px] text-muted2">mins</div></div>
+                <div><div class="font-bold tabular-nums">{player.last_season.starts}</div><div class="text-[10px] text-muted2">starts</div></div>
+                <div><div class="font-bold tabular-nums text-brand-light">{player.last_season.xg90.toFixed(2)}</div><div class="text-[10px] text-muted2">xG/90</div></div>
+                <div><div class="font-bold tabular-nums text-accent-light">{player.last_season.xa90.toFixed(2)}</div><div class="text-[10px] text-muted2">xA/90</div></div>
+              </div>
+            </div>
+          {:else}
+            <div class="text-[12px] text-muted2">No Premier League history last season — the projection leans on a position/price prior.</div>
+          {/if}
+
+          {#if player.set_pieces || player.price_pred.dir !== 'stable' || (player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0)}
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              {#if player.set_pieces}<span class="chip chip-info">⚽ {player.set_pieces}</span>{/if}
+              {#if player.price_pred.dir === 'up'}
+                <span class="chip chip-good">▲ rising · {(player.price_pred.momentum / 1000).toFixed(0)}k in</span>
+              {:else if player.price_pred.dir === 'down'}
+                <span class="chip chip-bad">▼ falling · {(Math.abs(player.price_pred.momentum) / 1000).toFixed(0)}k out</span>
+              {/if}
+            </div>
+            {#if player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0}
+              {@const up = player.price_pred.momentum > 0}
+              <div class="mt-2">
+                <div class="flex items-center justify-between text-[11px] text-muted2 mb-1">
+                  <span>Est. progress to price {up ? 'rise' : 'fall'}</span>
+                  <span class="tabular-nums text-muted">{Math.round(player.price_pred.progress * 100)}%</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-bg3 overflow-hidden">
+                  <div class="h-full {up ? 'bg-brand' : 'bg-red'}" style="width:{Math.min(100, player.price_pred.progress * 100)}%"></div>
+                </div>
+              </div>
+            {/if}
+          {/if}
+        </section>
+      </div>
     </div>
   </div>
 {/if}
