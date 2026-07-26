@@ -97,9 +97,19 @@
     optimalRisk = r
     const oh = bundle.recommendation.by_horizon?.[String(h)]?.by_risk?.[r]
     const src = oh ?? bundle.recommendation
-    const ids = [...src.starting, ...src.bench].map((p) => p.id)
-    const sq = ids.map((id) => byId.get(id)!).filter(Boolean)
-    plan = { ...plan, ids, ...autoLineup(sq) }
+    // Use the solver's exact XI, bench order and captain/vice — don't let the
+    // frontend auto-lineup re-pick them (it would re-captain by raw xP and lose
+    // the model's EO-aware captain, e.g. flip Haaland back to Bruno).
+    const starters = src.starting.map((p) => p.id)
+    const bench = src.bench.map((p) => p.id)
+    const ids = [...starters, ...bench]
+    plan = {
+      ...plan,
+      ids,
+      starters,
+      captainId: src.captain?.id ?? -1,
+      viceId: src.vice?.id ?? -1,
+    }
     shownOptimal = oh ?? null
   }
 

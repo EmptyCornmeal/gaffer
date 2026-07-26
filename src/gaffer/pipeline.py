@@ -46,7 +46,8 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
     # of a pure points-per-£ team that punts the template.
     risk_weights = optimize.RISK_WEIGHTS
     sol = optimize.optimise(
-        conn, from_gw, horizon, free_transfers=ft, template_weight=risk_weights["balanced"]
+        conn, from_gw, horizon, free_transfers=ft,
+        template_weight=risk_weights["balanced"], distributions=distributions,
     )
     log["solver"] = {
         "mode": sol.meta.get("mode"), "status": sol.status,
@@ -59,7 +60,10 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
     # trades rank-safety off against differential value).
     horizon_solutions = {
         h: {
-            r: optimize.optimise(conn, from_gw, h, free_transfers=ft, template_weight=w)
+            r: optimize.optimise(
+                conn, from_gw, h, free_transfers=ft,
+                template_weight=w, distributions=distributions,
+            )
             for r, w in risk_weights.items()
         }
         for h in (1, 3, 5)

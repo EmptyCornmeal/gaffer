@@ -24,7 +24,15 @@ HORIZON_DECAY = 0.84  # weight of each future GW relative to the previous
 # ignores the crowd); higher = own more of the template for rank protection.
 # Tuned so 'balanced' pulls a ~74%-owned default-captain premium (Haaland) into
 # the squad, which pure value drops. Balanced is the shipped default.
-RISK_WEIGHTS = {"differential": 0.0, "balanced": 0.4, "template": 1.0}
+RISK_WEIGHTS = {"differential": 0.0, "balanced": 3.0, "template": 5.0}
+
+# Reward next-GW UPSIDE (Monte-Carlo ceiling above the mean) in the XI and the
+# captain. Without this the solver maximises mean points and (a) drops elite
+# forwards whose mean is modest but ceiling is elite, and (b) stacks 5 low-ceiling
+# DEFCON defenders into a thin lone-striker shape at longer horizons. FPL rank is
+# driven by ceiling, so this pulls premiums + a real second forward into every
+# horizon consistently.
+CEILING_WEIGHT = 0.30
 
 
 @dataclass
@@ -107,10 +115,20 @@ def optimise(
     free_transfers: int = 1,
     budget: int | None = None,
     template_weight: float = 0.0,
+    distributions: dict[int, dict[str, float]] | None = None,
 ) -> Solution:
     horizon = horizon or config.PROJECTION_HORIZON
     players = load_players(conn, from_gw, horizon)
+    if distributions:
+        for pid, p in players.items():
+            d = distributions.get(pid)
+            if d:
+                p.ceiling = d.get("ceiling", 0.0)
     ids = list(players)
+    # How much `value` grows with the horizon (decayed GW count) — scale the
+    # next-GW ceiling term by this so its pull stays proportional to value at
+    # every horizon (otherwise structure drifts as the window lengthens).
+    horizon_factor = sum(HORIZON_DECAY**k for k in range(horizon))
     have_squad = any(p.in_squad for p in players.values())
     # No hard cap by default — the -4 hit cost self-limits how many transfers are
     # ever worth making. (Was hardcoded to 2, which blocked profitable big moves.)
@@ -134,8 +152,11 @@ def optimise(
     # high-projection players so the squad defends rank; template_weight is the
     # risk dial (0 = pure differential/value, higher = more template-safe).
     if template_weight:
+        # Uses next-GW points (not the horizon value) so rank-defence is a
+        # horizon-invariant overlay — balanced owns the essential template at the
+        # 1-GW view just as at 5 GWs, rather than only at longer horizons.
         obj += template_weight * pulp.lpSum(
-            start[i] * (players[i].ownership / 100.0) * players[i].value
+            start[i] * (players[i].ownership / 100.0) * players[i].next_gw_points
             for i in ids
         )
         # Captaincy is the biggest rank lever, so make it EO-aware too: under a
@@ -145,6 +166,17 @@ def optimise(
             cap[i] * (players[i].ownership / 100.0) * players[i].next_gw_points
             for i in ids
         )
+
+    # --- ceiling / upside term (rank is driven by ceiling, not mean) --------
+    # Reward the next-GW upside (ceiling above mean) of the starting XI and, more
+    # heavily, the captain (whose upside is doubled). Scaled by horizon_factor so
+    # premiums + a second forward are valued the same at 1/3/5 GWs.
+    upside = {i: max(0.0, players[i].ceiling - players[i].next_gw_points) for i in ids}
+    if any(upside.values()):
+        obj += CEILING_WEIGHT * horizon_factor * pulp.lpSum(
+            start[i] * upside[i] for i in ids
+        )
+        obj += CEILING_WEIGHT * 2.0 * pulp.lpSum(cap[i] * upside[i] for i in ids)
 
     hits_var = None
     if have_squad:
@@ -168,6 +200,14 @@ def optimise(
     prob += pulp.lpSum(start[i] for i in ids if players[i].position == "GKP") == 1
     for pos, lo in config.FORMATION_MIN.items():
         prob += pulp.lpSum(start[i] for i in ids if players[i].position == pos) >= lo
+
+    # Never START a £4.0 keeper — those are non-playing backups (bench fodder).
+    # Without this the solver funds a template squeeze by starting a £4.0 GK that
+    # scores ~0; real managers always start a £4.5+ playing keeper. (£4.0 keepers
+    # can still be bought as the mandatory second/bench GK.)
+    for i in ids:
+        if players[i].position == "GKP" and players[i].price < 45:
+            prob += start[i] == 0
 
     # --- captain ----------------------------------------------------------
     prob += pulp.lpSum(cap.values()) == 1
