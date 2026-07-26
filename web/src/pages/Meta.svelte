@@ -2,6 +2,7 @@
   import type { Bundle } from '../lib/data'
   import type { Player } from '../lib/types'
   import Crest from '../components/Crest.svelte'
+  import Scatter from '../components/Scatter.svelte'
 
   let { bundle, onpick }: { bundle: Bundle; onpick: (id: number) => void } = $props()
 
@@ -11,6 +12,16 @@
 
   const DIFF_MAX_OWN = 12 // "differential" = owned by fewer than this %
   const TEMPLATE_MIN_OWN = 25
+
+  // Ownership-vs-xP scatter: the single highest-signal meta view. Plot the pool
+  // (label the biggest names so the chart is readable), split into quadrants at
+  // the differential threshold and mean projected points.
+  const scatterPts = $derived(
+    [...pool]
+      .sort((a, b) => b.xp_window - a.xp_window)
+      .slice(0, 90)
+      .map((p) => ({ id: p.id, x: p.owned_by, y: p.xp_window, label: p.name, pos: p.pos })),
+  )
 
   const template = $derived(
     [...pool].filter((p) => p.owned_by >= TEMPLATE_MIN_OWN)
@@ -39,6 +50,21 @@
       Ownership data appears once the season opens — these lists sharpen as real
       ownership settles. For now they rank on projected points.
     </div>
+  {/if}
+
+  {#if hasCrowd}
+    <section class="card p-3">
+      <div class="flex items-baseline justify-between mb-1">
+        <h3 class="font-bold">Ownership vs projected points</h3>
+        <span class="text-[10px] text-muted">6-GW xP · top 90 by projection</span>
+      </div>
+      <p class="text-[11px] text-muted2 mb-2">
+        Top-left = high projection, low ownership (differentials you gain rank with).
+        Top-right = the template you own for safety. Bottom-right = popular traps the
+        model rates below their ownership. Click a dot to open the player.
+      </p>
+      <Scatter points={scatterPts} xLabel="Ownership %" yLabel="6-GW projected pts" xThreshold={DIFF_MAX_OWN} {onpick} />
+    </section>
   {/if}
 
   <div class="grid gap-4 lg:grid-cols-3">
