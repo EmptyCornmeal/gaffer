@@ -82,7 +82,7 @@
   })
 </script>
 
-<div class="w-full">
+<div class="w-full max-w-2xl mx-auto">
   <svg viewBox="0 0 {W} {H}" class="w-full h-auto select-none" role="img" aria-label="{yLabel} versus {xLabel}">
     <!-- grid + axis ticks -->
     {#each xTicks as t}

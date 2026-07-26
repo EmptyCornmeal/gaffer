@@ -99,7 +99,7 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-1">
         <h3 class="font-bold">Ownership vs projected points</h3>
-        <span class="text-[10px] text-muted">6-GW xP · top 90 by projection</span>
+        <span class="text-[10px] text-muted">6-GW xP · likely starters</span>
       </div>
       <p class="text-[11px] text-muted2 mb-2">
         Top-left = high projection, low ownership (differentials you gain rank with).
