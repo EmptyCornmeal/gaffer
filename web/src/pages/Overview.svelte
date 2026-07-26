@@ -7,6 +7,7 @@
   import { mdLite } from '../lib/mdlite'
   import { loadCurrent, lineupErrors, formationOf, planPoints, captainScore } from '../lib/squad'
   import { generateTeamBrief } from '../lib/teamBrief'
+  import { renderTeamCard, downloadBlob, type SharePlayer } from '../lib/shareImage'
 
   let { bundle, onpick, onnav }: { bundle: Bundle; onpick: (id: number) => void; onnav: (r: string) => void } = $props()
   const rec = $derived(bundle.recommendation)
@@ -83,6 +84,30 @@
       : [...P].filter((p) => p.p_start > 0.6).sort((a, b) => b.xgi90 - a.xgi90).slice(0, 5),
   )
   const formTitle = $derived(hasForm ? 'In form' : 'Top underlying threat')
+
+  // Shareable image of whichever XI is on screen (your team or the model's).
+  let sharing = $state(false)
+  async function share() {
+    sharing = true
+    try {
+      const isYour = view === 'your' && planValid
+      const xi = isYour ? yourStarters : rec.starting
+      const capId = isYour ? plan.captainId : rec.captain.id
+      const viceId = isYour ? plan.viceId : rec.vice.id
+      const players: SharePlayer[] = xi.map((p) => ({
+        name: p.name, pos: p.pos, team: p.team, isC: p.id === capId, isVC: p.id === viceId,
+      }))
+      const pts = isYour ? planPoints(planSquad, plan) : rec.xi_expected
+      const blob = await renderTeamCard({
+        title: isYour ? 'My XI' : "The model's XI",
+        subtitle: `${bundle.meta.gw_name ?? 'Gameweek'} · ${isYour ? formationOf(planSquad, plan.starters) : rec.formation} · ${pts} projected pts`,
+        players,
+      })
+      downloadBlob(blob, 'gaffer-team.png')
+    } finally {
+      sharing = false
+    }
+  }
 </script>
 
 <div class="flex flex-col gap-4 rise">
@@ -126,11 +151,16 @@
             <h2 class="font-bold">Model's ideal XI · {rec.formation}</h2>
           {/if}
         </div>
-        {#if view === 'your' && planValid}
-          <span class="text-xs text-muted">{formationOf(planSquad, plan.starters)} · {planPoints(planSquad, plan)} xP · model ideal {rec.xi_expected}</span>
-        {:else}
-          <span class="text-xs text-muted">£{rec.squad_value}m · {rec.xi_expected} xP</span>
-        {/if}
+        <div class="flex items-center gap-2">
+          {#if view === 'your' && planValid}
+            <span class="text-xs text-muted">{formationOf(planSquad, plan.starters)} · {planPoints(planSquad, plan)} xP · model ideal {rec.xi_expected}</span>
+          {:else}
+            <span class="text-xs text-muted">£{rec.squad_value}m · {rec.xi_expected} xP</span>
+          {/if}
+          <button onclick={share} disabled={sharing} title="Download a shareable image of this XI" class="text-xs text-muted hover:text-brand-light disabled:opacity-50 flex items-center gap-1">
+            <Icon name="share" size={13} /> {sharing ? '…' : 'Share'}
+          </button>
+        </div>
       </div>
 
       {#if view === 'your' && planValid}
