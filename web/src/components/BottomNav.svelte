@@ -1,5 +1,6 @@
 <script lang="ts">
   import { BOTTOM_TABS } from '../lib/nav'
+  import Icon from './Icon.svelte'
 
   let {
     route,
@@ -24,10 +25,10 @@
     <button
       onclick={() => onnav(t.key)}
       aria-current={route === t.key ? 'page' : undefined}
-      class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold
-        {route === t.key ? 'text-accent-light' : 'text-muted'}"
+      class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition
+        {route === t.key ? 'text-brand-light' : 'text-muted'}"
     >
-      <span class="text-lg leading-none" aria-hidden="true">{t.icon}</span>
+      <Icon name={t.icon} size={18} />
       {t.label}
     </button>
   {/each}
@@ -36,7 +37,7 @@
     class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-muted"
     aria-label="More pages and settings"
   >
-    <span class="text-lg leading-none" aria-hidden="true">☰</span>
+    <Icon name="menu" size={18} />
     More
   </button>
 </nav>

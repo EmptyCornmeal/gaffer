@@ -4,6 +4,7 @@
   import { getTheme, setTheme } from '../lib/config'
   import { matches } from '../lib/search'
   import { NAV_TABS } from '../lib/nav'
+  import Icon from './Icon.svelte'
 
   let {
     meta,
@@ -43,10 +44,10 @@
 </script>
 
 <header
-  class="sticky top-0 z-40 flex items-center gap-3 px-3 border-b border-line bg-bg2/95 backdrop-blur"
+  class="glass sticky top-0 z-40 flex items-center gap-3 px-3"
   style="height: var(--gaffer-topbar);"
 >
-  <button class="lg:hidden text-muted text-xl px-1" onclick={onmenu} aria-label="menu">☰</button>
+  <button class="lg:hidden text-muted hover:text-text px-1" onclick={onmenu} aria-label="menu"><Icon name="menu" size={20} /></button>
 
   <div class="flex items-center gap-2 shrink-0">
     <span class="text-lg font-black tracking-tight"><span class="text-brand">G</span>affer</span>
@@ -62,13 +63,19 @@
     </div>
   {/if}
 
-  <nav class="hidden lg:flex items-center gap-1">
+  <nav class="hidden lg:flex items-center gap-0.5">
     {#each tabs as t}
       <button
         onclick={() => onnav(t.key)}
-        class="px-3 py-1.5 rounded-lg text-sm font-semibold transition
-          {route === t.key ? 'bg-accent/15 text-accent-light' : 'text-muted hover:text-text'}"
-      >{t.label}</button>
+        class="group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold transition
+          {route === t.key ? 'text-text' : 'text-muted hover:text-text'}"
+      >
+        <Icon name={t.icon} size={15} class={route === t.key ? 'text-brand-light' : 'text-muted2 group-hover:text-muted'} />
+        {t.label}
+        {#if route === t.key}
+          <span class="absolute -bottom-[7px] left-2 right-2 h-0.5 rounded-full bg-brand"></span>
+        {/if}
+      </button>
     {/each}
   </nav>
 
@@ -95,8 +102,8 @@
 
   <button
     onclick={toggleTheme}
-    class="shrink-0 text-muted hover:text-text text-lg px-1"
+    class="shrink-0 text-muted hover:text-text px-1"
     title="Toggle theme"
-    aria-label="toggle theme">{theme === 'dark' ? '🌙' : '☀️'}</button
+    aria-label="toggle theme"><Icon name={theme === 'dark' ? 'moon' : 'sun'} size={18} /></button
   >
 </header>

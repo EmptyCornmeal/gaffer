@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fpl, type LeagueStanding } from '../lib/fpl'
   import { getLeagueIds, getEntryId } from '../lib/config'
+  import Icon from '../components/Icon.svelte'
 
   let { ongoSettings }: { ongoSettings: () => void } = $props()
 
@@ -72,7 +73,7 @@
 
 {#if phase === 'nosetup'}
   <div class="card p-8 text-center rise max-w-lg mx-auto">
-    <div class="text-4xl mb-2">🏆</div>
+    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand/12 text-brand-light mb-3"><Icon name="trophy" size={22} /></div>
     <h2 class="font-bold text-lg">Track your mini-leagues</h2>
     <p class="text-sm text-muted mt-2">Add <b>Classic League IDs</b> in Settings to see standings and momentum.</p>
     <button class="btn mt-4" onclick={ongoSettings}>Open settings</button>
@@ -97,8 +98,8 @@
         <span class="text-xs text-muted">{rows.length} member{rows.length === 1 ? '' : 's'}</span>
       </div>
       {#if preseason}
-        <div class="text-xs chip-info rounded-lg px-3 py-2">
-          ⏳ The season hasn't kicked off — live standings appear after the GW1 deadline. Here's who's joined so far.
+        <div class="text-xs chip-info rounded-lg px-3 py-2 flex items-center gap-2">
+          <Icon name="hourglass" size={13} /> The season hasn't kicked off — live standings appear after the GW1 deadline. Here's who's joined so far.
         </div>
       {/if}
       <div class="card overflow-x-auto">

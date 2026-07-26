@@ -3,8 +3,8 @@
   import {
     getEntryId, setEntryId, getLeagueIds, setLeagueIds, parseId,
   } from '../lib/config'
-  import { GLOSSARY } from '../lib/glossary'
   import { NAV_TABS } from '../lib/nav'
+  import Icon from './Icon.svelte'
 
   let {
     meta,
@@ -37,8 +37,6 @@
     setTimeout(() => (saved = false), 1500)
     onsaved()
   }
-
-  const glossaryEntries = Object.entries(GLOSSARY)
 </script>
 
 <svelte:window onkeydown={(e) => open && e.key === 'Escape' && onclose()} />
@@ -57,7 +55,7 @@
 >
   <div class="lg:hidden flex items-center justify-between mb-3">
     <h3 class="font-bold">Menu</h3>
-    <button class="text-muted" onclick={onclose} aria-label="close">✕</button>
+    <button class="text-muted hover:text-text" onclick={onclose} aria-label="close"><Icon name="x" size={18} /></button>
   </div>
 
   <!-- Page navigation — mobile only (the topbar carries it on ≥lg). Without this
@@ -66,10 +64,10 @@
     {#each NAV_TABS as t}
       <button
         onclick={() => onnav(t.key)}
-        class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-left transition
-          {route === t.key ? 'bg-accent/15 text-accent-light' : 'text-muted hover:text-text hover:bg-card2'}"
+        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-left transition
+          {route === t.key ? 'bg-brand/12 text-text' : 'text-muted hover:text-text hover:bg-card2'}"
       >
-        <span aria-hidden="true">{t.icon}</span>{t.label}
+        <Icon name={t.icon} size={16} class={route === t.key ? 'text-brand-light' : ''} />{t.label}
       </button>
     {/each}
   </nav>
@@ -98,14 +96,12 @@
     <div class="card py-2"><div class="font-bold">{meta?.last_finished_gw || '—'}</div><div class="text-muted">last GW</div></div>
   </div>
 
-  <details class="mt-4">
-    <summary class="cursor-pointer text-sm font-semibold text-muted hover:text-text">Glossary / Help</summary>
-    <div class="mt-2 space-y-2 text-xs">
-      {#each glossaryEntries as [term, def]}
-        <div><span class="chip chip-info">{term}</span> <span class="text-muted">{def}</span></div>
-      {/each}
-    </div>
-  </details>
+  <button
+    onclick={() => onnav('help')}
+    class="mt-4 w-full text-left text-sm font-semibold text-muted hover:text-text flex items-center gap-2"
+  >
+    <Icon name="book" size={15} /> Glossary &amp; how it works →
+  </button>
 
   <p class="mt-4 text-[11px] text-muted2 leading-relaxed">
     Live-aware. Projections update each refresh; your team &amp; league data are

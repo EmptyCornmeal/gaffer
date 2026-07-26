@@ -5,6 +5,7 @@
   import { getEntryId } from '../lib/config'
   import Pitch from '../components/Pitch.svelte'
   import FixtureStrip from '../components/FixtureStrip.svelte'
+  import Icon from '../components/Icon.svelte'
 
   let { bundle, onpick, ongoSettings }: { bundle: Bundle; onpick: (id: number) => void; ongoSettings: () => void } = $props()
 
@@ -65,7 +66,7 @@
 
 {#if phase === 'nosetup'}
   <div class="card p-8 text-center rise max-w-lg mx-auto">
-    <div class="text-4xl mb-2">🧢</div>
+    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand/12 text-brand-light mb-3"><Icon name="shirt" size={22} /></div>
     <h2 class="font-bold text-lg">Connect your team</h2>
     <p class="text-sm text-muted mt-2">
       Add your <b>FPL Entry ID</b> in Settings and your live squad appears here —
@@ -77,7 +78,7 @@
   <div class="flex justify-center py-24 text-muted"><div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div></div>
 {:else if phase === 'preseason'}
   <div class="card p-6 text-center rise max-w-lg mx-auto">
-    <div class="text-4xl mb-2">⏳</div>
+    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/12 text-accent-light mb-3"><Icon name="hourglass" size={22} /></div>
     <h2 class="font-bold text-lg">Your squad isn't public yet</h2>
     <p class="text-sm text-muted mt-2">
       FPL keeps everyone's team private until the <b>GW1 deadline ({deadlineStr})</b>. Your

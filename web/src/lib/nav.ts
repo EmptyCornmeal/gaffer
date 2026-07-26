@@ -3,18 +3,19 @@
 
 export type Tab = { key: string; label: string; icon: string }
 
+// icon = a key into components/Icon.svelte (Lucide/Feather set), not an emoji.
 export const NAV_TABS: Tab[] = [
-  { key: 'overview', label: 'Overview', icon: '⚡' },
-  { key: 'my-team', label: 'My Team', icon: '👕' },
-  { key: 'planner', label: 'Planner', icon: '🧭' },
-  { key: 'players', label: 'Players', icon: '📋' },
-  { key: 'fixtures', label: 'Fixtures', icon: '🗓️' },
-  { key: 'chips', label: 'Chips', icon: '🎴' },
-  { key: 'meta', label: 'Meta', icon: '📊' },
-  { key: 'league', label: 'League', icon: '🏆' },
-  { key: 'news', label: 'News', icon: '📰' },
-  { key: 'accuracy', label: 'Accuracy', icon: '🎯' },
-  { key: 'help', label: 'Help', icon: '❓' },
+  { key: 'overview', label: 'Overview', icon: 'zap' },
+  { key: 'my-team', label: 'My Team', icon: 'shirt' },
+  { key: 'planner', label: 'Planner', icon: 'compass' },
+  { key: 'players', label: 'Players', icon: 'users' },
+  { key: 'fixtures', label: 'Fixtures', icon: 'calendar' },
+  { key: 'chips', label: 'Chips', icon: 'layers' },
+  { key: 'meta', label: 'Meta', icon: 'chart' },
+  { key: 'league', label: 'League', icon: 'trophy' },
+  { key: 'news', label: 'News', icon: 'news' },
+  { key: 'accuracy', label: 'Accuracy', icon: 'target' },
+  { key: 'help', label: 'Help', icon: 'help' },
 ]
 
 // The primary destinations shown directly on the phone bottom bar; the rest live

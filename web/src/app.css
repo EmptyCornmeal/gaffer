@@ -1,45 +1,51 @@
 @import 'tailwindcss';
 
-/* ===== Gaffer design system — professional navy + emerald (from v1) ===== */
+/* ===== Gaffer design system — navy + emerald, elevated ============================
+   Depth comes from surface *lightness*, not shadow (shadows barely register on a
+   near-black navy). Each nested surface steps ~5% lighter. Saturation is spent only
+   on meaning: emerald = positive / CTA / "on"; everything else is navy/slate. */
 @theme {
-  --color-bg: #080e1a;
-  --color-bg2: #0d1424;
-  --color-bg3: #111827;
-  --color-card: #0f1729;
-  --color-card2: #131c30;
-  --color-line: #24314b;
-  --color-line2: #33425f;
-  --color-text: #f1f5f9;
-  --color-muted: #94a3b8;
-  --color-muted2: #64748b;
+  --color-bg: #080e1a;      /* page plane */
+  --color-bg2: #0e1626;     /* surface-1: topbar, sidebar, headers */
+  --color-bg3: #152034;     /* surface-2: nested, row hover */
+  --color-card: #0e1626;    /* surface-1 */
+  --color-card2: #152034;   /* surface-2 */
+  --color-line: #1e2a41;    /* hairline separators (~rgba(255,255,255,.08)) */
+  --color-line2: #2b3a56;   /* stronger borders */
+  --color-text: #f4f7fb;    /* ~92% white, not pure #fff */
+  --color-muted: #a9b4c6;   /* secondary labels */
+  --color-muted2: #6b7688;  /* captions, axis ticks */
   --color-brand: #10b981;
   --color-brand-light: #34d399;
   --color-accent: #3b82f6;
   --color-accent-light: #60a5fa;
-  --color-red: #f43f5e;
-  --color-yellow: #fbbf24;
-  --color-orange: #fb923c;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --color-red: #f04452;
+  --color-yellow: #fab219;
+  --color-orange: #ec835a;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --gaffer-topbar: 54px;
+  --gaffer-topbar: 56px;
   --gaffer-sidebar: 270px;
   --gaffer-bottomnav: 56px;
 }
 
-/* Bottom bar only exists on phones; reclaim the space on ≥lg so the main
-   content's reserved padding-bottom collapses to normal. */
 @media (min-width: 1024px) {
   :root { --gaffer-bottomnav: 0px; }
 }
 
 html { color-scheme: dark; -webkit-text-size-adjust: 100%; }
 
-/* Visible keyboard-focus ring app-wide (mouse clicks stay ring-free via
-   :focus-visible). Was missing entirely — keyboard users had no focus cue. */
+/* every digit aligns — the single change that makes dense data read as engineered */
+.tnum, table.data td, table.data th { font-variant-numeric: tabular-nums; }
+
 :focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 
 body {
@@ -49,27 +55,27 @@ body {
   font-family: var(--font-sans);
   font-size: clamp(13px, 12px + 0.15vw, 15px);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* light theme override (toggle stamps data-theme="light" on <html>) */
 :root[data-theme='light'] {
   --color-bg: #eef2f7;
-  --color-bg2: #e2e8f0;
+  --color-bg2: #e6ecf3;
   --color-bg3: #ffffff;
   --color-card: #ffffff;
-  --color-card2: #f1f5f9;
-  --color-line: #d3dce8;
-  --color-line2: #b7c3d4;
+  --color-card2: #f4f7fb;
+  --color-line: #dbe3ee;
+  --color-line2: #c2cddb;
   --color-text: #0b1220;
-  --color-muted: #475569; /* darker for readability on white */
+  --color-muted: #475569;
   --color-muted2: #64748b;
-  /* readable text variants of the accents on a light background */
   --color-brand-light: #047857;
   --color-accent-light: #1d4ed8;
   --color-accent: #2563eb;
 }
 :root[data-theme='light'] { color-scheme: light; }
-/* stronger chip/badge tints on light so they don't wash out */
+:root[data-theme='light'] .card { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); }
 :root[data-theme='light'] .chip-good { background: color-mix(in srgb, var(--color-brand) 22%, white); color: #065f46; }
 :root[data-theme='light'] .chip-info { background: color-mix(in srgb, var(--color-accent) 20%, white); color: #1e40af; }
 :root[data-theme='light'] .chip-warn { background: color-mix(in srgb, var(--color-yellow) 30%, white); color: #92600a; }
@@ -83,8 +89,41 @@ body {
 .card {
   background: var(--color-card);
   border: 1px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: 14px;
 }
+/* interactive cards lift toward the viewer (surface-2 + faint emerald hairline) */
+.card-hover { transition: background 0.15s, border-color 0.15s, transform 0.15s; }
+.card-hover:hover {
+  background: var(--color-card2);
+  border-color: color-mix(in srgb, var(--color-brand) 35%, var(--color-line));
+}
+
+/* stat tile: tiny label -> big tabular value -> delta/spark */
+.tile {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.tile-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
+.tile-value { font-variant-numeric: tabular-nums; font-weight: 800; line-height: 1.05; }
+
+/* frosted panel — floating chrome ONLY (never behind data tables/charts) */
+.glass {
+  background: color-mix(in srgb, var(--color-bg2) 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* faint emerald aura behind hero numbers / section headers */
+.aura { position: relative; }
+.aura::before {
+  content: ''; position: absolute; inset: -40% -10%;
+  background: radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--color-brand) 10%, transparent), transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
 .chip {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
@@ -104,17 +143,20 @@ body {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 7px 14px; border-radius: 9px; font-weight: 600; font-size: 13px;
   background: var(--color-brand); color: #05210f; border: none; cursor: pointer;
-  transition: filter 0.15s;
+  transition: filter 0.15s, transform 0.1s;
 }
 .btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(1px); }
 .btn-ghost { background: transparent; color: var(--color-text); border: 1px solid var(--color-line2); }
+.btn-ghost:hover { background: var(--color-card2); filter: none; }
 
-/* fixture difficulty scale */
-.fdr-1 { background: #067a4b; color: #eafff5; }
-.fdr-2 { background: #1aa06a; color: #04180f; }
-.fdr-3 { background: #33425f; color: #e6edf7; }
-.fdr-4 { background: #d1485f; color: #fff; }
-.fdr-5 { background: #a11d3a; color: #fff; }
+/* fixture difficulty — green(easy) -> slate(neutral) -> red(hard); slate at 3
+   reads calmer on navy than yellow, per the FDR-heatmap convention. */
+.fdr-1 { background: #0f7a52; color: #eafff5; }
+.fdr-2 { background: #10b981; color: #04180f; }
+.fdr-3 { background: #334155; color: #e6edf7; }
+.fdr-4 { background: #e06a3b; color: #fff; }
+.fdr-5 { background: #d03b3b; color: #fff; }
 
 table.data { width: 100%; border-collapse: collapse; }
 table.data th {
@@ -125,7 +167,8 @@ table.data th {
   border-bottom: 1px solid var(--color-line);
 }
 table.data th:first-child, table.data td:first-child { text-align: left; }
-table.data td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--color-line); font-variant-numeric: tabular-nums; }
+table.data td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--color-line); }
+table.data tbody tr { transition: background 0.12s; }
 table.data tbody tr:hover { background: var(--color-card2); cursor: pointer; }
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
