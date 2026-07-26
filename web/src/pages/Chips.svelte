@@ -47,6 +47,8 @@
     }),
   )
   const maxStart = $derived(Math.max(1, ...rows.map((r) => r.starters)))
+  // Bars scale to the XI+bench total so segment lengths are comparable across GWs.
+  const axisMax = $derived(Math.max(1, ...rows.map((r) => r.squad)))
 
   // Chip EV = the extra points the chip banks that week, so we rank on *value
   // gained*, not just which GW looks busy:
@@ -100,7 +102,7 @@
     <div class="card p-3">
       <div class="flex items-baseline justify-between">
         <div class="text-xs font-bold uppercase text-yellow mb-1">Free Hit</div>
-        <div class="text-sm font-bold text-yellow tabular-nums">{(avgStart - (fh?.starters ?? 0)).toFixed(1)} vs avg</div>
+        <div class="text-sm font-bold text-yellow tabular-nums">−{(avgStart - (fh?.starters ?? 0)).toFixed(1)} vs avg</div>
       </div>
       <div class="text-2xl font-black">GW{fh?.gw}</div>
       <div class="text-sm text-muted">Weakest XI week (~{fh?.starters.toFixed(1)}) — field a one-off side, or save for a blank/double.</div>
@@ -109,26 +111,34 @@
 
   <!-- per-GW projection -->
   <div class="card p-4">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="font-bold">Your projected points, next {gws.length} GWs</h3>
-      <span class="text-xs text-muted">XI · bench</span>
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <h3 class="font-bold">Projected points, next {gws.length} GWs</h3>
+      <div class="flex items-center gap-3 text-[11px]">
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-brand/80 inline-block"></span>Starting XI</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-accent/60 inline-block"></span>Bench</span>
+      </div>
     </div>
-    <div class="space-y-2">
+    <div class="space-y-1.5">
       {#each rows as r}
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-muted w-10">GW{r.gw}</span>
-          <div class="flex-1 h-6 rounded bg-bg3 overflow-hidden flex">
-            <div class="h-full bg-brand/80 flex items-center justify-end pr-2 text-[10px] font-bold text-[#05210f]" style="width:{(r.starters / maxStart) * 100}%">{r.starters.toFixed(0)}</div>
-            <div class="h-full bg-accent/50" style="width:{(r.bench / maxStart) * 100}%" title="bench {r.bench.toFixed(1)}"></div>
+        {@const isBB = r.gw === bb?.gw}
+        {@const isTC = r.gw === tc?.gw}
+        <div class="flex items-center gap-2">
+          <span class="text-[11px] w-9 tabular-nums {isBB || isTC ? 'text-brand-light font-bold' : 'text-muted2'}">GW{r.gw}</span>
+          <div class="flex-1 h-6 rounded bg-bg3 overflow-hidden flex {isBB ? 'ring-1 ring-accent/60' : ''}">
+            <div class="h-full bg-brand/80 flex items-center justify-end pr-1.5 text-[10px] font-bold text-[#05210f]" style="width:{(r.starters / axisMax) * 100}%">{r.starters.toFixed(0)}</div>
+            <div class="h-full bg-accent/60 flex items-center justify-end pr-1.5 text-[9px] font-semibold text-white/90" style="width:{(r.bench / axisMax) * 100}%" title="bench {r.bench.toFixed(1)}">{r.bench >= 2 ? '+' + r.bench.toFixed(0) : ''}</div>
           </div>
-          <span class="text-xs text-muted w-24 text-right">cap {r.bestCap.name}</span>
+          <span class="w-16 text-right shrink-0">
+            {#if isBB}<span class="chip chip-info">BB</span>{:else if isTC}<span class="chip chip-good">TC</span>{/if}
+          </span>
+          <span class="text-[11px] text-muted w-20 text-right truncate hidden sm:inline">C: {r.bestCap.name}</span>
         </div>
       {/each}
     </div>
     <p class="text-[11px] text-muted2 mt-3">
-      Pre-season the schedule has one fixture per team; double/blank gameweeks (which
-      supercharge Bench Boost &amp; Free Hit) are announced later — this radar updates
-      automatically when they are. First chip set must be used by the GW19 deadline.
+      Pre-season every team has one fixture, so weeks look flat; double/blank gameweeks —
+      which supercharge Bench Boost &amp; Free Hit — are announced later and this chart
+      updates automatically. First chip set must be used by the GW19 deadline.
     </p>
   </div>
 </div>

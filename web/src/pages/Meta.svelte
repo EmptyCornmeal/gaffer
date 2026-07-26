@@ -36,15 +36,18 @@
   const DIFF_MAX_OWN = 12 // "differential" = owned by fewer than this %
   const TEMPLATE_MIN_OWN = 25
 
-  // Ownership-vs-xP scatter: the single highest-signal meta view. Plot the pool
-  // (label the biggest names so the chart is readable), split into quadrants at
-  // the differential threshold and mean projected points.
-  const scatterPts = $derived(
-    [...pool]
-      .sort((a, b) => b.xp_window - a.xp_window)
-      .slice(0, 90)
-      .map((p) => ({ id: p.id, x: p.owned_by, y: p.xp_window, label: p.name, pos: p.pos })),
-  )
+  // Ownership-vs-xP scatter: the single highest-signal meta view. Union the
+  // top-by-projection (fills Differentials/Template) with the top-by-ownership
+  // (fills Traps — high-owned, lower-projected), so all four quadrants populate.
+  const scatterPts = $derived.by(() => {
+    const nailed = bundle.players.filter((p) => p.p_start > 0.4 && p.owned_by > 0)
+    const byXp = [...nailed].sort((a, b) => b.xp_window - a.xp_window).slice(0, 100)
+    const byOwn = [...nailed].sort((a, b) => b.owned_by - a.owned_by).slice(0, 55)
+    const seen = new Set<number>()
+    return [...byXp, ...byOwn]
+      .filter((p) => (seen.has(p.id) ? false : seen.add(p.id)))
+      .map((p) => ({ id: p.id, x: p.owned_by, y: p.xp_window, label: p.name, pos: p.pos }))
+  })
 
   const template = $derived(
     [...pool].filter((p) => p.owned_by >= TEMPLATE_MIN_OWN)

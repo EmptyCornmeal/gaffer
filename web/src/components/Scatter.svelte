@@ -43,8 +43,18 @@
   const iw = W - M.l - M.r
   const ih = H - M.t - M.b
 
-  const xMax = $derived(Math.max(1, ...points.map((p) => p.x)) * 1.05)
-  const yMax = $derived(Math.max(1, ...points.map((p) => p.y)) * 1.08)
+  // Round "nice" ceiling + tick step so axes read 0/20/40/60 not 15.6/31.3/…
+  function niceStep(max: number, target = 5): number {
+    const raw = max / target
+    const mag = 10 ** Math.floor(Math.log10(raw))
+    const norm = raw / mag
+    const step = norm >= 5 ? 5 : norm >= 2 ? 2 : 1
+    return step * mag
+  }
+  const xStep = $derived(niceStep(Math.max(1, ...points.map((p) => p.x))))
+  const yStep = $derived(niceStep(Math.max(1, ...points.map((p) => p.y))))
+  const xMax = $derived(Math.ceil((Math.max(1, ...points.map((p) => p.x)) * 1.05) / xStep) * xStep)
+  const yMax = $derived(Math.ceil((Math.max(1, ...points.map((p) => p.y)) * 1.05) / yStep) * yStep)
   const xThr = $derived(xThreshold ?? xMax / 3)
   const yThr = $derived(
     yThreshold ??
@@ -56,12 +66,20 @@
 
   let hover = $state<Pt | null>(null)
 
-  const xTicks = $derived(niceTicks(xMax, 5))
-  const yTicks = $derived(niceTicks(yMax, 5))
-  function niceTicks(max: number, n: number): number[] {
-    const step = max / n
-    return Array.from({ length: n + 1 }, (_, i) => Math.round(i * step * 10) / 10)
-  }
+  const xTicks = $derived(Array.from({ length: Math.floor(xMax / xStep) + 1 }, (_, i) => i * xStep))
+  const yTicks = $derived(Array.from({ length: Math.floor(yMax / yStep) + 1 }, (_, i) => i * yStep))
+
+  // Directly label the standout dots so the chart is readable, not just a blob:
+  // the highest-projection picks + the strongest low-owned differentials.
+  const labelled = $derived.by(() => {
+    const byY = [...points].sort((a, b) => b.y - a.y).slice(0, 6)
+    const diffs = [...points]
+      .filter((p) => p.x < xThr)
+      .sort((a, b) => b.y - a.y)
+      .slice(0, 4)
+    const ids = new Set<number>()
+    return [...byY, ...diffs].filter((p) => (ids.has(p.id) ? false : ids.add(p.id)))
+  })
 </script>
 
 <div class="w-full">
@@ -76,14 +94,14 @@
       <text x={M.l - 6} y={sy(t) + 3} text-anchor="end" class="fill-muted2 text-[10px]">{t}</text>
     {/each}
 
-    <!-- quadrant dividers + labels -->
+    <!-- quadrant dividers + labels (muted so they don't clash with dot colours) -->
     {#if quadrants}
-      <line x1={sx(xThr)} y1={M.t} x2={sx(xThr)} y2={M.t + ih} class="stroke-muted2" stroke-width="1" stroke-dasharray="4 4" />
-      <line x1={M.l} y1={sy(yThr)} x2={M.l + iw} y2={sy(yThr)} class="stroke-muted2" stroke-width="1" stroke-dasharray="4 4" />
-      <text x={M.l + 6} y={M.t + 14} class="fill-brand text-[11px] font-bold opacity-70">Differentials</text>
-      <text x={M.l + iw - 6} y={M.t + 14} text-anchor="end" class="fill-accent-light text-[11px] font-bold opacity-70">Template</text>
-      <text x={M.l + iw - 6} y={M.t + ih - 6} text-anchor="end" class="fill-red text-[11px] font-bold opacity-60">Traps</text>
-      <text x={M.l + 6} y={M.t + ih - 6} class="fill-muted2 text-[11px] font-bold opacity-60">Fringe</text>
+      <line x1={sx(xThr)} y1={M.t} x2={sx(xThr)} y2={M.t + ih} class="stroke-line2" stroke-width="1" stroke-dasharray="4 4" />
+      <line x1={M.l} y1={sy(yThr)} x2={M.l + iw} y2={sy(yThr)} class="stroke-line2" stroke-width="1" stroke-dasharray="4 4" />
+      <text x={M.l + 6} y={M.t + 13} class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Differentials</text>
+      <text x={M.l + iw - 6} y={M.t + 13} text-anchor="end" class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Template</text>
+      <text x={M.l + iw - 6} y={M.t + ih - 6} text-anchor="end" class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Traps</text>
+      <text x={M.l + 6} y={M.t + ih - 6} class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Fringe</text>
     {/if}
 
     <!-- points -->
@@ -93,7 +111,7 @@
         cy={sy(p.y)}
         r={hover?.id === p.id ? 6 : 4}
         fill={POS_COLOR[p.pos]}
-        fill-opacity={hover && hover.id !== p.id ? 0.35 : 0.85}
+        fill-opacity={hover && hover.id !== p.id ? 0.3 : 0.8}
         stroke="#0b1220"
         stroke-width="0.75"
         class="cursor-pointer transition-all"
@@ -103,18 +121,26 @@
         onmouseenter={() => (hover = p)}
         onmouseleave={() => (hover = null)}
         onclick={() => onpick?.(p.id)}
-      ><title>{p.label} · {p.x.toFixed(1)}% · {p.y.toFixed(1)}</title></circle>
+      ><title>{p.label} · {p.x.toFixed(1)}% owned · {p.y.toFixed(1)}</title></circle>
     {/each}
 
-    <!-- hover label -->
+    <!-- persistent labels for standout dots -->
+    {#each labelled as p (p.id)}
+      {#if hover?.id !== p.id}
+        <text x={sx(p.x)} y={sy(p.y) - 7} text-anchor="middle" class="fill-muted text-[9px] font-semibold pointer-events-none"
+          style="paint-order:stroke;stroke:#0b1220;stroke-width:2.5px">{p.label}</text>
+      {/if}
+    {/each}
+
+    <!-- hover label with values -->
     {#if hover}
       <text
-        x={Math.min(W - M.r, Math.max(M.l, sx(hover.x)))}
+        x={Math.min(W - M.r - 30, Math.max(M.l + 30, sx(hover.x)))}
         y={sy(hover.y) - 10}
         text-anchor="middle"
         class="fill-text text-[11px] font-bold"
-        style="paint-order:stroke;stroke:#0b1220;stroke-width:3px"
-      >{hover.label}</text>
+        style="paint-order:stroke;stroke:#0b1220;stroke-width:3.5px"
+      >{hover.label} · {hover.x.toFixed(1)}% · {hover.y.toFixed(0)}xP</text>
     {/if}
 
     <!-- axis titles -->
