@@ -131,9 +131,12 @@ export interface OptimalExplanation {
   bullets: string[]
 }
 
+export type RiskStance = 'differential' | 'balanced' | 'template'
+
 export interface OptimalHorizon {
   horizon: number
   label: string
+  risk: RiskStance
   status: string
   formation: string
   squad_value: number
@@ -143,6 +146,13 @@ export interface OptimalHorizon {
   starting: RecPlayer[]
   bench: RecPlayer[]
   explanation: OptimalExplanation
+}
+
+export interface HorizonBlock {
+  horizon: number
+  label: string
+  default_risk: RiskStance
+  by_risk: Record<RiskStance, OptimalHorizon>
 }
 
 export interface Recommendation {
@@ -159,7 +169,7 @@ export interface Recommendation {
   transfers_out: RecPlayer[]
   hits: number
   summary: string
-  by_horizon?: Record<string, OptimalHorizon>
+  by_horizon?: Record<string, HorizonBlock>
 }
 
 export type Fixtures = Record<string, { team: string; fixtures: TeamFixture[] }>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
-  import type { OptimalHorizon, Player, Pos, RecPlayer } from '../lib/types'
+  import type { OptimalHorizon, Player, Pos, RecPlayer, RiskStance } from '../lib/types'
   import {
     QUOTA, BUDGET, totals, addBlocker, squadValidity, autoLineup, lineupErrors,
     formationOf, planPoints, loadCurrent, saveCurrent, listPlans, savePlan, deletePlan,
@@ -81,12 +81,21 @@
     { h: 3, label: 'Next 3' },
     { h: 5, label: 'Next 5' },
   ]
+  // Risk stance = the effective-ownership dial. Differential chases points-per-£
+  // (may drop the crowd's premiums); template owns the crowd for rank safety.
+  const RISKS: { key: RiskStance; label: string }[] = [
+    { key: 'differential', label: 'Differential' },
+    { key: 'balanced', label: 'Balanced' },
+    { key: 'template', label: 'Template' },
+  ]
   let optimalHorizon = $state(3)
+  let optimalRisk = $state<RiskStance>('balanced')
   let shownOptimal = $state<OptimalHorizon | null>(null)
 
-  function loadOptimal(h = optimalHorizon) {
+  function loadOptimal(h = optimalHorizon, r = optimalRisk) {
     optimalHorizon = h
-    const oh = bundle.recommendation.by_horizon?.[String(h)]
+    optimalRisk = r
+    const oh = bundle.recommendation.by_horizon?.[String(h)]?.by_risk?.[r]
     const src = oh ?? bundle.recommendation
     const ids = [...src.starting, ...src.bench].map((p) => p.id)
     const sq = ids.map((id) => byId.get(id)!).filter(Boolean)
@@ -170,9 +179,18 @@
             <span class="text-[10px] uppercase text-muted px-1.5 font-bold">Optimal</span>
             {#each HORIZONS as o}
               <button
-                onclick={() => loadOptimal(o.h)}
+                onclick={() => loadOptimal(o.h, optimalRisk)}
                 class="px-2 py-1 rounded-md text-xs font-bold transition
                   {shownOptimal && optimalHorizon === o.h ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+              >{o.label}</button>
+            {/each}
+          </div>
+          <div class="inline-flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
+            {#each RISKS as o}
+              <button
+                onclick={() => loadOptimal(optimalHorizon, o.key)}
+                class="px-2 py-1 rounded-md text-xs font-bold transition
+                  {shownOptimal && optimalRisk === o.key ? 'bg-accent text-white' : 'text-muted hover:text-text'}"
               >{o.label}</button>
             {/each}
           </div>
@@ -226,7 +244,7 @@
     {#if shownOptimal}
       <div class="card p-3 border-brand/30">
         <div class="flex items-start justify-between gap-2 mb-1">
-          <h3 class="font-bold text-sm">Why this squad <span class="text-muted font-normal">· {shownOptimal.label}</span></h3>
+          <h3 class="font-bold text-sm">Why this squad <span class="text-muted font-normal">· {shownOptimal.label} · <span class="capitalize">{shownOptimal.risk}</span></span></h3>
           <button class="text-muted text-sm leading-none hover:text-text" onclick={() => (shownOptimal = null)} aria-label="dismiss explanation">✕</button>
         </div>
         <p class="text-xs text-brand-light mb-2">{shownOptimal.explanation.headline}</p>

@@ -41,18 +41,27 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
     log["simulated"] = len(distributions)
 
     ft = _free_transfers(conn)
-    sol = optimize.optimise(conn, from_gw, horizon, free_transfers=ft)
+    # Risk stance = the effective-ownership dial. Balanced is the default so the
+    # headline squad is template-aware (owns near-must-owns like Haaland) instead
+    # of a pure points-per-£ team that punts the template.
+    risk_weights = optimize.RISK_WEIGHTS
+    sol = optimize.optimise(
+        conn, from_gw, horizon, free_transfers=ft, template_weight=risk_weights["balanced"]
+    )
     log["solver"] = {
         "mode": sol.meta.get("mode"), "status": sol.status,
         "formation": sol.formation, "xi_expected": sol.xi_expected,
         "transfers_in": len(sol.transfers_in), "hits": sol.hits,
     }
 
-    # Optimal squads for the three planning windows the Planner offers. Each is a
-    # full re-solve on that horizon (the objective decays future GWs), so "next 5"
-    # rewards durable picks and "this GW" chases the immediate haul.
+    # Grid of optimal squads: 3 planning windows × 3 risk stances. Each is a full
+    # re-solve; the Planner toggles both (window rewards durable picks, stance
+    # trades rank-safety off against differential value).
     horizon_solutions = {
-        h: optimize.optimise(conn, from_gw, h, free_transfers=ft)
+        h: {
+            r: optimize.optimise(conn, from_gw, h, free_transfers=ft, template_weight=w)
+            for r, w in risk_weights.items()
+        }
         for h in (1, 3, 5)
     }
 

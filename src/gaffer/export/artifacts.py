@@ -319,8 +319,18 @@ def _avg_difficulty(card: dict[str, Any], n: int) -> float | None:
     return round(sum(ds) / len(ds), 1) if ds else None
 
 
+_RISK_STANCE = {
+    "differential": "Differential stance — chases points-per-£ and leaves the crowd's "
+    "template; higher variance vs the field.",
+    "balanced": "Balanced stance — owns the essential template for rank protection while "
+    "keeping value elsewhere.",
+    "template": "Template stance — maximises ownership of the crowd's picks; lowest rank "
+    "risk, lowest differential upside.",
+}
+
+
 def build_optimal_explanation(
-    sol: Solution, idx: dict[int, dict[str, Any]], horizon: int
+    sol: Solution, idx: dict[int, dict[str, Any]], horizon: int, risk: str = "balanced"
 ) -> dict[str, Any]:
     """Plain-English, fact-grounded 'why these picks' for the optimal squad.
 
@@ -345,6 +355,21 @@ def build_optimal_explanation(
     diffs = [c for c in starters if (c.get("owned_by") or 0) and float(c["owned_by"]) < 10]
 
     bullets: list[str] = []
+
+    # Risk stance — name the effective-ownership trade-off, and the template picks
+    # it owns or omits (the thing that most changes between stances).
+    owned_template = sorted(
+        (c for c in starters if (c.get("owned_by") or 0) and float(c["owned_by"]) >= 30),
+        key=lambda c: float(c["owned_by"] or 0),
+        reverse=True,
+    )
+    stance = _RISK_STANCE.get(risk, "")
+    if owned_template:
+        names = ", ".join(f"{c['name']} ({c.get('owned_by')}%)" for c in owned_template[:3])
+        stance += f" Owns the template core: {names}."
+    elif risk == "differential":
+        stance += " Owns none of the >30%-owned crowd — a pure punt against the field."
+    bullets.append(stance)
 
     # Captain
     cap_fx = _fixture_phrase(cap, 1)
@@ -403,13 +428,14 @@ def build_optimal_explanation(
 
 
 def build_horizon_reco(
-    sol: Solution, players_index: list[dict[str, Any]], horizon: int
+    sol: Solution, players_index: list[dict[str, Any]], horizon: int, risk: str = "balanced"
 ) -> dict[str, Any]:
-    """A compact optimal-squad payload for one planning horizon (1/3/5 GWs)."""
+    """A compact optimal-squad payload for one (horizon, risk-stance) combination."""
     idx = {p["id"]: p for p in players_index}
     return {
         "horizon": horizon,
         "label": _HORIZON_LABEL.get(horizon, f"Next {horizon} GWs"),
+        "risk": risk,
         "status": sol.status,
         "formation": sol.formation,
         "squad_value": round(sol.squad_value / 10.0, 1),
@@ -418,7 +444,7 @@ def build_horizon_reco(
         "vice": _rec_card(sol.vice, idx),
         "starting": [_rec_card(i, idx) for i in sol.starting],
         "bench": [_rec_card(i, idx) for i in sol.bench],
-        "explanation": build_optimal_explanation(sol, idx, horizon),
+        "explanation": build_optimal_explanation(sol, idx, horizon, risk),
     }
 
 
@@ -456,7 +482,7 @@ def build_my_team(
 def write_all(
     conn: sqlite3.Connection, sol: Solution, from_gw: int,
     horizon: int, model_version: str, out_dir: Path | None = None,
-    horizon_solutions: dict[int, Solution] | None = None,
+    horizon_solutions: dict[int, dict[str, Solution]] | None = None,
     distributions: dict[int, dict[str, float]] | None = None,
 ) -> list[str]:
     out_dir = out_dir or config.DATA_DIR
@@ -466,13 +492,21 @@ def write_all(
         conn, from_gw, horizon, team_fixtures=fixtures, distributions=distributions
     )
     reco = build_recommendation(conn, sol, players)
-    # Per-horizon optimal squads (this GW / next 3 / next 5) + a fact-grounded
-    # explanation for each, so the Planner can toggle the planning window and show
-    # *why* the model picked what it did.
+    # Grid of optimal squads — planning window (this GW / next 3 / next 5) ×
+    # risk stance (differential / balanced / template) — each with a fact-grounded
+    # explanation, so the Planner can toggle both and show *why*.
     if horizon_solutions:
         reco["by_horizon"] = {
-            str(h): build_horizon_reco(s, players, h)
-            for h, s in sorted(horizon_solutions.items())
+            str(h): {
+                "horizon": h,
+                "label": _HORIZON_LABEL.get(h, f"Next {h} GWs"),
+                "default_risk": "balanced",
+                "by_risk": {
+                    r: build_horizon_reco(s, players, h, r)
+                    for r, s in risk_map.items()
+                },
+            }
+            for h, risk_map in sorted(horizon_solutions.items())
         }
     artifacts = {
         "meta.json": build_meta(conn, model_version),

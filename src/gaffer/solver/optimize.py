@@ -20,6 +20,12 @@ from gaffer import config
 
 HORIZON_DECAY = 0.84  # weight of each future GW relative to the previous
 
+# Effective-ownership dial → template_weight. 0 = pure points-per-£ (differential,
+# ignores the crowd); higher = own more of the template for rank protection.
+# Tuned so 'balanced' pulls a ~74%-owned default-captain premium (Haaland) into
+# the squad, which pure value drops. Balanced is the shipped default.
+RISK_WEIGHTS = {"differential": 0.0, "balanced": 0.4, "template": 1.0}
+
 
 @dataclass
 class Player:
@@ -30,6 +36,8 @@ class Player:
     price: int            # current market price (cost to buy)
     value: float          # decayed horizon expected points
     next_gw_points: float
+    ownership: float = 0.0  # selected-by %, an effective-ownership proxy (rank defence)
+    ceiling: float = 0.0    # 90th-pct next-GW outcome (Monte-Carlo), for chase-captaincy
     in_squad: bool = False  # currently owned (transfer mode)
     sell_value: int = 0   # what we'd recoup if sold (FPL selling price; owned only)
 
@@ -63,8 +71,8 @@ def load_players(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict[i
     players: dict[int, Player] = {}
     rows = conn.execute(
         "SELECT pr.player_id, pr.gw, pr.exp_points, pl.web_name, pl.position, "
-        "pl.team_id, pl.price FROM projections pr JOIN players pl ON pl.id=pr.player_id "
-        "WHERE pr.gw>=? AND pr.gw<?",
+        "pl.team_id, pl.price, pl.selected_by_pct FROM projections pr "
+        "JOIN players pl ON pl.id=pr.player_id WHERE pr.gw>=? AND pr.gw<?",
         (from_gw, from_gw + horizon),
     )
     for r in rows:
@@ -76,6 +84,7 @@ def load_players(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict[i
             p = Player(
                 id=r["player_id"], name=r["web_name"], position=r["position"],
                 team_id=r["team_id"], price=r["price"], value=0.0, next_gw_points=0.0,
+                ownership=r["selected_by_pct"] or 0.0,
                 in_squad=is_owned, sell_value=int(sell) if sell else r["price"],
             )
             players[r["player_id"]] = p
@@ -97,6 +106,7 @@ def optimise(
     max_transfers: int | None = None,
     free_transfers: int = 1,
     budget: int | None = None,
+    template_weight: float = 0.0,
 ) -> Solution:
     horizon = horizon or config.PROJECTION_HORIZON
     players = load_players(conn, from_gw, horizon)
@@ -116,6 +126,25 @@ def optimise(
     obj = pulp.lpSum(start[i] * players[i].value for i in ids)
     # Captaincy is re-chosen every week, so double on *next-GW* points, not horizon.
     obj += pulp.lpSum(cap[i] * players[i].next_gw_points for i in ids)
+
+    # --- effective-ownership / template term (rank defence) ----------------
+    # FPL rank is zero-sum: a highly-owned player who hauls hurts you if you don't
+    # own him. A pure points-per-£ optimiser is blind to this and will drop a
+    # near-must-own like Haaland. This term rewards owning high-ownership,
+    # high-projection players so the squad defends rank; template_weight is the
+    # risk dial (0 = pure differential/value, higher = more template-safe).
+    if template_weight:
+        obj += template_weight * pulp.lpSum(
+            start[i] * (players[i].ownership / 100.0) * players[i].value
+            for i in ids
+        )
+        # Captaincy is the biggest rank lever, so make it EO-aware too: under a
+        # template stance, captaining a heavily-owned player (the crowd's captain)
+        # defends rank even at a small expected-points cost.
+        obj += template_weight * pulp.lpSum(
+            cap[i] * (players[i].ownership / 100.0) * players[i].next_gw_points
+            for i in ids
+        )
 
     hits_var = None
     if have_squad:
