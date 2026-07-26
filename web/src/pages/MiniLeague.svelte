@@ -10,6 +10,7 @@
   let msg = $state('')
   let name = $state('')
   let rows = $state<LeagueStanding[]>([])
+  let preseason = $state(false)
   const myEntry = getEntryId()
 
   $effect(() => {
@@ -22,9 +23,10 @@
     const id = ids[active]
     phase = 'loading'
     loadLeague(id)
-      .then(({ leagueName, results }) => {
+      .then(({ leagueName, results, pre }) => {
         name = leagueName
         rows = results
+        preseason = pre
         phase = 'ok'
       })
       .catch((e) => {
@@ -40,14 +42,29 @@
   async function loadLeague(id: number) {
     let leagueName = `League ${id}`
     const results: LeagueStanding[] = []
+    const newcomers: any[] = []
     for (let page = 1; page <= MAX_PAGES; page++) {
       const data = await fpl.league(id, page)
       leagueName = data?.league?.name ?? leagueName
       const chunk = (data?.standings?.results ?? []) as LeagueStanding[]
       results.push(...chunk)
-      if (!data?.standings?.has_next || chunk.length === 0) break
+      newcomers.push(...(data?.new_entries?.results ?? []))
+      const more = data?.standings?.has_next || data?.new_entries?.has_next
+      if (!more || (chunk.length === 0 && (data?.new_entries?.results ?? []).length === 0)) break
     }
-    return { leagueName, results }
+    if (results.length) return { leagueName, results, pre: false }
+    // Pre-season: standings are empty until GW1 — members sit in `new_entries`.
+    // Show who's joined (no scores yet) rather than a blank table.
+    const pre: LeagueStanding[] = newcomers.map((e, i) => ({
+      entry: e.entry,
+      entry_name: e.entry_name,
+      player_name: `${e.player_first_name ?? ''} ${e.player_last_name ?? ''}`.trim(),
+      rank: i + 1,
+      last_rank: i + 1,
+      total: 0,
+      event_total: 0,
+    }))
+    return { leagueName, results: pre, pre: true }
   }
 
   const maxTotal = $derived(rows.length ? Math.max(...rows.map((r) => r.total)) : 1)
@@ -57,7 +74,7 @@
   <div class="card p-8 text-center rise max-w-lg mx-auto">
     <div class="text-4xl mb-2">🏆</div>
     <h2 class="font-bold text-lg">Track your mini-leagues</h2>
-    <p class="text-sm text-muted mt-2">Add <b>Classic League IDs</b> and a <b>proxy</b> in Settings to see standings and momentum.</p>
+    <p class="text-sm text-muted mt-2">Add <b>Classic League IDs</b> in Settings to see standings and momentum.</p>
     <button class="btn mt-4" onclick={ongoSettings}>Open settings</button>
   </div>
 {:else}
@@ -75,7 +92,15 @@
     {:else if phase === 'error'}
       <div class="card p-6 text-center"><h2 class="font-bold">Couldn't load league</h2><p class="text-xs text-muted2 mt-1">{msg}</p></div>
     {:else if phase === 'ok'}
-      <h2 class="font-bold text-lg">{name}</h2>
+      <div class="flex items-center gap-2 flex-wrap">
+        <h2 class="font-bold text-lg">{name}</h2>
+        <span class="text-xs text-muted">{rows.length} member{rows.length === 1 ? '' : 's'}</span>
+      </div>
+      {#if preseason}
+        <div class="text-xs chip-info rounded-lg px-3 py-2">
+          ⏳ The season hasn't kicked off — live standings appear after the GW1 deadline. Here's who's joined so far.
+        </div>
+      {/if}
       <div class="card overflow-x-auto">
         <table class="data">
           <thead><tr><th>#</th><th>Manager</th><th>Team</th><th class="!text-left">Total</th><th>GW</th></tr></thead>
@@ -84,23 +109,30 @@
               <tr class="{r.entry === myEntry ? 'bg-brand/10' : ''}">
                 <td class="!text-left">
                   {r.rank}
-                  {#if r.rank < r.last_rank}<span class="text-brand">▲</span>{:else if r.rank > r.last_rank}<span class="text-red">▼</span>{/if}
+                  {#if !preseason && r.rank < r.last_rank}<span class="text-brand">▲</span>{:else if !preseason && r.rank > r.last_rank}<span class="text-red">▼</span>{/if}
                 </td>
                 <td class="!text-left">{r.player_name}{#if r.entry === myEntry}<span class="chip chip-good ml-1">you</span>{/if}</td>
                 <td class="!text-left text-muted">{r.entry_name}</td>
-                <td class="!text-left">
-                  <div class="flex items-center gap-2">
-                    <div class="h-2 rounded-full bg-brand/70" style="width: {(r.total / maxTotal) * 120}px"></div>
-                    <span class="font-bold tabular-nums">{r.total}</span>
-                  </div>
-                </td>
-                <td class="text-muted">{r.event_total}</td>
+                {#if preseason}
+                  <td class="!text-left text-muted2">—</td>
+                  <td class="text-muted2">—</td>
+                {:else}
+                  <td class="!text-left">
+                    <div class="flex items-center gap-2">
+                      <div class="h-2 rounded-full bg-brand/70" style="width: {(r.total / maxTotal) * 120}px"></div>
+                      <span class="font-bold tabular-nums">{r.total}</span>
+                    </div>
+                  </td>
+                  <td class="text-muted">{r.event_total}</td>
+                {/if}
               </tr>
             {/each}
           </tbody>
         </table>
       </div>
-      <p class="text-xs text-muted2">Cumulative &amp; per-GW momentum charts coming next.</p>
+      {#if !preseason}
+        <p class="text-xs text-muted2">Cumulative &amp; per-GW momentum charts coming next.</p>
+      {/if}
     {/if}
   </div>
 {/if}

@@ -111,6 +111,21 @@
         <FixtureStrip fixtures={player.fixtures} />
       </div>
 
+      <!-- last-season baseline (the projection's fallback; survives FPL's reset) -->
+      {#if player.last_season}
+        <div class="mt-3 rounded-lg bg-bg2 border border-line px-3 py-2">
+          <div class="text-[10px] uppercase text-muted mb-1">Last season · {player.last_season.season}</div>
+          <div class="grid grid-cols-4 gap-2 text-center text-xs">
+            <div><div class="font-bold tabular-nums">{player.last_season.minutes.toLocaleString()}</div><div class="text-muted2">mins</div></div>
+            <div><div class="font-bold tabular-nums">{player.last_season.starts}</div><div class="text-muted2">starts</div></div>
+            <div><div class="font-bold tabular-nums text-brand-light">{player.last_season.xg90.toFixed(2)}</div><div class="text-muted2">xG/90</div></div>
+            <div><div class="font-bold tabular-nums text-accent-light">{player.last_season.xa90.toFixed(2)}</div><div class="text-muted2">xA/90</div></div>
+          </div>
+        </div>
+      {:else}
+        <div class="mt-3 text-[11px] text-muted2">No Premier League history last season — projection leans on a position/price prior.</div>
+      {/if}
+
       {#if player.set_pieces || player.price_pred.dir !== 'stable'}
         <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
           {#if player.set_pieces}

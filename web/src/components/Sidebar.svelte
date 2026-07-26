@@ -2,7 +2,6 @@
   import type { Meta } from '../lib/types'
   import {
     getEntryId, setEntryId, getLeagueIds, setLeagueIds, parseId,
-    getApiOverride, setApiBase,
   } from '../lib/config'
   import { GLOSSARY } from '../lib/glossary'
   import { NAV_TABS } from '../lib/nav'
@@ -27,7 +26,6 @@
 
   let entry = $state(getEntryId()?.toString() ?? '')
   let leagues = $state(getLeagueIds().join(', '))
-  let api = $state(getApiOverride() ?? '')
   let saved = $state(false)
 
   function save() {
@@ -35,7 +33,6 @@
     setLeagueIds(
       leagues.split(',').map((s) => parseId(s.trim())).filter((n): n is number => !!n),
     )
-    if (api.trim()) setApiBase(api.trim())
     saved = true
     setTimeout(() => (saved = false), 1500)
     onsaved()
@@ -93,15 +90,6 @@
     class="w-full rounded-lg bg-card border border-line px-3 py-2 text-sm mb-3 focus:outline-none focus:border-accent"
   />
 
-  <div class="block text-xs text-muted mb-1">
-    Proxy API base <span class="text-muted2">(optional — a proxy is already set up)</span>
-  </div>
-  <input
-    bind:value={api}
-    placeholder="Default: gaffer-proxy.val.run/api"
-    class="w-full rounded-lg bg-card border border-line px-3 py-2 text-xs mb-3 focus:outline-none focus:border-accent"
-  />
-
   <button class="btn w-full" onclick={save}>{saved ? 'Saved ✓' : 'Save'}</button>
 
   <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
@@ -121,6 +109,6 @@
 
   <p class="mt-4 text-[11px] text-muted2 leading-relaxed">
     Live-aware. Projections update each refresh; your team &amp; league data are
-    fetched live once IDs + a proxy are set.
+    fetched live from the IDs above.
   </p>
 </aside>

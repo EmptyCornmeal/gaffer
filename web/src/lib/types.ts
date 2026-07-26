@@ -32,6 +32,14 @@ export interface PricePred {
   momentum: number
 }
 
+export interface LastSeason {
+  season: string
+  minutes: number
+  starts: number
+  xg90: number
+  xa90: number
+}
+
 export interface Player {
   id: number
   code: number | null
@@ -51,6 +59,7 @@ export interface Player {
   set_pieces: string
   form: number
   ict: number
+  last_season: LastSeason | null
   xgi90: number
   defcon90: number
   next_gw_xp: number
@@ -98,6 +107,25 @@ export interface RecPlayer {
   xmins_badge?: XminsBadge
 }
 
+export interface OptimalExplanation {
+  headline: string
+  bullets: string[]
+}
+
+export interface OptimalHorizon {
+  horizon: number
+  label: string
+  status: string
+  formation: string
+  squad_value: number
+  xi_expected: number
+  captain: RecPlayer
+  vice: RecPlayer
+  starting: RecPlayer[]
+  bench: RecPlayer[]
+  explanation: OptimalExplanation
+}
+
 export interface Recommendation {
   mode: string
   status: string
@@ -112,6 +140,7 @@ export interface Recommendation {
   transfers_out: RecPlayer[]
   hits: number
   summary: string
+  by_horizon?: Record<string, OptimalHorizon>
 }
 
 export type Fixtures = Record<string, { team: string; fixtures: TeamFixture[] }>

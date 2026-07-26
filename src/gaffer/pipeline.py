@@ -44,8 +44,17 @@ def run(fast: bool = False, horizon: int | None = None) -> dict[str, object]:
         "transfers_in": len(sol.transfers_in), "hits": sol.hits,
     }
 
+    # Optimal squads for the three planning windows the Planner offers. Each is a
+    # full re-solve on that horizon (the objective decays future GWs), so "next 5"
+    # rewards durable picks and "this GW" chases the immediate haul.
+    horizon_solutions = {
+        h: optimize.optimise(conn, from_gw, h, free_transfers=ft)
+        for h in (1, 3, 5)
+    }
+
     written = artifacts.write_all(
-        conn, sol, from_gw, horizon, projection.MODEL_VERSION
+        conn, sol, from_gw, horizon, projection.MODEL_VERSION,
+        horizon_solutions=horizon_solutions,
     )
     log["artifacts"] = written
 

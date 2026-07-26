@@ -39,21 +39,39 @@ def _set_piece_notes(e: dict[str, Any]) -> str:
 
 
 def ingest_teams(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
+    teams = bootstrap["teams"]
+    # Pre-season the FPL API ships the fine-grained attack/defence ratings as all
+    # zeros and only populates the coarse 1-5 strength_overall_home/away. Without
+    # a fallback every team looks identical (TeamContext turns 0 -> a flat 1000),
+    # so fixtures can't move any projection. When the fine-grained set is absent
+    # league-wide, use strength_overall_{home,away} as the per-venue rating for
+    # both attack and defence — the projection math is ratio-based, so the 1-5
+    # scale still tiers fixtures correctly. Once FPL fills the detailed ratings
+    # in-season, those take over automatically.
+    has_fine = any((t.get("strength_attack_home") or 0) > 0 for t in teams)
     rows = []
-    for t in bootstrap["teams"]:
+    for t in teams:
+        oh = t.get("strength_overall_home") or 3
+        oa = t.get("strength_overall_away") or 3
+        if has_fine:
+            att_h = t.get("strength_attack_home")
+            att_a = t.get("strength_attack_away")
+            def_h = t.get("strength_defence_home")
+            def_a = t.get("strength_defence_away")
+        else:  # pre-season: coarse overall rating stands in for attack + defence
+            att_h = def_h = oh
+            att_a = def_a = oa
         rows.append(
             {
                 "id": t["id"],
                 "code": t.get("code"),
                 "name": t["name"],
                 "short": t["short_name"],
-                "strength_att_home": t.get("strength_attack_home"),
-                "strength_att_away": t.get("strength_attack_away"),
-                "strength_def_home": t.get("strength_defence_home"),
-                "strength_def_away": t.get("strength_defence_away"),
-                "strength_overall": (
-                    (t.get("strength_overall_home", 0) + t.get("strength_overall_away", 0)) // 2
-                ),
+                "strength_att_home": att_h,
+                "strength_att_away": att_a,
+                "strength_def_home": def_h,
+                "strength_def_away": def_a,
+                "strength_overall": (oh + oa) // 2,
             }
         )
     return db.upsert(conn, "teams", rows, ["id"])

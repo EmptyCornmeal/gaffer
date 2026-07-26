@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
-  import type { Player, Pos, RecPlayer } from '../lib/types'
+  import type { OptimalHorizon, Player, Pos, RecPlayer } from '../lib/types'
   import {
     QUOTA, BUDGET, totals, addBlocker, squadValidity, autoLineup, lineupErrors,
     formationOf, planPoints, loadCurrent, saveCurrent, listPlans, savePlan, deletePlan,
@@ -73,10 +73,25 @@
     if (!plan.starters.includes(id)) return
     plan = { ...plan, viceId: id, captainId: plan.captainId === id ? plan.viceId : plan.captainId }
   }
-  function loadOptimal() {
-    const ids = [...bundle.recommendation.starting, ...bundle.recommendation.bench].map((p) => p.id)
+  // Planning window for "Load optimal": 1 = this GW, 3 = next 3, 5 = next 5. Each
+  // is a distinct server-side solve (future GWs decayed), so the squad shifts with
+  // the horizon you care about.
+  const HORIZONS = [
+    { h: 1, label: 'This GW' },
+    { h: 3, label: 'Next 3' },
+    { h: 5, label: 'Next 5' },
+  ]
+  let optimalHorizon = $state(3)
+  let shownOptimal = $state<OptimalHorizon | null>(null)
+
+  function loadOptimal(h = optimalHorizon) {
+    optimalHorizon = h
+    const oh = bundle.recommendation.by_horizon?.[String(h)]
+    const src = oh ?? bundle.recommendation
+    const ids = [...src.starting, ...src.bench].map((p) => p.id)
     const sq = ids.map((id) => byId.get(id)!).filter(Boolean)
     plan = { ...plan, ids, ...autoLineup(sq) }
+    shownOptimal = oh ?? null
   }
 
   let importMsg = $state('')
@@ -117,6 +132,12 @@
     plans = listPlans()
   }
 
+  // Render the model's **bold** markers in explanation bullets, escaping the rest.
+  function mdBold(s: string): string {
+    const esc = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return esc.replace(/\*\*(.+?)\*\*/g, '<strong class="text-text">$1</strong>')
+  }
+
   function toRec(p: Player): RecPlayer {
     return { id: p.id, code: p.code, team_code: p.team_code, name: p.name, team: p.team, pos: p.pos, price: p.price, next_gw_xp: p.next_gw_xp, confidence: p.confidence }
   }
@@ -145,7 +166,16 @@
         <h2 class="font-bold">Squad Planner</h2>
         <div class="flex gap-2 flex-wrap">
           <button class="btn text-xs" onclick={importTeam}>Import my team</button>
-          <button class="btn-ghost btn text-xs" onclick={loadOptimal}>Load optimal</button>
+          <div class="inline-flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Load the model's optimal squad for a planning window">
+            <span class="text-[10px] uppercase text-muted px-1.5 font-bold">Optimal</span>
+            {#each HORIZONS as o}
+              <button
+                onclick={() => loadOptimal(o.h)}
+                class="px-2 py-1 rounded-md text-xs font-bold transition
+                  {shownOptimal && optimalHorizon === o.h ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+              >{o.label}</button>
+            {/each}
+          </div>
           <button class="btn-ghost btn text-xs" onclick={autofill} disabled={squad.length < 11}>Auto-pick XI</button>
           <button class="btn-ghost btn text-xs" onclick={clearAll}>Clear</button>
         </div>
@@ -192,6 +222,21 @@
         </div>
       {/if}
     </div>
+
+    {#if shownOptimal}
+      <div class="card p-3 border-brand/30">
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <h3 class="font-bold text-sm">Why this squad <span class="text-muted font-normal">· {shownOptimal.label}</span></h3>
+          <button class="text-muted text-sm leading-none hover:text-text" onclick={() => (shownOptimal = null)} aria-label="dismiss explanation">✕</button>
+        </div>
+        <p class="text-xs text-brand-light mb-2">{shownOptimal.explanation.headline}</p>
+        <ul class="space-y-1.5 text-xs text-muted">
+          {#each shownOptimal.explanation.bullets as b}
+            <li class="flex gap-2"><span class="text-brand-light shrink-0">›</span><span>{@html mdBold(b)}</span></li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
 
     {#if starters.length}
       <div class="card p-3">

@@ -9,7 +9,7 @@
   let { bundle, onpick, ongoSettings }: { bundle: Bundle; onpick: (id: number) => void; ongoSettings: () => void } = $props()
 
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
-  let phase = $state<'idle' | 'loading' | 'ok' | 'error' | 'nosetup'>('idle')
+  let phase = $state<'idle' | 'loading' | 'ok' | 'error' | 'nosetup' | 'preseason'>('idle')
   let msg = $state('')
   let picks = $state<PicksResponse | null>(null)
 
@@ -29,10 +29,22 @@
         phase = 'ok'
       })
       .catch((e) => {
-        phase = 'error'
-        msg = String(e?.message ?? e)
+        // Pre-season the picks endpoint 404s (FPL keeps squads private until the
+        // GW1 deadline). That's expected, not a setup error — don't blame the ID.
+        if (!Number(bundle.meta.last_finished_gw)) {
+          phase = 'preseason'
+        } else {
+          phase = 'error'
+          msg = String(e?.message ?? e)
+        }
       })
   })
+
+  const deadlineStr = $derived(
+    bundle.meta.deadline
+      ? new Date(bundle.meta.deadline).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })
+      : 'the GW1 deadline',
+  )
 
   function toRec(p: Player): RecPlayer {
     return { id: p.id, code: p.code, team_code: p.team_code, name: p.name, team: p.team, pos: p.pos, price: p.price, next_gw_xp: p.next_gw_xp, confidence: p.confidence }
@@ -56,17 +68,30 @@
     <div class="text-4xl mb-2">🧢</div>
     <h2 class="font-bold text-lg">Connect your team</h2>
     <p class="text-sm text-muted mt-2">
-      Add your <b>FPL Entry ID</b> and a <b>proxy API base</b> in Settings, and your live squad
-      appears here — every player scored, badged, and explained.
+      Add your <b>FPL Entry ID</b> in Settings and your live squad appears here —
+      every player scored, badged, and explained.
     </p>
     <button class="btn mt-4" onclick={ongoSettings}>Open settings</button>
   </div>
 {:else if phase === 'loading'}
   <div class="flex justify-center py-24 text-muted"><div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div></div>
+{:else if phase === 'preseason'}
+  <div class="card p-6 text-center rise max-w-lg mx-auto">
+    <div class="text-4xl mb-2">⏳</div>
+    <h2 class="font-bold text-lg">Your squad isn't public yet</h2>
+    <p class="text-sm text-muted mt-2">
+      FPL keeps everyone's team private until the <b>GW1 deadline ({deadlineStr})</b>. Your
+      live XI will load here automatically once it passes.
+    </p>
+    <p class="text-sm text-muted mt-2">
+      In the meantime, head to the <b>Planner</b> — it's pre-loaded with the model's
+      optimal squad, and you can build and compare your own.
+    </p>
+  </div>
 {:else if phase === 'error'}
   <div class="card p-6 text-center rise max-w-lg mx-auto">
     <h2 class="font-bold">Couldn't load your team</h2>
-    <p class="text-sm text-muted mt-2">Picks are available after the GW1 deadline. Check your Entry ID and proxy.</p>
+    <p class="text-sm text-muted mt-2">We couldn't reach your live picks just now. Double-check your Entry ID in Settings.</p>
     <p class="text-xs text-muted2 mt-1">{msg}</p>
   </div>
 {:else if phase === 'ok' && picks}

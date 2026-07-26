@@ -72,18 +72,26 @@ export function parseId(raw: string): number | null {
   return m ? Number(m[0]) : null
 }
 
+// The owner's defaults so the dashboard populates out of the box. Any visitor can
+// override them from the Settings sidebar (their choice is saved to localStorage
+// and wins over these). Empty-string overrides are respected as "cleared".
+export const DEFAULT_ENTRY_ID = 1066421
+export const DEFAULT_LEAGUE_IDS = [271619]
+
 export function getEntryId(): number | null {
   const v = safeLS.get(LS.entry)
-  return v ? Number(v) : null
+  if (v !== null) return v ? Number(v) : null
+  return DEFAULT_ENTRY_ID
 }
 export function setEntryId(v: number | null) {
   if (v) safeLS.set(LS.entry, String(v))
-  else safeLS.remove(LS.entry)
+  else safeLS.set(LS.entry, '') // explicit clear — beats the default
 }
 
 export function getLeagueIds(): number[] {
   const v = safeLS.get(LS.leagues)
-  return v ? v.split(',').map(Number).filter(Boolean) : []
+  if (v !== null) return v.split(',').map(Number).filter(Boolean)
+  return DEFAULT_LEAGUE_IDS
 }
 export function setLeagueIds(ids: number[]) {
   safeLS.set(LS.leagues, ids.join(','))

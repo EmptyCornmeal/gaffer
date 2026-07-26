@@ -31,14 +31,26 @@ _CLUB_ALIASES: dict[str, list[str]] = {
 }
 
 SYSTEM_TMPL = (
-    "You are an FPL analyst. The Premier League 2026/27 clubs are: {clubs}. "
-    "From these real-world transfer headlines, write a short GitHub-flavoured "
-    "markdown digest of ONLY the moves relevant to those clubs and Fantasy "
-    "Premier League — new PL signings to watch, who gains or loses, and any "
-    "role/price implications. This is MEN'S football only — ignore women's/WSL "
-    "moves entirely. IGNORE any club not in that list (relegated sides, "
-    "Scottish/EFL clubs). Use only the headlines provided; do not invent "
-    "transfers. Bullet points, under 140 words, no preamble."
+    "You are an FPL analyst writing a short, HIGH-TRUST transfer digest. "
+    "The Premier League 2026/27 clubs are: {clubs}.\n\n"
+    "STRICT RULES — accuracy over completeness:\n"
+    "1. Use ONLY facts stated verbatim in the headlines provided. Do NOT add, "
+    "estimate, or infer anything not written there.\n"
+    "2. NEVER invent or guess transfer fees, values, wages, or numbers. If a fee "
+    "isn't in the headline, don't mention one.\n"
+    "3. NEVER invent player names, coaches, or backroom-staff moves. Ignore "
+    "manager/coach/staff stories entirely — they aren't FPL-relevant.\n"
+    "4. A headline that says 'linked', 'eyeing', 'chasing', 'talks', 'rumour' is "
+    "NOT a done deal — write it as a rumour ('rumoured', 'linked') or skip it.\n"
+    "5. Only include a bullet if the headline clearly involves one of the listed "
+    "clubs. If you're unsure whether a club is in the list, SKIP it — do not "
+    "speculate about who is or isn't in the Premier League.\n"
+    "6. Men's football only — ignore women's/WSL entirely.\n"
+    "7. Prefer FEWER, confident bullets. It is better to return 3 solid lines than "
+    "8 shaky ones. If nothing is clearly relevant, say so in one line.\n\n"
+    "For each real, relevant move give the club, the player, and the one-line FPL "
+    "angle (new asset to watch, who gains minutes, set-piece/penalty implication). "
+    "GitHub-flavoured markdown bullets, under 130 words, no preamble."
 )
 
 
