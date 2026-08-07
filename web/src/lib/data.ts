@@ -1,5 +1,6 @@
+import type { FixturesArtifact } from './fixtures'
 import type {
-  Fixtures, Meta, MyTeam, News, Player, Recommendation, TransferPlan, Verdict,
+  Meta, MyTeam, News, Player, Recommendation, TransferPlan, Verdict,
 } from './types'
 
 const BASE = import.meta.env.BASE_URL // './' in prod, '/' in dev
@@ -71,7 +72,7 @@ export async function loadShell(): Promise<Shell> {
 export interface Bundle {
   meta: Meta
   players: Player[]
-  fixtures: Fixtures
+  fixtures: FixturesArtifact
   recommendation: Recommendation
   myTeam: MyTeam | null
   plan: TransferPlan | null
@@ -93,7 +94,7 @@ export async function loadBundle(): Promise<Bundle> {
   const [meta, players, fixtures, recommendation] = await Promise.all([
     load<Meta>('meta.json'),
     load<Player[]>('players.json'),
-    load<Fixtures>('fixtures.json'),
+    load<FixturesArtifact>('fixtures.json'),
     load<Recommendation>('recommendation.json'),
   ])
   const [myTeam, plan, verdict, news, backtest, strategy, decision, review, notifications] =

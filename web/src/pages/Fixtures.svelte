@@ -1,18 +1,28 @@
 <script lang="ts">
-  import type { Fixtures, TeamFixture } from '../lib/types'
+  import type { TeamFixture } from '../lib/types'
+  import type { FixtureMode, FixturesArtifact } from '../lib/fixtures'
+  import {
+    buildRotation, buildRows, difficultyOf, gameweeksIn, parseFixtures,
+  } from '../lib/fixtures'
 
-  let { fixtures }: { fixtures: Fixtures } = $props()
+  let { fixtures }: { fixtures: FixturesArtifact } = $props()
+
+  // One guard between the artifact and this page. The artifact carries team
+  // records *and* metadata (`season`), and treating every value as a team is
+  // what took the whole route down with a TypeError.
+  const parsed = $derived(parseFixtures(fixtures))
+  const teams = $derived(parsed.kind === 'ok' ? parsed.teams : [])
+
 
   // Split fixture difficulty: overall, attack (ease of scoring — opponent defence)
   // or defence (ease of a clean sheet — opponent attack). Scoriness/Porosity.
-  type Mode = 'difficulty' | 'att' | 'def'
-  let mode = $state<Mode>('difficulty')
-  const MODES: { key: Mode; label: string; hint: string }[] = [
+  let mode = $state<FixtureMode>('difficulty')
+  const MODES: { key: FixtureMode; label: string; hint: string }[] = [
     { key: 'difficulty', label: 'Overall', hint: 'blend of both' },
     { key: 'att', label: 'Attack', hint: 'ease of scoring' },
     { key: 'def', label: 'Defence', hint: 'ease of a clean sheet' },
   ]
-  const diffOf = (f: TeamFixture): number => (f[mode] ?? f.difficulty) as number
+  const diffOf = (f: TeamFixture): number => difficultyOf(f, mode)
 
   // Rotation-pair planner: pin 2–3 teams and see the *best-of* their fixtures each
   // GW — i.e. the effective difficulty if you rotated them through one squad slot.
@@ -23,57 +33,31 @@
   }
 
   // Union of every GW any team plays in — so doubles/blanks don't shift the grid.
-  const gws = $derived(
-    [...new Set(Object.values(fixtures).flatMap((v) => v.fixtures.map((f) => f.gw)))].sort(
-      (a, b) => a - b,
-    ),
-  )
+  const gws = $derived(gameweeksIn(teams))
 
-  const rows = $derived(
-    Object.entries(fixtures)
-      .map(([short, v]) => {
-        // one cell per header GW: 0 fixtures = blank, 2+ = double
-        const byGw = new Map<number, TeamFixture[]>()
-        for (const f of v.fixtures) {
-          const list = byGw.get(f.gw) ?? []
-          list.push(f)
-          byGw.set(f.gw, list)
-        }
-        const cells = gws.map((gw) => byGw.get(gw) ?? [])
-        const played = v.fixtures.length
-        // ease = mean difficulty, with blanks penalised and doubles rewarded so
-        // the sort still means "best run" once BGWs/DGWs appear.
-        const sumDiff = v.fixtures.reduce((s, f) => s + diffOf(f), 0)
-        const blanks = cells.filter((c) => c.length === 0).length
-        const ease = (sumDiff + blanks * 6) / (gws.length || 1)
-        return { short, cells, played, blanks, doubles: cells.filter((c) => c.length > 1).length, ease }
-      })
-      .sort((a, b) => a.ease - b.ease),
-  )
+  const rows = $derived(buildRows(teams, gws, mode))
 
   // For each header GW, the easiest of the pinned teams' fixtures (a blank counts
   // as difficulty 6). The row shows which team you'd field and how the rotation
   // smooths the run vs owning either team alone.
-  const rotation = $derived.by(() => {
-    if (pinned.length < 2) return null
-    const cells = gws.map((gw) => {
-      let best: { short: string; f: TeamFixture } | null = null
-      for (const short of pinned) {
-        const fx = (fixtures[short]?.fixtures ?? []).filter((f) => f.gw === gw)
-        for (const f of fx) {
-          if (!best || diffOf(f) < diffOf(best.f)) best = { short, f }
-        }
-      }
-      return best
-    })
-    const rated = cells.filter((c): c is { short: string; f: TeamFixture } => !!c)
-    const ease = rated.length
-      ? rated.reduce((s, c) => s + diffOf(c.f), 0) / rated.length
-      : 6
-    return { cells, ease: Math.round(ease * 10) / 10 }
-  })
+  const rotation = $derived(buildRotation(teams, gws, pinned, mode))
 </script>
 
+{#if parsed.kind === 'unavailable'}
+  <!-- Fail visibly. Silently rendering an empty grid — or leaving the previous
+       route on screen — is how a broken artifact reads as "no fixtures". -->
+  <div class="rise max-w-xl mx-auto">
+    <h2 class="font-bold text-lg mb-2">Fixture ticker</h2>
+    <div class="card p-4 border border-red/40 bg-red/5">
+      <div class="font-bold text-red">Fixtures unavailable</div>
+      <p class="text-sm text-muted mt-1">{parsed.reason}</p>
+      <p class="text-[11px] text-muted2 mt-2">
+        This is a problem with the published <code>fixtures.json</code>, not with
+        your team. Everything else on the site is unaffected.
+      </p>
+    </div>
+  </div>
+{:else}
 <div class="rise">
   <div class="flex items-center justify-between mb-3 gap-2 flex-wrap">
     <h2 class="font-bold text-lg">Fixture ticker</h2>
@@ -168,3 +152,4 @@
     {/each}
   </div>
 </div>
+{/if}

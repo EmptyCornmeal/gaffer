@@ -2,8 +2,8 @@
   import type { Bundle } from '../lib/data'
   import {
     parseStrategy, pct, simError, epCost, departures,
-    CHIP_LABELS, STANCE_LABELS, CLASS_LABELS,
-    type LeagueView,
+    CHIP_LABELS, STANCE_LABELS, CLASS_LABELS, describeCoverage,
+    type Coverage, type LeagueView,
   } from '../lib/strategy'
   import { classifyFreshness } from '../lib/freshness'
   import Icon from '../components/Icon.svelte'
@@ -32,8 +32,13 @@
     if (stance === 'desperate') return 'chip-bad'
     return 'chip-good'
   }
-  function coverageClass(p: number) {
-    return p >= 100 ? 'text-brand-light' : p >= 50 ? 'text-yellow' : 'text-red'
+  // Colour follows the level, not a percentage: 0/0 rivals is not a red failure,
+  // and an inconsistent artifact must not look like healthy partial coverage.
+  function coverageClass(c: Coverage) {
+    if (c.level === 'full') return 'text-brand-light'
+    if (c.level === 'partial') return 'text-yellow'
+    if (c.level === 'no_rivals') return 'text-muted2'
+    return 'text-red'
   }
   function lg(l: LeagueView) {
     return openLeague === l.league_id
@@ -162,6 +167,9 @@
 
     <!-- ── per-league ─────────────────────────────────────────────── -->
     {#each s.leagues as l (l.league_id)}
+      <!-- Coverage is stated from the counts every time, whether or not a placing
+           probability came out, because it is what those probabilities are worth. -->
+      {@const cov = describeCoverage(l.data_quality)}
       <div class="card p-4">
         <button class="w-full text-left" onclick={() => (openLeague = lg(l) ? null : l.league_id)}>
           <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -192,17 +200,19 @@
 
         {#if l.placing.available}
           <p class="text-[11px] text-muted2 mt-2">
-            ±{(l.placing.ci95_halfwidth * 100).toFixed(1)}pp from {l.placing.simulations.toLocaleString()} shared scenarios ·
-            <span class={coverageClass(l.data_quality.coverage_pct)}>
-              {l.data_quality.with_picks}/{l.data_quality.rivals} rival squads known
-            </span>
-            {#if l.data_quality.picks_source_event}· from GW{l.data_quality.picks_source_event}{/if}
+            ±{(l.placing.ci95_halfwidth * 100).toFixed(1)}pp from {l.placing.simulations.toLocaleString()} shared scenarios
           </p>
         {:else}
           <p class="text-[11px] text-muted2 mt-2">
             No placing probability yet — {l.placing.caveats[0] ?? 'nothing to place against'}.
           </p>
         {/if}
+
+        <p class="text-[11px] mt-1">
+          <span class="font-semibold {coverageClass(cov)}">{cov.summary}</span>
+          {#if cov.meaning}<span class="text-muted2"> — {cov.meaning}</span>{/if}
+          {#if cov.notes.length}<span class="text-muted2"> · {cov.notes.join(' · ')}</span>{/if}
+        </p>
 
         {#if l.differs_from_neutral}
           <p class="text-sm mt-2 chip-warn rounded-lg px-3 py-2">{l.difference_reason}</p>

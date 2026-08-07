@@ -238,12 +238,119 @@ export const STANCE_LABELS: Record<string, string> = {
   desperate: 'All-in',
 }
 
+/**
+ * What kind of league this is. Nothing more.
+ *
+ * `tiny_private` used to read "every rival readable", which is a claim about
+ * *coverage*, not about class. It sat directly above "0/3 rival squads known"
+ * in production and contradicted it. Classification is decided from league size
+ * before a single rival squad is fetched, so it cannot know what was readable.
+ * Coverage wording now comes from `describeCoverage` and the real counts.
+ */
 export const CLASS_LABELS: Record<string, string> = {
-  tiny_private: 'Tiny private league — every rival readable',
+  tiny_private: 'Tiny private league',
   small_private: 'Small private league',
   medium: 'Medium league',
   large: 'Large league — bounded cohort',
   global: 'Global league — bounded cohort',
+}
+
+/** How much of the rival field we actually read. Drives wording and colour. */
+export type CoverageLevel = 'no_rivals' | 'none' | 'partial' | 'full' | 'inconsistent'
+
+export interface Coverage {
+  level: CoverageLevel
+  /** The counts, stated plainly: "0 of 3 rival squads known". */
+  summary: string
+  /** What that does to the numbers. Empty only when there is nothing to add. */
+  meaning: string
+  /** Status and truncation notes from the artifact, already worded. */
+  notes: string[]
+}
+
+/** Per-rival fetch outcomes, as `league.py` records them. */
+const STATUS_NOTES: Record<string, string> = {
+  no_public_picks_yet: 'picks are not public yet',
+  revealed: 'picks read from the API',
+  stale: 'picks carried from an earlier gameweek',
+  fetch_failed: 'some picks could not be fetched',
+  unavailable: 'some entries are private',
+}
+
+/**
+ * Coverage wording built from the counts, never from the classification.
+ *
+ * The one rule that matters: nothing here claims the field is readable unless
+ * `with_picks` actually reaches `rivals`. An inconsistent artifact (more squads
+ * read than rivals counted) is reported as inconsistent rather than rounded up
+ * into full coverage — a broken producer must not read as a good result.
+ */
+export function describeCoverage(dq: DataQuality): Coverage {
+  const rivals = Math.max(0, Math.trunc(dq.rivals ?? 0))
+  const known = Math.max(0, Math.trunc(dq.with_picks ?? 0))
+
+  const notes: string[] = []
+  for (const st of dq.statuses ?? []) {
+    const note = STATUS_NOTES[st]
+    if (note && !notes.includes(note)) notes.push(note)
+  }
+  if (dq.cohort_truncated) notes.push('rival cohort capped, so this is a sample of the league')
+  if (dq.picks_source_event) notes.push(`squads as at GW${dq.picks_source_event}`)
+
+  // `coverage_pct` is the producer's own summary of the same two counts. If it
+  // disagrees with them, one of the three numbers is wrong and we do not get to
+  // pick the flattering one.
+  const impliedPct = rivals > 0 ? (known / rivals) * 100 : 0
+  const statedPct = Number.isFinite(dq.coverage_pct) ? dq.coverage_pct : null
+  const pctDisagrees = statedPct !== null && Math.abs(statedPct - impliedPct) > 1
+
+  if (known > rivals) {
+    return {
+      level: 'inconsistent',
+      summary: `${known} rival squads known but only ${rivals} rivals counted`,
+      meaning: 'the coverage figures disagree, so treat these probabilities as unreliable',
+      notes,
+    }
+  }
+  if (pctDisagrees) {
+    return {
+      level: 'inconsistent',
+      summary: `${known} of ${rivals} rival squads known, but the artifact reports ${statedPct!.toFixed(0)}% coverage`,
+      meaning: 'the coverage figures disagree, so treat these probabilities as unreliable',
+      notes,
+    }
+  }
+  if (rivals === 0) {
+    return {
+      level: 'no_rivals',
+      summary: 'No rivals in this league',
+      meaning: 'there is no field to place against',
+      notes,
+    }
+  }
+  if (known === 0) {
+    return {
+      level: 'none',
+      summary: `0 of ${rivals} rival squads known`,
+      meaning: `all ${rivals} were modelled as a distribution, not as teams`,
+      notes,
+    }
+  }
+  if (known < rivals) {
+    const unknown = rivals - known
+    return {
+      level: 'partial',
+      summary: `${known} of ${rivals} rival squads known`,
+      meaning: `the other ${unknown} ${unknown === 1 ? 'was' : 'were'} modelled as a distribution, not as teams`,
+      notes,
+    }
+  }
+  return {
+    level: 'full',
+    summary: `All ${rivals} rival squads known`,
+    meaning: 'every rival is read from their actual picks',
+    notes,
+  }
 }
 
 /** Which league most wants a different decision from the neutral one. */

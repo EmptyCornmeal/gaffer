@@ -101,7 +101,10 @@ export interface Meta {
   gw_name: string
   deadline: string
   last_finished_gw: string
+  /** Machine-readable squad state — see `lib/squadStatus.ts`. Never infer it from a date. */
   squad_status: string
+  squad_status_reason?: string | null
+  squad_source_event?: number | string | null
   entry_name: string | null
   manager_name: string | null
   overall_rank: string | null
@@ -204,7 +207,10 @@ export interface TransferPlan {
   steps: PlanStep[]
 }
 
-export type Fixtures = Record<string, { team: string; fixtures: TeamFixture[] }>
+// The fixtures artifact is NOT a bare map of team records: it also carries
+// `season`. Its type and its one type-guard live in `lib/fixtures.ts`, so this
+// alias is deliberately gone — a `Record<string, {team, fixtures}>` was a lie
+// that let the page dereference the season string.
 
 export interface MyTeam {
   gw: number

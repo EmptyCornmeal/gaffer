@@ -7,6 +7,7 @@
   import { mdLite } from '../lib/mdlite'
   import { loadCurrent, lineupErrors, formationOf, planPoints, captainScore } from '../lib/squad'
   import { generateTeamBrief } from '../lib/teamBrief'
+  import { briefingCaveat } from '../lib/squadStatus'
   import { renderTeamCard, downloadBlob, type SharePlayer } from '../lib/shareImage'
 
   let { bundle, onpick, onnav }: { bundle: Bundle; onpick: (id: number) => void; onnav: (r: string) => void } = $props()
@@ -36,6 +37,11 @@
   )
   const showYourBrief = $derived(view === 'your' && planValid)
   const P = $derived(bundle.players)
+
+  // What the briefing is actually about. Decided from meta.squad_status, not
+  // from the calendar: a mid-season fetch failure must caveat exactly as loudly
+  // as pre-season does.
+  const caveat = $derived(briefingCaveat(bundle.meta, showYourBrief ? 'plan' : 'model'))
 
   // EO-aware so the widget agrees with the model/verdict (the rank-safe armband,
   // e.g. Haaland), not a raw-points list that would omit him.
@@ -124,6 +130,29 @@
         </div>
         <span class="text-[10px] text-muted2">{showYourBrief ? 'live' : verdict && verdict.source.startsWith('ai') ? 'AI' : 'auto'}</span>
       </div>
+
+      <!-- Above the briefing, never below it: by the time you have read "no hit
+           needed" it is too late to learn it was said about a squad that is not
+           yours. -->
+      {#if caveat}
+        <div
+          data-testid="briefing-caveat"
+          role="note"
+          class="mb-3 rounded-lg px-3 py-2 border {caveat.tone === 'unknown'
+            ? 'border-yellow/40 bg-yellow/10'
+            : 'border-line bg-bg3'}"
+        >
+          <p class="flex items-start gap-1.5 text-sm font-bold text-text">
+            <Icon name="alert" size={15} class="mt-0.5 shrink-0 {caveat.tone === 'unknown' ? 'text-yellow' : 'text-muted'}" />
+            <span>{caveat.headline}</span>
+          </p>
+          <p class="mt-1 text-[13px] text-muted leading-snug">{caveat.body}</p>
+          {#if caveat.reason}
+            <p class="mt-1 text-[11px] text-muted2">Why: {caveat.reason}.</p>
+          {/if}
+        </div>
+      {/if}
+
       <div class="verdict text-[15px] leading-relaxed text-text">
         {@html mdLite(showYourBrief ? teamBrief : (verdict?.briefing_md ?? ''))}
       </div>
