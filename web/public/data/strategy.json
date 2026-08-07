@@ -1,0 +1,540 @@
+{
+  "strategy_version": "strategy-1.0",
+  "league_version": "league-1.0",
+  "multileague_version": "multileague-1.0",
+  "chips_version": "chips-1.0",
+  "generated_at": "2026-08-07T07:51:29+00:00",
+  "gameweek": 1,
+  "gameweeks_remaining": 38,
+  "simulation": {
+    "sim_version": "scenarios-1.0",
+    "n_sims": 2000,
+    "seed": 20260806,
+    "model_version": "heuristic-0.2",
+    "gameweek": 1,
+    "fixtures": 20,
+    "players": 530,
+    "assumptions": [
+      "One goal draw per attacking side, shared by every player in the match; clean sheets and goals conceded read the same draw.",
+      "Goals are allocated multinomially in proportion to each player's deterministic expected goals, so teammates compete for the same goals and marginals are preserved.",
+      "A player drawn as not playing forfeits any allocated goal rather than it being reassigned, so simulated team totals sit slightly below lambda for sides with rotation risk.",
+      "Bonus is a coarse scenario-driven BPS proxy, not a BPS model."
+    ]
+  },
+  "basis": "the recommended squad (no readable squad of your own yet)",
+  "squad": {
+    "starting": [
+      {
+        "id": 4,
+        "name": "Gabriel",
+        "team": "ARS",
+        "pos": "DEF",
+        "price": 8.0,
+        "code": 226597,
+        "team_code": 3,
+        "next_gw_xp": 4.56
+      },
+      {
+        "id": 8,
+        "name": "Calafiori",
+        "team": "ARS",
+        "pos": "DEF",
+        "price": 5.5,
+        "code": 466075,
+        "team_code": 3,
+        "next_gw_xp": 3.04
+      },
+      {
+        "id": 12,
+        "name": "Saka",
+        "team": "ARS",
+        "pos": "MID",
+        "price": 9.5,
+        "code": 223340,
+        "team_code": 3,
+        "next_gw_xp": 3.78
+      },
+      {
+        "id": 106,
+        "name": "Thiago",
+        "team": "BRE",
+        "pos": "FWD",
+        "price": 8.0,
+        "code": 502500,
+        "team_code": 94,
+        "next_gw_xp": 3.14
+      },
+      {
+        "id": 155,
+        "name": "Enzo",
+        "team": "CHE",
+        "pos": "MID",
+        "price": 7.0,
+        "code": 448047,
+        "team_code": 8,
+        "next_gw_xp": 3.62
+      },
+      {
+        "id": 165,
+        "name": "João Pedro",
+        "team": "CHE",
+        "pos": "FWD",
+        "price": 7.5,
+        "code": 475168,
+        "team_code": 8,
+        "next_gw_xp": 3.19
+      },
+      {
+        "id": 250,
+        "name": "Leno",
+        "team": "FUL",
+        "pos": "GKP",
+        "price": 4.5,
+        "code": 80201,
+        "team_code": 54,
+        "next_gw_xp": 2.02
+      },
+      {
+        "id": 356,
+        "name": "Virgil",
+        "team": "LIV",
+        "pos": "DEF",
+        "price": 6.5,
+        "code": 97032,
+        "team_code": 14,
+        "next_gw_xp": 3.97
+      },
+      {
+        "id": 426,
+        "name": "B.Fernandes",
+        "team": "MUN",
+        "pos": "MID",
+        "price": 12.0,
+        "code": 141746,
+        "team_code": 1,
+        "next_gw_xp": 5.02
+      },
+      {
+        "id": 427,
+        "name": "Mbeumo",
+        "team": "MUN",
+        "pos": "MID",
+        "price": 8.0,
+        "code": 446008,
+        "team_code": 1,
+        "next_gw_xp": 3.77
+      },
+      {
+        "id": 445,
+        "name": "Thiaw",
+        "team": "NEW",
+        "pos": "DEF",
+        "price": 5.0,
+        "code": 465642,
+        "team_code": 4,
+        "next_gw_xp": 2.42
+      }
+    ],
+    "bench": [
+      {
+        "id": 497,
+        "name": "Dubravka",
+        "team": "TOT",
+        "pos": "GKP",
+        "price": 4.0,
+        "code": 67089,
+        "team_code": 6,
+        "next_gw_xp": 1.61
+      },
+      {
+        "id": 423,
+        "name": "Shaw",
+        "team": "MUN",
+        "pos": "DEF",
+        "price": 4.5,
+        "code": 106760,
+        "team_code": 1,
+        "next_gw_xp": 2.54
+      },
+      {
+        "id": 169,
+        "name": "Mheuka",
+        "team": "CHE",
+        "pos": "FWD",
+        "price": 4.5,
+        "code": 567119,
+        "team_code": 8,
+        "next_gw_xp": 1.92
+      },
+      {
+        "id": 54,
+        "name": "Gomes",
+        "team": "AVL",
+        "pos": "MID",
+        "price": 5.5,
+        "code": 448089,
+        "team_code": 7,
+        "next_gw_xp": 2.49
+      }
+    ],
+    "captain": {
+      "id": 426,
+      "name": "B.Fernandes",
+      "team": "MUN",
+      "pos": "MID",
+      "price": 12.0,
+      "code": 141746,
+      "team_code": 1,
+      "next_gw_xp": 5.02
+    },
+    "source_event": null
+  },
+  "leagues": [
+    {
+      "league_id": 271619,
+      "name": "Crouch Potatoes",
+      "league_type": "x",
+      "classification": "tiny_private",
+      "size": 4,
+      "target_position": 1,
+      "posture": {
+        "stance": "neutral",
+        "reason": "too little rival data to justify departing from expected points",
+        "variance_preference": 0.0
+      },
+      "placing": {
+        "p_first": 0.1235,
+        "p_target": 0.1235,
+        "target_position": 1,
+        "expected_position": 2.53,
+        "simulations": 2000,
+        "ci95_halfwidth": 0.0144,
+        "basis": "shared fixture scenarios",
+        "available": true,
+        "rival_coverage_pct": 0.0,
+        "caveats": [
+          "3 of 3 rival squads are unknown and were modelled as a distribution, not a team",
+          "Gaffer's multi-week mean projections are materially weaker than its one-week ones, so probabilities beyond the next gameweek are directional only"
+        ]
+      },
+      "shields": [],
+      "differentials": [
+        {
+          "player_id": 4,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 4,
+            "name": "Gabriel",
+            "team": "ARS",
+            "pos": "DEF",
+            "price": 8.0,
+            "code": 226597,
+            "team_code": 3,
+            "next_gw_xp": 4.56
+          }
+        },
+        {
+          "player_id": 8,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 8,
+            "name": "Calafiori",
+            "team": "ARS",
+            "pos": "DEF",
+            "price": 5.5,
+            "code": 466075,
+            "team_code": 3,
+            "next_gw_xp": 3.04
+          }
+        },
+        {
+          "player_id": 12,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 12,
+            "name": "Saka",
+            "team": "ARS",
+            "pos": "MID",
+            "price": 9.5,
+            "code": 223340,
+            "team_code": 3,
+            "next_gw_xp": 3.78
+          }
+        },
+        {
+          "player_id": 106,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 106,
+            "name": "Thiago",
+            "team": "BRE",
+            "pos": "FWD",
+            "price": 8.0,
+            "code": 502500,
+            "team_code": 94,
+            "next_gw_xp": 3.14
+          }
+        },
+        {
+          "player_id": 155,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 155,
+            "name": "Enzo",
+            "team": "CHE",
+            "pos": "MID",
+            "price": 7.0,
+            "code": 448047,
+            "team_code": 8,
+            "next_gw_xp": 3.62
+          }
+        },
+        {
+          "player_id": 165,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 165,
+            "name": "João Pedro",
+            "team": "CHE",
+            "pos": "FWD",
+            "price": 7.5,
+            "code": 475168,
+            "team_code": 8,
+            "next_gw_xp": 3.19
+          }
+        },
+        {
+          "player_id": 250,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 250,
+            "name": "Leno",
+            "team": "FUL",
+            "pos": "GKP",
+            "price": 4.5,
+            "code": 80201,
+            "team_code": 54,
+            "next_gw_xp": 2.02
+          }
+        },
+        {
+          "player_id": 356,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 356,
+            "name": "Virgil",
+            "team": "LIV",
+            "pos": "DEF",
+            "price": 6.5,
+            "code": 97032,
+            "team_code": 14,
+            "next_gw_xp": 3.97
+          }
+        },
+        {
+          "player_id": 426,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 426,
+            "name": "B.Fernandes",
+            "team": "MUN",
+            "pos": "MID",
+            "price": 12.0,
+            "code": 141746,
+            "team_code": 1,
+            "next_gw_xp": 5.02
+          }
+        },
+        {
+          "player_id": 427,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 427,
+            "name": "Mbeumo",
+            "team": "MUN",
+            "pos": "MID",
+            "price": 8.0,
+            "code": 446008,
+            "team_code": 1,
+            "next_gw_xp": 3.77
+          }
+        }
+      ],
+      "data_quality": {
+        "rivals": 3,
+        "with_picks": 0,
+        "coverage_pct": 0.0,
+        "cohort_truncated": false,
+        "picks_source_event": null,
+        "statuses": [
+          "no_public_picks_yet"
+        ]
+      },
+      "differs_from_neutral": false,
+      "difference_reason": "rival squads are only partly known, so no departure is justified"
+    }
+  ],
+  "league_errors": [],
+  "options": [
+    {
+      "key": "captain:426",
+      "label": "Captain B.Fernandes",
+      "expected_points": 64.43,
+      "p_target": {
+        "271619": 0.1235
+      }
+    },
+    {
+      "key": "captain:155",
+      "label": "Captain Enzo",
+      "expected_points": 62.916,
+      "p_target": {
+        "271619": 0.1195
+      }
+    },
+    {
+      "key": "captain:427",
+      "label": "Captain Mbeumo",
+      "expected_points": 62.311,
+      "p_target": {
+        "271619": 0.127
+      }
+    },
+    {
+      "key": "captain:165",
+      "label": "Captain João Pedro",
+      "expected_points": 61.896,
+      "p_target": {
+        "271619": 0.121
+      }
+    }
+  ],
+  "resolution": {
+    "default": null,
+    "reason": "no league weights configured, and no option dominates. Set [leagues].weights to express which league matters most; until then this is a genuine choice, not a calculation.",
+    "shortlist": [
+      {
+        "key": "captain:426",
+        "label": "Captain B.Fernandes",
+        "expected_points": 64.43,
+        "p_target": {
+          "271619": 0.1235
+        }
+      },
+      {
+        "key": "captain:427",
+        "label": "Captain Mbeumo",
+        "expected_points": 62.311,
+        "p_target": {
+          "271619": 0.127
+        }
+      }
+    ],
+    "conflicts": []
+  },
+  "chips": {
+    "chips_version": "chips-1.0",
+    "recommendation": "hold",
+    "gameweek": null,
+    "expected_gain": 13.4,
+    "use_threshold": 4.0,
+    "alternatives": [
+      {
+        "chip": "bboost",
+        "gameweek": 1,
+        "expected_gain": 13.4,
+        "ci95": [
+          13.17,
+          13.62
+        ],
+        "baseline_points": 64.43,
+        "with_chip_points": 77.83,
+        "assumptions": [
+          "Bench points are simulated under the same fixtures as the XI.",
+          "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
+        ]
+      },
+      {
+        "chip": "3xc",
+        "gameweek": 1,
+        "expected_gain": 8.36,
+        "ci95": [
+          8.11,
+          8.62
+        ],
+        "baseline_points": 64.43,
+        "with_chip_points": 72.79,
+        "assumptions": [
+          "Assumes the captain plays; a blank or an early injury forfeits the chip.",
+          "Evaluated on the captain the optimiser would pick, not a fixed choice."
+        ]
+      }
+    ],
+    "available": [
+      {
+        "name": "bboost",
+        "number": 1,
+        "start_event": 1,
+        "stop_event": 19,
+        "chip_type": "team"
+      },
+      {
+        "name": "3xc",
+        "number": 1,
+        "start_event": 1,
+        "stop_event": 19,
+        "chip_type": "team"
+      }
+    ],
+    "used": [],
+    "reason": "your own squad is not readable yet, so these gains are measured against a stand-in squad — a chip is spent on the team you actually own, so nothing is recommended until your picks are public"
+  },
+  "limitations": [
+    "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
+    "Probabilities describe the next gameweek's football, not the rest of the season: rivals are assumed to keep their current squads.",
+    "No squad of your own is readable yet, so league comparisons use the recommended squad as a stand-in.",
+    "Some rival squads are unknown and were modelled as a distribution rather than a team; see each league's coverage.",
+    "Gaffer's multi-week mean projections are materially weaker than its one-week ones, so anything beyond the next gameweek is directional."
+  ],
+  "season": "2026-27"
+}
