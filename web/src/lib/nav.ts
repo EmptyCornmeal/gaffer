@@ -31,6 +31,31 @@ export const BOTTOM_TABS: Tab[] = NAV_TABS.filter((t) =>
 )
 
 /**
+ * The destinations shown as labelled buttons in the desktop header.
+ *
+ * Fifteen of them could not coexist with the logo, the deadline countdown, the
+ * freshness chip, the player search and the theme button: at 1024-1440px the
+ * document was 1667px wide, Help sat entirely off-screen, and the search
+ * collapsed to 26px. Compressing the labels until they fit would have made
+ * fifteen illegible buttons instead of one usable row.
+ *
+ * So the header carries the six destinations that answer a weekly question, and
+ * everything else lives behind a "More" menu. Both lists are derived from
+ * NAV_TABS by key, so a route added there appears in exactly one of them and
+ * neither can drift.
+ */
+const PRIMARY_KEYS = ['home', 'live', 'my-team', 'players', 'fixtures', 'strategy'] as const
+
+export const PRIMARY_TABS: Tab[] = NAV_TABS.filter((t) =>
+  (PRIMARY_KEYS as readonly string[]).includes(t.key),
+)
+
+/** Everything NAV_TABS has that the header does not show directly. */
+export const MORE_TABS: Tab[] = NAV_TABS.filter((t) =>
+  !(PRIMARY_KEYS as readonly string[]).includes(t.key),
+)
+
+/**
  * Routes loaded as separate chunks (see App.svelte's LAZY map).
  *
  * Exported so a test can assert the two lists stay in step: a heavy route with

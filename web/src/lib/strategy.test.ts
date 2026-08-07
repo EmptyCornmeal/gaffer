@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   parseStrategy, simError, pct, epCost, departures, SUPPORTED,
-  type Strategy,
+  CLASS_LABELS, describeCoverage,
+  type DataQuality, type Strategy,
 } from './strategy'
 
 function valid(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -166,6 +169,147 @@ describe('departures from the neutral recommendation', () => {
     expect(s.kind).toBe('ok')
     if (s.kind === 'ok') {
       expect(departures(s.data).map((l) => l.league_id)).toEqual([20])
+    }
+  })
+})
+
+// The Strategy page shipped "Tiny private league - every rival readable" directly
+// above "0/3 rival squads known". The label is chosen from league size before a
+// single rival squad is fetched, so it never knew what was readable. These tests
+// hold the two apart: classification says what kind of league it is, coverage
+// says what we actually read.
+
+const DEPLOYED = join(process.cwd(), 'public', 'data', 'strategy.json')
+
+const dq = (over: Partial<DataQuality> = {}): DataQuality => ({
+  rivals: 3, with_picks: 0, coverage_pct: 0, cohort_truncated: false,
+  picks_source_event: null, statuses: ['no_public_picks_yet'], ...over,
+})
+
+/** Anything that would be a claim about how much of the field we can see. */
+const READABILITY_CLAIM = /readable|every rival|all rivals|fully known|exact EO|complete coverage/i
+
+describe('classification labels claim nothing about coverage', () => {
+  it.each(Object.entries(CLASS_LABELS))('%s: %s', (_key, label) => {
+    expect(label).not.toMatch(READABILITY_CLAIM)
+  })
+
+  it('still names the classification', () => {
+    expect(CLASS_LABELS.tiny_private).toBe('Tiny private league')
+    expect(Object.keys(CLASS_LABELS).sort()).toEqual(
+      ['global', 'large', 'medium', 'small_private', 'tiny_private'],
+    )
+  })
+})
+
+describe('describeCoverage', () => {
+  it('3 rivals, 0 known: says none are known and that they were modelled', () => {
+    const c = describeCoverage(dq({ rivals: 3, with_picks: 0, coverage_pct: 0 }))
+    expect(c.level).toBe('none')
+    expect(c.summary).toBe('0 of 3 rival squads known')
+    expect(c.meaning).toContain('modelled as a distribution')
+    expect(c.summary + ' ' + c.meaning).not.toMatch(READABILITY_CLAIM)
+  })
+
+  it('3 rivals, 1 known: names the two unread', () => {
+    const c = describeCoverage(dq({
+      rivals: 3, with_picks: 1, coverage_pct: 33.3,
+      statuses: ['revealed', 'no_public_picks_yet'],
+    }))
+    expect(c.level).toBe('partial')
+    expect(c.summary).toBe('1 of 3 rival squads known')
+    expect(c.meaning).toContain('other 2')
+    expect(c.summary + ' ' + c.meaning).not.toMatch(READABILITY_CLAIM)
+  })
+
+  it('3 rivals, 2 known: uses the singular for one unread rival', () => {
+    const c = describeCoverage(dq({ rivals: 3, with_picks: 2, coverage_pct: 66.7, statuses: ['revealed'] }))
+    expect(c.level).toBe('partial')
+    expect(c.meaning).toContain('other 1 was')
+  })
+
+  it('3 rivals, 3 known: only here may it say every rival is read', () => {
+    const c = describeCoverage(dq({ rivals: 3, with_picks: 3, coverage_pct: 100, statuses: ['revealed'] }))
+    expect(c.level).toBe('full')
+    expect(c.summary).toBe('All 3 rival squads known')
+    expect(c.meaning).toContain('every rival')
+  })
+
+  it('0 rivals, 0 known: no field, not zero coverage of a field', () => {
+    const c = describeCoverage(dq({ rivals: 0, with_picks: 0, coverage_pct: 0, statuses: [] }))
+    expect(c.level).toBe('no_rivals')
+    expect(c.summary).toBe('No rivals in this league')
+    expect(c.meaning).toContain('no field')
+  })
+
+  it('more squads than rivals: reported as inconsistent, never rounded up to full', () => {
+    const c = describeCoverage(dq({ rivals: 3, with_picks: 5, coverage_pct: 100, statuses: ['revealed'] }))
+    expect(c.level).toBe('inconsistent')
+    expect(c.summary).toContain('5 rival squads known but only 3 rivals counted')
+    expect(c.meaning).toContain('unreliable')
+    expect(c.summary + c.meaning).not.toMatch(READABILITY_CLAIM)
+  })
+
+  it('a coverage_pct that contradicts the counts is inconsistent too', () => {
+    const c = describeCoverage(dq({ rivals: 3, with_picks: 0, coverage_pct: 100 }))
+    expect(c.level).toBe('inconsistent')
+    expect(c.summary).toContain('reports 100% coverage')
+  })
+
+  it('tolerates rounding in coverage_pct', () => {
+    expect(describeCoverage(dq({ rivals: 3, with_picks: 1, coverage_pct: 33 })).level).toBe('partial')
+    expect(describeCoverage(dq({ rivals: 3, with_picks: 2, coverage_pct: 66.7 })).level).toBe('partial')
+  })
+
+  it('ignores a non-numeric coverage_pct rather than crying inconsistent', () => {
+    const c = describeCoverage({ ...dq({ rivals: 3, with_picks: 3 }), coverage_pct: NaN })
+    expect(c.level).toBe('full')
+  })
+
+  it('never claims readability for any with_picks below rivals', () => {
+    for (let known = 0; known < 12; known++) {
+      const c = describeCoverage(dq({ rivals: 12, with_picks: known, coverage_pct: (known / 12) * 100 }))
+      expect(c.level).not.toBe('full')
+      expect(c.summary + ' ' + c.meaning).not.toMatch(READABILITY_CLAIM)
+    }
+  })
+
+  it('words the per-rival statuses instead of leaking raw enum values', () => {
+    const c = describeCoverage(dq({ statuses: ['no_public_picks_yet'] }))
+    expect(c.notes).toContain('picks are not public yet')
+    expect(c.notes.join(' ')).not.toContain('no_public_picks_yet')
+  })
+
+  it('flags a truncated cohort and the gameweek the squads came from', () => {
+    const c = describeCoverage(dq({
+      rivals: 50, with_picks: 50, coverage_pct: 100,
+      cohort_truncated: true, picks_source_event: 7, statuses: ['revealed'],
+    }))
+    expect(c.notes.join(' - ')).toContain('cohort capped')
+    expect(c.notes.join(' - ')).toContain('GW7')
+  })
+
+  it('drops an unrecognised status rather than printing it', () => {
+    const c = describeCoverage(dq({ statuses: ['something_new'] }))
+    expect(c.notes.join(' ')).not.toContain('something_new')
+  })
+})
+
+describe('the real published strategy artifact', () => {
+  it.runIf(existsSync(DEPLOYED))('never pairs a readability claim with unread rivals', () => {
+    const raw = JSON.parse(readFileSync(DEPLOYED, 'utf8'))
+    const s = parseStrategy(raw)
+    expect(s.kind).toBe('ok')
+    if (s.kind !== 'ok') return
+    expect(s.data.leagues.length).toBeGreaterThan(0)
+    for (const l of s.data.leagues) {
+      const label = CLASS_LABELS[l.classification] ?? l.classification
+      const c = describeCoverage(l.data_quality)
+      expect(label).not.toMatch(READABILITY_CLAIM)
+      if (l.data_quality.with_picks < l.data_quality.rivals) {
+        expect(c.level).not.toBe('full')
+        expect(label + ' ' + c.summary + ' ' + c.meaning).not.toMatch(READABILITY_CLAIM)
+      }
     }
   })
 })

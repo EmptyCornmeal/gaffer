@@ -9,6 +9,12 @@
   }: { name: string; size?: number; stroke?: number; class?: string } = $props()
 
   const ICONS: Record<string, string> = {
+    // Disclosure affordance for the header's More menu (Batch 7.2).
+    'chevron-down': '<polyline points="6 9 12 15 18 9"/>',
+    // Marks the Overview caveat: the briefing is about a squad, and which squad
+    // that is has to be impossible to miss (Batch 7.2).
+    alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
+      + '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
     shirt:
       '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',

@@ -85,3 +85,18 @@ Counts as of Batch 7: **1059 backend tests**, **158 front-end tests**.
 | **B7-2** AI envelope + claim grounding | complete | `ai/grounding.py`, `ai/news.py`, `ai/verdict.py`, `contract.py`, `News.svelte` | `test_ai_grounding.py` (52), `test_contract.py` | News page renders each claim beside its source links | Quarantine is pattern-based and deliberately blunt: a false positive costs one dropped headline |
 | **B7-3** read-only MCP | complete | `gaffer/mcp_server.py` (11 tools) | `test_mcp_server.py` (57), `test_mcp_evals.py` (17) | `python -m gaffer.mcp_server` | Local stdio only. Never verified against a live gameweek's data, because none has been played |
 | **B7-4** pull-request CI | complete | `.github/workflows/ci.yml` | `test_schedule.py` (34) | GitHub checks on every PR | Runs for the first time on this release PR |
+
+---
+
+## Batch 7.2 — production website acceptance fixes
+
+Found by reviewing all fifteen deployed routes in a browser rather than by
+reading code. Every fix below is verified in Chrome against the production
+build, not only by unit test.
+
+| ID | Status | Implemented in | Proven by | Visible as | Limitation |
+|---|---|---|---|---|---|
+| **B72-1** Fixtures route crash | complete | `web/src/lib/fixtures.ts` (new normalisation boundary), `Fixtures.svelte`, `types.ts` (removed the false `Fixtures` alias) | `fixtures.test.ts` (34), including the **published** `web/public/data/fixtures.json` | Fixture ticker renders 20 teams; a broken artifact shows a named error card instead of an empty grid | The guard requires `team` plus a `fixtures` array; a future artifact that renames either field degrades to "unavailable" rather than adapting |
+| **B72-2** desktop navigation overflow | complete | `nav.ts` (`PRIMARY_TABS` / `MORE_TABS`), `Topbar.svelte` (More disclosure menu), `Icon.svelte` (`chevron-down`) | `nav.test.ts` (25) for the partition; Chrome measurement at 390/768/1024/1280/1366/1440/1920 for the widths and the menu behaviour | Six primary tabs plus a keyboard-accessible More menu; search stays 224 px on desktop, 160 px at 390 px | The primary set is a fixed key list, not a measured fit: a much longer label would need the list revisited |
+| **B72-3** false Strategy coverage wording | complete | `strategy.ts` (`CLASS_LABELS` de-claimed, `describeCoverage`), `Strategy.svelte` | `strategy.test.ts` (40), incl. a structural assertion that no classification label claims readability | "Tiny private league" above "0 of 3 rival squads known — all 3 were modelled as a distribution, not as teams" | Coverage is reported, not improved; rival picks stay unreadable until the first deadline passes |
+| **B72-4** Overview preseason honesty | complete | `web/src/lib/squadStatus.ts` (new), `Overview.svelte`, `types.ts` (`squad_status_reason`, `squad_source_event`), `Icon.svelte` (`alert`) | `squadStatus.test.ts` (21) | A caveat above the briefing: "This is a model-built reference squad, not your team" | The AI briefing text itself is unchanged — the artifact is not rewritten, so its imperative wording still reads confidently once past the caveat |

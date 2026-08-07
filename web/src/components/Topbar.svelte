@@ -4,7 +4,7 @@
   import { getTheme, setTheme } from '../lib/config'
   import { classifyFreshness } from '../lib/freshness'
   import { matches } from '../lib/search'
-  import { NAV_TABS } from '../lib/nav'
+  import { MORE_TABS, PRIMARY_TABS } from '../lib/nav'
   import Icon from './Icon.svelte'
 
   let {
@@ -25,7 +25,62 @@
     onmenu: () => void
   } = $props()
 
-  const tabs = NAV_TABS
+  // Six primary destinations in the bar; the rest behind More. Both derived
+  // from NAV_TABS, so a new route lands in exactly one of them.
+  const primary = PRIMARY_TABS
+  const more = MORE_TABS
+  const moreActive = $derived(more.some((t) => t.key === route))
+  const activeMoreLabel = $derived(more.find((t) => t.key === route)?.label ?? null)
+
+  let moreOpen = $state(false)
+  let moreButton = $state<HTMLButtonElement | null>(null)
+  let moreMenu = $state<HTMLDivElement | null>(null)
+
+  function openMore(focusFirst = false) {
+    moreOpen = true
+    if (focusFirst) {
+      // Wait a tick so the menu exists before reaching into it.
+      queueMicrotask(() => moreMenu?.querySelector('button')?.focus())
+    }
+  }
+
+  function closeMore(returnFocus = true) {
+    if (!moreOpen) return
+    moreOpen = false
+    if (returnFocus) moreButton?.focus()
+  }
+
+  function onMoreKeydown(e: KeyboardEvent) {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openMore(e.key === 'ArrowDown')
+    }
+  }
+
+  function onMenuKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      closeMore()
+    }
+  }
+
+  // Outside click and Escape anywhere close it. Registered on the window so a
+  // click on the page body counts, not only one inside the header.
+  function onWindowPointerDown(e: MouseEvent) {
+    if (!moreOpen) return
+    const t = e.target as Node
+    if (moreMenu?.contains(t) || moreButton?.contains(t)) return
+    closeMore(false)
+  }
+
+  function onWindowKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') closeMore()
+  }
+
+  function goMore(key: string) {
+    onnav(key)
+    closeMore()
+  }
 
   let theme = $state(getTheme())
   function toggleTheme() {
@@ -55,6 +110,8 @@
     }[freshness.state],
   )
 </script>
+
+<svelte:window onpointerdown={onWindowPointerDown} onkeydown={onWindowKeydown} />
 
 <header
   class="glass sticky top-0 z-40 flex items-center gap-3 px-3"
@@ -88,11 +145,12 @@
     </span>
   {/if}
 
-  <nav class="hidden lg:flex items-center gap-0.5">
-    {#each tabs as t}
+  <nav class="hidden lg:flex items-center gap-0.5 min-w-0" aria-label="Primary">
+    {#each primary as t}
       <button
         onclick={() => onnav(t.key)}
-        class="group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold transition
+        aria-current={route === t.key ? 'page' : undefined}
+        class="group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold transition whitespace-nowrap
           {route === t.key ? 'text-text' : 'text-muted hover:text-text'}"
       >
         <Icon name={t.icon} size={15} class={route === t.key ? 'text-brand-light' : 'text-muted2 group-hover:text-muted'} />
@@ -102,9 +160,60 @@
         {/if}
       </button>
     {/each}
+
+    <!-- The remaining nine routes. A menu rather than nine more buttons: at
+         1024-1440px all fifteen pushed the document to 1667px and squeezed the
+         search to 26px. -->
+    <div class="relative">
+      <button
+        bind:this={moreButton}
+        onclick={() => (moreOpen ? closeMore(false) : openMore())}
+        onkeydown={onMoreKeydown}
+        aria-expanded={moreOpen}
+        aria-controls="topbar-more-menu"
+        aria-haspopup="menu"
+        aria-current={moreActive ? 'page' : undefined}
+        title={activeMoreLabel ? `More — currently ${activeMoreLabel}` : 'More pages'}
+        class="group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold transition whitespace-nowrap
+          {moreActive ? 'text-text' : 'text-muted hover:text-text'}"
+      >
+        <Icon name="menu" size={15} class={moreActive ? 'text-brand-light' : 'text-muted2 group-hover:text-muted'} />
+        {activeMoreLabel ?? 'More'}
+        <Icon name="chevron-down" size={13} class="text-muted2" />
+        {#if moreActive}
+          <span class="absolute -bottom-[7px] left-2 right-2 h-0.5 rounded-full bg-brand"></span>
+        {/if}
+      </button>
+
+      {#if moreOpen}
+        <div
+          bind:this={moreMenu}
+          id="topbar-more-menu"
+          role="menu"
+          aria-label="More pages"
+          tabindex="-1"
+          onkeydown={onMenuKeydown}
+          class="absolute right-0 mt-2 w-52 card shadow-xl z-50 overflow-hidden py-1"
+        >
+          {#each more as t}
+            <button
+              role="menuitem"
+              onclick={() => goMore(t.key)}
+              aria-current={route === t.key ? 'page' : undefined}
+              class="w-full flex items-center gap-2 px-3 py-2 text-left text-sm font-semibold transition
+                {route === t.key ? 'text-text bg-card2' : 'text-muted hover:text-text hover:bg-card2'}"
+            >
+              <Icon name={t.icon} size={15} class={route === t.key ? 'text-brand-light' : 'text-muted2'} />
+              {t.label}
+              {#if route === t.key}<span class="ml-auto w-1.5 h-1.5 rounded-full bg-brand"></span>{/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
   </nav>
 
-  <div class="relative ml-auto w-40 sm:w-56">
+  <div class="relative ml-auto w-40 sm:w-56 shrink-0 min-w-[9rem]">
     <input
       bind:value={q}
       placeholder="Search players…"
