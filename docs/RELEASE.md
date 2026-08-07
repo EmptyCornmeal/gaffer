@@ -5,7 +5,7 @@ and as the record of what was done: branch `release/gaffer-v1`, two commits, a
 pull request gated by `.github/workflows/ci.yml`, then a merge and a manual
 refresh. Re-read it before shipping anything else.
 
-Deadline for GW1: **2026-08-21 17:30 BST**.
+Deadline for GW1: **21 August 2026 at 18:30 BST (17:30 UTC)**.
 
 ---
 
@@ -153,7 +153,7 @@ The Mac Mini job is **not installed**. If you want it, read
 `deploy/macmini/README.md` and run `install.sh` yourself; `launchctl load` is
 always your call, and the job carries no `--send` flag even once loaded.
 
-## 10. GW1 checks (2026-08-21 17:30 BST)
+## 10. GW1 checks — 21 August 2026 at 18:30 BST (17:30 UTC)
 
 The things that cannot be validated before a real gameweek:
 

@@ -378,7 +378,7 @@ This is the half of the brief the product doesn't address at all.
 
 # What I'd do, in order
 
-**Before the GW1 deadline (2026-08-21 17:30 BST) — you have 15 days.**
+**Before the GW1 deadline — 21 August 2026 at 18:30 BST (17:30 UTC) — you have 15 days.**
 
 1. **Fix the data path** (Tier 1.1). One line. Nothing else matters until the site is
    showing today's numbers. Add a CI assertion that `generated_at` actually advanced.
