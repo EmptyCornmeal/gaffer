@@ -1,0 +1,150 @@
+name: CI
+
+# The gate for a pull request.
+#
+# Before this existed, `deploy.yml` ran only on pushes to main and `refresh.yml`
+# only on a schedule or a manual dispatch — so a PR had *no* required check and
+# "all green" meant "nothing ran". This workflow runs the same gates as
+# `scripts/verify.py --all`, on the same pinned versions.
+#
+# It reaches no live FPL endpoint. The backend suite blocks sockets by default
+# (tests/conftest.py) and the artifact contract validates the artifacts already
+# committed in `data/`, so a PR is judged on what it changes, not on whether the
+# FPL API happens to be up.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]      # the branch behind a PR, before the PR exists
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: '1'
+  # Public FPL identifiers, so the contract checks the entry the artifacts were
+  # built for. Deliberately not secrets — both are readable from the site.
+  GAFFER_ENTRY_ID: '1066421'
+  GAFFER_LEAGUE_IDS: '271619'
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements.lock.txt
+
+      - name: Install from the lock
+        run: |
+          pip install -r requirements.lock.txt
+          pip install -e . --no-deps
+
+      - name: Dependency reproducibility
+        # Fails on: an import nothing declares, a lock that no longer satisfies
+        # pyproject, or an environment that has drifted from the lock.
+        run: python -m gaffer.deps
+
+      - name: Lint
+        run: python -m ruff check .
+
+      - name: Tests (sockets blocked)
+        run: python -m pytest -q
+
+      - name: Artifact contract — committed data/
+        # Generous age window: this validates the SHAPE of what is committed,
+        # not whether a scheduled refresh has run recently. Freshness is the
+        # refresh workflow's gate, not the PR's.
+        run: python -m gaffer.contract --data-dir data --max-age-hours 8760
+
+      - name: Artifact contract — published web/public/data/
+        run: python -m gaffer.contract --data-dir web/public/data --max-age-hours 8760
+
+      - name: Artifact mirrors agree
+        run: |
+          for f in data/*.json; do
+            cmp -s "$f" "web/public/data/$(basename "$f")" \
+              || { echo "::error::data/ and web/public/data/ disagree on $(basename "$f")"; exit 1; }
+          done
+          echo "all $(ls data/*.json | wc -l) artifacts identical in both trees"
+
+      - name: MCP self-test
+        # Never reads stdin, always terminates.
+        run: python -m gaffer.mcp_server --self-test
+
+      - name: CLI entry points
+        run: |
+          for m in pipeline contract backtest fitting notify season deps mcp_server; do
+            python -m gaffer.$m --help > /dev/null || { echo "::error::gaffer.$m --help failed"; exit 1; }
+          done
+          python scripts/verify.py --help > /dev/null
+
+      - name: Whitespace
+        run: git diff --check "${{ github.event.pull_request.base.sha || 'HEAD~1' }}" HEAD || true
+
+      - name: Nothing that should not be committed
+        run: |
+          bad=$(git ls-files | grep -Ei '\.(joblib|pkl|pickle|onnx|pt|pth|db|db-wal|db-shm|sqlite)$' || true)
+          if [ -n "$bad" ]; then echo "::error::binary/model/database files are tracked:"; echo "$bad"; exit 1; fi
+          if git ls-files | grep -q '^gaffer.local.toml$'; then echo "::error::local config is tracked"; exit 1; fi
+          if git ls-files | grep -q '^\.env$'; then echo "::error::.env is tracked"; exit 1; fi
+          if git ls-files | grep -q '^data/history/'; then echo "::error::the bulky history dataset is tracked"; exit 1; fi
+          echo "clean"
+
+      - name: Package builds and ships no model artifact
+        run: |
+          pip install --quiet build
+          python -m build --wheel --outdir dist_ci .
+          python - <<'PY'
+          import zipfile, glob
+          whl = glob.glob("dist_ci/*.whl")[0]
+          names = zipfile.ZipFile(whl).namelist()
+          bad = [n for n in names if n.endswith((".joblib", ".pkl", ".onnx"))]
+          assert not bad, f"model artifact in the wheel: {bad}"
+          assert not any(n.endswith("gaffer/ml.py") for n in names), "gaffer/ml.py is back"
+          assert any(n.endswith("store/schema.sql") for n in names), "schema.sql missing from the wheel"
+          print(f"{whl}: {len(names)} files, no model artifact")
+          PY
+
+  frontend:
+    name: Front-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck + a11y
+        run: npm run check
+
+      # Build BEFORE the tests: perf.test.ts measures the real bundle in dist/
+      # and skips itself when there is nothing to measure, so in the other order
+      # the performance budgets silently do not run.
+      - run: npm run build
+
+      - name: Unit tests + performance budgets
+        run: npm run test
+
+      - name: Audit (production)
+        run: npm audit --omit=dev

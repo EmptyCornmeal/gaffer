@@ -3,9 +3,56 @@ dataset (enough clubs and players to form a valid 15-man squad)."""
 
 from __future__ import annotations
 
+import socket
+
 import pytest
 
+from gaffer import config
 from gaffer.store import db
+
+
+@pytest.fixture(autouse=True)
+def _no_network(request, monkeypatch):
+    """Fail any test that opens a socket.
+
+    The pipeline opens FPL clients in two places (ingest and the strategy step).
+    Stubbing only one leaves the suite quietly calling the live API on every run
+    — slower, flaky, rate-limitable, and it hides the fact that a code path was
+    never actually exercised against its stub. Mark a test ``@pytest.mark.network``
+    to opt out.
+    """
+    if request.node.get_closest_marker("network"):
+        yield
+        return
+
+    def blocked(*args, **kwargs):
+        raise AssertionError(
+            "this test opened a network connection. Stub the client (both "
+            "gaffer.ingest.FplClient and gaffer.pipeline.FplClient), or mark "
+            "the test @pytest.mark.network."
+        )
+
+    monkeypatch.setattr(socket.socket, "connect", blocked)
+    monkeypatch.setattr(socket, "create_connection", blocked)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _restore_config_paths():
+    """Re-resolve config paths around every test.
+
+    Path/config tests monkeypatch GAFFER_* and call ``config.reload_paths()``;
+    without this the mutated globals would leak into later tests.
+
+    Re-resolving on the way IN as well as OUT makes this independent of fixture
+    teardown order. Teardown alone is not enough: if another autouse fixture
+    holds ``monkeypatch``, this one can run before the env vars are unpatched
+    and cheerfully re-resolve the paths back to the temp repo it was meant to
+    clean up.
+    """
+    config.reload_paths()
+    yield
+    config.reload_paths()
 
 
 def _players():

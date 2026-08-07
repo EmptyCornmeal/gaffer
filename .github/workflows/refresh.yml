@@ -1,11 +1,15 @@
 name: Refresh Gaffer data
 
 # Runs the pipeline on a schedule and commits fresh data/*.json so the deployed
-# site is never a stale snapshot. Replaces the Mac-Mini cron (scripts/refresh.sh).
+# site is never a stale snapshot.
 #
 # Times are UTC. ~02:00 UTC catches the overnight FPL price changes; ~11:00 and
 # ~17:00 UTC keep projections/news current through the day and before the typical
 # Friday/Saturday deadlines. Trigger manually any time via "Run workflow".
+#
+# Publishing is gated: tests -> lint -> pipeline -> artifact contract -> commit.
+# A scheduled run that produces no publishable diff FAILS rather than reporting
+# success, because a valid run always advances `generated_at`.
 on:
   schedule:
     - cron: '0 2 * * *'    # after overnight price changes
@@ -21,48 +25,135 @@ concurrency:
   group: refresh
   cancel-in-progress: false
 
+env:
+  # Public FPL identifiers — deliberately NOT secrets. Without these the
+  # pipeline resolves entry_id=None and publishes a generic build that looks
+  # personalised.
+  GAFFER_ENTRY_ID: '1066421'
+  GAFFER_LEAGUE_IDS: '271619'
+  PYTHONUTF8: '1'
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          # Pinned to the version in .python-version and the one
+          # requirements.lock.txt was resolved on. pyproject supports >=3.12;
+          # this is the version actually tested.
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements.lock.txt
 
       - name: Install Gaffer
-        # Include the [ai] extra so the AI Verdict/News run when the secret is set
-        # (without it the anthropic SDK is absent and the pipeline uses templates).
-        run: pip install ".[ai]"
+        # EDITABLE install. A non-editable install makes config.REPO_ROOT resolve
+        # into site-packages, so the pipeline writes artifacts outside the
+        # checkout and the commit step sees no diff. config.verify_publish_paths()
+        # also guards this independently — belt and braces, because this failure
+        # mode is silent and cost 37 green-but-empty runs.
+        # The lock is the install target everywhere: same resolved versions on
+        # Windows, here, and the Mac Mini. `--no-deps` on the editable step so
+        # pip cannot quietly re-resolve past the lock.
+        run: |
+          pip install -r requirements.lock.txt
+          pip install -e . --no-deps
+
+      - name: Dependency check
+        # Fails if the lock has drifted from pyproject, if the installed
+        # environment has drifted from the lock, or if the package imports
+        # something nothing declares.
+        run: python -m gaffer.deps
+
+      - name: Record the currently published timestamp
+        id: published
+        run: |
+          prev=$(git show HEAD:data/meta.json 2>/dev/null | jq -r '.generated_at // empty' || true)
+          echo "generated_at=${prev}" >> "$GITHUB_OUTPUT"
+          echo "Last published generated_at: ${prev:-<none>}"
+
+      - name: Backend tests
+        run: python -m pytest -q
+
+      - name: Lint
+        run: python -m ruff check .
 
       - name: Run pipeline
         env:
           # Optional: set this repo secret to get the AI-written Verdict/News.
           # Without it the pipeline falls back to deterministic templates.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          PYTHONUTF8: '1'
         run: python -m gaffer.pipeline
+
+      - name: Validate artifact contract
+        id: contract
+        run: |
+          python -m gaffer.contract --data-dir data
+          echo "generated_at=$(jq -r '.generated_at' data/meta.json)" >> "$GITHUB_OUTPUT"
+          echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - name: Stage artifacts for the front-end
         run: |
           mkdir -p web/public/data
           cp data/*.json web/public/data/
 
+      - name: Re-validate the staged copy
+        # The staged copy is what the site actually serves; a wrong cp target is
+        # one of the failure modes this workflow exists to catch.
+        run: python -m gaffer.contract --data-dir web/public/data
+
       - name: Commit + push if data changed
         id: commit
         run: |
-          if [ -z "$(git status --porcelain data web/public/data)" ]; then
+          if [ -n "$(git status --porcelain data web/public/data)" ]; then
+            git config user.name  "gaffer-bot"
+            git config user.email "gaffer-bot@users.noreply.github.com"
+            git add data web/public/data
+            git commit -m "data: scheduled refresh $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No data changes."
-            exit 0
           fi
-          git config user.name  "gaffer-bot"
-          git config user.email "gaffer-bot@users.noreply.github.com"
-          git add data web/public/data
-          git commit -m "data: scheduled refresh $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fail a scheduled run that published nothing
+        # A valid run always advances `generated_at`, so byte-identical output on
+        # a schedule is a defect, not a no-op. Manual dispatches are exempt: they
+        # are used for diagnostics where re-publishing is not the point.
+        if: github.event_name == 'schedule' && steps.commit.outputs.changed != 'true'
+        run: |
+          echo "::error::Scheduled refresh produced no publishable diff."
+          echo ""
+          echo "  pipeline generated_at   : ${{ steps.contract.outputs.generated_at }}"
+          echo "  last published          : ${{ steps.published.outputs.generated_at || '<none recorded>' }}"
+          echo "  artifact contract passed: ${{ steps.contract.outputs.ok || 'false' }}"
+          echo ""
+          python - <<'PY'
+          import json, pathlib
+          from gaffer import config
+          print("  repo_root               :", config.REPO_ROOT)
+          print("  repo_root_source        :", config.REPO_ROOT_SOURCE)
+          print("  data_dir                :", config.DATA_DIR)
+          print("  data_dir_source         :", config.DATA_DIR_SOURCE)
+          d = pathlib.Path("data")
+          names = sorted(p.name for p in d.glob("*.json")) if d.is_dir() else []
+          print("  files generated in data/:", names or "<none>")
+          PY
+          echo ""
+          echo "Likely causes, in order:"
+          echo "  1. Pipeline wrote outside the repository (data_dir not under repo_root)."
+          echo "     -> config.verify_publish_paths() should have caught this; check the paths above."
+          echo "  2. Pipeline generated invalid artifacts (the contract step would have failed first)."
+          echo "  3. The copy step targeted the wrong location (data/ populated, web/public/data/ not)."
+          echo "  4. Artifacts are genuinely byte-identical, which cannot happen when"
+          echo "     generated_at advances — suspect a frozen clock or a cached run."
+          echo "  5. No prior published timestamp recorded, so this is the first publish"
+          echo "     and something prevented the initial commit."
+          exit 1
 
       - name: Deploy the site with the fresh data
         # A push made with GITHUB_TOKEN does not itself trigger deploy.yml, so we

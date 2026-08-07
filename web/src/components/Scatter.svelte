@@ -115,12 +115,13 @@
         stroke="#0b1220"
         stroke-width="0.75"
         class="cursor-pointer transition-all"
-        role="button"
-        tabindex="-1"
-        aria-label={p.label}
         onmouseenter={() => (hover = p)}
         onmouseleave={() => (hover = null)}
         onclick={() => onpick?.(p.id)}
+        onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onpick?.(p.id) } }}
+        role="button"
+        tabindex="0"
+        aria-label="{p.label}, {p.x.toFixed(1)}% owned, {p.y.toFixed(1)} expected points"
       ><title>{p.label} · {p.x.toFixed(1)}% owned · {p.y.toFixed(1)}</title></circle>
     {/each}
 

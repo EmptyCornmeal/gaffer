@@ -30,19 +30,17 @@ from dataclasses import dataclass, field
 import pulp
 
 from gaffer import config
+from gaffer.solver import objective as OBJ
 from gaffer.solver.optimize import _meta_int
 
 HORIZON_DECAY = 0.84       # weight of each future GW relative to the previous
 FT_VALUE = 1.5             # points value of a banked free transfer (Solio default)
 FT_CAP = 5                 # max rollable free transfers (2026/27 rule)
-# Tiny per-transfer friction: a move must produce a *real* EP gain to be worth it,
-# so the plan doesn't churn the squad for zero benefit (e.g. in the final week,
-# where a banked FT has no future value). Far below any genuine transfer gain.
-TRANSFER_EPS = 0.05
-# Soft weights: value a stronger bench (in case of a start not happening) and a
-# strong vice-captain (armband insurance), without letting them outweigh the XI.
-BENCH_WEIGHT = 0.15
-VICE_WEIGHT = 0.10
+# TRANSFER_EPS / BENCH_WEIGHT / VICE_WEIGHT used to live here. T-19 moved the
+# transfer friction and the bench/vice weights into solver/objective.py so the
+# single-window optimiser and this planner cannot disagree; these copies were
+# left behind, read by nothing, and free to drift away from the values actually
+# in force. Removed by T-27 — see gaffer.solver.objective.
 
 
 def _pick_solver():
@@ -100,7 +98,10 @@ def _load_pool(
     owned = {
         r["player_id"]: r["selling_price"]
         for r in conn.execute(
-            "SELECT player_id, selling_price FROM my_squad WHERE gw=?", (from_gw,)
+            # See optimize.load_players: holdings come from the last readable
+            # event, not the projected one.
+            "SELECT player_id, selling_price FROM my_squad "
+            "WHERE gw = (SELECT MAX(gw) FROM my_squad)"
         )
     }
     players: dict[int, PlanPlayer] = {}
@@ -149,8 +150,10 @@ def optimise_path(
     horizon: int = 5,
     free_transfers: int = 1,
     budget: int | None = None,
+    params: OBJ.ObjectiveParams | None = None,
 ) -> Plan:
     """Plan the optimal transfer sequence across ``horizon`` gameweeks."""
+    params = params or OBJ.DEFAULT
     players = _load_pool(conn, from_gw, horizon)
     ids = list(players)
     gws = list(range(from_gw, from_gw + horizon))
@@ -167,24 +170,52 @@ def optimise_path(
     vic = {(i, w): pulp.LpVariable(f"vc_{i}_{w}", cat="Binary") for i in ids for w in W}
     buy = {(i, w): pulp.LpVariable(f"by_{i}_{w}", cat="Binary") for i in ids for w in W}
     sell = {(i, w): pulp.LpVariable(f"sl_{i}_{w}", cat="Binary") for i in ids for w in W}
-    # free transfers available entering week w, and paid (hit) transfers in week w
+    # Free transfers entering week w; `used` are the free ones actually consumed
+    # and `paid` are the hits. `used` is what removes the arbitrage: making it an
+    # explicit min(transfers, ft) lets `paid` be an exact consequence rather than
+    # a variable the solver can inflate to manufacture future free transfers.
     ft = {w: pulp.LpVariable(f"ft_{w}", lowBound=1, upBound=FT_CAP, cat="Integer") for w in W}
+    used = {w: pulp.LpVariable(f"us_{w}", lowBound=0, upBound=FT_CAP, cat="Integer")
+            for w in W}
     paid = {w: pulp.LpVariable(f"pd_{w}", lowBound=0, cat="Integer") for w in W}
+    # Terminal state, valued so the last modelled week is not treated as the end
+    # of the world (which caused transfer dumping) nor as worthless (hoarding).
+    ft_end = pulp.LpVariable("ft_end", lowBound=0, upBound=FT_CAP, cat="Integer")
 
     def ep(i: int, w: int) -> float:
         return players[i].ep.get(gws[w], 0.0)
 
-    # ---- objective: decayed (XI + captain) − hits + banked-FT + ITB ----
+    # ---- objective: the shared definition in solver.objective --------------
+    OBJ.assert_ownership_neutral(params)
+    OBJ.assert_no_ft_arbitrage(params)
     obj = []
     for w in W:
-        decay = HORIZON_DECAY ** w
+        decay = params.decay(w)
         obj.append(decay * pulp.lpSum(st[i, w] * ep(i, w) for i in ids))
         obj.append(decay * pulp.lpSum(cap[i, w] * ep(i, w) for i in ids))  # captain doubles
-        obj.append(decay * VICE_WEIGHT * pulp.lpSum(vic[i, w] * ep(i, w) for i in ids))
-        obj.append(decay * BENCH_WEIGHT * pulp.lpSum((sq[i, w] - st[i, w]) * ep(i, w) for i in ids))
-        obj.append(-config.HIT_COST * paid[w])
-        obj.append(decay * FT_VALUE * ft[w])  # value carrying a free transfer
-        obj.append(-TRANSFER_EPS * decay * pulp.lpSum(buy[i, w] for i in ids))  # friction
+        obj.append(decay * params.vice_weight * pulp.lpSum(vic[i, w] * ep(i, w) for i in ids))
+        # Position-aware bench: a backup keeper is near-worthless, an outfield
+        # sub can be auto-subbed in.
+        for pos in config.POSITIONS:
+            obj.append(decay * params.bench(pos) * pulp.lpSum(
+                (sq[i, w] - st[i, w]) * ep(i, w)
+                for i in ids if players[i].position == pos))
+        # Hits share the gains' time basis: a week-4 hit costs 4 * 0.84^4, not 4.
+        obj.append(-params.hit_cost_at(w) * paid[w])
+        if params.ft_value:  # 0 by design; see ObjectiveParams.ft_value
+            obj.append(decay * params.ft_value * ft[w])
+        obj.append(-params.transfer_friction * decay
+                   * pulp.lpSum(buy[i, w] for i in ids))
+        # Budget-keeper lean, matching optimize.py. Without it the two solvers
+        # disagreed on the backup goalkeeper for the same one-week problem.
+        obj.append(-params.gk_spend_penalty * decay * pulp.lpSum(
+            sq[i, w] * max(0, players[i].price - 45)
+            for i in ids if players[i].position == "GKP"))
+    # Terminal value: what the plan leaves behind still matters.
+    last = horizon - 1
+    obj.append(params.terminal_ft_value * ft_end)
+    obj.append(params.terminal_squad_value
+               * pulp.lpSum(st[i, last] * ep(i, last) for i in ids))
     prob += pulp.lpSum(obj)
 
     # ---- squad structure each week ----
@@ -208,10 +239,35 @@ def optimise_path(
             prob += cap[i, w] <= st[i, w]
             prob += vic[i, w] <= st[i, w]
             prob += cap[i, w] + vic[i, w] <= 1  # captain ≠ vice
-        # club limit + budget
+        # club limit
         for t in teams:
             prob += pulp.lpSum(sq[i, w] for i in ids if players[i].team_id == t) <= club_limit
-        prob += pulp.lpSum(sq[i, w] * players[i].price for i in ids) <= budget
+        if not have_squad:
+            # Build/wildcard: assemble under the market-price cap.
+            prob += pulp.lpSum(sq[i, w] * players[i].price for i in ids) <= budget
+
+    # ---- cash flow through the horizon (T-11) ----------------------------
+    # A transfer plan is only useful if you can pay for it. Track the bank week
+    # by week: you buy at market price and sell at FPL's selling price, and the
+    # bank may never go negative. Previously each week was merely capped at
+    # £100.0m of market prices, so a sequence could spend money the squad could
+    # not raise. `sell_value` was loaded and never referenced.
+    if have_squad:
+        start_bank = _meta_int(conn, "bank", 0)
+        itb = {
+            w: pulp.LpVariable(f"itb_{w}", lowBound=0, cat="Continuous")
+            for w in range(horizon + 1)
+        }
+        prob += itb[0] == start_bank
+        for w in W:
+            raised = pulp.lpSum(players[i].sell_value * sell[i, w] for i in ids)
+            spent = pulp.lpSum(players[i].price * buy[i, w] for i in ids)
+            prob += itb[w + 1] == itb[w] + raised - spent
+            # Non-negativity of itb[w+1] is implied by its lowBound, which is
+            # what makes every step of the sequence executable.
+        # Money left over has value too: it buys future flexibility.
+        obj.append(params.terminal_bank_value * itb[horizon])
+        prob.setObjective(pulp.lpSum(obj))
 
     # ---- transfer continuity + FT accounting ----
     # week-0 free transfers are given (rolled from before the horizon)
@@ -228,19 +284,23 @@ def optimise_path(
             # Building the initial 15 from scratch isn't a set of -4 transfers, so
             # it consumes no free transfers and takes no hit; FTs just roll +1.
             prob += paid[w] == 0
-            if w + 1 < horizon:
-                prob += ft[w + 1] <= ft[w] + 1
-                prob += ft[w + 1] <= FT_CAP
+            prob += used[w] == 0
+            nxt = ft_end if w + 1 == horizon else ft[w + 1]
+            prob += nxt <= ft[w] + 1
+            prob += nxt <= FT_CAP
             continue
-        # paid = transfers beyond the free allotment (>=0). Solver minimises it
-        # (each -4), so it uses all free transfers first.
-        prob += paid[w] >= tm - ft[w]
-        # FT rollover: next week's FTs = this week's minus those consumed, +1,
-        # capped. Consumed = min(tm, ft[w]); with paid pushed to its lower bound
-        # (tm - ft when tm>ft), (ft[w] - (tm - paid)) + 1 gives the carry.
-        if w + 1 < horizon:
-            prob += ft[w + 1] <= ft[w] - (tm - paid[w]) + 1
-            prob += ft[w + 1] <= FT_CAP
+        # used = min(transfers made, free transfers available). Both bounds plus
+        # the solver's incentive to avoid hits pin it exactly, and `paid` is then
+        # an exact consequence rather than a free variable.
+        prob += used[w] <= tm
+        prob += used[w] <= ft[w]
+        prob += paid[w] == tm - used[w]
+        # Rollover: carry the unused free transfers, add one, cap at five.
+        # Because `used` cannot exceed `tm`, inflating `paid` can no longer
+        # manufacture a free transfer — the horizon>=6 arbitrage is closed.
+        nxt = ft_end if w + 1 == horizon else ft[w + 1]
+        prob += nxt <= ft[w] - used[w] + 1
+        prob += nxt <= FT_CAP
 
     prob.solve(_pick_solver())
     status = pulp.LpStatus[prob.status]

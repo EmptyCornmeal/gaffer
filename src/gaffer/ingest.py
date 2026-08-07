@@ -8,12 +8,15 @@ exactly the baseline the GW1 projection needs.
 
 from __future__ import annotations
 
+import json
 import sqlite3
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
 
-from gaffer import config
+from gaffer import config, gameweek, teamstate
+from gaffer import season as season_mod
 from gaffer.fpl.client import FplClient
 from gaffer.store import db
 
@@ -77,6 +80,29 @@ def ingest_teams(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
     return db.upsert(conn, "teams", rows, ["id"])
 
 
+def _scoring_rates(e: dict[str, Any]) -> dict[str, float]:
+    """Per-90 rates for the T-13 scoring components, from season totals.
+
+    A player with no minutes has no evidence, so every rate is 0.0 — which the
+    model reads as "no contribution", not as "definitely never books".
+    """
+    mins = _f(e.get("minutes"))
+    if mins <= 0:
+        return {k: 0.0 for k in (
+            "saves_per_90", "yellow_per_90", "red_per_90", "og_per_90",
+            "pen_save_per_90", "pen_miss_per_90", "bonus_per_90")}
+    per90 = 90.0 / mins
+    return {
+        "saves_per_90": round(_f(e.get("saves")) * per90, 4),
+        "yellow_per_90": round(_f(e.get("yellow_cards")) * per90, 4),
+        "red_per_90": round(_f(e.get("red_cards")) * per90, 4),
+        "og_per_90": round(_f(e.get("own_goals")) * per90, 4),
+        "pen_save_per_90": round(_f(e.get("penalties_saved")) * per90, 4),
+        "pen_miss_per_90": round(_f(e.get("penalties_missed")) * per90, 4),
+        "bonus_per_90": round(_f(e.get("bonus")) * per90, 4),
+    }
+
+
 def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
     # Preserve enriched DEFCON: pre-season the bootstrap field is 0, so keep any
     # value we computed from history; let a non-zero (in-season) value override.
@@ -104,6 +130,7 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
                 "transfers_in_event": e.get("transfers_in_event", 0),
                 "transfers_out_event": e.get("transfers_out_event", 0),
                 "cost_change_event": e.get("cost_change_event", 0),
+                "cost_change_start": e.get("cost_change_start", 0),
                 "minutes": e.get("minutes", 0),
                 "starts": e.get("starts", 0),
                 "form": _f(e.get("form")),
@@ -118,6 +145,9 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
                     _f(e.get("defensive_contribution_per_90"))
                     or existing_defcon.get(e["id"], 0.0)
                 ),
+                # T-13 scoring rates. Season totals / minutes; pre-season these
+                # mirror last season, exactly like the xG/xA rates above.
+                **_scoring_rates(e),
                 "news": e.get("news") or "",
                 "set_piece_notes": _set_piece_notes(e),
             }
@@ -168,38 +198,263 @@ def ingest_game_settings(conn: sqlite3.Connection, bootstrap: dict[str, Any]) ->
         db.set_meta(conn, "total_players", tp)
 
 
-def ingest_my_squad(
-    conn: sqlite3.Connection, client: FplClient, entry_id: int, gw: int
+def _history_rows(pid: int, history: list[dict[str, Any]], season: str,
+                  now: str) -> list[dict[str, Any]]:
+    """Map ``element_summary[...]['history']`` entries to player_gw rows."""
+    rows = []
+    for h in history:
+        if not isinstance(h, dict):
+            continue
+        fixture = h.get("fixture")
+        rnd = h.get("round")
+        if fixture is None or rnd is None:
+            continue  # cannot key it; skip rather than invent an id
+        rows.append({
+            "season": season,
+            "player_id": pid,
+            "gw": int(rnd),
+            "fixture": int(fixture),
+            "kickoff_time": h.get("kickoff_time"),
+            "minutes": h.get("minutes"),
+            "total_points": h.get("total_points"),
+            "goals": h.get("goals_scored"),
+            "assists": h.get("assists"),
+            "clean_sheet": h.get("clean_sheets"),
+            "goals_conceded": h.get("goals_conceded"),
+            "own_goals": h.get("own_goals"),
+            "penalties_saved": h.get("penalties_saved"),
+            "penalties_missed": h.get("penalties_missed"),
+            "yellow_cards": h.get("yellow_cards"),
+            "red_cards": h.get("red_cards"),
+            "saves": h.get("saves"),
+            "bonus": h.get("bonus"),
+            "bps": h.get("bps"),
+            "starts": h.get("starts"),
+            "defcon": h.get("defensive_contribution"),
+            "xg": _f(h.get("expected_goals")),
+            "xa": _f(h.get("expected_assists")),
+            "xgi": _f(h.get("expected_goal_involvements")),
+            "xgc": _f(h.get("expected_goals_conceded")),
+            "value": h.get("value"),
+            "selected": h.get("selected"),
+            "was_home": 1 if h.get("was_home") else 0,
+            "opponent_team": h.get("opponent_team"),
+            "ingested_at": now,
+        })
+    return rows
+
+
+def ingest_player_history(
+    conn: sqlite3.Connection, client: FplClient, season: str | None = None,
+    player_ids: list[int] | None = None,
 ) -> int:
-    """Load the user's picks for the given GW. Returns 0 (and records why) if the
-    picks aren't available yet (e.g. pre-season before the GW1 deadline)."""
-    try:
-        picks = client.entry_picks(entry_id, gw)
-    except httpx.HTTPStatusError as exc:
-        db.set_meta(conn, "squad_status", f"unavailable ({exc.response.status_code})")
+    """Persist per-player per-fixture results already fetched during enrichment.
+
+    ``enrich_history`` calls ``element_summary`` for every relevant player and
+    throws the ``history`` array away. Retaining it costs no extra HTTP and is
+    the foundation for calibration and post-gameweek review.
+
+    Idempotent: re-running upserts the same (season, player_id, fixture) rows, so
+    an upstream correction (FPL revising bonus or xG after review) overwrites the
+    earlier value rather than duplicating it.
+    """
+    season = season or season_mod.current(conn)
+    now = datetime.now(UTC).isoformat(timespec="seconds")
+    if player_ids is None:
+        player_ids = [r["id"] for r in conn.execute("SELECT id FROM players ORDER BY id")]
+
+    written = 0
+    for pid in player_ids:
+        try:
+            summ = client.element_summary(pid)
+        except (httpx.HTTPStatusError, httpx.TransportError):
+            continue  # one player's history must not abort the run
+        history = summ.get("history") if isinstance(summ, dict) else None
+        if not isinstance(history, list) or not history:
+            continue
+        rows = _history_rows(pid, history, season, now)
+        if rows:
+            written += db.upsert(conn, "player_gw", rows, ["season", "player_id", "fixture"])
+    return written
+
+
+def _stored_squad_event(conn: sqlite3.Connection) -> int | None:
+    """The event the currently stored squad actually came from, from the rows."""
+    row = conn.execute("SELECT MAX(gw) AS gw FROM my_squad").fetchone()
+    return int(row["gw"]) if row and row["gw"] is not None else None
+
+
+def _record_squad_state(
+    conn: sqlite3.Connection, status: str, reason: str,
+    source_event: int | None, retrieved_at: str | None = None,
+) -> None:
+    """Write the machine-readable squad state. Always these five keys together."""
+    db.set_meta(conn, "squad_status", status)
+    db.set_meta(conn, "squad_status_reason", reason)
+    db.set_meta(conn, "squad_source_event", "" if source_event is None else source_event)
+    db.set_meta(conn, "squad_retrieved_at", retrieved_at or "")
+
+
+def _clear_squad(conn: sqlite3.Connection) -> None:
+    """Remove every stored squad row. Used when no squad may legitimately exist."""
+    conn.execute("DELETE FROM my_squad")
+    conn.commit()
+
+
+def _valid_picks(payload: Any) -> list[dict[str, Any]] | None:
+    """Validate the picks payload. Returns the picks list, or None if unusable."""
+    if not isinstance(payload, dict):
+        return None
+    picks = payload.get("picks")
+    if not isinstance(picks, list) or not picks:
+        return None
+    for p in picks:
+        if not isinstance(p, dict) or not isinstance(p.get("element"), int):
+            return None
+    return picks
+
+
+def ingest_my_squad(
+    conn: sqlite3.Connection, client: FplClient, entry_id: int,
+    squad_gw: int | None, projection_gw: int | None = None,
+) -> int:
+    """Load the entry's picks for the *readable* event, atomically.
+
+    ``squad_gw`` is the latest event whose picks FPL will serve (see
+    ``gameweek.readable_squad_event``) — never the projection event, whose picks
+    are private until its deadline passes.
+
+    Failure modes are recorded distinctly (``not_found`` / ``fetch_failed`` /
+    ``malformed``), and a failed fetch never leaves a half-written squad: the
+    replacement runs in one transaction, and any previously stored squad is
+    either retained *and labelled stale* or cleared — never retained while the
+    metadata claims the squad is current.
+    """
+    if squad_gw is None:
+        # Pre-season: no event's picks are readable yet. Nothing may be stored,
+        # or a stale prior-season squad would masquerade as current holdings.
+        _clear_squad(conn)
+        _record_squad_state(
+            conn, gameweek.STATUS_NO_PUBLIC_SQUAD_YET,
+            "no gameweek deadline has passed yet, so FPL exposes no picks", None,
+        )
         return 0
 
-    conn.execute("DELETE FROM my_squad WHERE gw=?", (gw,))
-    rows = []
-    for p in picks.get("picks", []):
-        rows.append(
-            {
-                "gw": gw,
-                "player_id": p["element"],
-                "is_captain": 1 if p.get("is_captain") else 0,
-                "is_vice": 1 if p.get("is_vice_captain") else 0,
-                "multiplier": p.get("multiplier", 1),
-                "purchase_price": None,
-                "selling_price": None,
-            }
+    def _degrade(status: str, reason: str) -> int:
+        """Keep a usable prior squad if one exists, but label it truthfully."""
+        stored = _stored_squad_event(conn)
+        if stored is None:
+            _record_squad_state(conn, status, reason, None)
+            return 0
+        _record_squad_state(
+            conn, gameweek.STATUS_STALE,
+            f"{reason}; showing the squad stored from GW{stored}", stored,
         )
-    n = db.upsert(conn, "my_squad", rows, ["gw", "player_id"])
-    eh = picks.get("entry_history", {})
-    db.set_meta(conn, "bank", eh.get("bank", 0))
-    db.set_meta(conn, "team_value", eh.get("value", 1000))
-    db.set_meta(conn, "active_chip", picks.get("active_chip") or "")
-    db.set_meta(conn, "squad_status", "loaded")
-    return n
+        return 0
+
+    try:
+        payload = client.entry_picks(entry_id, squad_gw)
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        if code == 404:
+            # A readable event that 404s is a real problem, not "pre-season".
+            return _degrade(
+                gameweek.STATUS_NOT_FOUND,
+                f"FPL returned 404 for entry {entry_id} GW{squad_gw} even though "
+                f"that deadline has passed",
+            )
+        return _degrade(gameweek.STATUS_FETCH_FAILED, f"HTTP {code} fetching picks")
+    except (httpx.TransportError, httpx.InvalidURL) as exc:
+        return _degrade(gameweek.STATUS_FETCH_FAILED, f"{type(exc).__name__} fetching picks")
+    except (ValueError, json.JSONDecodeError) as exc:
+        return _degrade(gameweek.STATUS_MALFORMED, f"unparseable picks response: {exc}")
+
+    picks = _valid_picks(payload)
+    if picks is None:
+        return _degrade(
+            gameweek.STATUS_MALFORMED,
+            "picks response present but had no usable 'picks' list",
+        )
+
+    squad_ids = [p["element"] for p in picks]
+
+    # T-11: reconstruct real purchase/selling prices from public data. Valuing a
+    # held player at market price hands the solver money FPL will not pay.
+    try:
+        transfers = client.entry_transfers(entry_id)
+        if not isinstance(transfers, list):
+            transfers = None
+    except (httpx.HTTPStatusError, httpx.TransportError, ValueError):
+        transfers = None
+    try:
+        chips = (client.entry_history(entry_id) or {}).get("chips")
+    except (httpx.HTTPStatusError, httpx.TransportError, ValueError):
+        chips = None
+
+    market = {r["id"]: r["price"] for r in conn.execute("SELECT id, price FROM players")}
+    starts = {
+        r["id"]: r["cost_change_start"] or 0
+        for r in conn.execute("SELECT id, cost_change_start FROM players")
+    }
+    settings = config.Settings.load()
+    priced = teamstate.reconstruct(
+        squad_ids, market, starts, transfers, chips,
+        overrides=settings.purchase_prices,
+    )
+
+    rows = [
+        {
+            "gw": squad_gw,
+            "player_id": p["element"],
+            "is_captain": 1 if p.get("is_captain") else 0,
+            "is_vice": 1 if p.get("is_vice_captain") else 0,
+            "multiplier": p.get("multiplier", 1),
+            "purchase_price": priced.prices[p["element"]].purchase,
+            "selling_price": priced.prices[p["element"]].selling,
+            "price_source": priced.prices[p["element"]].source,
+            "price_exact": 1 if priced.prices[p["element"]].exact else 0,
+        }
+        for p in picks
+    ]
+
+    # Atomic replace: exactly one squad is ever stored, and a mid-write failure
+    # rolls back rather than leaving a mixture of old and new rows.
+    cols = list(rows[0].keys())
+    sql = (
+        f"INSERT INTO my_squad ({', '.join(cols)}) "
+        f"VALUES ({', '.join(':' + c for c in cols)})"
+    )
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute("DELETE FROM my_squad")
+        conn.executemany(sql, rows)
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+
+    eh = payload.get("entry_history") or {}
+    if eh.get("value") is not None:
+        db.set_meta(conn, "team_value", eh["value"])
+    db.set_meta(conn, "active_chip", payload.get("active_chip") or "")
+
+    # T-11: bank and free transfers, with their provenance. An unknown bank is
+    # recorded as unknown — never silently as £0.0m.
+    bank = teamstate.resolve_bank(settings.bank, from_picks=eh.get("bank"))
+    summary = teamstate.summarise(
+        priced, bank, settings.free_transfers, settings.sources.get("free_transfers", "default")
+    )
+    db.set_meta(conn, "bank", "" if bank.value is None else bank.value)
+    for k, v in summary.as_meta().items():
+        if k != "bank":
+            db.set_meta(conn, k, "" if v is None else v)
+    _record_squad_state(
+        conn, gameweek.STATUS_LOADED,
+        f"picks read for GW{squad_gw}"
+        + (f" while projecting GW{projection_gw}" if projection_gw else ""),
+        squad_gw, datetime.now(UTC).isoformat(timespec="seconds"),
+    )
+    return len(rows)
 
 
 def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
@@ -263,11 +518,32 @@ def ingest_entry_meta(conn: sqlite3.Connection, client: FplClient, entry_id: int
         db.set_meta(conn, "team_value", info.get("last_deadline_value", 1000))
 
 
-def run(db_path=None, skip_enrich: bool = False) -> dict[str, int]:
+class SeasonMismatch(RuntimeError):
+    """Raised when the API's season and the database's disagree.
+
+    Deliberately fatal. The alternative is a run that succeeds, publishes, and
+    leaves a database holding two seasons of players under one set of ids.
+    """
+
+    def __init__(self, identity):
+        self.identity = identity
+        super().__init__(
+            f"refusing to ingest: {identity.state}.\n{identity.render()}\n"
+            "Nothing was written. Resolve it with `python -m gaffer.season` "
+            "(and `--rollover --confirm` if this really is a new season)."
+        )
+
+
+def run(
+    db_path=None, skip_enrich: bool = False, now: datetime | None = None
+) -> dict[str, int]:
     """Full ingest. Returns a small summary of row counts.
 
     Set ``skip_enrich`` (or env ``GAFFER_SKIP_ENRICH=1``) to skip the per-player
     DEFCON history calls during fast dev iterations.
+
+    ``now`` overrides the clock used to resolve the projection and readable-squad
+    events, so gameweek-boundary behaviour is testable without waiting for one.
     """
     import os
 
@@ -279,26 +555,54 @@ def run(db_path=None, skip_enrich: bool = False) -> dict[str, int]:
     summary: dict[str, int] = {}
     with FplClient() as client:
         bootstrap = client.bootstrap()
+
+        # T-29: identify the season BEFORE writing a single row. FPL reuses
+        # element ids every summer, and most working tables are keyed on that id
+        # alone — so ingesting a new season over an old one does not fail, it
+        # silently rewrites last season's players as this season's. Refusing here
+        # is the only place that costs nothing.
+        api_season, why = season_mod.derive_from_bootstrap(bootstrap)
+        ident = season_mod.identify(
+            api=api_season, database=season_mod.stored(conn),
+            empty_database=season_mod.database_is_empty(conn), api_detail=why)
+        if not ident.safe_to_run:
+            raise SeasonMismatch(ident)
+        db.set_meta(conn, "season", ident.api)
+        summary["season"] = ident.api
+
         summary["teams"] = ingest_teams(conn, bootstrap)
         summary["players"] = ingest_players(conn, bootstrap)
         summary["fixtures"] = ingest_fixtures(conn, client.fixtures())
         ingest_game_settings(conn, bootstrap)
-        gw = client.current_gw()
-        db.set_meta(conn, "current_gw", gw)
-        db.set_meta(conn, "last_finished_gw", client.last_finished_gw() or "")
-        ev = next((e for e in bootstrap["events"] if e["id"] == gw), None)
+        # Two distinct events. `projection_gw` is what we plan for; `squad_gw` is
+        # the latest event whose picks FPL will actually serve. Conflating them
+        # is what made every pre-deadline run 404 and silently keep stale rows.
+        events = bootstrap["events"]
+        projection_gw = gameweek.projection_event(events, now)
+        squad_gw = gameweek.readable_squad_event(events, now)
+        db.set_meta(conn, "current_gw", projection_gw)
+        db.set_meta(conn, "projection_event", projection_gw)
+        db.set_meta(conn, "last_finished_gw", gameweek.last_finished_event(events) or "")
+        ev = next((e for e in events if e["id"] == projection_gw), None)
         if ev:
             db.set_meta(conn, "deadline", ev.get("deadline_time") or "")
-            db.set_meta(conn, "gw_name", ev.get("name") or f"Gameweek {gw}")
+            db.set_meta(conn, "gw_name", ev.get("name") or f"Gameweek {projection_gw}")
         if not skip_enrich:
             summary["enriched"] = enrich_history(conn, client)
+            summary["player_gw"] = ingest_player_history(conn, client)
         # Free transfers: not in the public API, so trust the user-set value.
         db.set_meta(conn, "free_transfers", settings.free_transfers)
         if settings.entry_id:
             ingest_entry_meta(conn, client, settings.entry_id)
-            summary["my_squad"] = ingest_my_squad(conn, client, settings.entry_id, gw)
+            summary["my_squad"] = ingest_my_squad(
+                conn, client, settings.entry_id, squad_gw, projection_gw
+            )
         else:
-            db.set_meta(conn, "squad_status", "no_entry_id")
+            _clear_squad(conn)
+            _record_squad_state(
+                conn, gameweek.STATUS_NO_ENTRY_ID,
+                "no entry id configured; this is a generic build", None,
+            )
     conn.close()
     return summary
 

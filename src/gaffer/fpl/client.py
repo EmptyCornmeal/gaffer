@@ -9,16 +9,21 @@ endpoints use a very short TTL.
 from __future__ import annotations
 
 import json
+import re
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import httpx
 
-from gaffer import config
+from gaffer import config, gameweek
 
 BASE = "https://fantasy.premierleague.com/api"
 USER_AGENT = "gaffer/0.1 (+https://github.com/EmptyCornmeal)"
+
+#: Characters that must not reach a filename. `?` and `=` are illegal on Windows.
+_UNSAFE_CACHE_CHARS = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 class FplClient:
@@ -34,7 +39,16 @@ class FplClient:
 
     # -- low level ----------------------------------------------------------
     def _cache_file(self, path: str) -> Path:
-        safe = path.strip("/").replace("/", "_") or "root"
+        """Cache filename for an endpoint path.
+
+        Everything outside ``[A-Za-z0-9._-]`` is collapsed to an underscore. The
+        previous version only replaced ``/``, which left the query string intact —
+        and ``?``/``=`` are illegal in Windows filenames, so every query-bearing
+        endpoint (``leagues-classic/{id}/standings/?page_standings=1``) raised
+        ``OSError: [Errno 22]`` on write. Distinct queries still map to distinct
+        names, so page 1 and page 2 cannot collide.
+        """
+        safe = _UNSAFE_CACHE_CHARS.sub("_", path.strip("/")) or "root"
         return self.cache_dir / f"{safe}.json"
 
     def _get(self, path: str, ttl: float | None = None) -> Any:
@@ -91,22 +105,28 @@ class FplClient:
         )
 
     # -- helpers ------------------------------------------------------------
-    def current_gw(self) -> int:
-        """The gameweek to act on: the first not-yet-finished event.
+    def events(self) -> list[dict[str, Any]]:
+        return self.bootstrap()["events"]
 
-        Falls back to ``is_next``/``is_current`` flags; before the season starts
-        this returns GW1.
+    def projection_event(self, now: datetime | None = None) -> int:
+        """The event to project and decide for (the next one still actionable)."""
+        return gameweek.projection_event(self.events(), now)
+
+    def readable_squad_event(self, now: datetime | None = None) -> int | None:
+        """Latest event whose picks are publicly readable, or None pre-GW1.
+
+        NOT the same as :meth:`projection_event` — requesting the projection
+        event's picks 404s before every deadline.
         """
-        events = self.bootstrap()["events"]
-        for ev in events:
-            if ev.get("is_next"):
-                return int(ev["id"])
-        for ev in events:
-            if not ev.get("finished"):
-                return int(ev["id"])
-        return int(events[-1]["id"]) if events else 1
+        return gameweek.readable_squad_event(self.events(), now)
+
+    def current_gw(self) -> int:
+        """Deprecated alias for :meth:`projection_event`.
+
+        Kept so external callers keep working; the pipeline uses the explicit
+        names so the two concepts can never be confused again.
+        """
+        return self.projection_event()
 
     def last_finished_gw(self) -> int | None:
-        events = self.bootstrap()["events"]
-        finished = [int(ev["id"]) for ev in events if ev.get("finished")]
-        return max(finished) if finished else None
+        return gameweek.last_finished_event(self.events())

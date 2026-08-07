@@ -17,19 +17,38 @@ from dataclasses import dataclass, field
 import pulp
 
 from gaffer import config
+from gaffer.solver import objective as OBJ
 
 HORIZON_DECAY = 0.84  # weight of each future GW relative to the previous
 
-# Effective-ownership dial → template_weight. 0 = pure points-per-£ (differential,
-# ignores the crowd); higher = own more of the template for rank protection.
-# Tuned so 'balanced' pulls a ~74%-owned default-captain premium (Haaland) into
-# the squad, which pure value drops. Balanced is the shipped default.
-# High absolute weights because, with fixtures now read correctly, the model's
-# honest optimum is a *no-Haaland* value build (Bruno at Hull / Gabriel vs Coventry
-# out-project Haaland vs mid-table Bournemouth) — so owning the 74%-must-own is a
-# deliberate rank-defence override. differential = the model's sharp value view;
-# balanced = owns + captains Haaland (rank-safe default); template = max crowd.
-RISK_WEIGHTS = {"differential": 0.0, "balanced": 8.0, "template": 11.0}
+# Ownership weighting is NEUTRALISED (T-14).
+#
+# These weights previously added `w * (selected_by_percent/100) * next_gw_points`
+# to the objective. At the shipped 'balanced' setting that term was ~70% of the
+# whole objective, so the optimiser was maximising global popularity rather than
+# expected points: it sacrificed 2.11 xP on the armband and changed 11 of 15
+# squad players relative to the pure-points solve.
+#
+# Global ownership is also the wrong quantity. What moves your position in a
+# mini-league is ownership *within that league*, which is directly observable
+# from a handful of API calls — not a percentage across millions of managers.
+#
+# Rather than invent a proxy, the dial is set to zero until T-17 supplies real
+# league-specific placing objectives. It is kept as a named, single-purpose knob
+# so the reinstatement has an obvious home, and so the artifact shape (which the
+# Planner's risk toggle reads) does not change.
+NEUTRAL_RISK_WEIGHT = 0.0
+RISK_WEIGHTS = {
+    "differential": NEUTRAL_RISK_WEIGHT,
+    "balanced": NEUTRAL_RISK_WEIGHT,
+    "template": NEUTRAL_RISK_WEIGHT,
+}
+#: Why the three stances currently coincide, surfaced in the artifact.
+RISK_NOTE = (
+    "Ownership weighting is neutralised. The three stances are identical until "
+    "league-specific placing objectives land (T-17); global selected-by% is not "
+    "a substitute for ownership inside your league."
+)
 
 # Reward next-GW UPSIDE (Monte-Carlo ceiling above the mean) in the XI and the
 # captain. Without this the solver maximises mean points and (a) drops elite
@@ -83,8 +102,12 @@ def load_players(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict[i
     # owned player_id -> selling price (None until we have purchase data)
     owned = {
         r["player_id"]: r["selling_price"]
+        # The holdings baseline comes from the last *readable* event, which is
+        # never the event being projected — keying this on `from_gw` is what
+        # made transfer mode silently collapse to build mode.
         for r in conn.execute(
-            "SELECT player_id, selling_price FROM my_squad WHERE gw=?", (from_gw,)
+            "SELECT player_id, selling_price FROM my_squad "
+            "WHERE gw = (SELECT MAX(gw) FROM my_squad)"
         )
     }
     players: dict[int, Player] = {}
@@ -127,6 +150,7 @@ def optimise(
     budget: int | None = None,
     template_weight: float = 0.0,
     distributions: dict[int, dict[str, float]] | None = None,
+    params: OBJ.ObjectiveParams | None = None,
 ) -> Solution:
     horizon = horizon or config.PROJECTION_HORIZON
     players = load_players(conn, from_gw, horizon)
@@ -136,6 +160,8 @@ def optimise(
             if d:
                 p.ceiling = d.get("ceiling", 0.0)
     ids = list(players)
+    params = params or OBJ.DEFAULT
+    OBJ.assert_no_ft_arbitrage(params)
     # How much `value` grows with the horizon (decayed GW count) — scale the
     # next-GW ceiling term by this so its pull stays proportional to value at
     # every horizon (otherwise structure drifts as the window lengthens).
@@ -180,6 +206,16 @@ def optimise(
             for i in ids
         )
 
+    # --- bench value (T-19) ------------------------------------------------
+    # This term was absent: bench players carried ZERO objective weight, so the
+    # choice among minimum-cost legal fills was an arbitrary CBC tie-break —
+    # which produced a £17.5m bench worth 4.43 xP. Position-aware, and using the
+    # same weights as the multi-period planner so the two solvers agree.
+    for _pos in config.POSITIONS:
+        obj += params.bench(_pos) * horizon_factor * pulp.lpSum(
+            (squad[i] - start[i]) * players[i].next_gw_points
+            for i in ids if players[i].position == _pos
+        )
     # --- ceiling / upside term (rank is driven by ceiling, not mean) --------
     # Reward the next-GW upside (ceiling above mean) of the starting XI and, more
     # heavily, the captain (whose upside is doubled). Scaled by horizon_factor so

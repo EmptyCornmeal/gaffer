@@ -24,8 +24,12 @@
   let pos = $state<'ALL' | Pos>('ALL')
   // Cap tracks the actual most-expensive player so premiums (Haaland £15.5) are
   // never clamped out of the list — the old fixed max=15 hid him entirely.
-  const priceCap = Math.max(15, ...players.map((p) => p.price))
-  let maxPrice = $state(priceCap)
+  const priceCap = $derived(Math.max(15, ...players.map((p) => p.price)))
+  // Starts unset so the filter tracks the real cap; `effectiveMax` below reads
+  // the derived cap until the user actually moves the slider. Seeding a $state
+  // from a prop froze it at the first render's value.
+  let maxPrice = $state<number | null>(null)
+  const effectiveMax = $derived(maxPrice ?? priceCap)
   let onlyStarters = $state(false)
   // Differentials finder: sub-10%-owned players with a real projection, so the
   // list surfaces punts the crowd hasn't found rather than 0-minute noise.
@@ -59,7 +63,7 @@
   const filtered = $derived(
     players
       .filter((p) => pos === 'ALL' || p.pos === pos)
-      .filter((p) => p.price <= maxPrice)
+      .filter((p) => p.price <= effectiveMax)
       .filter((p) => !onlyStarters || p.p_start >= 0.6)
       .filter((p) => !onlyDiff || (p.owned_by < 10 && p.next_gw_xp >= 3 && p.p_start >= 0.5))
       .filter((p) => matches(p, query))
@@ -82,8 +86,8 @@
       {/each}
     </div>
     <label class="flex items-center gap-2 text-xs text-muted">
-      max £{maxPrice.toFixed(1)}
-      <input type="range" min="4" max={priceCap} step="0.5" bind:value={maxPrice} class="accent-brand" />
+      max £{effectiveMax.toFixed(1)}
+      <input type="range" min="4" max={priceCap} step="0.5" value={effectiveMax} oninput={(e) => (maxPrice = +e.currentTarget.value)} class="accent-brand" aria-label="Maximum price" />
     </label>
     <label class="flex items-center gap-1.5 text-xs text-muted">
       <input type="checkbox" bind:checked={onlyStarters} class="accent-brand" /> likely starters

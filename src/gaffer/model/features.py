@@ -80,6 +80,30 @@ def clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
 
 
+def expected_floor_div(lam: float, divisor: int, max_k: int = 40) -> float:
+    """E[floor(X / divisor)] for X ~ Poisson(lam).
+
+    FPL's goals-conceded and saves rules both bucket a count: one point per
+    ``divisor`` occurrences. Using ``floor(E[X]/divisor)`` would be wrong — the
+    expectation of a floor is not the floor of an expectation — so sum the tail
+    probabilities instead: E[floor(X/d)] = sum_{j>=1} P(X >= j*d).
+    """
+    if lam <= 0 or divisor <= 0:
+        return 0.0
+    # cdf[k] = P(X <= k)
+    cdf, pmf, total = [], math.exp(-lam), 0.0
+    for k in range(max_k + 1):
+        total += pmf
+        cdf.append(min(total, 1.0))
+        pmf *= lam / (k + 1)
+    out = 0.0
+    j = 1
+    while j * divisor <= max_k:
+        out += 1.0 - cdf[j * divisor - 1]
+        j += 1
+    return out
+
+
 # Pre-season, FPL only ships a coarse 1-5 team strength, so fixture ratios cluster
 # near 1.0 and every matchup looks average — premiums vs weak sides never get the
 # boost they deserve and trap fixtures aren't punished. Raise the coarse ratio to
@@ -109,6 +133,40 @@ class TeamContext:
     def _spread(self, ratio: float) -> float:
         """De-compress a strength ratio in the coarse pre-season regime."""
         return ratio**STRENGTH_GAMMA if self.coarse else ratio
+
+    @classmethod
+    def from_ratings(
+        cls,
+        att_home: dict[int, float],
+        att_away: dict[int, float],
+        def_home: dict[int, float],
+        def_away: dict[int, float],
+        team_xgc: dict[int, float] | None = None,
+        league_xgc: float | None = None,
+    ) -> TeamContext:
+        """Build a context from explicit ratings instead of the live DB.
+
+        Same class, same ``attack_multiplier`` / ``expected_conceded`` / gamma /
+        clamp — only the data source differs. This is what lets the backtest
+        score the *shipped* fixture model rather than a reimplementation of it.
+        """
+        ctx = cls()
+        ctx.att_home = dict(att_home)
+        ctx.att_away = dict(att_away)
+        ctx.def_home = dict(def_home)
+        ctx.def_away = dict(def_away)
+        ctx.team_xgc = dict(team_xgc or {})
+        vals = list(ctx.att_home.values()) + list(ctx.att_away.values())
+        ctx.league_att = sum(vals) / len(vals) if vals else 1.0
+        dvals = list(ctx.def_home.values()) + list(ctx.def_away.values())
+        ctx.league_def = sum(dvals) / len(dvals) if dvals else 1.0
+        if league_xgc is not None:
+            ctx.league_xgc = league_xgc
+        elif ctx.team_xgc:
+            ctx.league_xgc = sum(ctx.team_xgc.values()) / len(ctx.team_xgc)
+        # Identical regime test to build(): the coarse pre-season scale is small.
+        ctx.coarse = ctx.league_att < 100
+        return ctx
 
     @classmethod
     def build(cls, conn: sqlite3.Connection) -> TeamContext:

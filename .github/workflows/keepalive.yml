@@ -1,0 +1,94 @@
+name: Schedule keepalive
+
+# GitHub disables `schedule:` triggers on a public repository after 60 days with
+# no repository activity. Workflow RUNS do not count as activity; a push does.
+#
+# The primary defence is the refresh workflow: every valid run advances
+# `generated_at`, so there is always a diff to commit, and that push resets the
+# clock. This workflow is the watchdog for the case where the refresh has been
+# failing (or pushing nothing) for weeks — otherwise the schedule would be
+# silently disabled on top of an existing outage.
+#
+# It runs monthly, so consecutive runs are at most 31 days apart and the 45-day
+# threshold is always reached before the 60-day limit. It commits ONLY when the
+# repository is genuinely approaching the limit — at most a handful of commits a
+# year, and in a healthy season, none at all.
+on:
+  schedule:
+    - cron: '17 3 1 * *'   # 03:17 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write   # the keepalive commit; nothing else is needed
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install Gaffer
+        run: pip install -e .
+
+      - name: Decide whether a keepalive push is needed
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          pushed_at=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.pushed_at')
+          if [ -z "$pushed_at" ]; then
+            echo "::error::could not read pushed_at from the GitHub API"
+            exit 1
+          fi
+          echo "pushed_at=$pushed_at"
+          set +e
+          python -m gaffer.schedule --pushed-at "$pushed_at" --json | tee decision.json
+          code=${PIPESTATUS[0]}
+          set -e
+          if [ "$code" -eq 10 ]; then
+            echo "act=true" >> "$GITHUB_OUTPUT"
+          elif [ "$code" -eq 0 ]; then
+            echo "act=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::keepalive decision failed with exit $code"
+            exit "$code"
+          fi
+          echo "reason=$(python -c "import json;print(json.load(open('decision.json'))['reason'])")" >> "$GITHUB_OUTPUT"
+
+      - name: Report that no action is needed
+        if: steps.decide.outputs.act != 'true'
+        run: echo "::notice::${{ steps.decide.outputs.reason }}"
+
+      - name: Keep the schedule alive
+        if: steps.decide.outputs.act == 'true'
+        run: |
+          set -euo pipefail
+          # A real, auditable record of why this commit exists — not empty churn.
+          # This path is deliberately outside deploy.yml's `web/**` / `data/**`
+          # filter, so the push cannot trigger a rebuild (and a GITHUB_TOKEN push
+          # does not trigger workflows anyway — no recursion is possible).
+          mkdir -p .github
+          python - <<'PY' > .github/last-activity.json
+          import json, os, subprocess
+          d = json.load(open("decision.json"))
+          d["recorded_at"] = subprocess.check_output(
+              ["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], text=True).strip()
+          d["run"] = os.environ.get("GITHUB_RUN_ID")
+          print(json.dumps(d, indent=2))
+          PY
+          git config user.name  "gaffer-bot"
+          git config user.email "gaffer-bot@users.noreply.github.com"
+          git add .github/last-activity.json
+          git commit -m "chore: keepalive — refresh has not pushed in 45+ days"
+          git push
+          echo "::warning::${{ steps.decide.outputs.reason }}"

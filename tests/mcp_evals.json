@@ -1,0 +1,116 @@
+{
+  "eval_version": "mcp-evals-1.0",
+  "note": "Realistic questions, the tool route that should answer each, and the exact structured facts the answer must rest on. Deliberately not a prose judge: 'reads well' is not a property, and an eval that grades style will pass a confident invention.",
+  "cases": [
+    {
+      "id": "what-should-i-do",
+      "question": "What should I do this week?",
+      "expect_tools": ["get_weekly_decision"],
+      "require_fields": ["action", "headline", "reason", "confidence", "biggest_risk", "threshold_status"],
+      "allowed_statuses": ["ok", "data_unavailable"],
+      "must_not_invent": ["a transfer when action is 'unavailable'"]
+    },
+    {
+      "id": "why-roll",
+      "question": "Why is rolling better than making the transfer?",
+      "expect_tools": ["get_weekly_decision"],
+      "require_fields": ["comparison", "threshold_status", "assumptions"],
+      "allowed_statuses": ["ok", "data_unavailable"],
+      "require_facts": {"threshold_status.fitted": false}
+    },
+    {
+      "id": "compare-two",
+      "question": "Compare Saka and Palmer.",
+      "expect_tools": ["find_players", "compare_players"],
+      "require_fields": ["players", "differences"],
+      "allowed_statuses": ["ok", "not_found", "ambiguous"],
+      "must_not_invent": ["a recommendation between them"]
+    },
+    {
+      "id": "biggest-risk",
+      "question": "What is the biggest reason the recommendation could be wrong?",
+      "expect_tools": ["get_weekly_decision"],
+      "require_fields": ["biggest_risk", "limitations"],
+      "allowed_statuses": ["ok", "data_unavailable"]
+    },
+    {
+      "id": "league-captain",
+      "question": "How does league 271619 change the captain choice?",
+      "expect_tools": ["get_league_strategy"],
+      "require_fields": ["leagues", "limitations"],
+      "allowed_statuses": ["ok", "data_unavailable"],
+      "require_facts": {"leagues.0.data_quality": "present"},
+      "must_not_invent": ["rival ownership when data_quality.with_picks is 0"]
+    },
+    {
+      "id": "live-final",
+      "question": "Is the live score final?",
+      "expect_tools": ["get_live_gameweek"],
+      "require_fields": [],
+      "allowed_statuses": ["ok", "data_unavailable"],
+      "must_not_invent": ["a final total while bonus is provisional"]
+    },
+    {
+      "id": "bad-decision-or-bad-luck",
+      "question": "Was last week a bad decision or bad luck?",
+      "expect_tools": ["get_decision_review"],
+      "require_fields": ["quality", "comparison"],
+      "allowed_statuses": ["ok", "data_unavailable"],
+      "must_not_invent": ["a review before any gameweek has finished"]
+    },
+    {
+      "id": "blend-fitted",
+      "question": "Is the ep_next blend fitted?",
+      "expect_tools": ["get_model_evidence"],
+      "require_fields": ["ep_next_blend"],
+      "allowed_statuses": ["ok"],
+      "require_facts": {"ep_next_blend.fitted": false, "ep_next_blend.weight": 0.7}
+    },
+    {
+      "id": "withdrawn-claims",
+      "question": "Which accuracy claims were withdrawn?",
+      "expect_tools": ["get_model_evidence"],
+      "require_fields": ["withdrawn_baselines"],
+      "allowed_statuses": ["ok"],
+      "require_facts": {"withdrawn_baselines.fpl_xp": "present", "withdrawn_baselines.ensemble": "present"}
+    },
+    {
+      "id": "model-experiments",
+      "question": "Which model experiments were rejected or inconclusive?",
+      "expect_tools": ["get_model_evidence"],
+      "require_fields": ["model_candidates"],
+      "allowed_statuses": ["ok"],
+      "require_candidates": {"gbm": "rejected", "ridge": "inconclusive", "xp_models": "invalid_experiment"}
+    },
+    {
+      "id": "what-changed",
+      "question": "What changed since the previous refresh?",
+      "expect_tools": ["what_changed"],
+      "require_fields": ["compared"],
+      "allowed_statuses": ["ok", "data_unavailable"],
+      "must_not_invent": ["a change when no prior snapshot exists"]
+    },
+    {
+      "id": "squad-known",
+      "question": "Is my squad currently known?",
+      "expect_tools": ["gaffer_status"],
+      "require_fields": ["squad", "build_mode", "gameweek"],
+      "allowed_statuses": ["ok"]
+    },
+    {
+      "id": "player-outlook",
+      "question": "What is the outlook for player 1?",
+      "expect_tools": ["get_player_outlook"],
+      "require_fields": ["player"],
+      "allowed_statuses": ["ok", "not_found"],
+      "require_facts": {"player.projection.blend_is_fitted": false}
+    },
+    {
+      "id": "transfer-plan",
+      "question": "What is the multi-week plan?",
+      "expect_tools": ["get_transfer_plan"],
+      "require_fields": ["plan", "limitations"],
+      "allowed_statuses": ["ok", "data_unavailable"]
+    }
+  ]
+}

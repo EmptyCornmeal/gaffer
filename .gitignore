@@ -5,9 +5,18 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+# setuptools writes these into the source tree on `pip install .` (as opposed to
+# `-e`), so a `git add -A` after one clean-env install would commit a stale copy
+# of the entire package.
+build/
+dist/
 
-# Data — keep JSON artifacts, ignore the working DB, cache, and bulky history
+# Data — keep JSON artifacts, ignore the working DB, cache, and bulky history.
+# The -wal/-shm sidecars matter: the refresh workflow runs `git add data`, and
+# without these it would stage binary SQLite journals on every successful run.
 data/*.db
+data/*.db-wal
+data/*.db-shm
 data/*.sqlite
 data/.cache/
 data/history/

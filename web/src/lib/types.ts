@@ -109,8 +109,13 @@ export interface Meta {
   team_value: string | null
   active_chip: string | null
   model_version: string
-  generated_at: string
+  /** Pipeline run timestamp (ISO 8601, UTC). Shared with recommendation/plan. */
+  generated_at: string | null
   season: string
+  /** 'personalised' when an entry id was configured, otherwise 'generic'. */
+  build_mode?: 'personalised' | 'generic'
+  entry_id?: number | null
+  league_ids?: number[]
 }
 
 export interface RecPlayer {
@@ -158,6 +163,8 @@ export interface HorizonBlock {
 }
 
 export interface Recommendation {
+  /** Same pipeline run timestamp as meta.generated_at. */
+  generated_at?: string
   mode: string
   status: string
   formation: string
@@ -188,6 +195,8 @@ export interface PlanStep {
 }
 
 export interface TransferPlan {
+  /** Same pipeline run timestamp as meta.generated_at. */
+  generated_at?: string
   status: string
   mode: string
   horizon: number
@@ -210,6 +219,7 @@ export interface Verdict {
 }
 
 export interface NewsItem {
+  id: string
   source: string
   title: string
   summary: string
@@ -217,34 +227,36 @@ export interface NewsItem {
   published: string
 }
 
+/**
+ * One generated statement, with the items that support it.
+ *
+ * `source_item_ids` is the whole point: a claim the model produced is only
+ * rendered beside the headlines it came from, and it can never carry a URL of
+ * its own — links are resolved from `News.items`.
+ */
+export interface NewsClaim {
+  text: string
+  source_item_ids: string[]
+  claim_type: 'transfer' | 'injury' | 'availability' | 'selection' | 'other'
+  certainty: 'confirmed' | 'reported' | 'rumoured'
+  players?: string[]
+  teams?: string[]
+}
+
 export interface News {
+  news_version?: string
   items: NewsItem[]
+  claims?: NewsClaim[]
   digest_md: string
-  source: string
+  /** 'ai' or 'template'. The reason lives in `fallback_reason`. */
+  source: 'ai' | 'template'
+  fallback_reason: string | null
+  model: string | null
   count: number
+  quarantined?: Array<{ id: string; source?: string; reason: string }>
   generated_at: string
 }
 
-interface Lift {
-  top: number
-  bottom: number
-}
-export interface CalBin {
-  pred: number
-  actual: number
-  haul_rate: number
-  n: number
-}
-export interface Backtest {
-  season: string
-  n_predictions: number
-  gameweeks: string
-  trained_on: string
-  mae: { gaffer: number; ml: number; fpl_xp: number; naive: number }
-  rank_corr: { gaffer: number; ml: number; fpl_xp: number; naive: number }
-  lift: { ml: Lift; gaffer: Lift; fpl_xp: Lift }
-  calibration?: { gaffer: CalBin[]; ml: CalBin[] }
-  team_points?: { gaffer: number; ml: number; fpl_xp: number; naive: number }
-  note: string
-  generated_at: string
-}
+// Backtest types live in lib/backtest.ts, which owns the versioned schema
+// and its validation. The legacy interface here described the superseded
+// ml-vs-heuristic artifact and has been removed.
