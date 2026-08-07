@@ -128,3 +128,42 @@ def test_this_environment_matches_the_lock():
     """The machine producing artifacts must match the recipe that describes it."""
     rep = deps.check()
     assert rep.ok, rep.render()
+
+
+# --- the lock must be installable on every platform CI uses ------------------
+
+#: Distributions that exist only on Windows. A lock that pins one of these
+#: unconditionally cannot be installed on Linux at all — which is how the first
+#: PR CI run failed, on a Windows-only transitive of the MCP SDK that a
+#: Windows-only clean-install proof could never have caught.
+WINDOWS_ONLY = {"pywin32", "colorama", "pywinpty", "winkerberos"}
+
+
+def test_every_windows_only_pin_carries_a_marker():
+    for name, _version, marker in deps._lock_entries():
+        if name in WINDOWS_ONLY:
+            assert marker and "win32" in marker, (
+                f"{name} is pinned without a platform marker; `pip install -r "
+                f"requirements.lock.txt` would fail on Linux")
+
+
+def test_a_marker_that_does_not_apply_is_not_reported_as_drift():
+    """Otherwise every Linux run fails on a package correctly absent."""
+    assert deps.applies_here(None) is True
+    win = 'sys_platform == "win32"'
+    linux = 'sys_platform == "linux"'
+    assert deps.applies_here(win) != deps.applies_here(linux)
+
+
+def test_a_malformed_marker_does_not_silently_skip_a_package():
+    """Fail open: an unparseable marker must not excuse a missing dependency."""
+    assert deps.applies_here("this is not a marker") is True
+
+
+def test_lock_entries_keeps_the_marker_and_parse_lock_drops_it():
+    text = 'pandas==3.0.5\npywin32==312 ; sys_platform == "win32"  # comment\n'
+    assert deps.parse_lock(text) == {"pandas": "3.0.5", "pywin32": "312"}
+    assert deps._lock_entries(text) == [
+        ("pandas", "3.0.5", None),
+        ("pywin32", "312", 'sys_platform == "win32"'),
+    ]

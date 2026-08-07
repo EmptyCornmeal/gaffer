@@ -92,18 +92,42 @@ def declared() -> dict[str, list[str]]:
 
 def parse_lock(text: str | None = None) -> dict[str, str]:
     """`name -> exact version` from the lockfile. Markers are kept out of the key."""
+    return {name: version for name, version, _ in _lock_entries(text)}
+
+
+def _lock_entries(text: str | None = None) -> list[tuple[str, str, str | None]]:
+    """`(name, version, marker)` per line, marker None when unconditional."""
     raw = text if text is not None else LOCK_PATH.read_text(encoding="utf-8")
-    out: dict[str, str] = {}
+    out: list[tuple[str, str, str | None]] = []
     for line in raw.splitlines():
         line = line.split("#")[0].strip()
         if not line:
             continue
-        spec = line.split(";")[0].strip()
+        spec, _, marker = line.partition(";")
+        spec = spec.strip()
         if "==" not in spec:
             continue
         name, _, version = spec.partition("==")
-        out[_norm(name)] = version.strip()
+        out.append((_norm(name), version.strip(), marker.strip() or None))
     return out
+
+
+def applies_here(marker: str | None) -> bool:
+    """Whether a lock entry's environment marker matches this interpreter.
+
+    `pywin32` is a Windows-only transitive of the MCP SDK and has no Linux
+    distribution at all, so a lockfile that pins it unconditionally cannot be
+    installed in CI. A lock is only reproducible if it says *where* each pin
+    applies — and only if the checker agrees, or every Linux run reports drift
+    for a package that is correctly absent.
+    """
+    if not marker:
+        return True
+    from packaging.markers import InvalidMarker, Marker
+    try:
+        return Marker(marker).evaluate()
+    except InvalidMarker:  # pragma: no cover - defensive
+        return True
 
 
 def third_party_imports(src: Path | None = None) -> set[str]:
@@ -148,7 +172,9 @@ def check(*, check_environment: bool = True) -> DepReport:
                     f"{req.name}=={lock[key]} violates '{req.specifier}' ({group})")
 
     if check_environment:
-        for name, want in sorted(lock.items()):
+        for name, want, marker in sorted(_lock_entries()):
+            if not applies_here(marker):
+                continue  # correctly absent on this platform
             try:
                 have = metadata.version(name)
             except metadata.PackageNotFoundError:
@@ -172,8 +198,13 @@ working venv, which accumulates whatever was ever installed in it:
     /tmp/lockenv/bin/python -m pip freeze --exclude-editable \\
         | grep -v '^gaffer' | sort > requirements.lock.txt
 
-Then re-add the header and the `colorama ; sys_platform == "win32"` marker, and
-run `python -m gaffer.deps` to confirm. On Windows use `.venv/Scripts/python.exe`.
+Then re-add the header and the environment markers — `pip freeze` does not emit
+them, and a platform-specific pin without one cannot be installed anywhere else:
+
+    colorama==0.4.6 ; sys_platform == "win32"
+    pywin32==312    ; sys_platform == "win32"
+
+Run `python -m gaffer.deps` to confirm. On Windows use `.venv/Scripts/python.exe`.
 """
 
 
