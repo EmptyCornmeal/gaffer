@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
   import type { Player, Pos } from '../lib/types'
+  import { formatPrice, valuePerMillion } from '../lib/format'
   import Crest from '../components/Crest.svelte'
   import Scatter from '../components/Scatter.svelte'
 
@@ -58,7 +59,7 @@
       .sort((a, b) => b.xp_window - a.xp_window).slice(0, 12),
   )
   const value = $derived(
-    [...pool].map((p) => ({ p, v: p.xp_window / Math.max(p.price / 10, 0.1) }))
+    [...pool].map((p) => ({ p, v: valuePerMillion(p.xp_window, p.price) }))
       .sort((a, b) => b.v - a.v).slice(0, 12),
   )
 
@@ -183,7 +184,7 @@
       </div>
       <p class="text-[11px] text-muted2 mb-2">Most projected points per million — squad-builder fuel.</p>
       {#each value as { p, v }}
-        {@render row(p, `£${p.price / 10}m`, v, ' /£m')}
+        {@render row(p, formatPrice(p.price), v, ' /£m')}
       {/each}
     </section>
   </div>

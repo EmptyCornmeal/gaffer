@@ -1,0 +1,232 @@
+import { describe, expect, it } from 'vitest'
+import {
+  horizonKeys, leakageClean, methodsIn, parseBacktest, SUPPORTED_SCHEMA_VERSIONS,
+  withdrawalConsequence, withdrawn, modelCandidates, DECISION_LABELS,
+} from './backtest'
+
+const valid = {
+  schema_version: 5,
+  model_version: 'heuristic-0.1',
+  dataset: 'vaastav/Fantasy-Premier-League merged_gw',
+  season: '2024-25',
+  decision_gameweeks: 'GW2-GW38',
+  horizons: [1, 2],
+  coverage: {
+    rows_evaluated: 26615,
+    zero_minute_rows_retained: 15491,
+    zero_minute_share_pct: 58.2,
+  },
+  leakage_check: { enforced: true, post_match_fields_in_features: [], policy: 'shift(1)' },
+  per_horizon: {
+    '1': { n: 26615, mae: { gaffer: 1.566, naive: 1.11 }, rank_corr: { gaffer: 0.44, naive: 0.666 } },
+    '2': { n: 25443, mae: { gaffer: 1.576 }, rank_corr: { gaffer: 0.423 } },
+  },
+  calibration: { overall: [] },
+  limitations: ['pre-deadline team ratings are rebuilt, not the live construction'],
+  withdrawn_baselines: {
+    fpl_xp: {
+      withdrawn_in_schema: 4,
+      previously_reported: { rank_corr_h1: 0.76, xi_points_per_gw: 84.2 },
+      reason: "computed from the archive's xP column, which carries same-gameweek information",
+    },
+    consequence: 'EP_NEXT_BLEND_WEIGHT is now a labelled policy choice.',
+  },
+  model_candidates: {
+    heuristic_reference: { xi_points_per_gw: { '1': 50.86 }, captain_accuracy_pct_h1: 29.7 },
+    candidates: [
+      {
+        candidate: 'gbm', label: 'Gradient-boosted trees', decision: 'rejected',
+        reason: 'worse at every horizon', worse_at_every_horizon: true,
+        per_horizon: { '1': { candidate_xi: 46.22, diff: -4.65, ci95: [-10.03, 0.84] } },
+        captain_accuracy_pct_h1: 13.5,
+      },
+      {
+        candidate: 'ridge', label: 'Regularised linear model', decision: 'inconclusive',
+        reason: 'beat the heuristic at h=1 but the interval spans zero',
+        worse_at_every_horizon: false,
+        per_horizon: { '1': { candidate_xi: 53.57, diff: 2.7, ci95: [-1.38, 6.89] } },
+        captain_accuracy_pct_h1: 32.4,
+      },
+    ],
+    not_ruled_out: 'a minutes-only classifier',
+  },
+  generated_at: '2026-08-06T18:00:00+00:00',
+}
+
+describe('parseBacktest — acceptance', () => {
+  it('accepts a well-formed v5 artifact', () => {
+    const s = parseBacktest(valid)
+    expect(s.kind).toBe('ok')
+    if (s.kind === 'ok') expect(s.data.model_version).toBe('heuristic-0.1')
+  })
+
+  it('only claims support for versions it can render', () => {
+    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([5])
+  })
+})
+
+describe('parseBacktest — rejection', () => {
+  it('reports a missing artifact distinctly from a broken one', () => {
+    expect(parseBacktest(null).kind).toBe('missing')
+    expect(parseBacktest(undefined).kind).toBe('missing')
+  })
+
+  it('rejects the legacy artifact that has no schema_version', () => {
+    // The real shipped file: ml-vs-heuristic, minutes>0 filtered.
+    const legacy = {
+      season: '2024-25', n_predictions: 10011, trained_on: '2022-23 + 2023-24',
+      mae: { gaffer: 1.889, ml: 1.858, fpl_xp: 1.804, naive: 2.064 },
+      rank_corr: { gaffer: 0.3, ml: 0.379, fpl_xp: 0.572, naive: 0.308 },
+      generated_at: '2026-07-26T15:32:54+00:00',
+    }
+    const s = parseBacktest(legacy)
+    expect(s.kind).toBe('unsupported')
+    if (s.kind === 'unsupported') {
+      expect(s.detail).toContain('substitute model')
+      expect(s.detail).toContain('post-match')
+    }
+  })
+
+  it('rejects a superseded numeric schema version', () => {
+    const s = parseBacktest({ ...valid, schema_version: 2 })
+    expect(s.kind).toBe('unsupported')
+    if (s.kind === 'unsupported') expect(s.detail).toContain('supported: 5')
+  })
+
+  it('rejects v3 — it reported baselines that were later withdrawn', () => {
+    // A v3 artifact renders `fpl_xp` and `ensemble` as measured. Those numbers
+    // came from the archive's `xP` column and are inadmissible; showing them
+    // again would undo the retraction.
+    expect(parseBacktest({ ...valid, schema_version: 3 }).kind).toBe('unsupported')
+  })
+
+  it('rejects v4 — it collapsed every trained model into one verdict', () => {
+    // v4 said trained models lose every decision metric. Ridge did not. A v4
+    // artifact cannot carry the per-candidate evidence, so rendering it would
+    // repeat the claim it got wrong.
+    expect(parseBacktest({ ...valid, schema_version: 4 }).kind).toBe('unsupported')
+  })
+
+  it('rejects a future schema version rather than guessing', () => {
+    expect(parseBacktest({ ...valid, schema_version: 99 }).kind).toBe('unsupported')
+  })
+
+  it('rejects non-object payloads', () => {
+    for (const bad of ['a string', 42, [1, 2, 3], true]) {
+      expect(parseBacktest(bad).kind).toBe('malformed')
+    }
+  })
+
+  it.each([
+    'model_version', 'season', 'per_horizon', 'coverage',
+    'leakage_check', 'limitations', 'generated_at',
+  ])('rejects an artifact missing %s', (key) => {
+    const broken: Record<string, unknown> = { ...valid }
+    delete broken[key]
+    const s = parseBacktest(broken)
+    expect(s.kind).toBe('malformed')
+    if (s.kind === 'malformed') expect(s.detail).toContain(key)
+  })
+
+  it('rejects an empty per_horizon', () => {
+    const s = parseBacktest({ ...valid, per_horizon: {} })
+    expect(s.kind).toBe('malformed')
+    if (s.kind === 'malformed') expect(s.detail).toContain('nothing was evaluated')
+  })
+
+  it('rejects a malformed leakage_check', () => {
+    const s = parseBacktest({ ...valid, leakage_check: { enforced: 'yes' } })
+    expect(s.kind).toBe('malformed')
+  })
+
+  it('rejects non-array limitations', () => {
+    expect(parseBacktest({ ...valid, limitations: 'none' }).kind).toBe('malformed')
+  })
+})
+
+describe('helpers', () => {
+  it('orders horizons numerically, not lexically', () => {
+    const many = { ...valid, per_horizon: { '10': valid.per_horizon['1'], '2': valid.per_horizon['2'], '1': valid.per_horizon['1'] } }
+    const s = parseBacktest(many)
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    expect(horizonKeys(s.data)).toEqual(['1', '2', '10'])
+  })
+
+  it('collects every method named across horizons', () => {
+    const s = parseBacktest(valid)
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    expect(methodsIn(s.data).sort()).toEqual(['gaffer', 'naive'])
+  })
+
+  it('surfaces withdrawn baselines with the numbers they used to show', () => {
+    const s = parseBacktest(valid)
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    const w = withdrawn(s.data)
+    expect(w).toHaveLength(1)
+    expect(w[0].key).toBe('fpl_xp')
+    expect(w[0].label).toBe("FPL's own xP")
+    expect(w[0].entry.previously_reported.xi_points_per_gw).toBe(84.2)
+    expect(withdrawalConsequence(s.data)).toContain('policy choice')
+  })
+
+  it('treats the consequence string as prose, never as a withdrawn baseline', () => {
+    const s = parseBacktest(valid)
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    expect(withdrawn(s.data).map((w) => w.key)).not.toContain('consequence')
+  })
+
+  it('has nothing to surface when no baseline was withdrawn', () => {
+    const s = parseBacktest({ ...valid, withdrawn_baselines: undefined })
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    expect(withdrawn(s.data)).toEqual([])
+    expect(withdrawalConsequence(s.data)).toBeNull()
+  })
+
+  it('surfaces every model candidate, not just the rejected one', () => {
+    // Rendering GBM alone is how the summary came to say trained models lose
+    // every decision metric when ridge beat the heuristic at h=1.
+    const s = parseBacktest(valid)
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    const cs = modelCandidates(s.data)
+    expect(cs.map((c) => c.candidate)).toEqual(['gbm', 'ridge'])
+    expect(cs.map((c) => c.decision)).toEqual(['rejected', 'inconclusive'])
+  })
+
+  it('labels rejected and inconclusive differently', () => {
+    expect(DECISION_LABELS.rejected).not.toBe(DECISION_LABELS.inconclusive)
+    expect(DECISION_LABELS.inconclusive).toContain('not selected')
+  })
+
+  it('records ridge as beating the heuristic at h=1', () => {
+    const s = parseBacktest(valid)
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    const ridge = modelCandidates(s.data).find((c) => c.candidate === 'ridge')!
+    expect(ridge.per_horizon!['1'].diff).toBeGreaterThan(0)
+    expect(ridge.decision).not.toBe('rejected')
+  })
+
+  it('has no candidates when the artifact carries none', () => {
+    const s = parseBacktest({ ...valid, model_candidates: undefined })
+    if (s.kind !== 'ok') throw new Error('expected ok')
+    expect(modelCandidates(s.data)).toEqual([])
+  })
+
+  it('reports leakage state honestly', () => {
+    const ok = parseBacktest(valid)
+    if (ok.kind !== 'ok') throw new Error('expected ok')
+    expect(leakageClean(ok.data)).toBe(true)
+
+    const dirty = parseBacktest({
+      ...valid,
+      leakage_check: { enforced: true, post_match_fields_in_features: ['minutes'], policy: 'x' },
+    })
+    if (dirty.kind !== 'ok') throw new Error('expected ok')
+    expect(leakageClean(dirty.data)).toBe(false)
+
+    const unenforced = parseBacktest({
+      ...valid, leakage_check: { enforced: false, post_match_fields_in_features: [], policy: 'x' },
+    })
+    if (unenforced.kind !== 'ok') throw new Error('expected ok')
+    expect(leakageClean(unenforced.data)).toBe(false)
+  })
+})

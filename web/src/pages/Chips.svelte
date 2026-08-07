@@ -2,9 +2,17 @@
   import type { Bundle } from '../lib/data'
   import type { Player } from '../lib/types'
   import { loadCurrent, lineupErrors } from '../lib/squad'
+  import { parseStrategy, CHIP_LABELS } from '../lib/strategy'
   import Icon from '../components/Icon.svelte'
 
   let { bundle, onnav }: { bundle: Bundle; onnav: (r: string) => void } = $props()
+
+  // T-20: when the pipeline shipped a real chip evaluation — chips valued in the
+  // same simulated football as the squad, against the season's actual chip
+  // windows — that is the answer. The per-GW projection below stays as the
+  // *shape* of the next few weeks, but it is no longer the recommendation.
+  const stratState = $derived(parseStrategy(bundle.strategy))
+  const chipPlan = $derived(stratState.kind === 'ok' ? stratState.data.chips : null)
 
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
   const plan = loadCurrent()
@@ -79,8 +87,36 @@
     </p>
   </div>
 
-  <!-- chip recommendations -->
-  <div class="grid sm:grid-cols-3 gap-3">
+  {#if chipPlan}
+    <!-- the real evaluation: same scenarios as the squad, real chip windows -->
+    <div class="card p-4">
+      <div class="flex items-baseline justify-between gap-2 flex-wrap">
+        <h3 class="font-bold text-sm">Recommendation</h3>
+        {#if chipPlan.recommendation !== 'hold'}
+          <span class="text-sm font-bold text-brand-light tabular-nums">+{chipPlan.expected_gain.toFixed(1)} pts</span>
+        {/if}
+      </div>
+      <div class="text-2xl font-black mt-1">
+        {CHIP_LABELS[chipPlan.recommendation] ?? chipPlan.recommendation}{#if chipPlan.gameweek}
+          <span class="text-lg text-muted font-bold">GW{chipPlan.gameweek}</span>{/if}
+      </div>
+      <p class="text-sm text-muted mt-1">{chipPlan.reason}</p>
+      <div class="flex gap-1.5 flex-wrap mt-3">
+        {#each chipPlan.available as w}
+          <span class="chip chip-info">{CHIP_LABELS[w.name] ?? w.name} · GW{w.start_event}–{w.stop_event}</span>
+        {/each}
+        {#each chipPlan.used as u}
+          <span class="chip chip-bad">{CHIP_LABELS[u] ?? u} · played</span>
+        {/each}
+      </div>
+      <button class="text-[11px] text-accent-light hover:underline mt-3" onclick={() => onnav('strategy')}>
+        Full breakdown, assumptions and confidence intervals →
+      </button>
+    </div>
+  {/if}
+
+  <!-- chip recommendations (per-GW shape; superseded above when a real plan ships) -->
+  <div class="grid sm:grid-cols-3 gap-3" class:opacity-70={!!chipPlan}>
     <div class="card p-3">
       <div class="flex items-baseline justify-between">
         <div class="text-xs font-bold uppercase text-brand-light mb-1">Triple Captain</div>
@@ -138,7 +174,8 @@
     <p class="text-[11px] text-muted2 mt-3">
       Pre-season every team has one fixture, so weeks look flat; double/blank gameweeks —
       which supercharge Bench Boost &amp; Free Hit — are announced later and this chart
-      updates automatically. First chip set must be used by the GW19 deadline.
+      updates automatically.
+      {#if chipPlan}Chip windows above come from the live API, not a hard-coded split.{/if}
     </p>
   </div>
 </div>

@@ -1,0 +1,485 @@
+"""League intelligence: rivals, effective ownership, placing probabilities (T-17/T-18).
+
+Global ``selected_by_percent`` is a percentage across millions of managers. What
+moves your position in a mini-league is ownership *inside that league*, which in
+a four-person league takes exactly four values and is fully observable from three
+API calls. The two are different quantities that happen to share a name, and this
+module keeps them apart.
+
+Everything here is public and unauthenticated. Rival picks are only readable once
+a gameweek's deadline has passed, so "unknown" is a first-class state and is never
+rendered as "owns nothing".
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+import numpy as np
+
+LEAGUE_VERSION = "league-1.0"
+
+# --- classification --------------------------------------------------------
+TINY = "tiny_private"        # every rival readable; exact EO
+SMALL = "small_private"
+MEDIUM = "medium"
+LARGE = "large"
+GLOBAL = "global"            # auto-joined system leagues (Overall, a club, a region)
+
+#: How many rival squads we will fetch for each class. Unbounded fetching of a
+#: 10-million-entry league is not a strategy.
+COHORT_LIMIT = {TINY: 50, SMALL: 50, MEDIUM: 50, LARGE: 60, GLOBAL: 60}
+
+
+def classify(size: int | None, league_type: str | None) -> str:
+    """Classify by what we can actually know, not by size alone."""
+    if league_type == "s":
+        return GLOBAL
+    if size is None:
+        return MEDIUM
+    if size <= 8:
+        return TINY
+    if size <= 30:
+        return SMALL
+    if size <= 500:
+        return MEDIUM
+    return LARGE
+
+
+# --- data quality ----------------------------------------------------------
+PICKS_OK = "revealed"
+PICKS_NONE_YET = "no_public_picks_yet"
+PICKS_STALE = "stale"
+PICKS_FAILED = "fetch_failed"
+PICKS_PRIVATE = "unavailable"
+
+
+@dataclass
+class RivalEntry:
+    entry_id: int
+    entry_name: str = ""
+    manager: str = ""
+    rank: int | None = None
+    total: int = 0
+    event_total: int = 0
+    starting: list[int] = field(default_factory=list)
+    bench: list[int] = field(default_factory=list)
+    captain: int | None = None
+    vice: int | None = None
+    picks_event: int | None = None
+    picks_status: str = PICKS_NONE_YET
+    chips_used: list[str] = field(default_factory=list)
+    hits: int = 0
+
+    @property
+    def has_picks(self) -> bool:
+        return self.picks_status in (PICKS_OK, PICKS_STALE) and bool(self.starting)
+
+    @property
+    def squad(self) -> list[int]:
+        return list(self.starting) + list(self.bench)
+
+
+@dataclass
+class LeagueState:
+    league_id: int
+    name: str
+    league_type: str
+    classification: str
+    size: int | None
+    me: int
+    entries: list[RivalEntry] = field(default_factory=list)
+    cohort_truncated: bool = False
+    source_event: int | None = None
+    note: str = ""
+
+    @property
+    def rivals(self) -> list[RivalEntry]:
+        return [e for e in self.entries if e.entry_id != self.me]
+
+    @property
+    def my_entry(self) -> RivalEntry | None:
+        return next((e for e in self.entries if e.entry_id == self.me), None)
+
+    @property
+    def coverage(self) -> float:
+        """Share of rivals whose squad we actually know."""
+        rv = self.rivals
+        if not rv:
+            return 0.0
+        return sum(1 for r in rv if r.has_picks) / len(rv)
+
+    def data_quality(self) -> dict[str, Any]:
+        rv = self.rivals
+        return {
+            "rivals": len(rv),
+            "with_picks": sum(1 for r in rv if r.has_picks),
+            "coverage_pct": round(100.0 * self.coverage, 1),
+            "cohort_truncated": self.cohort_truncated,
+            "picks_source_event": self.source_event,
+            "statuses": sorted({r.picks_status for r in rv}) or [PICKS_NONE_YET],
+        }
+
+
+# ---------------------------------------------------------------------------
+# Ingestion
+# ---------------------------------------------------------------------------
+
+def _entry_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Standings plus pre-season `new_entries`, de-duplicated by entry id."""
+    rows, seen = [], set()
+    for block in ("standings", "new_entries"):
+        for r in (payload.get(block) or {}).get("results", []) or []:
+            eid = r.get("entry")
+            if eid is None or eid in seen:
+                continue
+            seen.add(eid)
+            rows.append(r)
+    return rows
+
+
+def fetch_league(
+    client: Any, league_id: int, me: int, *, squad_event: int | None,
+    max_pages: int = 20,
+) -> LeagueState:
+    """Ingest one league. Bounded: never walks an unbounded global league."""
+    first = client.league_classic(league_id, 1)
+    meta = first.get("league", {}) or {}
+    rows = _entry_rows(first)
+    truncated = False
+    page = 1
+    while (first.get("standings") or {}).get("has_next") and page < max_pages:
+        page += 1
+        nxt = client.league_classic(league_id, page)
+        rows += _entry_rows(nxt)
+        first = nxt
+        if not (nxt.get("standings") or {}).get("has_next"):
+            break
+    else:
+        if (first.get("standings") or {}).get("has_next"):
+            truncated = True
+
+    # No rows is "not published yet", not "a league of zero people" — the global
+    # leagues publish no standings at all before GW1. Recording 0 would make the
+    # league look measured when nothing has been measured.
+    size = (len(rows) or None) if not truncated else None
+    cls = classify(size, meta.get("league_type"))
+
+    state = LeagueState(
+        league_id=league_id, name=meta.get("name", str(league_id)),
+        league_type=meta.get("league_type", "?"), classification=cls,
+        size=size, me=me, cohort_truncated=truncated, source_event=squad_event,
+        note="" if rows else "no standings published for this league yet",
+    )
+
+    # Bounded cohort: me, plus the nearest rivals by rank.
+    limit = COHORT_LIMIT.get(cls, 50)
+    rows.sort(key=lambda r: (r.get("rank") or 10**9))
+    chosen = rows[:limit]
+    if not any(r.get("entry") == me for r in chosen):
+        mine = next((r for r in rows if r.get("entry") == me), None)
+        if mine:
+            chosen = [mine] + chosen[: limit - 1]
+    if len(chosen) < len(rows):
+        state.cohort_truncated = True
+        state.note = (
+            f"{len(rows)} entries; compared against the nearest {len(chosen)}."
+        )
+
+    for r in chosen:
+        e = RivalEntry(
+            entry_id=r["entry"],
+            entry_name=r.get("entry_name") or "",
+            manager=" ".join(x for x in (
+                r.get("player_first_name"), r.get("player_last_name")) if x)
+            or r.get("player_name", ""),
+            rank=r.get("rank"), total=r.get("total") or 0,
+            event_total=r.get("event_total") or 0,
+        )
+        _attach_picks(client, e, squad_event)
+        state.entries.append(e)
+    return state
+
+
+def _attach_picks(client: Any, entry: RivalEntry, squad_event: int | None) -> None:
+    """Read a rival's squad, respecting the public-picks timing rules."""
+    if squad_event is None:
+        entry.picks_status = PICKS_NONE_YET
+        return
+    try:
+        payload = client.entry_picks(entry.entry_id, squad_event)
+    except Exception as exc:  # noqa: BLE001 - any transport/HTTP failure
+        code = getattr(getattr(exc, "response", None), "status_code", None)
+        entry.picks_status = PICKS_PRIVATE if code == 404 else PICKS_FAILED
+        return
+    picks = (payload or {}).get("picks")
+    if not isinstance(picks, list) or not picks:
+        entry.picks_status = PICKS_FAILED
+        return
+    entry.picks_event = squad_event
+    entry.picks_status = PICKS_OK
+    for p in picks:
+        pid = p.get("element")
+        if not isinstance(pid, int):
+            continue
+        if (p.get("position") or 99) <= 11:
+            entry.starting.append(pid)
+        else:
+            entry.bench.append(pid)
+        if p.get("is_captain"):
+            entry.captain = pid
+        if p.get("is_vice_captain"):
+            entry.vice = pid
+    eh = payload.get("entry_history") or {}
+    entry.hits = int(eh.get("event_transfers_cost") or 0)
+    if payload.get("active_chip"):
+        entry.chips_used.append(str(payload["active_chip"]))
+
+
+# ---------------------------------------------------------------------------
+# League-scoped ownership
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Ownership:
+    player_id: int
+    owners: int
+    captains: int
+    n_rivals: int
+
+    @property
+    def ownership(self) -> float:
+        return self.owners / self.n_rivals if self.n_rivals else 0.0
+
+    @property
+    def effective(self) -> float:
+        """EO = share owning + share captaining. A captain counts twice."""
+        if not self.n_rivals:
+            return 0.0
+        return (self.owners + self.captains) / self.n_rivals
+
+    @property
+    def captain_eo(self) -> float:
+        return self.captains / self.n_rivals if self.n_rivals else 0.0
+
+
+def league_ownership(state: LeagueState) -> dict[int, Ownership]:
+    """Ownership across the rivals whose squads we actually know.
+
+    Computed over rivals with revealed picks only — inferring from an unknown
+    squad would invent the very number this exists to measure.
+    """
+    known = [r for r in state.rivals if r.has_picks]
+    n = len(known)
+    out: dict[int, Ownership] = {}
+    for r in known:
+        for pid in r.starting:
+            o = out.setdefault(pid, Ownership(pid, 0, 0, n))
+            o.owners += 1
+        if r.captain is not None:
+            o = out.setdefault(r.captain, Ownership(r.captain, 0, 0, n))
+            o.captains += 1
+    for o in out.values():
+        o.n_rivals = n
+    return out
+
+
+def shields_and_differentials(
+    state: LeagueState, my_squad: list[int], my_captain: int | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """What protects your position, and what can move it."""
+    own = league_ownership(state)
+    mine = set(my_squad)
+    shields, diffs, threats = [], [], []
+    for pid, o in own.items():
+        entry = {"player_id": pid, "owners": o.owners, "n_rivals": o.n_rivals,
+                 "ownership_pct": round(100 * o.ownership, 1),
+                 "effective_ownership_pct": round(100 * o.effective, 1),
+                 "captain_eo_pct": round(100 * o.captain_eo, 1)}
+        if pid in mine and o.ownership >= 0.5:
+            shields.append(entry)
+        elif pid not in mine:
+            threats.append(entry)
+    for pid in mine:
+        o = own.get(pid)
+        if o is None or o.ownership == 0:
+            diffs.append({"player_id": pid, "owners": 0,
+                          "n_rivals": len([r for r in state.rivals if r.has_picks]),
+                          "ownership_pct": 0.0, "effective_ownership_pct": 0.0,
+                          "captain_eo_pct": 0.0})
+    key = lambda e: -e["effective_ownership_pct"]  # noqa: E731
+    return {
+        "shields": sorted(shields, key=key)[:10],
+        "differentials": sorted(diffs, key=lambda e: e["player_id"])[:10],
+        "threats": sorted(threats, key=key)[:10],
+        "my_captain_eo_pct": round(
+            100 * own[my_captain].captain_eo, 1) if my_captain in own else 0.0,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Placing probabilities
+# ---------------------------------------------------------------------------
+
+#: A placing probability that could not be computed. Consumers must render this
+#: as "unknown" — never as a number, and above all never as 100%.
+BASIS_UNAVAILABLE = "unavailable"
+
+
+@dataclass
+class PlacingResult:
+    p_first: float
+    p_target: float
+    target: int
+    expected_position: float
+    n_sims: int
+    ci_halfwidth: float
+    basis: str
+    coverage_pct: float
+    caveats: list[str] = field(default_factory=list)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "p_first": round(self.p_first, 4),
+            "p_target": round(self.p_target, 4),
+            "target_position": self.target,
+            "expected_position": round(self.expected_position, 2),
+            "simulations": self.n_sims,
+            "ci95_halfwidth": round(self.ci_halfwidth, 4),
+            "basis": self.basis,
+            "available": self.basis != BASIS_UNAVAILABLE,
+            "rival_coverage_pct": self.coverage_pct,
+            "caveats": self.caveats,
+        }
+
+
+def placing_probabilities(
+    scen: Any, state: LeagueState, my_starting: list[int],
+    my_captain: int | None, *, target: int = 1,
+    gameweeks_remaining: int = 1, rng_seed: int = 5,
+) -> PlacingResult:
+    """P(finishing at or above ``target``) under shared football scenarios.
+
+    The user and every rival are scored under the SAME simulated matches, so a
+    goal that helps you is the same goal that helps them.
+
+    Only rivals with revealed squads are simulated; the rest are carried at their
+    current points with a widening uncertainty band. Coverage is reported so a
+    thin sample cannot masquerade as a precise probability.
+    """
+    known = [r for r in state.rivals if r.has_picks]
+    caveats: list[str] = []
+    n = getattr(scen, "n_sims", 0)
+    if n == 0:
+        caveats.append("no scenarios available")
+        return PlacingResult(0.0, 0.0, target, 0.0, 0, 1.0, BASIS_UNAVAILABLE,
+                             round(100 * state.coverage, 1), caveats)
+    if not state.rivals:
+        # Nobody to finish above or below. Pre-season the global leagues publish
+        # no standings at all, and simulating an empty field returns "you finish
+        # first in every scenario" — a 100% chance of winning the Overall league.
+        # The honest answer is that there is no field yet, not that you have won.
+        return PlacingResult(
+            0.0, 0.0, target, 0.0, n, 1.0, BASIS_UNAVAILABLE,
+            round(100 * state.coverage, 1),
+            ["no rivals are published in this league yet, so there is no field "
+             "to place against"],
+        )
+
+    me = state.my_entry
+    my_base = float(me.total) if me else 0.0
+    mine = scen.squad_points(my_starting, captain=my_captain) + my_base
+
+    rng = np.random.default_rng(rng_seed)
+    cols = [mine]
+    for r in state.rivals:
+        if r.has_picks:
+            cols.append(scen.squad_points(r.starting, captain=r.captain)
+                        + float(r.total) - r.hits)
+        else:
+            # Unknown squad: carry their points and widen with the horizon
+            # rather than pretending they own nothing.
+            spread = 12.0 * max(1, gameweeks_remaining) ** 0.5
+            cols.append(float(r.total) + rng.normal(mine.mean() - my_base, spread, n))
+    if len(state.rivals) > len(known):
+        caveats.append(
+            f"{len(state.rivals) - len(known)} of {len(state.rivals)} rival squads "
+            "are unknown and were modelled as a distribution, not a team")
+    if state.cohort_truncated:
+        caveats.append(state.note or "compared against a bounded cohort")
+    if gameweeks_remaining > 1:
+        caveats.append(
+            "Gaffer's multi-week mean projections are materially weaker than its "
+            "one-week ones, so probabilities beyond the next gameweek are "
+            "directional only")
+
+    mat = np.vstack(cols)                       # (1 + rivals, n_sims)
+    better = (mat[1:] > mat[0]).sum(axis=0)     # rivals finishing above me
+    position = better + 1
+    p_first = float((position == 1).mean())
+    p_target = float((position <= target).mean())
+    se = float(np.sqrt(max(p_target * (1 - p_target), 1e-12) / n))
+    return PlacingResult(
+        p_first=p_first, p_target=p_target, target=target,
+        expected_position=float(position.mean()), n_sims=n,
+        ci_halfwidth=1.96 * se, basis="shared fixture scenarios",
+        coverage_pct=round(100 * state.coverage, 1), caveats=caveats,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Posture
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Posture:
+    stance: str            # protect | neutral | chase | desperate
+    reason: str
+    variance_preference: float   # -1 minimise .. +1 maximise
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"stance": self.stance, "reason": self.reason,
+                "variance_preference": round(self.variance_preference, 3)}
+
+
+def posture(
+    *, points_gap: float, gameweeks_remaining: int, league_size: int,
+    target: int = 1, coverage: float = 1.0,
+) -> Posture:
+    """Risk posture as a function of the situation, not a fixed dial.
+
+    Trailing with little time left means variance is your friend; leading means
+    it is your enemy. The old template/balanced/differential dial encoded neither.
+    """
+    if coverage < 0.34:
+        return Posture("neutral",
+                       "too little rival data to justify departing from expected "
+                       "points", 0.0)
+    horizon = max(1, gameweeks_remaining)
+    # Roughly how many points a gameweek's variance can swing.
+    swing = 18.0 * horizon ** 0.5
+    z = points_gap / swing if swing else 0.0
+    if z >= 1.0:
+        return Posture("protect",
+                       f"{points_gap:.0f} ahead with {horizon} GW(s) left "
+                       f"({z:.1f} swings): reduce variance", -min(1.0, z / 2))
+    if z <= -1.5:
+        return Posture("desperate",
+                       f"{abs(points_gap):.0f} behind with {horizon} GW(s) left: "
+                       "only high variance closes this", 1.0)
+    if z <= -0.4:
+        return Posture("chase",
+                       f"{abs(points_gap):.0f} behind with {horizon} GW(s) left: "
+                       "take differentials", min(1.0, -z / 1.5))
+    return Posture("neutral",
+                   f"within {abs(points_gap):.0f} points with {horizon} GW(s) "
+                   "left: expected points is the right objective", 0.0)
+
+
+def points_gap_to_leader(state: LeagueState) -> float:
+    me = state.my_entry
+    if me is None or not state.entries:
+        return 0.0
+    best = max(e.total for e in state.entries)
+    return float(me.total - best)

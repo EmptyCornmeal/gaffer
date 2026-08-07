@@ -62,17 +62,47 @@
   function best(get: (p: Player) => number): number {
     return Math.max(...players.map(get))
   }
+
+  // Focus management, matching PlayerDetail: focus the close button on open and
+  // keep Tab inside the dialog (WCAG 2.4.3), with Escape to dismiss.
+  let closeBtn = $state<HTMLButtonElement | null>(null)
+  let card = $state<HTMLElement | null>(null)
+  $effect(() => {
+    closeBtn?.focus()
+  })
+  function trap(e: KeyboardEvent) {
+    if (e.key === 'Escape') { e.preventDefault(); onclose(); return }
+    if (e.key !== 'Tab' || !card) return
+    const f = card.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+    if (!f.length) return
+    const first = f[0]
+    const last = f[f.length - 1]
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+  }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick={onclose} role="presentation">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <!-- A real button, not a div with a click handler: the backdrop is genuinely
+       an interactive control (it dismisses the dialog) and must be reachable
+       and operable by keyboard like one. -->
+  <button
+    class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+    aria-label="Close comparison"
+    onclick={onclose}
+  ></button>
   <div
+    bind:this={card}
     class="card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 relative"
-    onclick={(e) => e.stopPropagation()}
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
     aria-label="Player comparison"
+    onkeydown={trap}
   >
-    <button onclick={onclose} aria-label="Close" class="absolute top-3 right-3 text-muted hover:text-text text-xl leading-none">✕</button>
+    <button bind:this={closeBtn} onclick={onclose} aria-label="Close" class="absolute top-3 right-3 min-w-11 min-h-11 text-muted hover:text-text text-xl leading-none">✕</button>
     <h2 class="font-bold text-lg mb-3">Compare players</h2>
 
     <div class="grid gap-4 md:grid-cols-2">

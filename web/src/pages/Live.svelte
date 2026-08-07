@@ -1,0 +1,252 @@
+<script lang="ts">
+  import { loadLiveSnapshot } from '../lib/data'
+  import {
+    parseLive, FIXTURE_STATE_LABELS, LIVE_UNAVAILABLE_LABELS, signed,
+    type LiveState,
+  } from '../lib/weekly'
+  import { Poller, freshnessLabel, isStale } from '../lib/refresh'
+  import Icon from '../components/Icon.svelte'
+
+  let { onpick }: { onpick: (id: number) => void } = $props()
+
+  // live.json is deliberately NOT part of the cached bundle: it is only true for
+  // the moment it was fetched. The poller below fetches it fresh on mount and
+  // then on its own schedule.
+  let raw = $state<unknown>(null)
+  let status = $state<'idle' | 'loading' | 'ok' | 'stale' | 'error'>('idle')
+  let lastSuccess = $state<number | null>(null)
+  let lastError = $state<string | null>(null)
+  let tick = $state(Date.now())
+
+  const parsed = $derived(parseLive(raw))
+  const s = $derived<LiveState | null>(parsed.kind === 'ok' ? parsed.data : null)
+  const anyLive = $derived(
+    !!s?.fixtures?.some((f) => f.state === 'live' || f.state === 'half_time'),
+  )
+  const stale = $derived(isStale(lastSuccess, tick))
+
+  $effect(() => {
+    const poller = new Poller<unknown>(
+      () => loadLiveSnapshot().then((v) => {
+        if (v == null) throw new Error('live.json unavailable')
+        return v
+      }),
+      (st) => {
+        if (st.data != null) raw = st.data
+        status = st.status
+        lastSuccess = st.lastSuccess
+        lastError = st.lastError
+      },
+      {},
+      // Stop polling once every fixture is done: there is nothing left to move.
+      () => !(s?.fixture_summary?.all_finished && s?.fixture_summary?.bonus_final),
+    )
+    poller.start()
+    const onVis = () => { if (!document.hidden) poller.wake() }
+    document.addEventListener('visibilitychange', onVis)
+    const t = setInterval(() => (tick = Date.now()), 15_000)
+    return () => {
+      poller.stop()
+      document.removeEventListener('visibilitychange', onVis)
+      clearInterval(t)
+    }
+  })
+
+  function stateTone(st: string) {
+    if (st === 'live' || st === 'half_time') return 'chip-good'
+    if (st === 'awaiting_bonus') return 'chip-warn'
+    if (st === 'postponed' || st === 'abandoned') return 'chip-bad'
+    return 'chip-info'
+  }
+</script>
+
+<div class="rise flex flex-col gap-4 max-w-3xl mx-auto w-full">
+  <div class="flex items-start justify-between gap-2 flex-wrap">
+    <div>
+      <h2 class="font-bold text-lg flex items-center gap-2">
+        <Icon name="flame" size={18} /> Live
+        {#if anyLive}<span class="chip chip-good">in play</span>{/if}
+      </h2>
+      <p class="text-sm text-muted">
+        Confirmed, provisional and predicted points, kept apart.
+      </p>
+    </div>
+    <div class="text-right">
+      <div class="text-[11px] text-muted2" aria-live="polite">
+        Updated {freshnessLabel(lastSuccess, tick)}
+      </div>
+      {#if stale && lastSuccess != null}
+        <span class="chip chip-warn">stale</span>
+      {/if}
+      {#if status === 'loading'}<span class="chip chip-info">refreshing…</span>{/if}
+    </div>
+  </div>
+
+  {#if lastError && s}
+    <div class="text-xs chip-warn rounded-lg px-3 py-2">
+      Last refresh failed ({lastError}). Showing the last good state.
+    </div>
+  {/if}
+
+  {#if parsed.kind === 'missing' && status !== 'loading'}
+    <div class="card p-6 text-center">
+      <h3 class="font-bold">No live data published</h3>
+      <p class="text-sm text-muted mt-2">
+        Run the pipeline during a gameweek to generate <code>live.json</code>.
+      </p>
+    </div>
+  {:else if parsed.kind === 'unsupported' || parsed.kind === 'malformed'}
+    <div class="card p-6">
+      <h3 class="font-bold text-red">This build can't render that live state</h3>
+      <p class="text-sm text-muted mt-2">{parsed.detail}</p>
+    </div>
+  {:else if s && !s.available}
+    <div class="card p-6 text-center">
+      <h3 class="font-bold">Nothing to score yet</h3>
+      <p class="text-sm text-muted mt-2">
+        {LIVE_UNAVAILABLE_LABELS[s.unavailable_reason ?? ''] ?? s.note ?? ''}
+      </p>
+      {#if s.fixture_summary?.total}
+        <p class="text-[11px] text-muted2 mt-2">
+          {s.fixture_summary.total} fixture(s) in GW{s.gameweek}.
+        </p>
+      {/if}
+    </div>
+  {:else if s?.squad}
+    <!-- ── the three kinds of points, never merged ─────────────────── -->
+    <section class="card p-4" aria-labelledby="score">
+      <h3 id="score" class="sr-only">Your live score</h3>
+      <div class="text-center">
+        <div class="text-5xl font-black tabular-nums">{s.squad.current}</div>
+        <div class="text-sm text-muted">
+          projected {s.squad.projected} · {s.squad.players_yet_to_play} yet to play
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+        <div class="rounded-lg bg-bg3 p-2">
+          <div class="text-[10px] uppercase text-muted2 font-bold">Confirmed</div>
+          <div class="text-lg font-black tabular-nums">{s.squad.confirmed}</div>
+        </div>
+        <div class="rounded-lg bg-bg3 p-2 ring-1 ring-yellow/40">
+          <div class="text-[10px] uppercase text-yellow font-bold">Provisional</div>
+          <div class="text-lg font-black tabular-nums">+{s.squad.provisional_bonus}</div>
+        </div>
+        <div class="rounded-lg bg-bg3 p-2">
+          <div class="text-[10px] uppercase text-muted2 font-bold">Predicted</div>
+          <div class="text-lg font-black tabular-nums">+{s.squad.predicted_remaining}</div>
+        </div>
+      </div>
+      <p class="text-[11px] text-muted2 mt-2">{s.separation?.note}</p>
+    </section>
+
+    <!-- ── autosubs ───────────────────────────────────────────────── -->
+    {#if s.squad.autosubs.subs_in.length || s.squad.autosubs.captain_source !== 'captain' || s.squad.autosubs.notes.length}
+      <section class="card p-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-sm">Substitutions</h3>
+          <span class="chip {s.squad.autosubs.provisional ? 'chip-warn' : 'chip-good'}">
+            {s.squad.autosubs.provisional ? 'projected' : 'final'}
+          </span>
+        </div>
+        {#if s.squad.autosubs.subs_in.length}
+          <p class="text-sm mt-1">
+            {s.squad.autosubs.subs_in.length} substitution(s) applied.
+          </p>
+        {/if}
+        {#if s.squad.autosubs.captain_source === 'vice'}
+          <p class="text-sm text-yellow mt-1">Armband passed to your vice-captain.</p>
+        {:else if s.squad.autosubs.captain_source === 'none'}
+          <p class="text-sm text-red mt-1">
+            Captain and vice both blanked — nobody is multiplied.
+          </p>
+        {/if}
+        <ul class="text-[11px] text-muted2 mt-1 list-disc pl-4">
+          {#each s.squad.autosubs.notes as n}<li>{n}</li>{/each}
+        </ul>
+      </section>
+    {/if}
+
+    <!-- ── the swing ──────────────────────────────────────────────── -->
+    {#if s.largest_swing}
+      <section class="card p-3">
+        <h3 class="font-bold text-sm">Biggest league swing</h3>
+        <p class="text-sm mt-1">
+          <b>{s.largest_swing.name}</b>
+          <span class={s.largest_swing.swing > 0 ? 'text-brand-light' : 'text-red'}>
+            {signed(s.largest_swing.swing, 0)}
+          </span>
+          — {s.largest_swing.note}.
+        </p>
+      </section>
+    {/if}
+
+    <!-- ── rivals ─────────────────────────────────────────────────── -->
+    {#if s.rivals?.length}
+      <section class="card overflow-x-auto">
+        <table class="data">
+          <thead>
+            <tr><th>#</th><th class="!text-left">Manager</th><th>GW</th><th>Total</th><th>Left</th></tr>
+          </thead>
+          <tbody>
+            {#each s.rivals as r (r.entry_id)}
+              <tr class={r.you ? 'bg-brand/10' : ''}>
+                <td>{r.provisional_position}</td>
+                <td class="!text-left">{r.name}{#if r.you}<span class="chip chip-good ml-1">you</span>{/if}</td>
+                <td class="tabular-nums font-semibold">{r.gw_points}</td>
+                <td class="tabular-nums">{r.current}</td>
+                <td class="tabular-nums text-muted2">{r.yet_to_play}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+        <p class="text-[11px] text-muted2 p-2">
+          Positions are provisional: they include bonus that is not yet confirmed.
+        </p>
+      </section>
+    {/if}
+
+    <!-- ── players ────────────────────────────────────────────────── -->
+    {#if s.players?.length}
+      <section class="card overflow-x-auto">
+        <table class="data">
+          <thead>
+            <tr>
+              <th class="!text-left">Player</th><th>Min</th><th>Conf</th>
+              <th>Prov</th><th>Pred</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each s.players as p (p.id)}
+              <tr class={p.in_xi ? '' : 'opacity-60'}>
+                <td class="!text-left">
+                  <button class="min-h-11 text-left" onclick={() => onpick(p.id)}>
+                    {p.name}{#if p.is_captain}<span class="chip chip-good ml-1">C</span>{/if}
+                    {#if p.yet_to_play}<span class="chip chip-info ml-1">to play</span>{/if}
+                  </button>
+                </td>
+                <td class="tabular-nums text-muted2">{p.minutes}</td>
+                <td class="tabular-nums font-semibold">{p.confirmed}</td>
+                <td class="tabular-nums text-yellow">{p.provisional ? `+${p.provisional}` : '—'}</td>
+                <td class="tabular-nums text-muted2">{p.predicted ? `+${p.predicted}` : '—'}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </section>
+    {/if}
+  {/if}
+
+  <!-- ── fixtures ─────────────────────────────────────────────────── -->
+  {#if s?.fixtures?.length}
+    <section class="card p-3">
+      <h3 class="font-bold text-sm mb-2">Fixtures</h3>
+      <div class="flex flex-wrap gap-1.5">
+        {#each s.fixtures as f (f.id)}
+          <span class="chip {stateTone(f.state)}">
+            {FIXTURE_STATE_LABELS[f.state]}{#if f.state === 'live'} {f.minutes}'{/if}
+          </span>
+        {/each}
+      </div>
+    </section>
+  {/if}
+</div>

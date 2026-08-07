@@ -1,10 +1,31 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
+  import type { NewsItem } from '../lib/types'
   import { mdLite } from '../lib/mdlite'
   import Icon from '../components/Icon.svelte'
 
   let { bundle }: { bundle: Bundle } = $props()
   const news = $derived(bundle.news)
+  const claims = $derived(news?.claims ?? [])
+  // Resolve a claim's cited ids back to the items that were actually fetched.
+  // The claim never carries a URL, so a generated link is not representable.
+  const byId = $derived(new Map((news?.items ?? []).map((i) => [i.id, i])))
+  const sourcesFor = (ids: string[]): NewsItem[] =>
+    ids.map((i) => byId.get(i)).filter((i): i is NewsItem => i !== undefined)
+
+  const CERTAINTY: Record<string, string> = {
+    confirmed: 'chip-ok', reported: 'chip-info', rumoured: 'chip-warn',
+  }
+  const FALLBACK: Record<string, string> = {
+    no_credentials: 'no AI key configured',
+    no_source_items: 'no stories fetched',
+    provider_error: 'the AI call failed',
+    empty_output: 'the AI returned nothing',
+    malformed_output: 'the AI output could not be parsed',
+    grounding_rejected: 'no generated claim could be traced to a source',
+  }
+  const fallbackText = (r: string | null) =>
+    r ? (FALLBACK[r.split(':')[0]] ?? r) : ''
 
   // Relative time reads faster in a feed than a full RSS timestamp.
   function relTime(pub: string): string {
@@ -20,17 +41,59 @@
 <div class="rise flex flex-col gap-4 max-w-3xl mx-auto">
   <div class="flex items-center justify-between">
     <h2 class="font-bold text-lg flex items-center gap-2"><Icon name="news" size={18} /> Transfer News</h2>
-    {#if news}<span class="text-xs text-muted2">{news.count} stories · {news.source.startsWith('ai') ? 'AI digest' : 'headline feed'}</span>{/if}
+    {#if news}
+      <span class="text-xs text-muted2">
+        {news.count} stories ·
+        {news.source === 'ai' ? 'AI digest' : `headline feed (${fallbackText(news.fallback_reason)})`}
+      </span>
+    {/if}
   </div>
 
   {#if !news || !news.items.length}
     <div class="card p-6 text-center text-muted text-sm">No transfer stories fetched right now — check back after the next refresh.</div>
   {:else}
-    <!-- FPL-angle digest -->
-    <div class="card p-4 border-brand/40 bg-brand/8">
-      <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-1">The FPL angle</div>
-      <div class="verdict text-[15px] leading-relaxed text-text">{@html mdLite(news.digest_md)}</div>
-    </div>
+    <!-- FPL-angle claims, each beside the headlines that support it -->
+    {#if claims.length}
+      <div class="card p-4 border-brand/40 bg-brand/8">
+        <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-2">
+          The FPL angle
+        </div>
+        <ul class="space-y-3">
+          {#each claims as c}
+            <li>
+              <div class="flex flex-wrap items-baseline gap-2">
+                <span class="text-[15px] leading-relaxed">{c.text}</span>
+                <span class="chip {CERTAINTY[c.certainty] ?? 'chip-info'} text-[10px]">
+                  {c.certainty}
+                </span>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-1">
+                {#each sourcesFor(c.source_item_ids) as src}
+                  <a
+                    href={src.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-[11px] text-muted2 underline decoration-dotted hover:text-brand-light"
+                    title={src.title}
+                  >{src.source} ↗</a>
+                {/each}
+              </div>
+            </li>
+          {/each}
+        </ul>
+        {#if news.source === 'ai'}
+          <p class="text-[10px] text-muted2 mt-3">
+            Generated from the headlines below. Every line names its sources, and
+            any claim that could not be traced to one was dropped.
+          </p>
+        {/if}
+      </div>
+    {:else}
+      <div class="card p-4 border-brand/40 bg-brand/8">
+        <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-1">The FPL angle</div>
+        <div class="verdict text-[15px] leading-relaxed text-text">{@html mdLite(news.digest_md)}</div>
+      </div>
+    {/if}
 
     <!-- headline feed -->
     <div class="card divide-y divide-line/60">
@@ -48,5 +111,12 @@
         </a>
       {/each}
     </div>
+
+    {#if news.quarantined?.length}
+      <p class="text-[10px] text-muted2">
+        {news.quarantined.length} feed item{news.quarantined.length === 1 ? '' : 's'}
+        withheld: the text was shaped like an instruction rather than a headline.
+      </p>
+    {/if}
   {/if}
 </div>

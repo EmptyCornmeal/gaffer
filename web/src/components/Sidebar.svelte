@@ -24,6 +24,24 @@
     onclose: () => void
   } = $props()
 
+  let aside = $state<HTMLElement | null>(null)
+  // Tailwind's `lg` breakpoint. Tracked rather than assumed so the drawer is
+  // only made inert on the layout where it is genuinely hidden.
+  let narrow = $state(true)
+  $effect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 1023px)')
+    const sync = () => (narrow = mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  })
+  // Opening the drawer moves focus into it, so a keyboard user is not left
+  // behind on the button that opened it.
+  $effect(() => {
+    if (open && narrow) aside?.querySelector<HTMLElement>('button')?.focus()
+  })
+
   let entry = $state(getEntryId()?.toString() ?? '')
   let leagues = $state(getLeagueIds().join(', '))
   let saved = $state(false)
@@ -46,10 +64,17 @@
   <button class="fixed inset-0 bg-black/50 z-30 lg:hidden" aria-label="close" onclick={onclose}></button>
 {/if}
 
+<!-- `inert` when closed on phones: a drawer that is merely translated off-screen
+     still holds keyboard focus and is still announced by a screen reader, so a
+     Tab press from the topbar disappears into an invisible menu. `lg:` layouts
+     show it permanently, hence the width check rather than a blanket flag. -->
 <aside
+  bind:this={aside}
+  inert={!open && narrow ? true : undefined}
+  aria-hidden={!open && narrow ? 'true' : undefined}
   class="fixed lg:sticky top-0 lg:top-[var(--gaffer-topbar)] left-0 z-40 lg:z-0
          h-svh lg:h-[calc(100svh-var(--gaffer-topbar))] overflow-y-auto
-         bg-bg2 border-r border-line p-4 shrink-0 transition-transform
+         bg-bg2 border-r border-line p-4 shrink-0 transition-transform motion-reduce:transition-none
          {open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0"
   style="width: var(--gaffer-sidebar);"
 >
@@ -107,7 +132,8 @@
   </button>
 
   <p class="mt-4 text-[11px] text-muted2 leading-relaxed">
-    Live-aware. Projections update each refresh; your team &amp; league data are
-    fetched live from the IDs above.
+    Projections are a snapshot from the last pipeline run — see the data-age chip
+    in the header. Your team &amp; league tables are fetched live from the IDs
+    above; the IDs do not change the projections or the recommended squad.
   </p>
 </aside>

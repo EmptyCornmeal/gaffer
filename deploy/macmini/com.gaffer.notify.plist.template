@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Gaffer notification check — launchd TEMPLATE.
+
+  This file is NOT installed and NOT loaded by Gaffer. Render it with
+  ./install.sh <repo-path>, read what it produced, then load it yourself.
+
+  __GAFFER_ROOT__ and __PYTHON__ are placeholders. install.sh validates that
+  both paths exist before writing the rendered plist, so a typo fails at
+  install time rather than silently never running.
+
+  Note there is NO --send flag below. The scheduled job is a dry run. Add
+  --send yourself, in the rendered file, once you have configured a provider
+  and delivered one alert by hand.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.gaffer.notify</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>__PYTHON__</string>
+    <string>-m</string>
+    <string>gaffer.notify</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__GAFFER_ROOT__</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONUTF8</key>
+    <string>1</string>
+    <!-- Credentials do NOT belong here. Put them in __GAFFER_ROOT__/.env
+         (git-ignored) which the pipeline loads at import time. -->
+  </dict>
+
+  <!-- Twice a day: a morning check and an evening one. Deliberately modest.
+       Deadline reminders bucket at 24h/3h/1h and dedupe, so a low frequency
+       still catches each bucket without spamming. -->
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>18</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>__GAFFER_ROOT__/data/notify.log</string>
+  <key>StandardErrorPath</key>
+  <string>__GAFFER_ROOT__/data/notify.err</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

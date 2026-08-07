@@ -72,7 +72,7 @@ def test_squad_is_continuous_across_weeks(conn):
     _seed_projections(conn)
     plan = multiperiod.optimise_path(conn, from_gw=1, horizon=HORIZON, free_transfers=1)
     assert plan.status == "Optimal"
-    for a, b in zip(plan.steps, plan.steps[1:]):
+    for a, b in zip(plan.steps, plan.steps[1:], strict=False):
         added = set(b.squad) - set(a.squad)
         removed = set(a.squad) - set(b.squad)
         assert added == set(b.transfers_in)
@@ -110,7 +110,9 @@ def test_big_upgrade_is_transferred_in(conn):
         if r["id"] not in owned
     )
     for gw in range(1, HORIZON + 1):
-        conn.execute("UPDATE projections SET exp_points=30 WHERE player_id=? AND gw=?", (target, gw))
+        conn.execute(
+            "UPDATE projections SET exp_points=30 WHERE player_id=? AND gw=?", (target, gw)
+        )
     plan = multiperiod.optimise_path(conn, from_gw=1, horizon=HORIZON, free_transfers=1)
     assert plan.status == "Optimal"
     assert any(target in s.squad for s in plan.steps)

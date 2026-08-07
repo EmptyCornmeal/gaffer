@@ -2,6 +2,7 @@
   import type { Meta, Player } from '../lib/types'
   import { countdown } from '../lib/data'
   import { getTheme, setTheme } from '../lib/config'
+  import { classifyFreshness } from '../lib/freshness'
   import { matches } from '../lib/search'
   import { NAV_TABS } from '../lib/nav'
   import Icon from './Icon.svelte'
@@ -41,6 +42,18 @@
     q = ''
   }
   const timeLeft = $derived(meta ? countdown(meta.deadline, now) : '')
+
+  // Data age. The deadline countdown ticks regardless of how old the underlying
+  // projections are, so freshness gets its own always-visible state.
+  const freshness = $derived(classifyFreshness(meta?.generated_at, now))
+  const freshTone = $derived(
+    {
+      fresh: 'text-muted border-line',
+      stale: 'text-yellow border-yellow/40 bg-yellow/10',
+      critical: 'text-red border-red/40 bg-red/10',
+      unknown: 'text-red border-red/40 bg-red/10',
+    }[freshness.state],
+  )
 </script>
 
 <header
@@ -61,6 +74,18 @@
       <span class="text-[9px] uppercase text-muted">{meta.gw_name || 'GW' + meta.current_gw} deadline</span>
       <span class="text-sm font-bold text-accent-light tabular-nums">{timeLeft || '—'}</span>
     </div>
+
+    <span
+      class="shrink-0 flex items-center gap-1 text-[10px] font-semibold rounded-full border px-2 py-0.5 {freshTone}"
+      title={freshness.title}
+      aria-label={freshness.title}
+    >
+      {#if freshness.state !== 'fresh'}
+        <Icon name="hourglass" size={11} />
+      {/if}
+      <span class="hidden sm:inline">{freshness.label}</span>
+      <span class="sm:hidden">{freshness.label.replace('Updated ', '')}</span>
+    </span>
   {/if}
 
   <nav class="hidden lg:flex items-center gap-0.5">

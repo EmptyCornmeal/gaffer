@@ -7,7 +7,7 @@ model reproducible on a clean clone:
     C:\\Python314\\python.exe scripts/fetch_history.py
 
 Writes data/history/merged_gw_<season>.csv and teams_<season>.csv — exactly the
-names gaffer.ml / gaffer.backtest expect.
+names gaffer.histdata expects.
 """
 
 from __future__ import annotations
@@ -19,7 +19,11 @@ import httpx
 from gaffer import config
 
 RAW = "https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data"
-SEASONS = ("2022-23", "2023-24", "2024-25")
+#: 2021-22 exists only to supply 2022-23's priors. It predates FPL's
+#: `expected_goals` / `expected_assists` / `starts` columns, so it contributes a
+#: minutes and team-strength prior and nothing else — which is exactly why
+#: 2022-23 was previously unusable. See docs/MODEL-EVALUATION.md.
+SEASONS = ("2021-22", "2022-23", "2023-24", "2024-25")
 
 
 def _download(client: httpx.Client, url: str, dest) -> None:

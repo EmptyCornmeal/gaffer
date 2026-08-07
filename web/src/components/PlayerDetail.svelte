@@ -15,6 +15,9 @@
     if (player) closeBtn?.focus()
   })
   function trap(e: KeyboardEvent) {
+    // Escape closes, which is the behaviour a screen-reader user expects from
+    // anything announced as a modal dialog.
+    if (e.key === 'Escape') { e.preventDefault(); onclose(); return }
     if (e.key !== 'Tab' || !card) return
     const f = card.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
@@ -73,16 +76,19 @@
 <svelte:window onkeydown={(e) => player && e.key === 'Escape' && onclose()} />
 
 {#if player}
+  <!-- The keydown handler lives on the element that IS the dialog, so the role,
+       the modal semantics and the keyboard behaviour are the same node. -->
   <div
     class="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center"
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
     aria-label="{player.name} details"
+    onkeydown={trap}
   >
     <button class="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-label="Close" onclick={onclose}></button>
     <div
       bind:this={card}
-      onkeydown={trap}
       class="relative w-full sm:max-w-lg card rounded-t-2xl sm:rounded-2xl rise max-h-[90vh] overflow-y-auto"
     >
       <button

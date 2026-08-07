@@ -45,7 +45,45 @@ html { color-scheme: dark; -webkit-text-size-adjust: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  /* `animation-iteration-count` matters as much as the duration: a spinner set
+     to `infinite` still spins forever at 0.001ms per turn, which is worse than
+     the original motion for anyone who asked for less of it. */
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- touch targets (WCAG 2.5.8) ------------------------------------------
+   A 24x24 CSS-pixel minimum for anything tappable. Applied at the element
+   level rather than by auditing every call site, so a new button cannot ship
+   below the floor. Inline controls inside prose opt out via `.tap-inline`. */
+button, [role='button'], a.btn, summary, input[type='range'] {
+  min-height: 24px;
+}
+@media (pointer: coarse) {
+  /* On a real phone the comfortable target is larger than the legal minimum. */
+  button:not(.tap-inline),
+  [role='button']:not(.tap-inline),
+  a.btn { min-height: 44px; }
+}
+
+/* Visible focus must survive on every background, including the brand-coloured
+   ones where a brand-coloured outline would disappear. */
+:focus-visible { outline-color: var(--color-brand); }
+.bg-brand :focus-visible,
+.btn:focus-visible { outline-color: var(--color-text); }
+
+/* Screen-reader-only text that becomes visible when focused (skip link). */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.focus\:not-sr-only:focus {
+  position: static; width: auto; height: auto; padding: inherit; margin: inherit;
+  overflow: visible; clip: auto; white-space: normal;
 }
 
 body {

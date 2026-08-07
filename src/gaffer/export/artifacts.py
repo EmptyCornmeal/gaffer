@@ -15,6 +15,7 @@ from gaffer import config
 from gaffer.io import write_json_atomic
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
 from gaffer.solver.optimize import Solution
+from gaffer.store import db
 
 
 def _teams(conn: sqlite3.Connection) -> dict[int, dict[str, Any]]:
@@ -77,9 +78,30 @@ def _price_pred(net: int, owned_pct: float = 0.0, total_players: int = 0) -> dic
     }
 
 
-def build_meta(conn: sqlite3.Connection, model_version: str) -> dict[str, Any]:
+def run_timestamp() -> str:
+    """One UTC stamp per pipeline run, shared by every artifact it writes.
+
+    Stable ISO 8601 with an explicit ``+00:00`` offset. Artifacts must agree so
+    the contract can assert they came from the same run.
+    """
+    return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def build_meta(
+    conn: sqlite3.Connection,
+    model_version: str,
+    generated_at: str | None = None,
+    settings: config.Settings | None = None,
+) -> dict[str, Any]:
     keys = [
         "current_gw", "gw_name", "deadline", "last_finished_gw", "squad_status",
+        # T-05: the two events are distinct, and the squad's provenance is explicit.
+        "projection_event", "squad_source_event", "squad_status_reason",
+        "squad_retrieved_at",
+        # T-11: executable team state and where each value came from.
+        "bank_source", "bank_exact", "free_transfers_source",
+        "selling_price_confidence", "selling_prices_exact", "selling_prices_total",
+        "recommendation_executable", "team_state_reason",
         "entry_name", "manager_name", "overall_rank", "bank", "team_value", "active_chip",
         "free_transfers", "rule_budget", "rule_club_limit", "rule_squad_size",
         "rule_sell_on_fee", "rule_max_extra_ft", "rule_transfers_cap",
@@ -91,8 +113,13 @@ def build_meta(conn: sqlite3.Connection, model_version: str) -> dict[str, Any]:
         # str(None)/empty from unset entry fields → real null (never leak "None")
         meta[k] = None if v in (None, "", "None") else v
     meta["model_version"] = model_version
-    meta["generated_at"] = datetime.now(UTC).isoformat(timespec="seconds")
+    meta["generated_at"] = generated_at or run_timestamp()
     meta["season"] = config.SEASON
+    # Label the build explicitly so a generic squad can never read as personalised.
+    settings = settings if settings is not None else config.Settings.load()
+    meta["build_mode"] = settings.build_mode
+    meta["entry_id"] = settings.entry_id
+    meta["league_ids"] = list(settings.league_ids)
     return meta
 
 
@@ -294,8 +321,15 @@ def _rec_card(pid: int, idx: dict[int, dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _risk_note() -> str:
+    from gaffer.solver.optimize import RISK_NOTE
+
+    return RISK_NOTE
+
+
 def build_recommendation(
-    conn: sqlite3.Connection, sol: Solution, players_index: list[dict[str, Any]]
+    conn: sqlite3.Connection, sol: Solution, players_index: list[dict[str, Any]],
+    generated_at: str | None = None,
 ) -> dict[str, Any]:
     idx = {p["id"]: p for p in players_index}
 
@@ -305,6 +339,7 @@ def build_recommendation(
     cap = card(sol.captain)
     summary = _summarise(sol, idx)
     return {
+        "generated_at": generated_at or run_timestamp(),
         "mode": sol.meta.get("mode"),
         "status": sol.status,
         "formation": sol.formation,
@@ -487,7 +522,9 @@ def _summarise(sol: Solution, idx: dict[int, dict]) -> str:
     return f"Transfer: {outs} -> {ins}{hit}. Captain {cap}."
 
 
-def build_plan(plan: Any, players_index: list[dict[str, Any]]) -> dict[str, Any] | None:
+def build_plan(
+    plan: Any, players_index: list[dict[str, Any]], generated_at: str | None = None
+) -> dict[str, Any] | None:
     """Serialise a multi-GW transfer path (solver.multiperiod.Plan) for the UI."""
     if plan is None or not getattr(plan, "steps", None):
         return None
@@ -512,6 +549,7 @@ def build_plan(plan: Any, players_index: list[dict[str, Any]]) -> dict[str, Any]
             "bench": cards(bench),
         })
     return {
+        "generated_at": generated_at or run_timestamp(),
         "status": plan.status,
         "mode": plan.meta.get("mode"),
         "horizon": plan.meta.get("horizon"),
@@ -523,15 +561,111 @@ def build_plan(plan: Any, players_index: list[dict[str, Any]]) -> dict[str, Any]
 def build_my_team(
     conn: sqlite3.Connection, from_gw: int, players_index: list[dict[str, Any]]
 ) -> dict[str, Any] | None:
-    owned = [r["player_id"] for r in conn.execute(
-        "SELECT player_id FROM my_squad WHERE gw=?", (from_gw,))]
-    if not owned:
+    """The stored holdings baseline, or None when no squad is known.
+
+    Reads whatever squad is stored rather than filtering on ``from_gw``: the
+    squad comes from the last *readable* event, which is never the event being
+    projected. Returning None means "we do not know the squad" — consumers must
+    not read it as "owns nothing".
+    """
+    rows = conn.execute(
+        "SELECT gw, player_id FROM my_squad ORDER BY gw DESC, player_id"
+    ).fetchall()
+    if not rows:
         return None
+    source_gw = int(rows[0]["gw"])
+    owned = [r["player_id"] for r in rows if int(r["gw"]) == source_gw]
     idx = {p["id"]: p for p in players_index}
     return {
-        "gw": from_gw,
+        # `gw` stays for backwards compatibility with the front-end; the explicit
+        # names say which event is which.
+        "gw": source_gw,
+        "source_event": source_gw,
+        "projection_event": from_gw,
+        "status": db_get_meta(conn, "squad_status"),
         "players": [idx.get(pid, {"id": pid}) for pid in owned],
     }
+
+
+def _mini_card(pid: Any, idx: dict[int, dict[str, Any]]) -> dict[str, Any]:
+    """Just enough to render a name and a shirt — the strategy artifact carries
+    hundreds of these and must not duplicate players.json."""
+    p = idx.get(pid) or {}
+    return {"id": pid, "name": p.get("name", "?"), "team": p.get("team"),
+            "pos": p.get("pos"), "price": p.get("price"), "code": p.get("code"),
+            "team_code": p.get("team_code"), "next_gw_xp": p.get("next_gw_xp")}
+
+
+def build_strategy(
+    strategy: dict[str, Any], players_index: list[dict[str, Any]],
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    """Resolve the strategy layer's player ids into cards for the front-end.
+
+    The strategy module speaks in ids because it is a pure decision layer; the UI
+    needs names and shirts. This is the only place the two are joined.
+    """
+    idx = {p["id"]: p for p in players_index}
+    out = dict(strategy)
+    out["generated_at"] = generated_at or strategy.get("generated_at") or run_timestamp()
+
+    squad = dict(strategy.get("squad") or {})
+    for key in ("starting", "bench"):
+        squad[key] = [_mini_card(i, idx) for i in squad.get(key) or []]
+    if squad.get("captain") is not None:
+        squad["captain"] = _mini_card(squad["captain"], idx)
+    out["squad"] = squad
+
+    def decorate(entries: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+        rows = []
+        for e in entries or []:
+            row = dict(e)
+            row["player"] = _mini_card(e.get("player_id"), idx)
+            rows.append(row)
+        return rows
+
+    out["leagues"] = [
+        {**lg,
+         "shields": decorate(lg.get("shields")),
+         "differentials": decorate(lg.get("differentials"))}
+        for lg in strategy.get("leagues") or []
+    ]
+    return out
+
+
+def build_decision(
+    payload: dict[str, Any], players_index: list[dict[str, Any]],
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    """Resolve the weekly decision's player ids into cards for the UI.
+
+    The decision layer speaks in ids because it is a pure decision layer; the
+    home screen needs names, shirts and prices. This is the only place they join.
+    """
+    idx = {p["id"]: p for p in players_index}
+    out = dict(payload)
+    out["generated_at"] = generated_at or payload.get("generated_at") or run_timestamp()
+
+    dec = dict(payload.get("decision") or {})
+    for key in ("starting", "bench", "transfers_in", "transfers_out"):
+        dec[key] = [_rec_card(i, idx) for i in dec.get(key) or []]
+    for key in ("captain", "vice"):
+        dec[key] = _rec_card(dec[key], idx) if dec.get(key) is not None else None
+    out["decision"] = dec
+
+    squad = dict(payload.get("squad_state") or {})
+    squad["players"] = [_mini_card(i, idx) for i in squad.get("squad") or []]
+    out["squad_state"] = squad
+    # The stored distribution is for the review, not the UI: it is hundreds of
+    # floats and nothing on screen reads it.
+    out.pop("outcome_distribution", None)
+    return out
+
+
+def db_get_meta(conn: sqlite3.Connection, key: str) -> Any:
+    row = conn.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
+    v = row["value"] if row else None
+    return None if v in (None, "", "None") else v
 
 
 def write_all(
@@ -540,14 +674,28 @@ def write_all(
     horizon_solutions: dict[int, dict[str, Solution]] | None = None,
     distributions: dict[int, dict[str, float]] | None = None,
     plan: Any = None,
+    generated_at: str | None = None,
+    settings: config.Settings | None = None,
+    strategy: dict[str, Any] | None = None,
+    decision: dict[str, Any] | None = None,
+    live: dict[str, Any] | None = None,
+    review: dict[str, Any] | None = None,
+    notifications: dict[str, Any] | None = None,
+    verify_paths: bool = True,
+    dry_run: bool = False,
 ) -> list[str]:
-    out_dir = out_dir or config.DATA_DIR
+    out_dir = Path(out_dir) if out_dir is not None else config.DATA_DIR
+    # Guard before any write: publishing outside the checkout discards the run.
+    if verify_paths:
+        config.verify_publish_paths(data_dir=out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    generated_at = generated_at or run_timestamp()
+    settings = settings if settings is not None else config.Settings.load()
     fixtures = build_fixtures(conn, from_gw, horizon)
     players = build_players(
         conn, from_gw, horizon, team_fixtures=fixtures, distributions=distributions
     )
-    reco = build_recommendation(conn, sol, players)
+    reco = build_recommendation(conn, sol, players, generated_at=generated_at)
     # Grid of optimal squads — planning window (this GW / next 3 / next 5) ×
     # risk stance (differential / balanced / template) — each with a fact-grounded
     # explanation, so the Planner can toggle both and show *why*.
@@ -557,6 +705,7 @@ def write_all(
                 "horizon": h,
                 "label": _HORIZON_LABEL.get(h, f"Next {h} GWs"),
                 "default_risk": "balanced",
+                "risk_note": _risk_note(),
                 "by_risk": {
                     r: build_horizon_reco(s, players, h, r)
                     for r, s in risk_map.items()
@@ -565,16 +714,76 @@ def write_all(
             for h, risk_map in sorted(horizon_solutions.items())
         }
     artifacts = {
-        "meta.json": build_meta(conn, model_version),
+        "meta.json": build_meta(
+            conn, model_version, generated_at=generated_at, settings=settings
+        ),
         "players.json": players,
         "fixtures.json": fixtures,
         "recommendation.json": reco,
         "my_team.json": build_my_team(conn, from_gw, players),
-        "plan.json": build_plan(plan, players),
+        "plan.json": build_plan(plan, players, generated_at=generated_at),
     }
+    # Strategy is optional by presence: a run with no leagues configured, or one
+    # invoked with --skip-strategy, writes nothing rather than an empty shell that
+    # would read as "no leagues found".
+    if strategy is not None:
+        artifacts["strategy.json"] = build_strategy(
+            strategy, players, generated_at=generated_at
+        )
+    # Batch 5. Each is optional by PRESENCE, not by emptiness: a run with nothing
+    # to say writes no file rather than an empty shell that reads as "nothing
+    # happened". `decision.json` is the exception — it always exists, because
+    # "we cannot advise you" is itself the week's answer.
+    if decision is not None:
+        artifacts["decision.json"] = build_decision(
+            decision, players, generated_at=generated_at)
+    if live is not None:
+        artifacts["live.json"] = {**live, "generated_at": generated_at}
+    if review is not None:
+        artifacts["review.json"] = {**review, "generated_at":
+                                    review.get("generated_at") or generated_at}
+    if notifications is not None:
+        artifacts["notifications.json"] = {**notifications,
+                                           "generated_at": generated_at}
+    # T-29: every artifact carries the season it describes. `fixtures.json` is a
+    # bare team->fixtures map and `players.json` a bare list, so those two are
+    # stamped in `meta.json` alone and the contract cross-checks the rest against
+    # it. Without this a stale artifact from a previous season parses cleanly and
+    # renders as current.
+    stamped = db.get_meta(conn, "season") or config.SEASON
+    for blob in artifacts.values():
+        if isinstance(blob, dict) and "season" not in blob:
+            blob["season"] = stamped
+
+    announce_targets(out_dir, list(artifacts))
+    if dry_run:
+        print("[artifacts] DRY RUN — nothing was written")
+        return []
     written = []
     for fname, data in artifacts.items():
         path = out_dir / fname
         write_json_atomic(path, data)
         written.append(str(path))
     return written
+
+
+def announce_targets(out_dir: Path, names: list[str]) -> None:
+    """Print every file about to be overwritten, before anything is written.
+
+    The scheduled refresh writes into the tracked ``data/`` directory by design —
+    that is how the site updates. What must never happen is it doing so
+    *silently*: an operator running the pipeline by hand deserves to see the
+    tracked files they are about to replace, and a run that clobbers a manually
+    curated artifact should be visible in the log, not discovered later.
+    """
+    root = Path(config.REPO_ROOT).resolve()
+    print(f"[artifacts] target directory: {out_dir}")
+    for name in sorted(names):
+        path = (out_dir / name).resolve()
+        try:
+            tracked = path.is_relative_to(root) and path.exists()
+        except (OSError, ValueError):  # pragma: no cover - unresolvable path
+            tracked = False
+        state = "OVERWRITE (tracked)" if tracked else (
+            "overwrite" if path.exists() else "create")
+        print(f"[artifacts]   {state:20} {name}")

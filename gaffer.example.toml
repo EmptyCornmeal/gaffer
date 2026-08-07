@@ -1,0 +1,86 @@
+# Gaffer — example personal configuration.
+#
+# Copy to `gaffer.local.toml` (git-ignored) at the repo root and edit:
+#
+#     cp gaffer.example.toml gaffer.local.toml
+#
+# Every value here is also settable via an environment variable, which is what
+# CI uses. PRECEDENCE, highest first:
+#
+#     1. environment variable   (e.g. GAFFER_ENTRY_ID)
+#     2. gaffer.local.toml      (this file, once copied)
+#     3. built-in default
+#
+# Verify what actually resolved:
+#
+#     python -c "from gaffer import config; s=config.Settings.load(); \
+#       print(config.describe_paths()); print(s)"
+#
+# NEVER put secrets in this file — it is committed. API keys belong in the
+# git-ignored `.env` (ANTHROPIC_API_KEY=...) or in GitHub Actions secrets.
+
+[fpl]
+# Your FPL entry (team) id. Find it in the URL of your points page:
+#   https://fantasy.premierleague.com/entry/1066421/event/1
+#                                          ^^^^^^^
+# Env var: GAFFER_ENTRY_ID
+#
+# Leave unset to generate a deliberately *generic* build. The pipeline stamps
+# meta.build_mode = "generic" so a non-personalised squad can never be mistaken
+# for one built around your team.
+entry_id = 1066421
+
+# Classic mini-leagues to track. Always a LIST — Gaffer supports many leagues and
+# nothing may assume a single entry. Find the id in your league's URL:
+#   https://fantasy.premierleague.com/leagues/271619/standings/c
+#                                             ^^^^^^
+# Env var: GAFFER_LEAGUE_IDS (comma-separated, e.g. "271619,314")
+#
+# Each league costs one standings call plus one picks call per rival in the
+# analysed cohort (bounded — see gaffer.league.COHORT_LIMIT), and at most the
+# first six leagues are analysed (gaffer.strategy.MAX_LEAGUES); any beyond that
+# are reported as skipped rather than silently dropped.
+#
+# You can add the auto-joined global leagues (Overall = 314, your club, your
+# country) and Gaffer will handle them — it bounds the cohort to the rivals
+# nearest you and sets a percentile target rather than pretending you can win
+# a ten-million-entry league. They cost the most API calls for the least
+# actionable output, so they are not enabled by default.
+league_ids = [271619]
+
+# Free transfers available this gameweek. The public FPL API does not expose
+# this (it needs the authenticated my-team endpoint), so the solver trusts this
+# value. Clamped to [1, 5] — 2026/27 allows rolling up to five.
+# Env var: GAFFER_FREE_TRANSFERS
+free_transfers = 1
+
+
+# --- Paths (optional) ------------------------------------------------------
+# Normally you do NOT need these: the repo root is discovered from the checkout
+# and the data directory defaults to <repo root>/data.
+#
+# They exist because deriving the output directory from the *package* location
+# is what silently sent artifacts into site-packages under a non-editable
+# install. Set them explicitly if you run Gaffer from an unusual layout.
+#
+#   GAFFER_REPO_ROOT   absolute path to the checkout
+#   GAFFER_DATA_DIR    absolute path for generated data/*.json
+#
+# The pipeline refuses to publish when the data directory is not inside the
+# repository root, because those artifacts would never reach the site.
+
+
+# --- AI layer (optional) ---------------------------------------------------
+# The Verdict/News writers are optional. With no credentials the pipeline falls
+# back to deterministic templates and still succeeds.
+#
+#   ANTHROPIC_API_KEY     set in .env (git-ignored) or as a CI secret
+#   GAFFER_VERDICT_MODEL  override the verdict model (default: claude-opus-4-8)
+#   GAFFER_AI_MODEL       override the news-digest model
+#
+# Do not put the key in this file.
+
+
+# --- Development toggles (optional) ----------------------------------------
+#   GAFFER_SKIP_ENRICH=1  skip the ~520 per-player history calls for fast local
+#                         iteration (same as `python -m gaffer.pipeline --fast`)

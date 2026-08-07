@@ -1,23 +1,36 @@
 <script lang="ts">
-  import { loadBundle, type Bundle } from './lib/data'
+  import { loadBundle, loadShell, type Bundle, type Shell } from './lib/data'
   import { getTheme, setTheme } from './lib/config'
+  import { normaliseRoute } from './lib/nav'
   import type { Player } from './lib/types'
   import Topbar from './components/Topbar.svelte'
   import Sidebar from './components/Sidebar.svelte'
   import BottomNav from './components/BottomNav.svelte'
   import PlayerDetail from './components/PlayerDetail.svelte'
+  // Eagerly bundled: the routes a phone opens first, and the small ones where a
+  // second network round-trip would cost more than the code it saves.
+  import Home from './pages/Home.svelte'
   import Overview from './pages/Overview.svelte'
   import MyTeam from './pages/MyTeam.svelte'
-  import Planner from './pages/Planner.svelte'
-  import Players from './pages/Players.svelte'
   import Fixtures from './pages/Fixtures.svelte'
-  import MiniLeague from './pages/MiniLeague.svelte'
-  import News from './pages/News.svelte'
-  import Accuracy from './pages/Accuracy.svelte'
-  import Chips from './pages/Chips.svelte'
-  import Meta from './pages/Meta.svelte'
   import Help from './pages/Help.svelte'
 
+  // Lazily loaded: heavy screens most sessions never open. Each is its own
+  // chunk, fetched on first navigation and then cached by the browser.
+  const LAZY: Record<string, () => Promise<{ default: unknown }>> = {
+    planner: () => import('./pages/Planner.svelte'),
+    players: () => import('./pages/Players.svelte'),
+    chips: () => import('./pages/Chips.svelte'),
+    meta: () => import('./pages/Meta.svelte'),
+    strategy: () => import('./pages/Strategy.svelte'),
+    live: () => import('./pages/Live.svelte'),
+    review: () => import('./pages/Review.svelte'),
+    league: () => import('./pages/MiniLeague.svelte'),
+    news: () => import('./pages/News.svelte'),
+    accuracy: () => import('./pages/Accuracy.svelte'),
+  }
+
+  let shell = $state<Shell | null>(null)
   let bundle = $state<Bundle | null>(null)
   let error = $state<string | null>(null)
   let route = $state(parseRoute())
@@ -26,9 +39,15 @@
   let sidebarOpen = $state(false)
   let reloadKey = $state(0)
 
+  // Resolved lazy components, by route key.
+  let loaded = $state<Record<string, any>>({})
+  let chunkError = $state<string | null>(null)
+
+  // Unknown / malformed / stale-bookmark hashes fall back to Overview rather
+  // than rendering an empty <main>. Normalising (instead of rewriting
+  // location.hash) keeps back/forward working and cannot loop.
   function parseRoute(): string {
-    const h = (typeof location !== 'undefined' ? location.hash : '').replace(/^#\/?/, '')
-    return h || 'overview'
+    return normaliseRoute(typeof location !== 'undefined' ? location.hash : '')
   }
   function nav(r: string) {
     location.hash = `#/${r}`
@@ -37,9 +56,28 @@
 
   const byId = $derived(new Map((bundle?.players ?? []).map((p) => [p.id, p])))
   const selected = $derived<Player | null>(selectedId != null ? byId.get(selectedId) ?? null : null)
+  const meta = $derived(bundle?.meta ?? shell?.meta ?? null)
+  const LazyPage = $derived(loaded[route] ?? null)
+  const needsChunk = $derived(route in LAZY && !loaded[route])
+
+  // Fetch the chunk for whichever heavy route is active. Failures surface as a
+  // page-level message rather than a blank <main>.
+  $effect(() => {
+    const r = route
+    if (!(r in LAZY) || loaded[r]) return
+    chunkError = null
+    LAZY[r]()
+      .then((m) => (loaded = { ...loaded, [r]: m.default }))
+      .catch((e) => (chunkError = String(e)))
+  })
 
   $effect(() => {
     setTheme(getTheme())
+    // meta.json first (~1 kB) so the shell shows the gameweek, deadline,
+    // freshness and build mode without waiting for megabytes of players.
+    loadShell()
+      .then((s) => (shell = s))
+      .catch(() => {})
     loadBundle().then((b) => (bundle = b)).catch((e) => (error = String(e)))
     const onHash = () => (route = parseRoute())
     window.addEventListener('hashchange', onHash)
@@ -52,8 +90,12 @@
 </script>
 
 <div class="min-h-svh flex flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-brand focus:text-[#05210f] focus:font-bold">
+    Skip to content
+  </a>
+
   <Topbar
-    meta={bundle?.meta ?? null}
+    meta={meta}
     players={bundle?.players ?? []}
     {route}
     {now}
@@ -64,7 +106,7 @@
 
   <div class="flex flex-1 min-h-0">
     <Sidebar
-      meta={bundle?.meta ?? null}
+      meta={meta}
       playerCount={bundle?.players.length ?? 0}
       open={sidebarOpen}
       {route}
@@ -74,38 +116,62 @@
     />
 
     <main
+      id="main"
       class="flex-1 min-w-0 overflow-y-auto p-3 sm:p-5"
       style="padding-bottom: calc(var(--gaffer-bottomnav) + env(safe-area-inset-bottom) + 1rem);"
     >
       {#if error}
         <div class="card p-4 text-red text-sm max-w-lg mx-auto">Couldn't load data — run the pipeline so <code>data/*.json</code> is served.<div class="mt-1 text-muted2">{error}</div></div>
       {:else if !bundle}
-        <div class="flex flex-col items-center justify-center py-32 text-muted gap-3">
-          <div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div>
-          Loading…
+        <div class="flex flex-col items-center justify-center py-32 text-muted gap-3" role="status" aria-live="polite">
+          <div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+          {shell ? 'Loading players…' : 'Loading…'}
         </div>
+      {:else if chunkError}
+        <div class="card p-4 text-red text-sm max-w-lg mx-auto">
+          Couldn't load that page.
+          <div class="mt-1 text-muted2">{chunkError}</div>
+          <button class="btn mt-3" onclick={() => nav('overview')}>Back to Overview</button>
+        </div>
+      {:else if needsChunk}
+        <div class="flex flex-col items-center justify-center py-32 text-muted gap-3" role="status" aria-live="polite">
+          <div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+          Loading page…
+        </div>
+      {:else if route === 'home'}
+        <Home {bundle} onnav={nav} onpick={(id) => (selectedId = id)} {now} />
       {:else if route === 'overview'}
         <Overview {bundle} onpick={(id) => (selectedId = id)} onnav={nav} />
       {:else if route === 'my-team'}
         {#key reloadKey}<MyTeam {bundle} onpick={(id) => (selectedId = id)} ongoSettings={() => (sidebarOpen = true)} onnav={nav} />{/key}
-      {:else if route === 'planner'}
-        <Planner {bundle} onpick={(id) => (selectedId = id)} />
-      {:else if route === 'players'}
-        <Players players={bundle.players} onpick={(id) => (selectedId = id)} />
       {:else if route === 'fixtures'}
         <Fixtures fixtures={bundle.fixtures} />
-      {:else if route === 'chips'}
-        <Chips {bundle} onnav={nav} />
-      {:else if route === 'meta'}
-        <Meta {bundle} onpick={(id) => (selectedId = id)} />
-      {:else if route === 'league'}
-        {#key reloadKey}<MiniLeague ongoSettings={() => (sidebarOpen = true)} />{/key}
-      {:else if route === 'news'}
-        <News {bundle} />
-      {:else if route === 'accuracy'}
-        <Accuracy {bundle} />
       {:else if route === 'help'}
         <Help />
+      {:else if route === 'players' && LazyPage}
+        <LazyPage players={bundle.players} onpick={(id: number) => (selectedId = id)} />
+      {:else if route === 'planner' && LazyPage}
+        <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
+      {:else if route === 'meta' && LazyPage}
+        <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
+      {:else if route === 'live' && LazyPage}
+        <LazyPage onpick={(id: number) => (selectedId = id)} />
+      {:else if route === 'review' && LazyPage}
+        <LazyPage {bundle} onnav={nav} />
+      {:else if route === 'strategy' && LazyPage}
+        <LazyPage {bundle} onnav={nav} {now} />
+      {:else if route === 'chips' && LazyPage}
+        <LazyPage {bundle} onnav={nav} />
+      {:else if route === 'league' && LazyPage}
+        {#key reloadKey}<LazyPage ongoSettings={() => (sidebarOpen = true)} />{/key}
+      {:else if route === 'news' && LazyPage}
+        <LazyPage {bundle} />
+      {:else if route === 'accuracy' && LazyPage}
+        <LazyPage {bundle} />
+      {:else}
+        <!-- Belt-and-braces: parseRoute() already normalises, so this only fires
+             if a route key is added to NAV_TABS without a branch above. -->
+        <Home {bundle} onnav={nav} onpick={(id) => (selectedId = id)} {now} />
       {/if}
     </main>
   </div>
