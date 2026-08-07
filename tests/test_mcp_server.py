@@ -415,3 +415,310 @@ def test_what_changed_compares_like_with_like():
         assert type(was) is type(now), (
             f"{entry['field']} compares {type(was).__name__} against "
             f"{type(now).__name__}: {was!r} vs {now!r}")
+
+
+# ---------------------------------------------------------------------------
+# Batch 7.1 — the three defects the read-only acceptance test found
+# ---------------------------------------------------------------------------
+
+DEFAULT_ARGS = {"find_players": {"query": "a"},
+                "get_player_outlook": {"player": "12"},
+                "compare_players": {"players": ["12", "426"]}}
+
+
+# --- D1: every default response fits the budget ------------------------------
+
+def test_every_default_response_is_within_the_serialized_budget():
+    """`get_transfer_plan` returned 74 KB and the MCP client refused it outright,
+    so the tool was unusable however correct its contents were."""
+    over = []
+    for name in sorted(M.TOOLS):
+        n = M.serialized_bytes(M.call(name, **DEFAULT_ARGS.get(name, {})))
+        if n > M.MAX_RESULT_BYTES:
+            over.append(f"{name}: {n:,} bytes")
+    assert over == [], f"over the {M.MAX_RESULT_BYTES:,}-byte budget: {over}"
+
+
+def test_the_transfer_plan_summary_is_small_and_still_decision_shaped():
+    r = M.call("get_transfer_plan")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no plan artifact")
+    assert M.serialized_bytes(r) < M.MAX_RESULT_BYTES
+    for field in ("plan", "initial_state", "first_move", "steps",
+                  "detail_available", "limitations"):
+        assert field in r, f"the summary dropped {field}"
+    for field in ("status", "mode", "horizon", "total_expected"):
+        assert field in r["plan"]
+    step = r["steps"][0]
+    for field in ("gw", "transfers_in", "transfers_out", "hits",
+                  "free_transfers", "bank", "xi_expected", "captain", "vice",
+                  "starting_ids", "bench_ids_in_order"):
+        assert field in step, f"the step dropped {field}"
+    assert len(step["starting_ids"]) == 11
+    assert all(isinstance(i, int) for i in step["starting_ids"])
+    assert all(isinstance(i, int) for i in step["bench_ids_in_order"])
+
+
+def test_the_plan_summary_carries_no_full_player_cards():
+    """The 74 KB came from repeating fifteen 15-field cards per gameweek."""
+    r = M.call("get_transfer_plan")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no plan artifact")
+    blob = json.dumps(r)
+    for heavy in ("rationale", "xmins_badge", "fixtures", "tags", "team_code"):
+        assert heavy not in blob, f"the summary still carries {heavy}"
+
+
+def test_gameweek_detail_returns_one_week_in_full_and_stays_bounded():
+    summary = M.call("get_transfer_plan")
+    if summary["status"] != M.STATUS_OK:
+        pytest.skip("no plan artifact")
+    gw = summary["steps"][0]["gw"]
+    r = M.call("get_transfer_plan", detail="gameweek", gameweek=gw)
+    assert r["status"] == M.STATUS_OK
+    assert r["gameweek"] == gw
+    assert len(r["step"]["starting"]) == 11
+    assert all(isinstance(p, dict) and "name" in p for p in r["step"]["starting"])
+    assert M.serialized_bytes(r) < M.MAX_RESULT_BYTES
+
+
+@pytest.mark.parametrize("kwargs,expected", [
+    ({"detail": "everything"}, M.STATUS_INVALID),
+    ({"detail": "gameweek"}, M.STATUS_INVALID),          # no gameweek given
+    ({"detail": "gameweek", "gameweek": "abc"}, M.STATUS_INVALID),
+    ({"detail": "gameweek", "gameweek": 99}, M.STATUS_NOT_FOUND),
+])
+def test_the_plan_selector_is_validated(kwargs, expected):
+    r = M.call("get_transfer_plan", **kwargs)
+    if r["status"] == M.STATUS_MISSING:
+        pytest.skip("no plan artifact")
+    assert r["status"] == expected
+    assert r["detail"]
+
+
+def test_the_default_detail_is_summary():
+    a = M.call("get_transfer_plan")
+    b = M.call("get_transfer_plan", detail="summary")
+    assert a.get("detail") == "summary"
+    assert a == b
+
+
+# --- D2: provenance comes from the artifact the tool actually read ----------
+
+def _versions(name):
+    return M.call(name, **DEFAULT_ARGS.get(name, {}))["versions"]
+
+
+@pytest.mark.parametrize("name", sorted(M.TOOLS))
+def test_every_response_declares_where_its_versions_came_from(name):
+    v = _versions(name)
+    assert v["source"], f"{name} does not name its provenance source"
+    for field in M.VERSION_FIELDS:
+        assert field in v
+        if v[field] is None:
+            assert v["unavailable"].get(field) in (M.NOT_APPLICABLE, M.NOT_AVAILABLE), \
+                f"{name}.{field} is null with no reason — indistinguishable " \
+                f"from an accidental omission"
+        else:
+            assert field not in v["unavailable"]
+
+
+@pytest.mark.parametrize("name", sorted(M.TOOLS))
+def test_no_response_contradicts_a_version_it_carries_elsewhere(name):
+    """The defect verbatim: the envelope said sim_version null while the same
+    payload carried simulation.sim_version = 'scenarios-1.0'."""
+    result = M.call(name, **DEFAULT_ARGS.get(name, {}))
+    env = result["versions"]
+    found: list[tuple[str, str, str]] = []
+
+    def walk(node, path="$"):
+        if isinstance(node, dict):
+            for k, val in node.items():
+                if k in M.VERSION_FIELDS and isinstance(val, str):
+                    found.append((k, val, f"{path}.{k}"))
+                walk(val, f"{path}.{k}")
+        elif isinstance(node, list):
+            for i, val in enumerate(node[:20]):
+                walk(val, f"{path}[{i}]")
+
+    walk({k: v for k, v in result.items() if k != "versions"})
+    for field, value, where in found:
+        assert env[field] == value, (
+            f"{name}: envelope {field}={env[field]!r} contradicts "
+            f"{where}={value!r}")
+
+
+def test_the_league_strategy_envelope_matches_its_simulation_block():
+    r = M.call("get_league_strategy")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no strategy artifact")
+    assert r["versions"]["sim_version"] == r["simulation"]["sim_version"]
+    assert r["versions"]["model_version"] == r["simulation"]["model_version"]
+
+
+def test_the_weekly_decision_exposes_its_real_objective_and_scenario_versions():
+    r = M.call("get_weekly_decision")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no decision artifact")
+    v = r["versions"]
+    assert v["objective_version"], "the decision comes out of the shared objective"
+    assert v["sim_version"], "the hold comparison is scored in the scenario set"
+    assert v["unavailable"] == {}
+
+
+def test_tools_over_the_same_calculation_agree_on_versions():
+    """`what_changed` reads a decision snapshot; both describe the same solve."""
+    if M.call("what_changed")["status"] != M.STATUS_OK:
+        pytest.skip("no prior snapshot")
+    a, b = _versions("get_weekly_decision"), _versions("what_changed")
+    for field in M.VERSION_FIELDS:
+        assert a[field] == b[field], f"{field} disagrees: {a[field]} vs {b[field]}"
+
+
+def test_a_version_is_never_borrowed_from_an_unrelated_artifact():
+    """players.json is a bare list with no solve behind it."""
+    v = _versions("get_player_outlook")
+    assert v["objective_version"] is None
+    assert v["unavailable"]["objective_version"] == M.NOT_APPLICABLE
+    assert v["sim_version"] is None
+
+
+def test_an_applicable_but_unrecorded_version_is_not_available_not_inapplicable():
+    """plan.json genuinely comes from the objective and the scenarios; it just
+    does not record either. That distinction is the whole point."""
+    r = M.call("get_transfer_plan")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no plan artifact")
+    v = r["versions"]
+    assert v["objective_version"] is None
+    assert v["unavailable"]["objective_version"] == M.NOT_AVAILABLE
+    assert v["unavailable"]["sim_version"] == M.NOT_AVAILABLE
+
+
+# --- D3: components are real or explicitly unavailable ----------------------
+
+def test_the_blend_components_are_the_stored_values():
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    proj = r["player"]["projection"]
+    if not proj["components_available"]:
+        pytest.skip("no local database in this environment")
+    gw = int(json.loads(
+        (config.DATA_DIR / "meta.json").read_text(encoding="utf-8"))["current_gw"])
+    conn = M.read_only_db()
+    try:
+        row = conn.execute(
+            "SELECT exp_points_model, exp_points_ep_next FROM projections "
+            "WHERE player_id = 12 AND gw = ?", (gw,)).fetchone()
+    finally:
+        conn.close()
+    assert proj["model_only"] == row["exp_points_model"]
+    assert proj["fpl_ep_next"] == row["exp_points_ep_next"]
+
+
+def test_a_component_is_never_derived_backwards_from_the_blend():
+    """The blend is (1-w)*model + w*ep_next with w scaled by availability, so it
+    is invertible on paper. The values must still come from the record.
+
+    Checked on the parse tree with the docstring stripped: the docstring
+    legitimately names `next_gw_xp` while explaining that it is not used, and a
+    substring scan cannot tell prose from code.
+    """
+    tree = ast.parse(SRC.read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "stored_components")
+    body = fn.body[1:] if ast.get_docstring(fn) else fn.body
+    code = " ; ".join(ast.unparse(n) for n in body)
+    assert "SELECT" in code and "exp_points_model" in code, (
+        "the components must come from a query, not a calculation")
+    for banned in ("EP_NEXT_BLEND_WEIGHT", "next_gw_xp"):
+        assert banned not in code, f"stored_components computes with {banned!r}"
+    # No arithmetic at all on the returned values.
+    for node in ast.walk(fn):
+        if isinstance(node, ast.BinOp) and isinstance(
+                node.op, (ast.Sub, ast.Mult, ast.Div)):
+            raise AssertionError("stored_components does arithmetic on a component")
+
+
+def test_zero_is_a_value_not_an_absence():
+    """42 players have a stored ep_next of exactly 0.0 — the blend is skipped for
+    them. That is a component, not a missing one."""
+    assert M._component_block(
+        {"exp_points_model": 4.0, "exp_points_ep_next": 0.0}, have_db=True
+    ) == {"model_only": 4.0, "fpl_ep_next": 0.0,
+          "components_available": True, "unavailable_reason": None}
+
+
+@pytest.mark.parametrize("row,have_db,available,reason", [
+    ({"exp_points_model": 5.1, "exp_points_ep_next": 3.2}, True, True, None),
+    ({"exp_points_model": 5.1, "exp_points_ep_next": None}, True, False,
+     M.COMPONENTS_NOT_STORED),
+    ({"exp_points_model": None, "exp_points_ep_next": None}, True, False,
+     M.COMPONENTS_NOT_STORED),
+    (None, True, False, M.COMPONENTS_NO_ROW),
+    (None, False, False, M.COMPONENTS_NO_DB),
+])
+def test_component_availability_is_always_explicit(row, have_db, available, reason):
+    b = M._component_block(row, have_db=have_db)
+    assert b["components_available"] is available
+    assert b["unavailable_reason"] == reason
+    if not available:
+        assert b["model_only"] is None or b["fpl_ep_next"] is None
+
+
+def test_one_missing_component_names_which():
+    b = M._component_block({"exp_points_model": 5.1, "exp_points_ep_next": None},
+                           have_db=True)
+    assert b["missing_components"] == ["fpl_ep_next"]
+
+
+def test_the_limitation_matches_what_was_actually_returned():
+    """The defect: 'kept separate' printed beside two nulls."""
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    available = r["player"]["projection"]["components_available"]
+    text = " ".join(r["limitations"])
+    if available:
+        assert "read from the stored projection" in text
+        assert "NOT available" not in text
+    else:
+        assert "NOT available" in text
+        assert "kept separate" not in text
+
+
+def test_outlook_and_comparison_report_the_same_components():
+    a = M.call("get_player_outlook", player="12")
+    b = M.call("compare_players", players=["12", "426"])
+    if a["status"] != M.STATUS_OK or b["status"] != M.STATUS_OK:
+        pytest.skip("players absent")
+    theirs = next(p for p in b["players"] if p["id"] == 12)
+    assert a["player"]["projection"] == theirs["projection"]
+    assert a["player"]["minutes"] == theirs["minutes"]
+    assert a["player"]["uncertainty"] == theirs["uncertainty"]
+
+
+def test_the_distribution_is_read_from_where_it_is_stored():
+    """floor/ceiling/boom were read from top-level keys that do not exist, so
+    every one came back null beside a claim they were provided."""
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    u = r["player"]["uncertainty"]
+    if not u["distribution_available"]:
+        pytest.skip("this artifact carries no dist block")
+    for field in ("floor", "ceiling", "boom_pct"):
+        assert u[field] is not None, f"{field} is still null"
+
+
+def test_no_nullable_field_is_promised_without_a_reason():
+    """Every null in the projection/minutes blocks is accompanied by a code."""
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    proj, minutes = r["player"]["projection"], r["player"]["minutes"]
+    if proj["model_only"] is None or proj["fpl_ep_next"] is None:
+        assert proj["unavailable_reason"]
+    if minutes["exp_minutes"] is None:
+        assert minutes["exp_minutes_source"] != "projections"
