@@ -396,3 +396,22 @@ def test_module_name_does_not_shadow_the_sdk():
     import mcp
     assert Path(mcp.__file__).parent != SRC.parent
     assert SRC.name == "mcp_server.py"
+
+
+def test_what_changed_compares_like_with_like():
+    """The snapshot stores player ids; the artifact stores resolved cards.
+
+    Comparing `426` against `"B.Fernandes"` reported the captain as changed on
+    every run — found by driving the server through a real MCP client rather
+    than by calling the function.
+    """
+    r = M.call("what_changed")
+    if r["status"] != M.STATUS_OK or not r.get("compared"):
+        pytest.skip("no prior snapshot to compare against")
+    for entry in r["changed_fields"]:
+        was, now = entry["was"], entry["now"]
+        if was is None or now is None:
+            continue
+        assert type(was) is type(now), (
+            f"{entry['field']} compares {type(was).__name__} against "
+            f"{type(now).__name__}: {was!r} vs {now!r}")
