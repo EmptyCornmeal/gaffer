@@ -546,14 +546,32 @@ def what_changed() -> dict[str, Any]:
     except ValueError:
         raise ToolError(STATUS_MALFORMED, "the prior snapshot is unreadable") from None
 
+    # The snapshot stores player IDs; the published artifact stores resolved
+    # cards. Comparing one against the other reported the captain as changed on
+    # every single run — `426` is never equal to `"B.Fernandes"`. Both sides are
+    # reduced to an id before comparison, and the id is resolved to a name only
+    # for display.
+    def ident(v: Any) -> Any:
+        return v.get("id") if isinstance(v, dict) else v
+
+    def label(v: Any) -> Any:
+        if isinstance(v, dict):
+            return v.get("name") or v.get("id")
+        return v
+
+    names = {p.get("id"): p.get("name") for p in _players()
+             if isinstance(p, dict)} if data_dir().joinpath("players.json").exists() else {}
+
+    def shown(v: Any) -> Any:
+        i = ident(v)
+        return names.get(i, label(v)) if isinstance(i, int) else label(v)
+
     changed = []
     for field in ("action", "headline", "captain", "vice", "confidence",
                   "biggest_risk"):
         a, b = prev.get(field), cur_dec.get(field)
-        a_v = a.get("name") if isinstance(a, dict) else a
-        b_v = b.get("name") if isinstance(b, dict) else b
-        if a_v != b_v:
-            changed.append({"field": field, "was": a_v, "now": b_v})
+        if ident(a) != ident(b):
+            changed.append({"field": field, "was": shown(a), "now": shown(b)})
     return envelope(
         "decision_snapshots", meta, compared=True,
         previous_as_of=rows[1]["as_of"], current_as_of=rows[0]["as_of"],
