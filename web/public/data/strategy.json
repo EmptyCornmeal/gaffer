@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-07T11:41:12+00:00",
+  "generated_at": "2026-08-07T17:41:25+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.2",
     "gameweek": 1,
     "fixtures": 20,
-    "players": 530,
+    "players": 532,
     "assumptions": [
       "One goal draw per attacking side, shared by every player in the match; clean sheets and goals conceded read the same draw.",
       "Goals are allocated multinomially in proportion to each player's deterministic expected goals, so teammates compete for the same goals and marginals are preserved.",
@@ -203,12 +203,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.1235,
-        "p_target": 0.1235,
+        "p_first": 0.134,
+        "p_target": 0.134,
         "target_position": 1,
-        "expected_position": 2.53,
+        "expected_position": 2.52,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0144,
+        "ci95_halfwidth": 0.0149,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
@@ -419,33 +419,33 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 64.426,
+      "expected_points": 63.817,
       "p_target": {
-        "271619": 0.1235
+        "271619": 0.134
       }
     },
     {
       "key": "captain:155",
       "label": "Captain Enzo",
-      "expected_points": 62.914,
+      "expected_points": 62.613,
       "p_target": {
-        "271619": 0.1195
+        "271619": 0.1345
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 62.308,
+      "expected_points": 62.016,
       "p_target": {
-        "271619": 0.127
+        "271619": 0.1355
       }
     },
     {
       "key": "captain:165",
       "label": "Captain João Pedro",
-      "expected_points": 61.894,
+      "expected_points": 61.453,
       "p_target": {
-        "271619": 0.121
+        "271619": 0.131
       }
     }
   ],
@@ -456,17 +456,25 @@
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 64.426,
+        "expected_points": 63.817,
         "p_target": {
-          "271619": 0.1235
+          "271619": 0.134
+        }
+      },
+      {
+        "key": "captain:155",
+        "label": "Captain Enzo",
+        "expected_points": 62.613,
+        "p_target": {
+          "271619": 0.1345
         }
       },
       {
         "key": "captain:427",
         "label": "Captain Mbeumo",
-        "expected_points": 62.308,
+        "expected_points": 62.016,
         "p_target": {
-          "271619": 0.127
+          "271619": 0.1355
         }
       }
     ],
@@ -476,19 +484,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 13.32,
+    "expected_gain": 13.35,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "bboost",
         "gameweek": 1,
-        "expected_gain": 13.32,
+        "expected_gain": 13.35,
         "ci95": [
-          13.08,
-          13.57
+          13.1,
+          13.59
         ],
-        "baseline_points": 64.43,
-        "with_chip_points": 77.75,
+        "baseline_points": 63.82,
+        "with_chip_points": 77.16,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -497,13 +505,13 @@
       {
         "chip": "3xc",
         "gameweek": 1,
-        "expected_gain": 8.36,
+        "expected_gain": 8.12,
         "ci95": [
-          8.11,
-          8.62
+          7.89,
+          8.36
         ],
-        "baseline_points": 64.43,
-        "with_chip_points": 72.79,
+        "baseline_points": 63.82,
+        "with_chip_points": 71.94,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
