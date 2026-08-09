@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-09T11:23:19+00:00",
+  "generated_at": "2026-08-09T17:22:56+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -195,7 +195,7 @@
       "name": "Crouch Potatoes",
       "league_type": "x",
       "classification": "tiny_private",
-      "size": 4,
+      "size": 5,
       "target_position": 1,
       "posture": {
         "stance": "neutral",
@@ -203,17 +203,17 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.129,
-        "p_target": 0.129,
+        "p_first": 0.075,
+        "p_target": 0.075,
         "target_position": 1,
-        "expected_position": 2.54,
+        "expected_position": 3.05,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0147,
+        "ci95_halfwidth": 0.0115,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
         "caveats": [
-          "3 of 3 rival squads are unknown and were modelled as a distribution, not a team",
+          "4 of 4 rival squads are unknown and were modelled as a distribution, not a team",
           "Gaffer's multi-week mean projections are materially weaker than its one-week ones, so probabilities beyond the next gameweek are directional only"
         ]
       },
@@ -401,7 +401,7 @@
         }
       ],
       "data_quality": {
-        "rivals": 3,
+        "rivals": 4,
         "with_picks": 0,
         "coverage_pct": 0.0,
         "cohort_truncated": false,
@@ -421,7 +421,7 @@
       "label": "Captain B.Fernandes",
       "expected_points": 64.265,
       "p_target": {
-        "271619": 0.129
+        "271619": 0.075
       }
     },
     {
@@ -429,7 +429,7 @@
       "label": "Captain Enzo",
       "expected_points": 62.784,
       "p_target": {
-        "271619": 0.1265
+        "271619": 0.0705
       }
     },
     {
@@ -437,7 +437,7 @@
       "label": "Captain Mbeumo",
       "expected_points": 62.378,
       "p_target": {
-        "271619": 0.134
+        "271619": 0.074
       }
     },
     {
@@ -445,28 +445,20 @@
       "label": "Captain João Pedro",
       "expected_points": 61.959,
       "p_target": {
-        "271619": 0.13
+        "271619": 0.068
       }
     }
   ],
   "resolution": {
-    "default": null,
-    "reason": "no league weights configured, and no option dominates. Set [leagues].weights to express which league matters most; until then this is a genuine choice, not a calculation.",
+    "default": "captain:426",
+    "reason": "one option dominates on every objective",
     "shortlist": [
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
         "expected_points": 64.265,
         "p_target": {
-          "271619": 0.129
-        }
-      },
-      {
-        "key": "captain:427",
-        "label": "Captain Mbeumo",
-        "expected_points": 62.378,
-        "p_target": {
-          "271619": 0.134
+          "271619": 0.075
         }
       }
     ],
