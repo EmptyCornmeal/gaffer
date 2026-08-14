@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { loadLiveSnapshot } from '../lib/data'
+  import type { Bundle } from '../lib/data'
+  import { fetchLive, type LiveSourceName } from '../lib/live/source'
   import {
     parseLive, FIXTURE_STATE_LABELS, LIVE_UNAVAILABLE_LABELS, signed,
     type LiveState,
@@ -7,12 +8,16 @@
   import { Poller, freshnessLabel, isStale } from '../lib/refresh'
   import Icon from '../components/Icon.svelte'
 
-  let { onpick }: { onpick: (id: number) => void } = $props()
+  let { bundle, onpick }: { bundle: Bundle | null; onpick: (id: number) => void } =
+    $props()
 
-  // live.json is deliberately NOT part of the cached bundle: it is only true for
-  // the moment it was fetched. The poller below fetches it fresh on mount and
-  // then on its own schedule.
+  // Scored in the browser from the live endpoints, once a minute. `live.json` is
+  // published three times a day, so polling it could never move during a match;
+  // it remains the fallback when the proxy cannot answer, and the source is
+  // always stated rather than assumed.
   let raw = $state<unknown>(null)
+  let source = $state<LiveSourceName>('proxy')
+  let fallbackReason = $state<string | null>(null)
   let status = $state<'idle' | 'loading' | 'ok' | 'stale' | 'error'>('idle')
   let lastSuccess = $state<number | null>(null)
   let lastError = $state<string | null>(null)
@@ -27,9 +32,15 @@
 
   $effect(() => {
     const poller = new Poller<unknown>(
-      () => loadLiveSnapshot().then((v) => {
-        if (v == null) throw new Error('live.json unavailable')
-        return v
+      // Read `bundle` at call time, not setup time, so arriving data does not
+      // tear down and rebuild the poller.
+      () => fetchLive(
+        Number(bundle?.meta?.current_gw ?? 0) || 0,
+        bundle?.players ?? [],
+      ).then((r) => {
+        source = r.source
+        fallbackReason = r.fallbackReason
+        return r.state
       }),
       (st) => {
         if (st.data != null) raw = st.data
@@ -68,13 +79,19 @@
         {#if anyLive}<span class="chip chip-good">in play</span>{/if}
       </h2>
       <p class="text-sm text-muted">
-        Confirmed, provisional and predicted points, kept apart.
+        Confirmed, provisional and predicted points, kept apart. Updates itself
+        every minute while a match is on.
       </p>
     </div>
     <div class="text-right">
       <div class="text-[11px] text-muted2" aria-live="polite">
         Updated {freshnessLabel(lastSuccess, tick)}
       </div>
+      {#if source === 'artifact'}
+        <span class="chip chip-warn" title={fallbackReason ?? ''}>
+          published snapshot
+        </span>
+      {/if}
       {#if stale && lastSuccess != null}
         <span class="chip chip-warn">stale</span>
       {/if}
@@ -90,9 +107,14 @@
 
   {#if parsed.kind === 'missing' && status !== 'loading'}
     <div class="card p-6 text-center">
-      <h3 class="font-bold">No live data published</h3>
+      <h3 class="font-bold">No live data</h3>
       <p class="text-sm text-muted mt-2">
-        Run the pipeline during a gameweek to generate <code>live.json</code>.
+        {#if fallbackReason}
+          The live proxy could not answer ({fallbackReason}) and no published
+          snapshot exists yet.
+        {:else}
+          Nothing has been published for this gameweek yet.
+        {/if}
       </p>
     </div>
   {:else if parsed.kind === 'unsupported' || parsed.kind === 'malformed'}

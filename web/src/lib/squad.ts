@@ -4,8 +4,10 @@ import type { Player, Pos } from './types'
 export const QUOTA: Record<Pos, number> = { GKP: 2, DEF: 5, MID: 5, FWD: 3 }
 export const BUDGET = 100.0
 export const CLUB_LIMIT = 3
-const FORMATION_MIN: Record<Pos, number> = { GKP: 1, DEF: 3, MID: 2, FWD: 1 }
-const FORMATION_MAX: Record<Pos, number> = { GKP: 1, DEF: 5, MID: 5, FWD: 3 }
+// Exported so the live autosub rules read the same formation bounds the lineup
+// validator does, rather than keeping a second copy that is free to drift.
+export const FORMATION_MIN: Record<Pos, number> = { GKP: 1, DEF: 3, MID: 2, FWD: 1 }
+export const FORMATION_MAX: Record<Pos, number> = { GKP: 1, DEF: 5, MID: 5, FWD: 3 }
 
 const CUR_KEY = 'gaffer.plan'
 const PLANS_KEY = 'gaffer.plans'

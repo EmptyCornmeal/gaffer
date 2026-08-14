@@ -53,6 +53,8 @@ export const fpl = {
   picks: (id: number, gw: number) => get<PicksResponse>(`/ep/${id}/${gw}/picks`),
   league: (id: number, page = 1) => get<any>(`/lc/${id}/${page}`),
   live: (gw: number) => get<any>(`/ev/${gw}/live`, 60 * 1000),
+  // Fixture states and live BPS, for scoring a gameweek in the browser.
+  fixtures: (gw: number) => get<any>(`/fx/${gw}`, 60 * 1000),
   photoUrl: (code: number | null | undefined) =>
     code ? `${apiBase()}/player-photo/${code}` : '',
 }

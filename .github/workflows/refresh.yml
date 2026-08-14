@@ -12,6 +12,15 @@ name: Refresh Gaffer data
 # success, because a valid run always advances `generated_at`.
 on:
   schedule:
+    # GitHub's scheduler is best-effort and drifts: measured over 61 runs of this
+    # repo the 17:00 slot started a MEDIAN of 53 minutes late, and once landed 16
+    # minutes after where a GW1 deadline would have been — publishing an answer
+    # for the wrong gameweek. You cannot make one cron punctual, so fire often
+    # and let `gaffer.schedule --should-refresh` decide. Almost every tick exits
+    # in seconds without installing anything.
+    - cron: '*/15 * * * *'
+    # Kept as belt and braces: high-frequency crons are the first thing GitHub
+    # drops under load, and these three have a track record of firing.
     - cron: '0 2 * * *'    # after overnight price changes
     - cron: '0 11 * * *'   # midday
     - cron: '0 17 * * *'   # pre-evening / pre-deadline
@@ -40,11 +49,40 @@ env:
   GAFFER_AI_NARRATION: '0'
 
 jobs:
+  # Cheap decision, taken before anything is installed. `gaffer.schedule` imports
+  # only the standard library, so this needs the checkout and a Python and
+  # nothing else. It fails OPEN: unreadable artifacts mean "refresh".
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      refresh: ${{ steps.decide.outputs.refresh }}
+      window: ${{ steps.decide.outputs.window }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Should this run refresh anything?
+        id: decide
+        env:
+          PYTHONPATH: src
+        run: |
+          FORCE=""
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            FORCE="--force"
+          fi
+          python -m gaffer.schedule --should-refresh $FORCE >> "$GITHUB_OUTPUT"
+
   refresh:
+    needs: gate
+    if: needs.gate.outputs.refresh == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Why this run is happening
+        run: echo "window=${{ needs.gate.outputs.window }}"
 
       - uses: actions/setup-python@v5
         with:

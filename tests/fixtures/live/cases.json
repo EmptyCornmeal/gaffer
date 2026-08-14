@@ -1,0 +1,5977 @@
+{
+ "cases": [
+  {
+   "expected": {
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": false,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": true,
+     "by_state": {
+      "scheduled": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 0,
+      "state": "scheduled",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "live_version": "live-1.0",
+    "note": "no match in this gameweek has kicked off yet",
+    "unavailable_reason": "not_started"
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 0,
+      "started": false,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {},
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "nothing has kicked off"
+  },
+  {
+   "expected": {
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": false,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {},
+     "total": 0
+    },
+    "fixtures": [],
+    "gameweek": 1,
+    "live_version": "live-1.0",
+    "note": "no fixtures are scheduled for gameweek 1",
+    "unavailable_reason": "no_gameweek"
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {},
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "no fixtures in this gameweek"
+  },
+  {
+   "expected": {
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": false,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {
+      "live": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 60,
+      "state": "live",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "live_version": "live-1.0",
+    "note": "your squad is not readable, so there is nothing to score",
+    "unavailable_reason": "no_squad"
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 60,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": null,
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "squad unreadable before the deadline"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {
+      "live": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 70,
+      "state": "live",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 3,
+      "total": 5.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 3,
+      "total": 5.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 1,
+      "total": 3.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 31,
+      "entry_id": 1,
+      "gw_points": 31,
+      "name": "You",
+      "projected": 31.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 24,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 7
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [],
+      "provisional": true,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 8,
+     "confirmed": 24,
+     "current": 31,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 15,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 31.0,
+     "provisional_bonus": 7,
+     "season_total_before": 0,
+     "season_total_projected": 31.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 70,
+      "started": true,
+      "stats": [
+       {
+        "a": [],
+        "h": [
+         {
+          "element": 5,
+          "value": 40
+         },
+         {
+          "element": 6,
+          "value": 40
+         },
+         {
+          "element": 7,
+          "value": 32
+         },
+         {
+          "element": 8,
+          "value": 20
+         }
+        ],
+        "identifier": "bps"
+       }
+      ],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "in play, provisional bonus with a tie on top"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": true,
+     "bonus_final": true,
+     "by_state": {
+      "finished": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 24,
+      "entry_id": 1,
+      "gw_points": 24,
+      "name": "You",
+      "projected": 24.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 24,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [],
+      "provisional": false,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 8,
+     "confirmed": 24,
+     "current": 24,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 15,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 24.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 24.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [
+       {
+        "a": [],
+        "h": [
+         {
+          "element": 5,
+          "value": 40
+         },
+         {
+          "element": 6,
+          "value": 32
+         },
+         {
+          "element": 7,
+          "value": 20
+         }
+        ],
+        "identifier": "bps"
+       }
+      ],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "bonus already final is not double counted"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": true,
+     "bonus_final": true,
+     "by_state": {
+      "finished": 2
+     },
+     "total": 2
+    },
+    "fixtures": [
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 2,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 12,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 0,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 1,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P1",
+      "played": false,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 0.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 24,
+      "entry_id": 1,
+      "gw_points": 24,
+      "name": "You",
+      "projected": 24.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 24,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       1,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [
+       "Goalkeeper substitution: only the bench keeper is eligible."
+      ],
+      "provisional": false,
+      "subs_in": [
+       12
+      ],
+      "subs_out": [
+       1
+      ],
+      "xi": [
+       12,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 6,
+     "confirmed": 24,
+     "current": 24,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 14,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 24.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 24.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 2,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [],
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "goalkeeper blanked, bench keeper came on"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": true,
+     "bonus_final": true,
+     "by_state": {
+      "finished": 2
+     },
+     "total": 2
+    },
+    "fixtures": [
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 2,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 13,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 0,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 9,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P9",
+      "played": false,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 0.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 24,
+      "entry_id": 1,
+      "gw_points": 24,
+      "name": "You",
+      "projected": 24.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 24,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       9,
+       14,
+       15
+      ],
+      "captain": 10,
+      "captain_source": "vice",
+      "multiplier": 2,
+      "notes": [
+       "Captain recorded no minutes, so the armband passed to the vice-captain."
+      ],
+      "provisional": false,
+      "subs_in": [
+       13
+      ],
+      "subs_out": [
+       9
+      ],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       13,
+       10,
+       11
+      ]
+     },
+     "bench_points": 6,
+     "confirmed": 24,
+     "current": 24,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 14,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 24.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 24.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 2,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [],
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "captain blanked so the armband passes to the vice"
+  },
+  {
+   "expected": {
+    "active_chip": "3xc",
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {
+      "live": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 60,
+      "state": "live",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 26,
+      "entry_id": 1,
+      "gw_points": 26,
+      "name": "You",
+      "projected": 26.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 26,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 3,
+      "notes": [],
+      "provisional": true,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 8,
+     "confirmed": 26,
+     "current": 26,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 15,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 26.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 26.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": "3xc",
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 60,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "triple captain"
+  },
+  {
+   "expected": {
+    "active_chip": "bboost",
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": true,
+     "bonus_final": true,
+     "by_state": {
+      "finished": 2
+     },
+     "total": 2
+    },
+    "fixtures": [
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "bonus_final": true,
+      "event": 1,
+      "id": 2,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 90,
+      "state": "finished",
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 0,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P3",
+      "played": false,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 0.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": true,
+      "fixture_states": [
+       "finished"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 30,
+      "entry_id": 1,
+      "gw_points": 30,
+      "name": "You",
+      "projected": 30.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 30,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [
+       "Bench Boost is active: all 15 score and no substitutions are made."
+      ],
+      "provisional": false,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 0,
+     "confirmed": 30,
+     "current": 30,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 14,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 30.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 30.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": "bboost",
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "event": 1,
+      "finished": true,
+      "finished_provisional": false,
+      "id": 2,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 90,
+      "started": true,
+      "stats": [],
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "bench boost plays all fifteen and makes no substitutions"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {
+      "live": 1,
+      "scheduled": 1
+     },
+     "total": 2
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 60,
+      "state": "live",
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 2,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 0,
+      "state": "scheduled",
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 0,
+      "name": "P9",
+      "played": false,
+      "pos": "FWD",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P10",
+      "played": false,
+      "pos": "FWD",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P11",
+      "played": false,
+      "pos": "FWD",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P12",
+      "played": false,
+      "pos": "GKP",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P13",
+      "played": false,
+      "pos": "DEF",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P14",
+      "played": false,
+      "pos": "MID",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     },
+     {
+      "confirmed": 0,
+      "finished": false,
+      "fixture_states": [
+       "live",
+       "scheduled"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 0,
+      "name": "P15",
+      "played": false,
+      "pos": "FWD",
+      "predicted": 3.5,
+      "provisional": 0,
+      "total": 3.5,
+      "yet_to_play": true
+     }
+    ],
+    "rivals": [
+     {
+      "current": 16,
+      "entry_id": 1,
+      "gw_points": 16,
+      "name": "You",
+      "projected": 30.0,
+      "provisional_position": 1,
+      "yet_to_play": 7,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 16,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 14.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [],
+      "provisional": true,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 0,
+     "confirmed": 16,
+     "current": 16,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 8,
+     "players_yet_to_play": 7,
+     "predicted_remaining": 14.0,
+     "projected": 30.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 30.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 60,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     },
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 2,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 0,
+      "started": false,
+      "stats": [],
+      "team_a": 3,
+      "team_h": 2
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 0,
+        "total_points": 0
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {
+     "10": 3.5,
+     "11": 3.5,
+     "12": 3.5,
+     "13": 3.5,
+     "14": 3.5,
+     "15": 3.5,
+     "9": 3.5
+    },
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "predicted points for a player yet to kick off"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {
+      "live": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 70,
+      "state": "live",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": {
+     "against": 2,
+     "in_your_xi": true,
+     "name": "P9",
+     "note": "a differential you own",
+     "player_id": 9,
+     "swing": 24
+    },
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 3,
+      "total": 5.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 2,
+      "total": 4.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 12,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 12.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "live"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 95,
+      "entry_id": 1,
+      "gw_points": 45,
+      "name": "You",
+      "projected": 95.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     },
+     {
+      "current": 65,
+      "entry_id": 2,
+      "gw_points": 25,
+      "name": "Rival",
+      "projected": 65.0,
+      "provisional_position": 2,
+      "yet_to_play": 0,
+      "you": false
+     }
+    ],
+    "separation": {
+     "confirmed": 44,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 5
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [],
+      "provisional": true,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 8,
+     "confirmed": 44,
+     "current": 45,
+     "entry_id": 1,
+     "hits": 4,
+     "players_played": 15,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 45.0,
+     "provisional_bonus": 5,
+     "season_total_before": 50,
+     "season_total_projected": 95.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T15:00:00Z",
+    "baseline": 50,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 70,
+      "started": true,
+      "stats": [
+       {
+        "a": [],
+        "h": [
+         {
+          "element": 5,
+          "value": 40
+         },
+         {
+          "element": 6,
+          "value": 30
+         }
+        ],
+        "identifier": "bps"
+       }
+      ],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 4,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 12
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T15:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [
+     {
+      "active_chip": null,
+      "bench": [
+       12,
+       13,
+       14,
+       9
+      ],
+      "captain": 1,
+      "entry_id": 2,
+      "hits": 4,
+      "name": "Rival",
+      "starting": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       10,
+       11,
+       15
+      ],
+      "total": 40,
+      "vice": 2
+     }
+    ],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "rivals, live table and the biggest swing"
+  },
+  {
+   "expected": {
+    "active_chip": null,
+    "as_of": "2026-08-22T19:00:00Z",
+    "available": true,
+    "fixture_summary": {
+     "all_finished": false,
+     "bonus_final": false,
+     "by_state": {
+      "abandoned": 1
+     },
+     "total": 1
+    },
+    "fixtures": [
+     {
+      "bonus_final": false,
+      "event": 1,
+      "id": 1,
+      "kickoff": "2026-08-22T14:00:00+00:00",
+      "minutes": 30,
+      "state": "abandoned",
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gameweek": 1,
+    "largest_swing": null,
+    "live_version": "live-1.0",
+    "players": [
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 1,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P1",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 2,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P2",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 3,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P3",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 4,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P4",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 5,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P5",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 6,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P6",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 7,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P7",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 8,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P8",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 9,
+      "in_xi": true,
+      "is_captain": true,
+      "minutes": 90,
+      "name": "P9",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 10,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P10",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 11,
+      "in_xi": true,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P11",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 12,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P12",
+      "played": true,
+      "pos": "GKP",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 13,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P13",
+      "played": true,
+      "pos": "DEF",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 14,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P14",
+      "played": true,
+      "pos": "MID",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     },
+     {
+      "confirmed": 2,
+      "finished": false,
+      "fixture_states": [
+       "abandoned"
+      ],
+      "id": 15,
+      "in_xi": false,
+      "is_captain": false,
+      "minutes": 90,
+      "name": "P15",
+      "played": true,
+      "pos": "FWD",
+      "predicted": 0.0,
+      "provisional": 0,
+      "total": 2.0,
+      "yet_to_play": false
+     }
+    ],
+    "rivals": [
+     {
+      "current": 24,
+      "entry_id": 1,
+      "gw_points": 24,
+      "name": "You",
+      "projected": 24.0,
+      "provisional_position": 1,
+      "yet_to_play": 0,
+      "you": true
+     }
+    ],
+    "separation": {
+     "confirmed": 24,
+     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed.",
+     "predicted_remaining": 0.0,
+     "provisional_bonus": 0
+    },
+    "squad": {
+     "autosubs": {
+      "bench": [
+       12,
+       13,
+       14,
+       15
+      ],
+      "captain": 9,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "notes": [],
+      "provisional": true,
+      "subs_in": [],
+      "subs_out": [],
+      "xi": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ]
+     },
+     "bench_points": 8,
+     "confirmed": 24,
+     "current": 24,
+     "entry_id": 1,
+     "hits": 0,
+     "players_played": 15,
+     "players_yet_to_play": 0,
+     "predicted_remaining": 0.0,
+     "projected": 24.0,
+     "provisional_bonus": 0,
+     "season_total_before": 0,
+     "season_total_projected": 24.0
+    },
+    "unavailable_reason": null
+   },
+   "input": {
+    "active_chip": null,
+    "as_of": "2026-08-22T19:00:00Z",
+    "baseline": 0,
+    "entry_id": 1,
+    "fixtures_payload": [
+     {
+      "event": 1,
+      "finished": false,
+      "finished_provisional": false,
+      "id": 1,
+      "kickoff_time": "2026-08-22T14:00:00Z",
+      "minutes": 30,
+      "started": true,
+      "stats": [],
+      "team_a": 2,
+      "team_h": 1
+     }
+    ],
+    "gw": 1,
+    "hits": 0,
+    "live_payload": {
+     "elements": [
+      {
+       "id": 1,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 2,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 3,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 4,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 5,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 6,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 7,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 8,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 9,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 10,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 11,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 12,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 13,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 14,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      },
+      {
+       "id": 15,
+       "stats": {
+        "bps": 0,
+        "minutes": 90,
+        "total_points": 2
+       }
+      }
+     ]
+    },
+    "names": {
+     "1": "P1",
+     "10": "P10",
+     "11": "P11",
+     "12": "P12",
+     "13": "P13",
+     "14": "P14",
+     "15": "P15",
+     "2": "P2",
+     "3": "P3",
+     "4": "P4",
+     "5": "P5",
+     "6": "P6",
+     "7": "P7",
+     "8": "P8",
+     "9": "P9"
+    },
+    "now": "2026-08-22T19:00:00Z",
+    "positions": {
+     "1": "GKP",
+     "10": "FWD",
+     "11": "FWD",
+     "12": "GKP",
+     "13": "DEF",
+     "14": "MID",
+     "15": "FWD",
+     "2": "DEF",
+     "3": "DEF",
+     "4": "DEF",
+     "5": "MID",
+     "6": "MID",
+     "7": "MID",
+     "8": "MID",
+     "9": "FWD"
+    },
+    "predictions": {},
+    "rivals": [],
+    "squad": {
+     "bench": [
+      12,
+      13,
+      14,
+      15
+     ],
+     "captain": 9,
+     "starting": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ],
+     "vice": 10
+    },
+    "team_of": {
+     "1": 1,
+     "10": 2,
+     "11": 2,
+     "12": 2,
+     "13": 2,
+     "14": 2,
+     "15": 2,
+     "2": 1,
+     "3": 1,
+     "4": 1,
+     "5": 1,
+     "6": 1,
+     "7": 1,
+     "8": 1,
+     "9": 2
+    }
+   },
+   "name": "abandoned fixture four hours after kick-off"
+  }
+ ],
+ "note": "Generated from gaffer.live, the reference implementation. Read tests/test_live_parity.py before regenerating."
+}

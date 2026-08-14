@@ -155,7 +155,7 @@
       {:else if route === 'meta' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'live' && LazyPage}
-        <LazyPage onpick={(id: number) => (selectedId = id)} />
+        <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'review' && LazyPage}
         <LazyPage {bundle} onnav={nav} />
       {:else if route === 'strategy' && LazyPage}

@@ -1,4 +1,9 @@
-"""T-08 — schedule-continuity decision logic and workflow structure."""
+"""T-08 — schedule-continuity decision logic and workflow structure.
+
+Also covers the refresh gate: GitHub's scheduler drifts by up to an hour, so the
+workflow fires every 15 minutes and asks `should_refresh` whether there is any
+point. Every boundary below is a fixed clock rather than a wait.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +14,185 @@ import pytest
 from gaffer import config, schedule
 
 NOW = datetime(2026, 10, 1, 3, 17, tzinfo=UTC)
+
+# The GW1 deadline this whole gate exists to protect.
+DEADLINE = datetime(2026, 8, 21, 17, 30, tzinfo=UTC)
+
+
+def before(hours: float) -> datetime:
+    return DEADLINE - timedelta(hours=hours)
+
+
+def decide(hours_before: float, age_min: float | None = 0.0, states=None):
+    now = before(hours_before)
+    return schedule.should_refresh(
+        now, deadline=DEADLINE, fixture_states=states,
+        last_generated_at=None if age_min is None
+        else now - timedelta(minutes=age_min))
+
+
+# --------------------------------------------------------------------------
+# Refresh gate — windows
+# --------------------------------------------------------------------------
+
+def test_far_from_a_deadline_is_idle():
+    assert decide(7).window == "idle"
+    assert decide(48).window == "idle"
+
+
+def test_the_pre_deadline_window_opens_six_hours_out():
+    assert decide(6.01).window == "idle"
+    assert decide(5.99).window == "pre_deadline"
+
+
+def test_the_final_approach_starts_two_hours_out():
+    assert decide(2.01).window == "pre_deadline"
+    assert decide(1.99).window == "final_approach"
+
+
+def test_the_window_shuts_before_the_deadline():
+    """A run started inside this would finish after the deadline and would be
+    projecting the NEXT gameweek — not the question being asked."""
+    assert decide(0.4).window == "final_approach"       # 24 min out
+    assert decide(0.25).window == "idle"                # 15 min out
+    assert decide(-1).window == "idle"                  # deadline gone
+
+
+def test_live_football_is_its_own_window():
+    d = decide(48, 0, states=["scheduled", "live"])
+    assert d.window == "live"
+    for state in ("live", "half_time", "awaiting_bonus"):
+        assert decide(48, 0, states=[state]).window == "live"
+    for state in ("scheduled", "finished", "postponed"):
+        assert decide(48, 0, states=[state]).window == "idle"
+
+
+def test_a_deadline_outranks_live_football():
+    """Both can be true during a double gameweek. If you are picking a team,
+    that is the more urgent number."""
+    assert decide(1, 0, states=["live"]).window == "final_approach"
+
+
+# --------------------------------------------------------------------------
+# Refresh gate — the age bar
+# --------------------------------------------------------------------------
+
+@pytest.mark.parametrize("hours,age,expected", [
+    (7, 200, False), (7, 400, True),        # idle: 6h bar
+    (5, 30, False), (5, 100, True),         # pre-deadline: 90 min bar
+    (1, 10, False), (1, 30, True),          # final approach: 20 min bar
+])
+def test_each_window_has_its_own_staleness_bar(hours, age, expected):
+    assert decide(hours, age).should_refresh is expected
+
+
+def test_the_final_approach_guarantees_a_recent_publish():
+    """The GW1 failure mode: at 17:29 the last publish must not be from 11:45."""
+    d = decide(0.5, age_min=345)            # published ~11:45 for a 17:30 deadline
+    assert d.should_refresh is True
+    assert d.window == "final_approach"
+
+
+def test_nothing_published_fails_open():
+    d = decide(48, age_min=None)
+    assert d.should_refresh is True
+    assert "nothing is published" in d.reason
+
+
+def test_a_future_timestamp_does_not_trigger_a_refresh_loop():
+    now = before(48)
+    d = schedule.should_refresh(
+        now, deadline=DEADLINE, last_generated_at=now + timedelta(hours=1))
+    assert d.should_refresh is False
+    assert "future" in d.reason
+
+
+def test_the_decision_reports_what_it_measured():
+    d = decide(1, 30)
+    assert d.age_minutes == pytest.approx(30, abs=0.1)
+    assert d.max_age_minutes == 20
+    assert d.window in d.reason
+
+
+# --------------------------------------------------------------------------
+# Refresh gate — reading the committed artifacts
+# --------------------------------------------------------------------------
+
+def test_published_state_is_read_from_the_artifacts(tmp_path):
+    import json
+
+    (tmp_path / "meta.json").write_text(json.dumps({
+        "deadline": "2026-08-21T17:30:00Z",
+        "generated_at": "2026-08-21T11:45:00Z",
+    }), encoding="utf-8")
+    (tmp_path / "live.json").write_text(json.dumps({
+        "fixtures": [{"state": "scheduled"}, {"state": "live"}],
+    }), encoding="utf-8")
+    state = schedule.read_published_state(tmp_path)
+    assert state["deadline"] == DEADLINE
+    assert state["generated_at"] == datetime(2026, 8, 21, 11, 45, tzinfo=UTC)
+    assert state["fixture_states"] == ["scheduled", "live"]
+
+
+@pytest.mark.parametrize("setup", ["missing", "malformed", "empty"])
+def test_unreadable_artifacts_never_block_a_refresh(tmp_path, setup):
+    """The gate runs before anything is installed. It must never be the reason a
+    refresh does not happen."""
+    if setup == "malformed":
+        (tmp_path / "meta.json").write_text("{not json", encoding="utf-8")
+    elif setup == "empty":
+        (tmp_path / "meta.json").write_text("{}", encoding="utf-8")
+    state = schedule.read_published_state(tmp_path)
+    assert state["generated_at"] is None
+    assert schedule.should_refresh(
+        NOW, deadline=state["deadline"],
+        last_generated_at=state["generated_at"],
+        fixture_states=state["fixture_states"]).should_refresh is True
+
+
+# --------------------------------------------------------------------------
+# Refresh gate — the CLI the workflow calls
+# --------------------------------------------------------------------------
+
+def test_cli_emits_github_output_lines(tmp_path, capsys):
+    import json
+
+    (tmp_path / "meta.json").write_text(json.dumps({
+        "deadline": "2026-08-21T17:30:00Z",
+        "generated_at": "2026-08-21T16:50:00Z",
+    }), encoding="utf-8")
+    code = schedule.main(["--should-refresh", "--data-dir", str(tmp_path),
+                          "--now", "2026-08-21T17:00:00Z"])
+    out = capsys.readouterr().out
+    assert code == 0, "the gate must never fail the build"
+    assert "refresh=false" in out and "window=final_approach" in out
+
+
+def test_cli_inside_the_cutoff_stops_asking(tmp_path, capsys):
+    """Ten minutes out, a run would publish after the deadline for a gameweek you
+    can no longer change. The window is deliberately shut."""
+    import json
+
+    (tmp_path / "meta.json").write_text(json.dumps({
+        "deadline": "2026-08-21T17:30:00Z",
+        "generated_at": "2026-08-21T11:45:00Z",
+    }), encoding="utf-8")
+    schedule.main(["--should-refresh", "--data-dir", str(tmp_path),
+                   "--now", "2026-08-21T17:20:00Z"])
+    assert "window=idle" in capsys.readouterr().out
+
+
+def test_cli_force_always_refreshes(tmp_path, capsys):
+    code = schedule.main(["--should-refresh", "--force",
+                          "--data-dir", str(tmp_path)])
+    assert code == 0
+    assert "refresh=true" in capsys.readouterr().out
+
+
+def test_cli_exits_zero_even_with_no_artifacts(tmp_path, capsys):
+    code = schedule.main(["--should-refresh", "--data-dir", str(tmp_path / "nope")])
+    assert code == 0
+    assert "refresh=true" in capsys.readouterr().out
 
 
 def ago(days: float) -> str:
