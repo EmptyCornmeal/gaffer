@@ -5,8 +5,10 @@ Run with::
     python -m gaffer.pipeline            # full run
     python -m gaffer.pipeline --fast     # skip per-player DEFCON enrichment
 
-Intended to run on a schedule (Mac Mini launchd), committing ``data/*.json`` for
-the GitHub Pages front-end.
+Runs on a schedule in GitHub Actions (``.github/workflows/refresh.yml``), which
+commits ``data/*.json`` and dispatches the Pages deploy. Note the scheduler
+drifts — the 17:00 UTC slot has a median delay near an hour — so a run that must
+land before a deadline should be dispatched manually rather than waited for.
 """
 
 from __future__ import annotations
@@ -51,6 +53,13 @@ def run(
     log["from_gw"] = from_gw
 
     log["projection_rows"] = projection.project(conn, from_gw, horizon)
+    # Which h=1 number was published, and why. `component_only` means FPL's
+    # `ep_next` was measured as uninformative and left out entirely.
+    log["projection_regime"] = (
+        f"{db.get_meta(conn, 'projection_regime')} "
+        f"(ep_next weight {db.get_meta(conn, 'ep_next_blend_weight')}; "
+        f"{db.get_meta(conn, 'projection_regime_reason')})"
+    )
 
     # Monte-Carlo next-GW distribution (floor/ceiling/boom%) over the same rates.
     distributions = simulate.simulate_next_gw(conn, from_gw)
@@ -257,14 +266,43 @@ def _build_live(conn, client, settings, from_gw, now, generated_at):
             "SELECT player_id, exp_points FROM projections WHERE gw=?", (from_gw,))
     }
     rivals = _live_rivals(client, settings, from_gw)
-    return live_mod.assemble(
+    baseline, hits, baseline_source = _live_baseline(conn, client, settings, from_gw)
+    state = live_mod.assemble(
         gw=from_gw, live_payload=live_payload, fixtures_payload=fixtures_payload,
         squad=squad, positions=positions, team_of=team_of, now=now or
         datetime.now(UTC), predictions=preds, rivals=rivals, names=names,
         entry_id=settings.entry_id,
-        baseline=int(db.get_meta(conn, "overall_points") or 0),
-        hits=0, active_chip=db.get_meta(conn, "active_chip") or None,
+        baseline=baseline, hits=hits,
+        active_chip=db.get_meta(conn, "active_chip") or None,
         as_of=generated_at)
+    state["baseline_source"] = baseline_source
+    return state
+
+
+def _live_baseline(conn, client, settings, gw) -> tuple[int, int, str]:
+    """Season points carried into ``gw`` and the transfer cost paid for it.
+
+    Both were wrong before this existed: `overall_points` was never written at
+    ingest so the baseline read 0, and hits were hardcoded to 0 so a -8 week
+    looked four points better than it was.
+
+    The entry history is preferred because its cumulative `total_points` at the
+    previous event is exactly "before this gameweek"; the ingested season total
+    already contains the in-progress gameweek once scoring starts, so it is only
+    a fallback — and the source is reported so no screen can present it as exact.
+    """
+    if settings.entry_id:
+        try:
+            history = client.entry_history(settings.entry_id)
+        except Exception:  # noqa: BLE001 - a baseline is never worth losing the run
+            history = None
+        if history:
+            baseline, hits = live_mod.entry_baseline_and_hits(history, gw)
+            return baseline, hits, "entry_history"
+    try:
+        return int(db.get_meta(conn, "overall_points") or 0), 0, "overall_points"
+    except (TypeError, ValueError):
+        return 0, 0, "unknown"
 
 
 def _live_rivals(client, settings, gw) -> list[dict]:

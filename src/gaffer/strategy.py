@@ -215,12 +215,18 @@ def chip_block(
     except Exception:  # noqa: BLE001
         bootstrap = {}
     windows = CH.parse_windows(bootstrap)
-    used: list[str] = []
+    used: list[CH.ChipUse] = []
+    # A failed history fetch is NOT "no chips played". Swallowing the exception
+    # and carrying on with an empty ledger made every chip look available, so an
+    # ordinary transient API error could recommend a chip that was already spent
+    # — an unrecoverable in-game mistake. Fail closed and say so.
+    chip_state_known = True
     if entry_id:
         try:
-            used = CH.chips_used_from_history(client.entry_history(entry_id))
+            used = CH.chip_uses_from_history(client.entry_history(entry_id))
         except Exception:  # noqa: BLE001
             used = []
+            chip_state_known = False
 
     evaluations: list[CH.ChipEvaluation] = []
     if starting:
@@ -235,7 +241,8 @@ def chip_block(
             evaluations.append(CH.evaluate_wildcard(
                 scen, starting, captain, free_sol.starting, free_sol.captain, gw,
                 weeks_retained=weeks_retained))
-    plan = CH.plan_chips(evaluations, windows, used, gw, squad_known=squad_known)
+    plan = CH.plan_chips(evaluations, windows, used, gw, squad_known=squad_known,
+                         chip_state_known=chip_state_known)
     return plan.as_dict()
 
 

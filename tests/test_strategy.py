@@ -284,6 +284,29 @@ def test_chip_block_never_recommends_a_played_chip():
     assert set(block["used"]) == {"bboost", "3xc"}
 
 
+def test_a_failed_history_fetch_does_not_empty_the_chip_ledger():
+    """The defect: `except Exception: used = []` made every chip look unused, so
+    an ordinary transient API error could recommend a chip already spent."""
+    class NoHistory(FakeClient):
+        def entry_history(self, entry_id):
+            raise RuntimeError("502 from the entry endpoint")
+
+    scen = FakeScen({p: 6.0 for p in range(1, 16)}, n=4000)
+    block = ST.chip_block(NoHistory(chips=LIVE_CHIPS), scen, 100, 7,
+                          list(range(1, 12)), [12, 13, 14, 15], 1, None, 4)
+    assert block["state_known"] is False
+    assert block["recommendation"] == "hold", \
+        "a chip worth 24 points must still not be recommended on an unknown ledger"
+    assert "already played" in block["reason"]
+
+
+def test_a_readable_ledger_is_marked_known():
+    scen = FakeScen({p: 6.0 for p in range(1, 16)}, n=4000)
+    block = ST.chip_block(FakeClient(chips=LIVE_CHIPS), scen, 100, 7,
+                          list(range(1, 12)), [12, 13, 14, 15], 1, None, 4)
+    assert block["state_known"] is True
+
+
 def test_chip_block_survives_an_api_failure():
     class Broken(FakeClient):
         def bootstrap(self):

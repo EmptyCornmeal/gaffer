@@ -191,7 +191,12 @@ MAX_FREE_TRANSFERS = 5  # 2026/27: roll up to five
 PROJECTION_HORIZON = 6  # gameweeks projected ahead
 
 # Points per attacking return by position (FPL scoring).
-GOAL_POINTS = {"GKP": 6, "DEF": 6, "MID": 5, "FWD": 4}
+# GKP is 10, not 6: a goalkeeper's goal has been worth ten points since 2026/27.
+# This table sat at 6 for an entire pre-season because a hard-coded rule agrees
+# with itself. `gaffer.rules` now re-reads `bootstrap.game_config.scoring` on
+# every ingest and refuses to run when the two disagree, so it cannot drift
+# silently again.
+GOAL_POINTS = {"GKP": 10, "DEF": 6, "MID": 5, "FWD": 4}
 ASSIST_POINTS = 3
 CS_POINTS = {"GKP": 4, "DEF": 4, "MID": 1, "FWD": 0}
 DEFCON_POINTS = 2  # awarded once per match if the defensive-action threshold is met
@@ -212,6 +217,10 @@ RED_POINTS = -3
 OWN_GOAL_POINTS = -2
 PENALTY_SAVE_POINTS = 5
 PENALTY_MISS_POINTS = -2
+# Appearance: 1 point for any minutes, 2 once 60' is reached. Named rather than
+# inlined so `gaffer.rules` can check them against the API's long_play/short_play.
+APPEARANCE_SHORT = 1
+APPEARANCE_LONG = 2
 
 # --- ep_next ensemble (T-15, re-labelled by T-26) ---------------------------
 # FPL publishes its own expected points for the NEXT gameweek only, and the

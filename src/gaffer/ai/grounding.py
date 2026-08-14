@@ -41,9 +41,14 @@ REASON_EMPTY_OUTPUT = "empty_output"
 REASON_MALFORMED_OUTPUT = "malformed_output"
 REASON_GROUNDING_REJECTED = "grounding_rejected"
 REASON_NO_SOURCE_ITEMS = "no_source_items"
+#: Credentials exist but paid narration was not switched on. Distinct from
+#: `no_credentials` on purpose: one is "we cannot", the other is "we chose not
+#: to", and only the second is reversible by a setting.
+REASON_NARRATION_DISABLED = "narration_disabled"
 ALL_FALLBACK_REASONS = frozenset({
     REASON_NO_CREDENTIALS, REASON_PROVIDER_ERROR, REASON_EMPTY_OUTPUT,
     REASON_MALFORMED_OUTPUT, REASON_GROUNDING_REJECTED, REASON_NO_SOURCE_ITEMS,
+    REASON_NARRATION_DISABLED,
 })
 
 #: Exception class names that are safe to expose as a sub-reason. Anything else

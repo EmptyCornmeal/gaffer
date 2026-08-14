@@ -112,6 +112,59 @@ def test_chips_used_are_read_from_history():
     assert C.chips_used_from_history({}) == []
 
 
+def test_chip_uses_carry_the_gameweek_they_were_played_in():
+    hist = {"chips": [{"name": "wildcard", "event": 8},
+                      {"name": "3xc", "event": "12"},
+                      {"name": "bboost"},
+                      {"name": "freehit", "event": None}]}
+    uses = C.chip_uses_from_history(hist)
+    assert uses[0] == C.ChipUse("wildcard", 8)
+    assert uses[1] == C.ChipUse("3xc", 12), "a string event is still an event"
+    assert uses[2].event is None and uses[3].event is None
+
+
+def test_a_second_half_chip_consumes_its_own_window_not_the_expired_one():
+    """The defect: matching a use to a window by NAME deleted the earliest
+    window bearing that name. Play the second-half Wildcard while the first-half
+    one expired unused and it removed the *expired* window, leaving the one you
+    had just spent looking available — so it could be recommended again."""
+    ws = C.parse_windows(LIVE_CHIPS)
+    used = [C.ChipUse("wildcard", 20)]      # played in the second half
+    assert "wildcard" not in {w.name for w in C.available_windows(ws, used, 21)}, \
+        "the wildcard played in GW20 must not still be on offer in GW21"
+
+
+def test_the_first_half_window_survives_a_second_half_use():
+    ws = C.parse_windows(LIVE_CHIPS)
+    used = [C.ChipUse("wildcard", 20)]
+    # Hypothetically back in GW10 the first-half instance is still unspent.
+    assert "wildcard" in {w.name for w in C.available_windows(ws, used, 10)}
+
+
+def test_a_bare_name_still_works_for_callers_without_event_data():
+    ws = C.parse_windows(LIVE_CHIPS)
+    assert "wildcard" not in {w.name for w in C.available_windows(ws, ["wildcard"], 10)}
+
+
+def test_an_unreadable_chip_ledger_recommends_nothing(scen):
+    """"We could not read your chip history" is not "you have played none"."""
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.evaluate_bench_boost(scen, list(range(1, 12)), [12, 13, 14, 15], 1, 5)]
+    plan = C.plan_chips(ev, ws, [], 5, chip_state_known=False)
+    assert plan.recommendation == "hold"
+    assert plan.state_known is False
+    assert "already played" in plan.reason
+    assert plan.as_dict()["state_known"] is False
+
+
+def test_a_known_ledger_still_recommends_a_strong_chip(scen):
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.evaluate_bench_boost(scen, list(range(1, 12)), [12, 13, 14, 15], 1, 5)]
+    plan = C.plan_chips(ev, ws, [], 5)
+    assert plan.state_known is True
+    assert plan.recommendation == "bboost"
+
+
 def test_a_window_outside_the_gameweek_is_unavailable():
     ws = C.parse_windows(LIVE_CHIPS)
     assert not [w for w in C.available_windows(ws, [], 25) if w.name == "3xc"

@@ -354,6 +354,7 @@ def apply_autosubs(
     starting: list[int], bench: list[int], positions: dict[int, str],
     live: dict[int, PlayerLive], *, captain: int | None = None,
     vice: int | None = None, bench_boost: bool = False,
+    triple_captain: bool = False,
 ) -> Autosubs:
     """FPL's substitution rules, applied to the live state.
 
@@ -376,7 +377,7 @@ def apply_autosubs(
     if bench_boost:
         notes.append("Bench Boost is active: all 15 score and no substitutions "
                      "are made.")
-        cap, src, mult = _armband(captain, vice, live)
+        cap, src, mult = _armband(captain, vice, live, triple_captain)
         return Autosubs(xi=xi, bench=bench, captain=cap, captain_source=src,
                         multiplier=mult, provisional=_any_unfinished(live, xi + bench),
                         notes=notes)
@@ -431,7 +432,7 @@ def apply_autosubs(
     if not subs_in and any(out(p) for p in starting):
         notes.append("A starter blanked but no legal replacement played.")
 
-    cap, src, mult = _armband(captain, vice, live)
+    cap, src, mult = _armband(captain, vice, live, triple_captain)
     if src == "vice":
         notes.append("Captain recorded no minutes, so the armband passed to the "
                      "vice-captain.")
@@ -452,16 +453,58 @@ def _any_unfinished(live: dict[int, PlayerLive], ids: list[int]) -> bool:
 
 def _armband(
     captain: int | None, vice: int | None, live: dict[int, PlayerLive],
+    triple_captain: bool = False,
 ) -> tuple[int | None, str, int]:
+    """Who wears the armband, and what it is worth.
+
+    The multiplier is decided here and nowhere else. It used to be recomputed in
+    ``score_squad`` and left at 2 on the ``Autosubs`` record, so the league-swing
+    arithmetic — which reads it from there — understated a Triple Captain week by
+    a third.
+    """
+    mult = 3 if triple_captain else 2
+
     def blanked(pid: int | None) -> bool:
         st = live.get(pid) if pid is not None else None
         return bool(st and st.finished and st.minutes == 0)
 
     if captain is not None and not blanked(captain):
-        return captain, "captain", 2
+        return captain, "captain", mult
     if vice is not None and not blanked(vice):
-        return vice, "vice", 2
+        return vice, "vice", mult
     return None, "none", 1
+
+
+def entry_baseline_and_hits(
+    history: dict[str, Any] | None, gw: int,
+) -> tuple[int, int]:
+    """Season points carried INTO ``gw``, and the transfer cost paid FOR it.
+
+    ``summary_overall_points`` cannot supply the baseline: once the gameweek
+    starts scoring it already contains the points this view is computing, so a
+    live total built on it counts them twice. The cumulative ``total_points`` at
+    the previous event is the only figure that is exactly "before this gameweek",
+    and it is already net of earlier hits.
+
+    Hits were previously hardcoded to zero, which made a -8 week read four points
+    better than it was.
+    """
+    rows = [r for r in ((history or {}).get("current") or [])
+            if isinstance(r, dict) and isinstance(r.get("event"), int)]
+    prior = [r for r in rows if r["event"] < gw]
+    baseline = 0
+    if prior:
+        last = max(prior, key=lambda r: r["event"])
+        total = last.get("total_points")
+        if isinstance(total, (int, float)) and not isinstance(total, bool):
+            baseline = int(total)
+        else:  # no cumulative column: rebuild it from the per-gameweek rows
+            baseline = sum(
+                int(r.get("points") or 0) - int(r.get("event_transfers_cost") or 0)
+                for r in prior)
+    this = next((r for r in rows if r["event"] == gw), None)
+    hits = int((this or {}).get("event_transfers_cost") or 0)
+    return baseline, hits
 
 
 # ---------------------------------------------------------------------------
@@ -521,8 +564,9 @@ def score_squad(
     second fetch would let the two disagree about a goal that had just gone in.
     """
     subs = apply_autosubs(starting, bench, positions, live, captain=captain,
-                          vice=vice, bench_boost=bench_boost)
-    mult = 3 if (triple_captain and subs.captain is not None) else subs.multiplier
+                          vice=vice, bench_boost=bench_boost,
+                          triple_captain=triple_captain)
+    mult = subs.multiplier
 
     scoring = list(subs.xi) + (list(subs.bench) if bench_boost else [])
     confirmed = provisional = 0

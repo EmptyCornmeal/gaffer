@@ -34,6 +34,170 @@ _SAVES_PER_GOAL = 2.2
 #: aggregate) is the only pre-deadline signal available.
 _BONUS_HISTORY_WEIGHT = 0.5
 
+# --- h=1 blend regime -------------------------------------------------------
+# The shipped one-week number blends FPL's own `ep_next` at
+# `config.EP_NEXT_BLEND_WEIGHT`. In-season that is defensible: FPL sees team news
+# Gaffer does not. Out of season it is not a forecast at all.
+#
+# Measured on the live 2026/27 pre-season payload, one week before the GW1
+# deadline: `ep_next` topped out at exactly 4.0 across all 587 players, and
+# Haaland (15.5m, 6.8 ppg), B.Fernandes (6.7), Gabriel (6.5) and a 6.0m
+# goalkeeper (4.4) all held that same 4.0. Blending 70% of that collapsed the
+# recommended XI from the model's own 66.2 expected points to a published 43.6,
+# and — because the deflation is uneven — reordered the players the decision
+# turns on. A goalkeeper outranked a premium forward.
+#
+# So the weight is gated on the external source actually carrying information.
+# The gate is measured, recorded in meta.json, and lifts by itself.
+
+#: Below this the whole population tops out too low to be a one-week points
+#: forecast. A real premium's one-week expectation is comfortably above it.
+EP_NEXT_MIN_POPULATION_MAX = 4.5
+#: Below this the external forecast is compressed relative to the model it is
+#: being blended into, so it cannot separate the players a decision turns on.
+#: Self-calibrating — it asks "does this source spread the way ours does?",
+#: not "is this number large?". Measured at 0.28 on the pre-season payload.
+EP_NEXT_MIN_SPREAD_RATIO = 0.5
+#: Fewer paired players than this and neither statistic means anything.
+EP_NEXT_MIN_SAMPLE = 10
+
+#: The published h=1 number is the blend of the component model with `ep_next`.
+REGIME_BLENDED = "blended"
+#: The published h=1 number is Gaffer's component model alone.
+REGIME_COMPONENT_ONLY = "component_only"
+
+
+def _quantile(sorted_values: list[float], q: float) -> float:
+    """Nearest-rank quantile. Deliberately not interpolated: these are decision
+    thresholds, and an exact tie should read as the value that is actually there."""
+    if not sorted_values:
+        return 0.0
+    idx = min(len(sorted_values) - 1, max(0, int(q * len(sorted_values))))
+    return sorted_values[idx]
+
+
+def ep_next_regime(
+    pairs: list[tuple[float, float]], *, season_started: bool,
+) -> dict[str, Any]:
+    """Decide whether FPL's ``ep_next`` is worth blending into h=1 this run.
+
+    ``pairs`` is ``(ep_next, model_points)`` for every player carrying both.
+
+    Two independent degeneracy tests, either of which disables the blend:
+
+    1. **Absolute** — the population maximum is at or below
+       ``EP_NEXT_MIN_POPULATION_MAX``. Nothing that tops out at 4.0 across every
+       player in the game is a one-week points forecast.
+    2. **Relative** — the source's upper spread is less than
+       ``EP_NEXT_MIN_SPREAD_RATIO`` of the model's own, so it cannot discriminate
+       where the model can.
+
+    Both are skipped entirely once a gameweek has completed: from then on
+    ``ep_next`` is computed from real form and fixtures, and the guard must not be
+    able to fire. That is what makes the restoration automatic rather than a
+    thing somebody has to remember.
+    """
+    eps = sorted(e for e, _ in pairs)
+    mods = sorted(m for _, m in pairs)
+    stats: dict[str, Any] = {
+        "sample": len(pairs),
+        "ep_max": round(eps[-1], 3) if eps else None,
+        "ep_spread": None,
+        "model_spread": None,
+        "spread_ratio": None,
+        "season_started": season_started,
+    }
+    full = config.EP_NEXT_BLEND_WEIGHT
+
+    def out(regime: str, weight: float, reason: str) -> dict[str, Any]:
+        return {**stats, "regime": regime, "blend_weight": round(weight, 4),
+                "reason": reason}
+
+    if season_started:
+        return out(REGIME_BLENDED, full,
+                   "a gameweek has been completed, so ep_next is computed from "
+                   "real form and fixtures rather than a pre-season placeholder")
+    if len(pairs) < EP_NEXT_MIN_SAMPLE:
+        return out(REGIME_COMPONENT_ONLY, 0.0,
+                   f"only {len(pairs)} player(s) carry both an ep_next and a "
+                   "model projection, which is too few to judge whether the "
+                   "external forecast carries any information")
+
+    ep_spread = _quantile(eps, 0.95) - _quantile(eps, 0.50)
+    model_spread = _quantile(mods, 0.95) - _quantile(mods, 0.50)
+    ratio = (ep_spread / model_spread) if model_spread > 0 else 0.0
+    stats["ep_spread"] = round(ep_spread, 3)
+    stats["model_spread"] = round(model_spread, 3)
+    stats["spread_ratio"] = round(ratio, 3)
+
+    if stats["ep_max"] is not None and stats["ep_max"] <= EP_NEXT_MIN_POPULATION_MAX:
+        return out(REGIME_COMPONENT_ONLY, 0.0,
+                   f"ep_next tops out at {stats['ep_max']:g} across all "
+                   f"{len(pairs)} projected players, which is a clipped "
+                   "pre-season placeholder rather than a one-week forecast")
+    if ratio < EP_NEXT_MIN_SPREAD_RATIO:
+        return out(REGIME_COMPONENT_ONLY, 0.0,
+                   f"ep_next spreads only {ratio:.2f}x as widely as Gaffer's own "
+                   "projection over the same players, so blending it would "
+                   "compress the ranking rather than inform it")
+    return out(REGIME_BLENDED, full,
+               f"ep_next spreads {ratio:.2f}x as widely as Gaffer's own "
+               "projection, so it carries usable one-week information")
+
+
+def apply_ep_next_blend(
+    rows: list[dict], *, from_gw: int, availability: dict[int, float],
+    season_started: bool,
+) -> dict[str, Any]:
+    """Blend ``ep_next`` into the h=1 rows, unless the source is degenerate.
+
+    Mutates ``rows`` in place and returns the regime record. Rows keep
+    ``exp_points_model`` and ``exp_points_ep_next`` untouched either way, so the
+    component breakdown always adds up and the two inputs stay auditable.
+    """
+    pairs = [
+        (float(r["exp_points_ep_next"]), float(r["exp_points_model"]))
+        for r in rows
+        if r["gw"] == from_gw
+        and r.get("exp_points_ep_next") is not None
+        and float(r["exp_points_ep_next"]) > 0
+        and float(r["exp_points_model"]) > 0
+    ]
+    regime = ep_next_regime(pairs, season_started=season_started)
+    base = regime["blend_weight"]
+    if base <= 0:
+        return regime
+    for r in rows:
+        if r["gw"] != from_gw:
+            continue
+        ep = r.get("exp_points_ep_next")
+        if ep is None or float(ep) <= 0:
+            continue
+        # Scale the external weight by OUR availability read. FPL's ep_next does
+        # not always reflect fresh injury news, and without this an unavailable
+        # player would be resurrected by the blend.
+        w = base * availability.get(r["player_id"], 1.0)
+        r["exp_points"] = round(
+            (1.0 - w) * float(r["exp_points_model"]) + w * float(ep), 3)
+    return regime
+
+
+def record_regime(conn: sqlite3.Connection, regime: dict[str, Any]) -> None:
+    """Stamp the active projection regime into ``meta`` so it reaches meta.json.
+
+    The regime is the difference between "these are Gaffer's numbers" and "these
+    are 70% somebody else's". It travels with the artifact for the same reason
+    the model version does.
+    """
+    from gaffer.store import db
+
+    db.set_meta(conn, "projection_regime", regime.get("regime"))
+    db.set_meta(conn, "projection_regime_reason", regime.get("reason") or "")
+    db.set_meta(conn, "ep_next_blend_weight", regime.get("blend_weight"))
+    for key in ("sample", "ep_max", "spread_ratio"):
+        val = regime.get(key)
+        db.set_meta(conn, f"ep_next_{key}", "" if val is None else val)
+
 
 def _rate(player: Any, key: str) -> float:
     """A per-90 rate from the player row, tolerating absent columns.
@@ -208,7 +372,10 @@ def _project_one_fixture(
     exp_defcon_pts = r["defcon_p_hit"] * r["defcon_pts"]
 
     # --- appearance -----------------------------------------------------
-    exp_appearance = r["p60"] * 2.0 + (r["p_play"] - r["p60"]) * 1.0
+    exp_appearance = (
+        r["p60"] * config.APPEARANCE_LONG
+        + (r["p_play"] - r["p60"]) * config.APPEARANCE_SHORT
+    )
 
     # --- goals conceded (T-13) ------------------------------------------
     # Negative counterpart to the clean sheet, from the same lambda: a defender
@@ -326,21 +493,16 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
             acc = {k: sum(part[k] for part in parts) for k in additive}
             # p_start is a per-match property, not additive across a double.
             acc["p_start"] = max((part["p_start"] for part in parts), default=0.0)
-            # T-15: blend FPL's own expected points for the NEXT gameweek only.
-            # `ep_next` is a one-week-ahead number and does not exist for later
-            # gameweeks, so h>=2 stays pure Gaffer. The model's own estimate is
-            # retained separately so the component breakdown still adds up and
-            # the external number is never presented as Gaffer's own.
+            # T-15: FPL's own expected points for the NEXT gameweek are blended
+            # in afterwards, in one pass over every row, because the decision to
+            # blend at all depends on the whole population (see
+            # `apply_ep_next_blend`). `ep_next` is a one-week-ahead number and
+            # does not exist for later gameweeks, so h>=2 is always pure Gaffer.
+            # The model's own estimate is retained separately so the component
+            # breakdown still adds up and the external number is never presented
+            # as Gaffer's own.
             model_points = acc["exp_points"]
-            blended = model_points
             ep = p["ep_next"] if "ep_next" in p.keys() else None
-            if gw == from_gw and ep is not None and float(ep) > 0:
-                # Scale the external weight by OUR availability read. FPL's
-                # ep_next does not always reflect fresh injury news, and without
-                # this an unavailable player would be resurrected by the blend.
-                w = config.EP_NEXT_BLEND_WEIGHT * avail
-                blended = (1.0 - w) * model_points + w * float(ep)
-            acc["exp_points"] = blended
             proj = GwProjection(
                 player_id=p["id"], gw=gw, confidence=conf, generated_at=now,
                 exp_points_model=round(model_points, 3),
@@ -348,6 +510,16 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
                 **{k: round(v, 3) for k, v in acc.items()},
             )
             rows.append(asdict(proj))
+
+    # The h=1 blend, decided over the whole population rather than per player:
+    # an external forecast that cannot separate anybody must not be allowed to
+    # flatten a ranking. Runs before the snapshot so what is retained for later
+    # scoring is exactly what was published.
+    regime = apply_ep_next_blend(
+        rows, from_gw=from_gw, availability=avail_by_player,
+        season_started=games_played > 0,
+    )
+    record_regime(conn, regime)
 
     from gaffer.store import db
 

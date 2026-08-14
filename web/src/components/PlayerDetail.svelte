@@ -37,11 +37,22 @@
           { label: 'Assists', v: player.breakdown.assists, c: '#fab219' },
           { label: 'Clean sheet', v: player.breakdown.clean_sheet, c: '#60a5fa' },
           { label: 'DEFCON', v: player.breakdown.defcon, c: '#10b981' },
+          { label: 'Saves', v: player.breakdown.saves ?? 0, c: '#38bdf8' },
           { label: 'Bonus', v: player.breakdown.bonus, c: '#34d399' },
         ].filter((p) => p.v > 0.001)
       : [],
   )
   const total = $derived(player?.next_gw_xp ?? 0)
+  // The card used to show six of the ten components under a headline that was a
+  // blend of a seventh thing, so the arithmetic on screen could never close.
+  // `other` carries the negative terms and `blend` names the gap between
+  // Gaffer's own model number and the published one, so the column adds up.
+  const other = $derived(player?.breakdown.other ?? 0)
+  const modelXp = $derived(player?.model_xp ?? null)
+  const blend = $derived(
+    player && modelXp != null ? Math.round((player.next_gw_xp - modelXp) * 100) / 100 : 0,
+  )
+  const showsLedger = $derived(Math.abs(other) >= 0.005 || Math.abs(blend) >= 0.005)
   const hasProjection = $derived(total > 0.05 && parts.length > 0)
   const partsSum = $derived(parts.reduce((s, p) => s + p.v, 0) || 1)
   const photo = $derived(player ? playerPhoto(player.code, '250x250') : '')
@@ -159,6 +170,27 @@
               {/each}
             </div>
 
+            {#if showsLedger}
+              <div class="mt-2.5 pt-2.5 border-t border-line grid grid-cols-2 gap-x-5 gap-y-1.5 text-[13px]">
+                {#if Math.abs(other) >= 0.005}
+                  <div class="flex items-center justify-between">
+                    <span class="text-muted">Conceded, cards, other</span>
+                    <span class="tabular-nums text-text">{other.toFixed(2)}</span>
+                  </div>
+                {/if}
+                {#if Math.abs(blend) >= 0.005}
+                  <div class="flex items-center justify-between">
+                    <span class="text-muted" title="FPL publishes its own one-week expected points; the pipeline blends it in when it carries information.">FPL ep_next blend</span>
+                    <span class="tabular-nums text-text">{blend > 0 ? '+' : ''}{blend.toFixed(2)}</span>
+                  </div>
+                {/if}
+                <div class="flex items-center justify-between col-span-2 font-semibold">
+                  <span class="text-muted">Total xP</span>
+                  <span class="tabular-nums text-brand-light">{total.toFixed(2)}</span>
+                </div>
+              </div>
+            {/if}
+
             {#if dist && dist.ceiling > 0}
               <!-- distribution, scaled from 0 -->
               <div class="mt-4">
@@ -169,7 +201,7 @@
                 </div>
                 <div class="flex justify-between text-[11px] mt-1.5 tabular-nums">
                   <span class="text-muted2">Floor <b class="text-muted">{dist.floor}</b></span>
-                  <span class="text-muted2">Median <b class="text-brand-light">{total.toFixed(1)}</b></span>
+                  <span class="text-muted2">Expected <b class="text-brand-light">{total.toFixed(1)}</b></span>
                   <span class="text-muted2">Ceiling <b class="text-muted">{dist.ceiling}</b></span>
                 </div>
               </div>

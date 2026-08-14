@@ -20,7 +20,9 @@
   const d = $derived(parsed.kind === 'ok' ? parsed.data : null)
   const body = $derived(d?.decision ?? null)
   const meta = $derived(bundle.meta)
-  const fresh = $derived(classifyFreshness(meta?.generated_at, now))
+  // Deadline-aware: near a deadline, and after one, plain age is the wrong
+  // question. See lib/freshness.ts.
+  const fresh = $derived(classifyFreshness(meta?.generated_at, now, meta?.deadline))
   const cmp = $derived(body?.comparison ?? null)
   const exe = $derived(body?.executability ?? null)
   const chip = $derived((d?.chip ?? null) as { recommendation?: string; reason?: string; expected_gain?: number } | null)
@@ -56,7 +58,7 @@
       </div>
       <div class="flex flex-col items-end gap-1">
         <span
-          class="chip {fresh.state === 'fresh' ? 'chip-good' : fresh.state === 'critical' ? 'chip-bad' : 'chip-warn'}"
+          class="chip {fresh.state === 'fresh' ? 'chip-good' : fresh.state === 'critical' || fresh.state === 'expired' ? 'chip-bad' : 'chip-warn'}"
           title={fresh.title}
         >{fresh.label}</span>
         {#if meta?.build_mode === 'generic'}
@@ -271,6 +273,11 @@
             <code>{d.versions.objective_version}</code>, simulation
             <code>{d.versions.sim_version}</code> (seed {d.versions.seed}).
           </li>
+          {#if meta?.projection_regime}
+            <li>
+              One-week projection: <code>{meta.projection_regime}</code>{#if meta.projection_regime_reason} — {meta.projection_regime_reason}{/if}.
+            </li>
+          {/if}
           {#if d.squad_state.source_event}
             <li>Your squad was read from GW{d.squad_state.source_event}.</li>
           {/if}

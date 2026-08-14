@@ -436,6 +436,85 @@ def test_triple_captain_multiplies_by_three():
     assert tc.confirmed - base.confirmed == 10
 
 
+def test_the_triple_captain_multiplier_reaches_the_autosub_record():
+    """The defect: `score_squad` recomputed the multiplier locally and left
+    `Autosubs.multiplier` at 2, so `largest_swing` — which reads it from there —
+    understated a Triple Captain week by a third."""
+    tc = live.score_squad(XI, BENCH, POS, plive(p9=(10, 0)), captain=9,
+                          triple_captain=True)
+    assert tc.autosubs.multiplier == 3
+    plain = live.score_squad(XI, BENCH, POS, plive(p9=(10, 0)), captain=9)
+    assert plain.autosubs.multiplier == 2
+
+
+def test_a_triple_captain_swing_is_measured_at_three_times():
+    st = plive(p9=(20, 3))
+    rival_xi = [p for p in XI if p != 9] + [15]
+    mine_tc = live.score_squad(XI, BENCH, POS, st, captain=9, entry_id=1,
+                               triple_captain=True)
+    mine_x2 = live.score_squad(XI, BENCH, POS, st, captain=9, entry_id=1)
+    theirs = live.score_squad(rival_xi, BENCH, POS, st, captain=1, entry_id=2)
+    tc = live.largest_swing(mine_tc, [theirs], st)
+    x2 = live.largest_swing(mine_x2, [theirs], st)
+    assert tc["player_id"] == x2["player_id"] == 9
+    assert tc["swing"] == pytest.approx(x2["swing"] * 1.5), \
+        "x3 instead of x2 is exactly 50% more swing"
+
+
+def test_a_blanked_captain_and_vice_still_multiply_nobody_under_triple_captain():
+    st = plive(p9=(0, 0), p10=(0, 0))
+    for pid in (9, 10):
+        st[pid] = live.PlayerLive(id=pid, minutes=0, confirmed=0, provisional=0,
+                                  played=False, finished=True)
+    s = live.score_squad(XI, BENCH, POS, st, captain=9, vice=10,
+                         triple_captain=True)
+    assert s.autosubs.captain is None
+    assert s.autosubs.multiplier == 1
+
+
+# --------------------------------------------------------------------------
+# Season baseline and hits
+# --------------------------------------------------------------------------
+
+HISTORY = {"current": [
+    {"event": 1, "points": 62, "total_points": 62, "event_transfers_cost": 0},
+    {"event": 2, "points": 51, "total_points": 109, "event_transfers_cost": 4},
+    {"event": 3, "points": 70, "total_points": 179, "event_transfers_cost": 0},
+    {"event": 4, "points": 40, "total_points": 211, "event_transfers_cost": 8},
+]}
+
+
+def test_the_baseline_is_the_total_before_this_gameweek():
+    """`summary_overall_points` cannot be used: once the gameweek starts scoring
+    it already contains the points the live view is computing."""
+    baseline, hits = live.entry_baseline_and_hits(HISTORY, 4)
+    assert baseline == 179, "cumulative total at GW3, not the season total"
+    assert hits == 8, "the -8 paid FOR gameweek 4"
+
+
+def test_hits_are_read_not_assumed_zero():
+    assert live.entry_baseline_and_hits(HISTORY, 2)[1] == 4
+    assert live.entry_baseline_and_hits(HISTORY, 3)[1] == 0
+
+
+def test_the_first_gameweek_has_no_baseline():
+    assert live.entry_baseline_and_hits(HISTORY, 1) == (0, 0)
+
+
+def test_a_missing_history_is_zero_rather_than_an_exception():
+    assert live.entry_baseline_and_hits(None, 5) == (0, 0)
+    assert live.entry_baseline_and_hits({}, 5) == (0, 0)
+    assert live.entry_baseline_and_hits({"current": []}, 5) == (0, 0)
+
+
+def test_a_history_without_cumulative_totals_is_rebuilt_net_of_hits():
+    hist = {"current": [
+        {"event": 1, "points": 62, "event_transfers_cost": 0},
+        {"event": 2, "points": 51, "event_transfers_cost": 4},
+    ]}
+    assert live.entry_baseline_and_hits(hist, 3)[0] == 62 + 51 - 4
+
+
 def test_bench_boost_scores_all_fifteen_and_reports_no_bench_points():
     s = live.score_squad(XI, BENCH, POS, plive(), captain=9, bench_boost=True)
     assert s.confirmed == 15 * 2 + 2      # 15 players + captain's extra copy

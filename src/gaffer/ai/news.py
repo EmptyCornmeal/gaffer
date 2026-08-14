@@ -242,8 +242,11 @@ def generate(
 
     if not items:
         reason = G.REASON_NO_SOURCE_ITEMS
-    elif not llm.has_credentials():
-        reason = G.REASON_NO_CREDENTIALS
+    elif not llm.narration_enabled():
+        # Opt-in: see gaffer.ai.llm. The templated digest cites the same source
+        # items and carries the same links, so nothing on the page depends on it.
+        reason = (G.REASON_NARRATION_DISABLED if llm.has_credentials()
+                  else G.REASON_NO_CREDENTIALS)
     else:
         try:
             # The source block is delimited and labelled as data. The call has

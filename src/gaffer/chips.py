@@ -32,6 +32,18 @@ TRIPLE_CAPTAIN = "3xc"
 USE_THRESHOLD = 4.0
 
 
+@dataclass(frozen=True)
+class ChipUse:
+    """A chip the manager has already played, and when.
+
+    The gameweek matters. With two sets of every chip a bare name cannot say
+    *which* instance was spent — see ``available_windows``.
+    """
+
+    name: str
+    event: int | None = None
+
+
 @dataclass
 class ChipWindow:
     name: str
@@ -65,19 +77,33 @@ def parse_windows(bootstrap: dict[str, Any]) -> list[ChipWindow]:
 
 
 def available_windows(
-    windows: list[ChipWindow], used: list[str], gw: int,
+    windows: list[ChipWindow], used: list[ChipUse | str], gw: int,
 ) -> list[ChipWindow]:
     """Windows still usable at ``gw``, after removing spent chips.
 
-    A chip name may appear twice (two sets); each use consumes one instance, so
-    playing the first-half Wildcard leaves the second-half one available.
+    A chip name may appear twice (two sets), so a use has to be matched to the
+    *right* instance. When the use carries the gameweek it was played in — which
+    ``entry/{id}/history`` does — consume the window whose range covers it.
+
+    Matching on the name alone always deleted the earliest window bearing that
+    name. Play the second-half Wildcard while the first-half one expired unused
+    and it removed the *expired* window, leaving the one you had just spent
+    looking available — so it could be recommended a second time. A bare name is
+    still accepted, and still falls back to first-match, because that is all a
+    caller without event data can offer.
     """
     remaining = list(windows)
-    for name in used:
-        for i, w in enumerate(remaining):
-            if w.name == name:
-                del remaining[i]
-                break
+    for use in used:
+        name = use.name if isinstance(use, ChipUse) else str(use)
+        event = use.event if isinstance(use, ChipUse) else None
+        idx = None
+        if event is not None:
+            idx = next((i for i, w in enumerate(remaining)
+                        if w.name == name and w.covers(event)), None)
+        if idx is None:
+            idx = next((i for i, w in enumerate(remaining) if w.name == name), None)
+        if idx is not None:
+            del remaining[idx]
     return [w for w in remaining if w.covers(gw)]
 
 
@@ -191,6 +217,9 @@ class ChipPlan:
     used: list[str]
     reason: str
     threshold: float = USE_THRESHOLD
+    #: False when the played-chip ledger could not be read. Travels with the
+    #: artifact so no screen can present "no chips used" as a fact we know.
+    state_known: bool = True
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -202,14 +231,15 @@ class ChipPlan:
             "alternatives": self.alternatives,
             "available": self.available,
             "used": self.used,
+            "state_known": self.state_known,
             "reason": self.reason,
         }
 
 
 def plan_chips(
     evaluations: list[ChipEvaluation], windows: list[ChipWindow],
-    used: list[str], gw: int, threshold: float = USE_THRESHOLD,
-    squad_known: bool = True,
+    used: list[ChipUse | str], gw: int, threshold: float = USE_THRESHOLD,
+    squad_known: bool = True, chip_state_known: bool = True,
 ) -> ChipPlan:
     """Compare 'use now' against holding, and say which — with a reason.
 
@@ -217,17 +247,32 @@ def plan_chips(
     squad (pre-season, before any deadline has passed, FPL exposes no picks). The
     gains are still worth showing, but a chip is spent on a squad you actually
     own, so nothing is recommended.
+
+    ``chip_state_known=False`` means the played-chip ledger could not be read.
+    That is not the same as "no chips have been played", and treating it as such
+    is how an already-spent chip gets recommended a second time. Recommend
+    nothing and say why.
     """
     avail = available_windows(windows, used, gw)
     usable = {w.name for w in avail}
     live = [e for e in evaluations if e.chip in usable]
     live.sort(key=lambda e: -e.expected_gain)
     alts = [e.as_dict() for e in live]
+    used_names = [u.name if isinstance(u, ChipUse) else str(u) for u in used]
+
+    if not chip_state_known:
+        return ChipPlan(
+            "hold", None, live[0].expected_gain if live else 0.0, alts,
+            [w.as_dict() for w in avail], used_names,
+            "your chip history could not be read, so Gaffer cannot tell which "
+            "chips you have already played — recommending one now risks "
+            "spending it twice",
+            threshold, state_known=False)
 
     if not squad_known:
         return ChipPlan(
             "hold", None, live[0].expected_gain if live else 0.0, alts,
-            [w.as_dict() for w in avail], list(used),
+            [w.as_dict() for w in avail], used_names,
             "your own squad is not readable yet, so these gains are measured "
             "against a stand-in squad — a chip is spent on the team you actually "
             "own, so nothing is recommended until your picks are public",
@@ -235,30 +280,48 @@ def plan_chips(
 
     if not live:
         return ChipPlan("hold", None, 0.0, alts,
-                        [w.as_dict() for w in avail], list(used),
+                        [w.as_dict() for w in avail], used_names,
                         "no chip is available in this gameweek's windows",
                         threshold)
     best = live[0]
     if best.expected_gain < threshold:
         return ChipPlan(
             "hold", None, best.expected_gain, alts,
-            [w.as_dict() for w in avail], list(used),
+            [w.as_dict() for w in avail], used_names,
             f"the best available chip ({best.chip}) is worth only "
             f"{best.expected_gain:.1f} points here, below the {threshold:.0f}-point "
             "bar for spending a one-per-half option",
             threshold)
     return ChipPlan(
         best.chip, best.gameweek, best.expected_gain, alts,
-        [w.as_dict() for w in avail], list(used),
+        [w.as_dict() for w in avail], used_names,
         f"{best.chip} projects +{best.expected_gain:.1f} points "
         f"(95% CI {best.ci95[0]:.1f} to {best.ci95[1]:.1f}) in GW{best.gameweek}",
         threshold)
 
 
-def chips_used_from_history(history: dict[str, Any] | None) -> list[str]:
-    """Names of chips already played, from ``entry/{id}/history``."""
-    out = []
+def chip_uses_from_history(history: dict[str, Any] | None) -> list[ChipUse]:
+    """Chips already played **and the gameweek each was played in**.
+
+    The event is what lets ``available_windows`` consume the right instance when
+    a chip exists in two sets.
+    """
+    out: list[ChipUse] = []
     for c in (history or {}).get("chips") or []:
-        if isinstance(c, dict) and c.get("name"):
-            out.append(str(c["name"]))
+        if not (isinstance(c, dict) and c.get("name")):
+            continue
+        try:
+            event = int(c["event"]) if c.get("event") is not None else None
+        except (TypeError, ValueError):
+            event = None
+        out.append(ChipUse(str(c["name"]), event))
     return out
+
+
+def chips_used_from_history(history: dict[str, Any] | None) -> list[str]:
+    """Names of chips already played, from ``entry/{id}/history``.
+
+    Kept for callers that only need the names; anything matching a use back to a
+    window should use :func:`chip_uses_from_history` instead.
+    """
+    return [u.name for u in chip_uses_from_history(history)]

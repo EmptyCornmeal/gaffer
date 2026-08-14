@@ -100,12 +100,15 @@
 
   // Data age. The deadline countdown ticks regardless of how old the underlying
   // projections are, so freshness gets its own always-visible state.
-  const freshness = $derived(classifyFreshness(meta?.generated_at, now))
+  // The deadline is passed in on purpose: near one, and after one, plain age is
+  // the wrong question. See lib/freshness.ts.
+  const freshness = $derived(classifyFreshness(meta?.generated_at, now, meta?.deadline))
   const freshTone = $derived(
     {
       fresh: 'text-muted border-line',
       stale: 'text-yellow border-yellow/40 bg-yellow/10',
       critical: 'text-red border-red/40 bg-red/10',
+      expired: 'text-red border-red/40 bg-red/10',
       unknown: 'text-red border-red/40 bg-red/10',
     }[freshness.state],
   )

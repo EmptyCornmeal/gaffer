@@ -7,6 +7,10 @@ export interface Breakdown {
   clean_sheet: number
   defcon: number
   bonus: number
+  /** Goalkeeper save points. Optional so an older artifact still parses. */
+  saves?: number
+  /** Goals conceded + cards + own goals/penalties: usually negative. */
+  other?: number
 }
 
 export interface Tag {
@@ -84,6 +88,10 @@ export interface Player {
   xgi90: number
   defcon90: number
   next_gw_xp: number
+  /** Gaffer's own component sum. Equals `next_gw_xp` unless the h=1 blend ran. */
+  model_xp?: number | null
+  /** FPL's published one-week number, for reference. Never shown as ours. */
+  ep_next_xp?: number | null
   horizon_xp: number
   xp_window: number
   gw_xp: { gw: number; xp: number }[]
@@ -108,6 +116,15 @@ export interface Meta {
   entry_name: string | null
   manager_name: string | null
   overall_rank: string | null
+  overall_points?: string | null
+  /** 'component_only' | 'blended' — which h=1 number was published, and why. */
+  projection_regime?: string | null
+  projection_regime_reason?: string | null
+  ep_next_blend_weight?: string | null
+  /** Whether the live FPL scoring table matched the rules Gaffer models. */
+  rule_scoring_source?: string | null
+  rule_scoring_status?: string | null
+  rule_scoring_drift?: string | null
   bank: string | null
   team_value: string | null
   active_chip: string | null

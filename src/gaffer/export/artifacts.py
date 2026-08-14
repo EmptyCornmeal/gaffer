@@ -102,9 +102,18 @@ def build_meta(
         "bank_source", "bank_exact", "free_transfers_source",
         "selling_price_confidence", "selling_prices_exact", "selling_prices_total",
         "recommendation_executable", "team_state_reason",
-        "entry_name", "manager_name", "overall_rank", "bank", "team_value", "active_chip",
+        "entry_name", "manager_name", "overall_rank", "overall_points",
+        "bank", "team_value", "active_chip",
         "free_transfers", "rule_budget", "rule_club_limit", "rule_squad_size",
         "rule_sell_on_fee", "rule_max_extra_ft", "rule_transfers_cap",
+        # Which scoring table this run was checked against, and whether it
+        # matched what the model encodes.
+        "rule_scoring_source", "rule_scoring_status", "rule_scoring_drift",
+        # Which h=1 number was published: Gaffer's component model alone, or a
+        # blend with FPL's ep_next. The difference is large enough to reorder a
+        # squad, so it travels with the artifact like a model version does.
+        "projection_regime", "projection_regime_reason", "ep_next_blend_weight",
+        "ep_next_sample", "ep_next_ep_max", "ep_next_spread_ratio",
     ]
     meta = {}
     for k in keys:
@@ -174,7 +183,9 @@ def build_players(
     q = """
         SELECT pl.*, pr.exp_points, pr.p_start, pr.confidence, pr.exp_goal_pts,
                pr.exp_assist_pts, pr.exp_cs_pts, pr.exp_defcon_pts, pr.exp_bonus_pts,
-               pr.exp_appearance, pr.exp_minutes
+               pr.exp_appearance, pr.exp_minutes, pr.exp_conceded_pts,
+               pr.exp_saves_pts, pr.exp_cards_pts, pr.exp_misc_pts,
+               pr.exp_points_model, pr.exp_points_ep_next
         FROM players pl
         LEFT JOIN projections pr ON pr.player_id = pl.id AND pr.gw = ?
     """
@@ -240,6 +251,17 @@ def build_players(
                 "rationale": player_rationale(rat_input),
                 "tags": player_tags(rat_input),
                 "fixtures": fixtures,
+                # Gaffer's own component sum, and FPL's ep_next, published
+                # beside the shipped number so a card can always reconcile what
+                # it is showing. When the two differ the difference is the h=1
+                # blend, and `meta.projection_regime` says why it was applied.
+                "model_xp": (round(r["exp_points_model"], 2)
+                             if r["exp_points_model"] is not None else None),
+                "ep_next_xp": (round(r["exp_points_ep_next"], 2)
+                               if r["exp_points_ep_next"] is not None else None),
+                # Every component, not six of ten: `saves` and `other` were
+                # missing, so the breakdown could not add up to anything even
+                # before the blend was in the picture. It now sums to `model_xp`.
                 "breakdown": {
                     "appearance": round(r["exp_appearance"] or 0, 2),
                     "goals": round(r["exp_goal_pts"] or 0, 2),
@@ -247,6 +269,10 @@ def build_players(
                     "clean_sheet": round(r["exp_cs_pts"] or 0, 2),
                     "defcon": round(r["exp_defcon_pts"] or 0, 2),
                     "bonus": round(r["exp_bonus_pts"] or 0, 2),
+                    "saves": round(r["exp_saves_pts"] or 0, 2),
+                    "other": round((r["exp_conceded_pts"] or 0)
+                                   + (r["exp_cards_pts"] or 0)
+                                   + (r["exp_misc_pts"] or 0), 2),
                 },
             }
         )

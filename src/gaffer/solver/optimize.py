@@ -75,7 +75,8 @@ class Player:
     value: float          # decayed horizon expected points
     next_gw_points: float
     ownership: float = 0.0  # selected-by %, an effective-ownership proxy (rank defence)
-    ceiling: float = 0.0    # 90th-pct next-GW outcome (Monte-Carlo), for chase-captaincy
+    ceiling: float = 0.0    # 90th-pct next-GW outcome (Monte-Carlo)
+    sim_mean: float = 0.0   # mean of that SAME distribution — the ceiling's own baseline
     in_squad: bool = False  # currently owned (transfer mode)
     sell_value: int = 0   # what we'd recoup if sold (FPL selling price; owned only)
 
@@ -134,6 +135,10 @@ def load_players(conn: sqlite3.Connection, from_gw: int, horizon: int) -> dict[i
         p.value += r["exp_points"] * weight
         if r["gw"] == from_gw:
             p.next_gw_points = r["exp_points"]
+    # Default the simulated mean to the point estimate, so a player with no
+    # distribution contributes zero upside rather than his whole ceiling.
+    for p in players.values():
+        p.sim_mean = p.next_gw_points
     return players
 
 
@@ -159,6 +164,7 @@ def optimise(
             d = distributions.get(pid)
             if d:
                 p.ceiling = d.get("ceiling", 0.0)
+                p.sim_mean = d.get("mean", p.next_gw_points)
     ids = list(players)
     params = params or OBJ.DEFAULT
     OBJ.assert_no_ft_arbitrage(params)
@@ -198,13 +204,10 @@ def optimise(
             start[i] * (players[i].ownership / 100.0) * players[i].next_gw_points
             for i in ids
         )
-        # Captaincy is the biggest rank lever, so make it EO-aware too: under a
-        # template stance, captaining a heavily-owned player (the crowd's captain)
-        # defends rank even at a small expected-points cost.
-        obj += template_weight * pulp.lpSum(
-            cap[i] * (players[i].ownership / 100.0) * players[i].next_gw_points
-            for i in ids
-        )
+        # There is deliberately NO ownership term on the armband. Captaincy
+        # optimises pure expected points, by decision, so that the solver, the
+        # weekly decision and every screen name the same captain. Ownership may
+        # be shown next to that captain as context; it may not choose him.
 
     # --- bench value (T-19) ------------------------------------------------
     # This term was absent: bench players carried ZERO objective weight, so the
@@ -216,16 +219,26 @@ def optimise(
             (squad[i] - start[i]) * players[i].next_gw_points
             for i in ids if players[i].position == _pos
         )
-    # --- ceiling / upside term (rank is driven by ceiling, not mean) --------
-    # Reward the next-GW upside (ceiling above mean) of the starting XI and, more
-    # heavily, the captain (whose upside is doubled). Scaled by horizon_factor so
-    # premiums + a second forward are valued the same at 1/3/5 GWs.
-    upside = {i: max(0.0, players[i].ceiling - players[i].next_gw_points) for i in ids}
+    # --- ceiling / upside term (squad structure, not captaincy) -------------
+    # Reward the next-GW upside of the starting XI: without it the solver
+    # maximises mean points and (a) drops elite forwards whose mean is modest but
+    # ceiling is elite, and (b) stacks low-ceiling DEFCON defenders into a thin
+    # lone-striker shape at longer horizons. Scaled by horizon_factor so the
+    # structure is the same at 1/3/5 GWs.
+    #
+    # Upside is measured against the mean of the SAME distribution the ceiling
+    # came from. It used to be `ceiling - next_gw_points`, subtracting a
+    # (possibly blended) point estimate from an unblended Monte-Carlo percentile,
+    # so the term was inflated by exactly the blend gap — largest for precisely
+    # the players the blend hit hardest.
+    #
+    # The captain carries no upside term: the armband is decided on expected
+    # points alone, so every surface agrees on it.
+    upside = {i: max(0.0, players[i].ceiling - players[i].sim_mean) for i in ids}
     if any(upside.values()):
         obj += CEILING_WEIGHT * horizon_factor * pulp.lpSum(
             start[i] * upside[i] for i in ids
         )
-        obj += CEILING_WEIGHT * 2.0 * pulp.lpSum(cap[i] * upside[i] for i in ids)
 
     # --- budget-keeper lean (scaled by horizon so it stays proportional to value)
     obj -= GK_SPEND_PENALTY * horizon_factor * pulp.lpSum(
@@ -313,8 +326,13 @@ def optimise(
         (i for i in chosen if i not in starting),
         key=lambda i: (players[i].position != "GKP", -players[i].value),
     )
+    # The vice is the next-best armband, so it is chosen on the same quantity as
+    # the armband: next-gameweek expected points. Ranking it by decayed horizon
+    # value instead made `recommendation.json` name a different vice from the
+    # weekly decision and the client's own lineup, on identical data.
     vice = max(
-        (i for i in starting if i != captain), key=lambda i: players[i].value, default=captain
+        (i for i in starting if i != captain),
+        key=lambda i: players[i].next_gw_points, default=captain
     )
     counts = {pos: sum(1 for i in starting if players[i].position == pos)
               for pos in config.POSITIONS}
@@ -370,7 +388,8 @@ def _degraded(
     starting = _pick_xi(players, chosen)
     captain = max(starting, key=lambda i: players[i].next_gw_points, default=0)
     vice = max(
-        (i for i in starting if i != captain), key=lambda i: players[i].value,
+        (i for i in starting if i != captain),
+        key=lambda i: players[i].next_gw_points,
         default=captain,
     )
     bench = sorted(

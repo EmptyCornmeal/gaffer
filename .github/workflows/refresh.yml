@@ -32,6 +32,12 @@ env:
   GAFFER_ENTRY_ID: '1066421'
   GAFFER_LEAGUE_IDS: '271619'
   PYTHONUTF8: '1'
+  # Paid AI narration is OPT-IN. The ANTHROPIC_API_KEY secret below is passed to
+  # the pipeline, but a key is not consent to spend: without this flag the
+  # Verdict and News ship their deterministic templates, which carry the same
+  # numbers and the same links. Set to '1' to buy prose.
+  # The narrator never calculates anything, so this changes words and nothing else.
+  GAFFER_AI_NARRATION: '0'
 
 jobs:
   refresh:
@@ -83,8 +89,8 @@ jobs:
 
       - name: Run pipeline
         env:
-          # Optional: set this repo secret to get the AI-written Verdict/News.
-          # Without it the pipeline falls back to deterministic templates.
+          # Only used when GAFFER_AI_NARRATION is on (see the env block above).
+          # Without either, the pipeline ships deterministic templates.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python -m gaffer.pipeline
 

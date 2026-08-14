@@ -88,19 +88,27 @@ def test_a_heavily_owned_lower_xp_player_no_longer_wins_the_armband(seeded):
     assert sol.captain == star, "a 0.5 xP edge must beat a 94-point ownership gap"
 
 
-def test_the_old_weight_would_have_flipped_it(seeded):
-    """Demonstrates the defect the neutralisation removes."""
+def test_no_ownership_weight_can_change_the_armband(seeded):
+    """Captaincy optimises pure expected points, by decision.
+
+    The old objective carried an ownership term on the captain, and at weight 8
+    it captained the popular player over a genuinely better one. The term is
+    gone: the squad dial may still exist, but nothing it does may reach the
+    armband, so every surface names the same captain.
+    """
     conn = seeded
     star, crowd = a_mid(conn, 0), a_mid(conn, 1)
     set_xp(conn, star, 9.0)
     set_xp(conn, crowd, 8.5)
     set_owned(conn, star, 1.0)
     set_owned(conn, crowd, 95.0)
-    old = optimize.optimise(conn, 1, 1, free_transfers=1, template_weight=8.0)
-    new = optimize.optimise(conn, 1, 1, free_transfers=1, template_weight=0.0)
-    assert old.captain == crowd, "the old 8.0 weight captained the popular player"
-    assert new.captain == star
-    assert old.captain != new.captain
+    captains = {
+        w: optimize.optimise(conn, 1, 1, free_transfers=1,
+                             template_weight=w).captain
+        for w in (0.0, 1.0, 8.0, 50.0)
+    }
+    assert set(captains.values()) == {star}, (
+        f"ownership weight changed the captain: {captains}")
 
 
 def test_vice_is_the_next_best_and_distinct(seeded):
@@ -111,6 +119,26 @@ def test_vice_is_the_next_best_and_distinct(seeded):
     sol = optimize.optimise(conn, 1, 1, free_transfers=1, template_weight=0.0)
     assert sol.captain != sol.vice
     assert sol.captain in sol.starting and sol.vice in sol.starting
+
+
+def test_the_vice_is_the_second_highest_expected_points_starter(seeded):
+    """Same basis as the armband, so every surface names the same pair.
+
+    Ranking the vice by decayed horizon value while the captain used next-GW
+    points made `recommendation.json` disagree with the weekly decision and with
+    the client's own lineup on identical data.
+    """
+    conn = seeded
+    a, b, c = a_mid(conn, 0), a_mid(conn, 1), a_mid(conn, 2)
+    set_xp(conn, a, 12.0)
+    set_xp(conn, b, 11.0)
+    set_xp(conn, c, 10.0)
+    sol = optimize.optimise(conn, 1, 1, free_transfers=1, template_weight=0.0)
+    xp = {r["player_id"]: r["exp_points"]
+          for r in conn.execute("SELECT player_id, exp_points FROM projections")}
+    ranked = sorted(sol.starting, key=lambda i: -xp[i])
+    assert sol.captain == ranked[0]
+    assert sol.vice == ranked[1]
 
 
 # --------------------------------------------------------------------------

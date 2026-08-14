@@ -233,7 +233,9 @@ def simulate(
         for i, r in enumerate(group):
             row = np.zeros(n_sims, dtype=np.float32)
             # appearance
-            row += np.where(started[i], 2.0, np.where(played[i], 1.0, 0.0))
+            row += np.where(
+                started[i], float(config.APPEARANCE_LONG),
+                np.where(played[i], float(config.APPEARANCE_SHORT), 0.0))
             # attacking returns
             row += alloc[i] * config.GOAL_POINTS[r.position]
             row += assists[i] * config.ASSIST_POINTS

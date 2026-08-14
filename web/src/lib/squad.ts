@@ -114,13 +114,22 @@ export function formationOf(squad: Player[], starterIds: number[]): string {
   return `${by.DEF}-${by.MID}-${by.FWD}`
 }
 
-// Captaincy is EO-aware to match the model/solver + the verdict: a heavily-owned
-// premium is the rank-safe armband even when a differential out-projects it on
-// raw points. Without this the UI captained by raw xP (Bruno) while the verdict
-// said Haaland — a self-contradiction. Weight ~ the solver's balanced stance.
-const CAPTAIN_EO_WEIGHT = 8
+// Captaincy optimises PURE expected points, and nothing else.
+//
+// This used to be `next_gw_xp * (1 + 8 * ownership)`. At that weight ownership
+// was the dominant term — a player needed 1.27x the expected points of a
+// 73.5%-owned rival merely to draw level — so in practice it captained whoever
+// the crowd owned. It was added to stop the UI contradicting the verdict, and it
+// only moved the contradiction: My Team captained the most-owned player while
+// Home, `recommendation.json` and the verdict captained the highest-xP one, from
+// the same data. It also quietly reinstated the global-ownership term the solver
+// had deleted on measured evidence (it cost 2.11 xP on the armband).
+//
+// One rule, in the solver and here: the captain is the starter with the highest
+// expected points. Ownership is context to show beside that choice, never an
+// input to it.
 export function captainScore(p: Player): number {
-  return p.next_gw_xp * (1 + CAPTAIN_EO_WEIGHT * ((p.owned_by || 0) / 100))
+  return p.next_gw_xp
 }
 
 /** Auto-pick the best legal XI (by expected points) + EO-aware captain/vice. */

@@ -5,7 +5,7 @@
 // first-class UI state now, and the arithmetic lives here so no component can
 // quietly disagree about what "stale" means.
 
-export type FreshnessState = 'fresh' | 'stale' | 'critical' | 'unknown'
+export type FreshnessState = 'fresh' | 'stale' | 'critical' | 'expired' | 'unknown'
 
 export interface Freshness {
   state: FreshnessState
@@ -23,6 +23,14 @@ export const FRESH_MS = 12 * 60 * 60 * 1000
 export const STALE_MS = 36 * 60 * 60 * 1000
 /** Tolerated clock skew before a future timestamp is treated as untrustworthy. */
 export const SKEW_MS = 5 * 60 * 1000
+/**
+ * Inside this much of a deadline, "under twelve hours old" stops being good
+ * enough: this is the window in which press conferences, late fitness news and
+ * price changes land.
+ */
+export const DEADLINE_SOON_MS = 12 * 60 * 60 * 1000
+/** Near a deadline, data older than this is not safe to decide on. */
+export const DEADLINE_MAX_AGE_MS = 3 * 60 * 60 * 1000
 
 function humanAge(ms: number): string {
   if (ms < 60_000) return 'just now'
@@ -38,10 +46,19 @@ function humanAge(ms: number): string {
  *
  * `now` is a parameter rather than a `Date.now()` call so this is testable and
  * so every component in a render pass agrees on the current time.
+ *
+ * `deadline` is the gameweek this advice is *for*. Age alone is the wrong
+ * question near one: the scheduled refresh drifts by up to an hour, so the last
+ * publish before a 17:30 deadline can easily be the 11:45 one — five and a half
+ * hours old, comfortably inside the twelve-hour "fresh" band, and yet predating
+ * every team announcement that matters. And once the deadline has passed the
+ * advice describes a gameweek nobody can change any more. Neither may render as
+ * a reassuring green chip.
  */
 export function classifyFreshness(
   generatedAt: string | null | undefined,
   now: number = Date.now(),
+  deadline?: string | null,
 ): Freshness {
   const unknown = (title: string): Freshness => ({
     state: 'unknown',
@@ -74,13 +91,39 @@ export function classifyFreshness(
   }
 
   const clamped = Math.max(0, ageMs)
-  const state: FreshnessState =
+  let state: FreshnessState =
     clamped < FRESH_MS ? 'fresh' : clamped < STALE_MS ? 'stale' : 'critical'
+  let label = `Updated ${humanAge(clamped)}`
+  let title = `Data generated ${iso} (${humanAge(clamped)})`
 
-  return {
-    state,
-    ageMs,
-    label: `Updated ${humanAge(clamped)}`,
-    title: `Data generated ${iso} (${humanAge(clamped)})`,
+  const dl = deadline == null ? NaN : Date.parse(deadline)
+  if (!Number.isNaN(dl)) {
+    if (now > dl + SKEW_MS) {
+      // The artifact still names a deadline that has already gone, which means
+      // no refresh has run since it passed. Whatever is on screen is advice for
+      // a gameweek that is now locked.
+      return {
+        state: 'expired',
+        ageMs,
+        label: 'Deadline passed',
+        title:
+          `This advice is for a deadline that passed at ${new Date(dl).toISOString().replace('.000', '')} ` +
+          `and has not been refreshed since (data generated ${iso}). It can no longer be acted on.`,
+      }
+    }
+    const untilDeadline = dl - now
+    if (
+      state === 'fresh' &&
+      untilDeadline <= DEADLINE_SOON_MS &&
+      clamped > DEADLINE_MAX_AGE_MS
+    ) {
+      state = 'stale'
+      label = `${humanAge(clamped)} · pre-deadline`
+      title =
+        `Deadline in ${humanAge(untilDeadline)} but this data is ${humanAge(clamped)} old ` +
+        `(generated ${iso}), so it predates the last team-news window. Refresh before deciding.`
+    }
   }
+
+  return { state, ageMs, label, title }
 }

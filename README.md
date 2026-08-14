@@ -57,8 +57,10 @@ FPL API ──► Python pipeline ──► SQLite ──► JSON artifacts ─�
   Europe/London quiet hours. **Dry-run by default and shipped inactive**; see
   `deploy/macmini/`.
 - **Export** (`gaffer.export`) — denormalised `data/*.json` the front-end reads,
-  gated by `gaffer.contract` before anything is published. Every write announces
-  its targets first, and `--dry-run` prints them without touching a file.
+  gated by `gaffer.contract` in `refresh.yml` and `ci.yml` before anything is
+  published. Every write announces its targets first, and `--dry-run` skips the
+  artifacts, the verdict and the news (it still writes SQLite rows — snapshot,
+  review and notification dedupe — so it is not yet fully dry).
 
 ## Quick start
 
@@ -150,9 +152,17 @@ from the *package* location is what silently wrote artifacts into `site-packages
 under a non-editable install, so scheduled runs published nothing while reporting
 success.
 
-**Secrets.** `ANTHROPIC_API_KEY` (optional, enables the AI Verdict/News; templates
-otherwise) goes in a git-ignored `.env` or a GitHub Actions secret — never in
-`gaffer.local.toml`, and never in the committed example.
+**Secrets.** `ANTHROPIC_API_KEY` (optional) goes in a git-ignored `.env` or a
+GitHub Actions secret — never in `gaffer.local.toml`, and never in the committed
+example.
+
+**Paid AI narration is opt-in and off by default.** A configured key is not
+consent to spend: set `GAFFER_AI_NARRATION=1` as well, or the Verdict and News
+ship their deterministic templates (same shape, same numbers, same links,
+`source: "template"`, `fallback_reason: "narration_disabled"`). The AI layer is a
+narrator — it writes prose about numbers the pipeline has already computed and
+never calculates, ranks or alters one — so this switch changes the words on the
+page and nothing else.
 
 ## Deployment
 

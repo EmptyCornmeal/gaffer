@@ -20,6 +20,7 @@ from typing import Any
 
 from gaffer import config
 from gaffer.ai import grounding as G
+from gaffer.ai import llm
 from gaffer.io import write_json_atomic
 
 VERDICT_MODEL = os.environ.get("GAFFER_VERDICT_MODEL", "claude-opus-4-8")
@@ -258,7 +259,7 @@ def find_unselected_mentions(
 
 
 def _has_credentials() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN"))
+    return llm.has_credentials()
 
 
 def _ai_briefing(ctx: dict[str, Any], model: str, correction: str | None = None) -> str:
@@ -395,9 +396,13 @@ def generate(
     violations: list[str] = []
     numeric_violations: list[str] = []
 
-    if not _has_credentials():
+    # Paid narration is opt-in. Without it the deterministic briefing ships —
+    # same shape, same numbers, no metered call. The numbers are the pipeline's
+    # either way; the model never computes one.
+    if not llm.narration_enabled():
         briefing = _template_briefing(ctx)
-        reason = G.REASON_NO_CREDENTIALS
+        reason = (G.REASON_NARRATION_DISABLED if _has_credentials()
+                  else G.REASON_NO_CREDENTIALS)
     else:
         correction: str | None = None
         for attempt in range(1, max_attempts + 1):

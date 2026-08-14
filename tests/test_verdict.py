@@ -159,8 +159,41 @@ def test_ambiguous_english_words_are_not_flagged(data_dir):
 # generate() end-to-end (no credentials, no spend)
 # --------------------------------------------------------------------------
 
+def test_credentials_alone_do_not_buy_narration(data_dir, monkeypatch):
+    """Paid narration is opt-in. A key in CI is not consent to spend on every
+    scheduled run, and the deterministic briefing carries the same numbers."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.delenv("GAFFER_AI_NARRATION", raising=False)
+
+    def boom(ctx, model, correction=None):
+        raise AssertionError("the provider must not be called")
+
+    monkeypatch.setattr(V, "_ai_briefing", boom)
+    out = V.generate(data_dir=data_dir)
+    assert out["source"] == "template"
+    assert out["fallback_reason"] == "narration_disabled"
+    assert out["model"] is None
+
+
+def test_narration_is_off_for_anything_but_an_explicit_yes(monkeypatch):
+    from gaffer.ai import llm
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+    for value in ("", "0", "false", "no", "off", "maybe"):
+        monkeypatch.setenv("GAFFER_AI_NARRATION", value)
+        assert llm.narration_enabled() is False, value
+    for value in ("1", "true", "yes", "on", "TRUE", " On "):
+        monkeypatch.setenv("GAFFER_AI_NARRATION", value)
+        assert llm.narration_enabled() is True, value
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    monkeypatch.setenv("GAFFER_AI_NARRATION", "1")
+    assert llm.narration_enabled() is False, "the flag alone is not credentials"
+
+
 def test_template_path_is_grounded_and_recorded(data_dir, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GAFFER_AI_NARRATION", raising=False)
     monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
     out = V.generate(data_dir=data_dir)
     assert out["source"] == "template"
@@ -174,6 +207,7 @@ def test_ai_output_naming_non_squad_players_is_retried_then_rejected(
     data_dir, monkeypatch
 ):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("GAFFER_AI_NARRATION", "1")
     calls = []
 
     def fake(ctx, model, correction=None):
@@ -199,6 +233,7 @@ def test_ai_output_naming_non_squad_players_is_retried_then_rejected(
 
 def test_ai_output_is_accepted_when_grounded(data_dir, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("GAFFER_AI_NARRATION", "1")
     monkeypatch.setattr(
         V, "_ai_briefing",
         lambda ctx, model, correction=None:
@@ -211,6 +246,7 @@ def test_ai_output_is_accepted_when_grounded(data_dir, monkeypatch):
 
 def test_retry_succeeds_on_second_attempt(data_dir, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("GAFFER_AI_NARRATION", "1")
     seq = iter([
         "Gabriel is superb at the back.",
         "**Virgil is superb at the back.** Haaland captains.",
@@ -226,6 +262,7 @@ def test_retry_succeeds_on_second_attempt(data_dir, monkeypatch):
 
 def test_api_failure_falls_back_safely(data_dir, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("GAFFER_AI_NARRATION", "1")
 
     def boom(ctx, model, correction=None):
         raise RuntimeError("connection reset")
@@ -244,6 +281,7 @@ def test_api_failure_falls_back_safely(data_dir, monkeypatch):
 
 def test_missing_recommendation_does_not_crash(tmp_path, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GAFFER_AI_NARRATION", raising=False)
     d = tmp_path / "empty"
     d.mkdir()
     out = V.generate(data_dir=d)

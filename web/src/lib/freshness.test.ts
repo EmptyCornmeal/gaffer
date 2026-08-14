@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { classifyFreshness, FRESH_MS, SKEW_MS, STALE_MS } from './freshness'
+import {
+  classifyFreshness, DEADLINE_MAX_AGE_MS, FRESH_MS, SKEW_MS, STALE_MS,
+} from './freshness'
 
 // Fixed reference time — never Date.now(), so these can't go green/red with the
 // wall clock.
@@ -67,5 +69,56 @@ describe('classifyFreshness degenerate inputs', () => {
     const f = classifyFreshness(at(50 * HOUR), NOW)
     expect(f.state).toBe('critical')
     expect(f.label).not.toMatch(/live|current|fresh/i)
+  })
+})
+
+// The GW1 failure mode, exactly: the scheduled refresh drifts by up to an hour,
+// so the last publish before a 17:30 deadline is realistically the 11:45 one —
+// five and three quarter hours old, comfortably inside the 12h "fresh" band, and
+// predating every team announcement that matters.
+describe('deadline awareness', () => {
+  const inHours = (h: number) => new Date(NOW + h * HOUR).toISOString()
+
+  it('does not call five-hour-old data fresh half an hour before a deadline', () => {
+    const f = classifyFreshness(at(5.75 * HOUR), NOW, inHours(0.5))
+    expect(f.state).not.toBe('fresh')
+    expect(f.state).toBe('stale')
+    expect(f.title).toMatch(/team-news/i)
+  })
+
+  it('still calls recent data fresh near a deadline', () => {
+    const f = classifyFreshness(at(0.5 * HOUR), NOW, inHours(0.5))
+    expect(f.state).toBe('fresh')
+  })
+
+  it('applies the tighter bar exactly at the decision-safe boundary', () => {
+    const soon = inHours(1)
+    expect(classifyFreshness(at(DEADLINE_MAX_AGE_MS - 60_000), NOW, soon).state)
+      .toBe('fresh')
+    expect(classifyFreshness(at(DEADLINE_MAX_AGE_MS + 60_000), NOW, soon).state)
+      .toBe('stale')
+  })
+
+  it('leaves the ordinary bands alone when the deadline is far away', () => {
+    const f = classifyFreshness(at(5.75 * HOUR), NOW, inHours(72))
+    expect(f.state).toBe('fresh')
+  })
+
+  it('marks advice for a deadline that has already passed as expired', () => {
+    const f = classifyFreshness(at(1 * HOUR), NOW, inHours(-1))
+    expect(f.state).toBe('expired')
+    expect(f.label).toBe('Deadline passed')
+    expect(f.label).not.toMatch(/updated/i)
+  })
+
+  it('does not flip to expired inside the tolerated clock skew', () => {
+    const f = classifyFreshness(at(1 * HOUR), NOW, new Date(NOW - SKEW_MS / 2).toISOString())
+    expect(f.state).not.toBe('expired')
+  })
+
+  it('ignores an unparseable or absent deadline', () => {
+    expect(classifyFreshness(at(1 * HOUR), NOW, 'not-a-date').state).toBe('fresh')
+    expect(classifyFreshness(at(1 * HOUR), NOW, null).state).toBe('fresh')
+    expect(classifyFreshness(at(1 * HOUR), NOW).state).toBe('fresh')
   })
 })

@@ -15,7 +15,7 @@ from typing import Any
 
 import httpx
 
-from gaffer import config, gameweek, teamstate
+from gaffer import config, gameweek, rules, teamstate
 from gaffer import season as season_mod
 from gaffer.fpl.client import FplClient
 from gaffer.store import db
@@ -178,8 +178,13 @@ def ingest_game_settings(conn: sqlite3.Connection, bootstrap: dict[str, Any]) ->
 
     Stored in ``meta`` (rule_*) and read by the solver with config fallbacks, so
     Gaffer self-adjusts if FPL changes the budget, club limit, sell-on fee, etc.
+
+    Squad and transfer rules are read through ``gaffer.rules.parse_rules``, which
+    prefers the newer ``game_config.rules`` block and falls back to the older
+    top-level ``game_settings`` — the two carry the same keys, and which one an
+    API build ships is not this function's problem.
     """
-    gs = bootstrap.get("game_settings", {}) or {}
+    gs = rules.parse_rules(bootstrap)
     mapping = {
         "rule_squad_size": gs.get("squad_squadsize"),
         "rule_budget": gs.get("squad_total_spend"),
@@ -512,6 +517,13 @@ def ingest_entry_meta(conn: sqlite3.Connection, client: FplClient, entry_id: int
     db.set_meta(conn, "manager_name", f"{info.get('player_first_name','')} "
                 f"{info.get('player_last_name','')}".strip())
     db.set_meta(conn, "overall_rank", info.get("summary_overall_rank") or "")
+    # The live view needs a season-points baseline to sit its in-gameweek score
+    # on top of. This was never written, so `pipeline` read a missing key and
+    # fell back to 0 — every live rank and total was wrong from the first
+    # kickoff. Note it is the *whole-season* total and therefore already
+    # includes an in-progress gameweek once scoring starts; `live` prefers the
+    # entry history for that reason and treats this as the fallback.
+    db.set_meta(conn, "overall_points", info.get("summary_overall_points") or "")
     # bank/value from last deadline as a fallback when picks aren't available yet.
     if db.get_meta(conn, "bank") is None:
         db.set_meta(conn, "bank", info.get("last_deadline_bank", 0))
@@ -569,6 +581,15 @@ def run(
             raise SeasonMismatch(ident)
         db.set_meta(conn, "season", ident.api)
         summary["season"] = ident.api
+
+        # T-30: check the live scoring table BEFORE writing a single row. A
+        # season projected under the previous season's rules is a green run that
+        # is wrong everywhere, and the only cheap place to catch it is here.
+        scoring = rules.verify(bootstrap)
+        db.set_meta(conn, "rule_scoring_source", scoring["source"])
+        db.set_meta(conn, "rule_scoring_status", scoring["status"])
+        db.set_meta(conn, "rule_scoring_drift", "; ".join(scoring["drift"]))
+        summary["scoring_rules"] = scoring["status"]
 
         summary["teams"] = ingest_teams(conn, bootstrap)
         summary["players"] = ingest_players(conn, bootstrap)
