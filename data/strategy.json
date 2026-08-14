@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-14T17:45:33+00:00",
+  "generated_at": "2026-08-14T18:24:54+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.2",
     "gameweek": 1,
     "fixtures": 20,
-    "players": 530,
+    "players": 528,
     "assumptions": [
       "One goal draw per attacking side, shared by every player in the match; clean sheets and goals conceded read the same draw.",
       "Goals are allocated multinomially in proportion to each player's deterministic expected goals, so teammates compete for the same goals and marginals are preserved.",
@@ -32,7 +32,7 @@
         "price": 8.0,
         "code": 226597,
         "team_code": 3,
-        "next_gw_xp": 4.56
+        "next_gw_xp": 5.86
       },
       {
         "id": 8,
@@ -42,7 +42,7 @@
         "price": 5.5,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 3.04
+        "next_gw_xp": 4.31
       },
       {
         "id": 12,
@@ -52,7 +52,7 @@
         "price": 9.5,
         "code": 223340,
         "team_code": 3,
-        "next_gw_xp": 3.78
+        "next_gw_xp": 5.13
       },
       {
         "id": 106,
@@ -62,7 +62,17 @@
         "price": 8.0,
         "code": 502500,
         "team_code": 94,
-        "next_gw_xp": 3.14
+        "next_gw_xp": 4.62
+      },
+      {
+        "id": 109,
+        "name": "Verbruggen",
+        "team": "BHA",
+        "pos": "GKP",
+        "price": 4.5,
+        "code": 489639,
+        "team_code": 36,
+        "next_gw_xp": 2.56
       },
       {
         "id": 155,
@@ -72,7 +82,7 @@
         "price": 7.0,
         "code": 448047,
         "team_code": 8,
-        "next_gw_xp": 3.62
+        "next_gw_xp": 6.24
       },
       {
         "id": 165,
@@ -82,17 +92,7 @@
         "price": 7.5,
         "code": 475168,
         "team_code": 8,
-        "next_gw_xp": 3.19
-      },
-      {
-        "id": 250,
-        "name": "Leno",
-        "team": "FUL",
-        "pos": "GKP",
-        "price": 4.5,
-        "code": 80201,
-        "team_code": 54,
-        "next_gw_xp": 2.02
+        "next_gw_xp": 5.28
       },
       {
         "id": 356,
@@ -102,7 +102,7 @@
         "price": 6.5,
         "code": 97032,
         "team_code": 14,
-        "next_gw_xp": 3.97
+        "next_gw_xp": 5.99
       },
       {
         "id": 367,
@@ -112,7 +112,7 @@
         "price": 7.0,
         "code": 243298,
         "team_code": 14,
-        "next_gw_xp": 3.23
+        "next_gw_xp": 4.95
       },
       {
         "id": 426,
@@ -122,7 +122,7 @@
         "price": 12.0,
         "code": 141746,
         "team_code": 1,
-        "next_gw_xp": 5.02
+        "next_gw_xp": 7.4
       },
       {
         "id": 427,
@@ -132,7 +132,7 @@
         "price": 8.0,
         "code": 446008,
         "team_code": 1,
-        "next_gw_xp": 3.77
+        "next_gw_xp": 6.04
       }
     ],
     "bench": [
@@ -144,7 +144,7 @@
         "price": 4.0,
         "code": 67089,
         "team_code": 6,
-        "next_gw_xp": 1.61
+        "next_gw_xp": 3.04
       },
       {
         "id": 169,
@@ -154,7 +154,7 @@
         "price": 4.5,
         "code": 567119,
         "team_code": 8,
-        "next_gw_xp": 1.92
+        "next_gw_xp": 4.06
       },
       {
         "id": 425,
@@ -164,7 +164,7 @@
         "price": 4.0,
         "code": 547676,
         "team_code": 1,
-        "next_gw_xp": 1.87
+        "next_gw_xp": 3.89
       },
       {
         "id": 304,
@@ -174,7 +174,7 @@
         "price": 4.0,
         "code": 216616,
         "team_code": 40,
-        "next_gw_xp": 1.89
+        "next_gw_xp": 3.98
       }
     ],
     "captain": {
@@ -185,7 +185,7 @@
       "price": 12.0,
       "code": 141746,
       "team_code": 1,
-      "next_gw_xp": 5.02
+      "next_gw_xp": 7.4
     },
     "source_event": null
   },
@@ -203,12 +203,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.0725,
-        "p_target": 0.0725,
+        "p_first": 0.067,
+        "p_target": 0.067,
         "target_position": 1,
-        "expected_position": 3.05,
+        "expected_position": 3.04,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0114,
+        "ci95_halfwidth": 0.011,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
@@ -234,7 +234,7 @@
             "price": 8.0,
             "code": 226597,
             "team_code": 3,
-            "next_gw_xp": 4.56
+            "next_gw_xp": 5.86
           }
         },
         {
@@ -252,7 +252,7 @@
             "price": 5.5,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 3.04
+            "next_gw_xp": 4.31
           }
         },
         {
@@ -270,7 +270,7 @@
             "price": 9.5,
             "code": 223340,
             "team_code": 3,
-            "next_gw_xp": 3.78
+            "next_gw_xp": 5.13
           }
         },
         {
@@ -288,7 +288,25 @@
             "price": 8.0,
             "code": 502500,
             "team_code": 94,
-            "next_gw_xp": 3.14
+            "next_gw_xp": 4.62
+          }
+        },
+        {
+          "player_id": 109,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 109,
+            "name": "Verbruggen",
+            "team": "BHA",
+            "pos": "GKP",
+            "price": 4.5,
+            "code": 489639,
+            "team_code": 36,
+            "next_gw_xp": 2.56
           }
         },
         {
@@ -306,7 +324,7 @@
             "price": 7.0,
             "code": 448047,
             "team_code": 8,
-            "next_gw_xp": 3.62
+            "next_gw_xp": 6.24
           }
         },
         {
@@ -324,25 +342,7 @@
             "price": 7.5,
             "code": 475168,
             "team_code": 8,
-            "next_gw_xp": 3.19
-          }
-        },
-        {
-          "player_id": 250,
-          "owners": 0,
-          "n_rivals": 0,
-          "ownership_pct": 0.0,
-          "effective_ownership_pct": 0.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 250,
-            "name": "Leno",
-            "team": "FUL",
-            "pos": "GKP",
-            "price": 4.5,
-            "code": 80201,
-            "team_code": 54,
-            "next_gw_xp": 2.02
+            "next_gw_xp": 5.28
           }
         },
         {
@@ -360,7 +360,7 @@
             "price": 6.5,
             "code": 97032,
             "team_code": 14,
-            "next_gw_xp": 3.97
+            "next_gw_xp": 5.99
           }
         },
         {
@@ -378,7 +378,7 @@
             "price": 7.0,
             "code": 243298,
             "team_code": 14,
-            "next_gw_xp": 3.23
+            "next_gw_xp": 4.95
           }
         },
         {
@@ -396,7 +396,7 @@
             "price": 12.0,
             "code": 141746,
             "team_code": 1,
-            "next_gw_xp": 5.02
+            "next_gw_xp": 7.4
           }
         }
       ],
@@ -419,33 +419,33 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 67.555,
+      "expected_points": 68.457,
       "p_target": {
-        "271619": 0.0725
+        "271619": 0.067
       }
     },
     {
       "key": "captain:155",
       "label": "Captain Enzo",
-      "expected_points": 65.932,
+      "expected_points": 66.771,
       "p_target": {
-        "271619": 0.071
+        "271619": 0.065
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 65.691,
+      "expected_points": 66.513,
       "p_target": {
-        "271619": 0.07
+        "271619": 0.067
       }
     },
     {
-      "key": "captain:356",
-      "label": "Captain Virgil",
-      "expected_points": 65.059,
+      "key": "captain:165",
+      "label": "Captain João Pedro",
+      "expected_points": 65.83,
       "p_target": {
-        "271619": 0.071
+        "271619": 0.0645
       }
     }
   ],
@@ -456,9 +456,9 @@
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 67.555,
+        "expected_points": 68.457,
         "p_target": {
-          "271619": 0.0725
+          "271619": 0.067
         }
       }
     ],
@@ -468,19 +468,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 10.07,
+    "expected_gain": 10.09,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "bboost",
         "gameweek": 1,
-        "expected_gain": 10.07,
+        "expected_gain": 10.09,
         "ci95": [
-          9.84,
-          10.29
+          9.87,
+          10.31
         ],
-        "baseline_points": 67.56,
-        "with_chip_points": 77.62,
+        "baseline_points": 68.46,
+        "with_chip_points": 78.55,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -489,13 +489,13 @@
       {
         "chip": "3xc",
         "gameweek": 1,
-        "expected_gain": 8.41,
+        "expected_gain": 8.49,
         "ci95": [
-          8.17,
-          8.66
+          8.24,
+          8.74
         ],
-        "baseline_points": 67.56,
-        "with_chip_points": 75.97,
+        "baseline_points": 68.46,
+        "with_chip_points": 76.95,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -519,6 +519,7 @@
       }
     ],
     "used": [],
+    "state_known": true,
     "reason": "your own squad is not readable yet, so these gains are measured against a stand-in squad — a chip is spent on the team you actually own, so nothing is recommended until your picks are public"
   },
   "limitations": [
