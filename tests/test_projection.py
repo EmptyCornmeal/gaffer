@@ -36,10 +36,10 @@ def _player(**over):
     return base
 
 
-def _rates(**over):
+def _rates(fixtures_played=0, **over):
     return projection.fixture_rates(
         _player(**over), F.Fixture(gw=1, opponent_id=2, at_home=True, fdr=3),
-        _ctx(), avail=1.0, games_played=0)
+        _ctx(), avail=1.0, fixtures_played=fixtures_played)
 
 
 @pytest.mark.parametrize("label,expected", [
@@ -103,6 +103,51 @@ def test_no_prior_sample_at_all_still_uses_the_prior():
     r = _rates(base_minutes=0, base_season="")
     assert r["exp_goals"] > 0.0
     assert r["p_start"] == pytest.approx(projection._start_prior("MID", 90), abs=1e-9)
+
+
+# --------------------------------------------------------------------------
+# M3b — `starts` is a fixture count, so its denominator must be one too
+#
+# The old code divided by `last_finished_gw`, an EVENT count. The two agree only
+# while every team plays exactly once per gameweek. Across 2024-25 they differed
+# for at least one team in 17 of 37 decision gameweeks, covering 3.9% of
+# evaluated rows — small in aggregate, wrong in kind.
+# --------------------------------------------------------------------------
+
+def test_the_start_rate_divides_fixtures_by_fixtures():
+    """A double gameweek breaks an event-count denominator. Four starts from five
+    fixtures is 0.80; against the four gameweeks those fixtures fell in it reads
+    1.00, and the model calls a rotated player nailed."""
+    assert _rates(minutes=400, starts=4, fixtures_played=5)["p_start"] == \
+        pytest.approx(4 / 5, abs=1e-9)
+
+
+def test_a_blank_does_not_punish_a_player_for_a_match_never_played():
+    """The mirror case. The team played three of a possible four and the player
+    started all three, so he is an ever-present — not a 75% starter. (0.98 is the
+    model's ceiling on any start probability, applied here as everywhere.)"""
+    assert _rates(minutes=270, starts=3, fixtures_played=3)["p_start"] == \
+        pytest.approx(0.98, abs=1e-9)
+
+
+def test_the_current_season_branch_still_waits_for_three_fixtures():
+    """Below three the sample is too thin and last season keeps doing the work.
+    The threshold is now correctly three FIXTURES — a team with an early double
+    reaches it sooner than the gameweek number suggests, which is the point."""
+    prior = _rates(minutes=180, starts=2, fixtures_played=2,
+                   base_minutes=2000, base_starts=19, base_season="2024/25")
+    assert prior["p_start"] == pytest.approx(19 / 38.0, abs=1e-9)
+
+
+def test_played_fixtures_counts_both_sides_of_every_finished_match(conn):
+    from gaffer.model import features as FF
+
+    conn.execute("UPDATE fixtures SET finished=1 WHERE id IN (1,2)")
+    conn.commit()
+    played = FF.played_fixtures_by_team(conn)
+    # Fixtures 1 and 2 are (1 v 2) and (3 v 4); fixture 3 (5 v 6) is unfinished.
+    assert played == {1: 1, 2: 1, 3: 1, 4: 1}, played
+    assert 5 not in played and 6 not in played, "an unfinished match counts for no one"
 
 
 # --------------------------------------------------------------------------
@@ -188,7 +233,7 @@ def test_a_projection_survives_a_row_without_the_provenance_column():
     del player["base_season"]
     out = projection.fixture_rates(
         player, F.Fixture(gw=1, opponent_id=2, at_home=True, fdr=3),
-        _ctx(), avail=1.0, games_played=0)
+        _ctx(), avail=1.0, fixtures_played=0)
     assert out["p_start"] > 0
 
 

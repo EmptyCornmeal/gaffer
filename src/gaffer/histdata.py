@@ -191,6 +191,22 @@ class SeasonHistory:
         return _prior_rates(self.season, [int(t) for t in self.teams["id"]],
                             dict(zip(self.teams["id"], self.teams["name"], strict=False)))
 
+    def team_fixtures_played(self, before_gw: int) -> dict[int, int]:
+        """Map team_id -> fixtures completed strictly before ``before_gw``.
+
+        The archive's mirror of ``features.played_fixtures_by_team``. A gameweek
+        is not a fixture: doubles and blanks make the two counts diverge, and
+        dividing a fixture-level ``starts`` tally by an event count is a
+        dimension error either way. Counting distinct (team, fixture) pairs makes
+        both cases fall out for free.
+        """
+        df = self.frame
+        prior = df[df["GW"] < before_gw]
+        if prior.empty:
+            return {}
+        per_fx = prior.drop_duplicates(["team_id", "fixture"])
+        return {int(t): int(n) for t, n in per_fx.groupby("team_id").size().items()}
+
     def team_xgc_to_date(self, before_gw: int) -> dict[int, float]:
         """Per-team goals-conceded-per-90 proxy from strictly earlier gameweeks.
 

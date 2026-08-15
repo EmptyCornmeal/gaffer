@@ -66,7 +66,7 @@ def test_backtest_reproduces_the_live_projection_exactly():
         "base_xa90": FROZEN_PLAYER["base_xa90"],
         "team_id": 1,
     }])
-    via_backtest = backtest.project_rows(frame, ctx, games_played=11)
+    via_backtest = backtest.project_rows(frame, ctx, fixtures_played=11)
 
     assert via_backtest.iloc[0] == pytest.approx(live["exp_points"], abs=1e-12)
     assert live["exp_points"] > 0
@@ -112,10 +112,12 @@ def test_model_version_reflects_the_scoring_change():
 
     0.2 added goals conceded, saves, cards, OG and penalties (T-13). 0.3 stopped
     reading an unmeasurable zero in the prior-season baseline as a measurement
-    (M3), which moves the projection for real players.
+    (M3). 0.4 fixed the start-rate denominator to count fixtures rather than
+    gameweeks (M3b). Each moves the projection for real players.
     """
-    assert projection.MODEL_VERSION == "heuristic-0.3"
-    assert projection.MODEL_VERSION not in ("heuristic-0.1", "heuristic-0.2")
+    assert projection.MODEL_VERSION == "heuristic-0.4"
+    assert projection.MODEL_VERSION not in (
+        "heuristic-0.1", "heuristic-0.2", "heuristic-0.3")
 
 
 def test_availability_path_is_the_real_one():

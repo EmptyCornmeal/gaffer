@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -108,13 +109,18 @@ def _player_inputs(row: Any) -> dict[str, Any]:
 
 
 def project_rows(
-    frame: pd.DataFrame, ctx: F.TeamContext, games_played: int
+    frame: pd.DataFrame, ctx: F.TeamContext,
+    fixtures_played: Mapping[int, int] | int,
 ) -> pd.Series:
     """Run the real projection over historical fixtures.
 
     A player with two fixtures in a gameweek (DGW) is summed; a player with none
     (BGW) never reaches here and scores zero by construction — the same shape
     ``projection.project`` produces live.
+
+    ``fixtures_played`` is per team, because that is the denominator the shipped
+    model uses for start probability. An int is accepted for single-team callers
+    (the parity test), where a mapping would be noise.
     """
     out = np.zeros(len(frame))
     for i, row in enumerate(frame.itertuples(index=False)):
@@ -127,7 +133,9 @@ def project_rows(
         # so every player resolves to the model's "available" branch. This is a
         # documented limitation, not a silent substitution — see `limitations`.
         avail = projection._availability("a", None)
-        parts = projection._project_one_fixture(player, fx, ctx, avail, games_played)
+        played = (fixtures_played if isinstance(fixtures_played, int)
+                  else fixtures_played.get(player["team_id"], 0))
+        parts = projection._project_one_fixture(player, fx, ctx, avail, played)
         out[i] = parts["exp_points"]
     return pd.Series(out, index=frame.index)
 
@@ -659,7 +667,9 @@ def build_evaluation(
             continue
         feat = snap.drop_duplicates("element").set_index("element")
         ctx = _context_for(hist, decision_gw, season_end_ratings=season_end_ratings)
-        games_played = decision_gw - 1
+        # Per team, not `decision_gw - 1`: after a double the two disagree, and
+        # `starts` is a fixture count.
+        fixtures_played = hist.team_fixtures_played(decision_gw)
         coverage["decision_gws"] += 1
 
         for h in horizons:
@@ -679,7 +689,7 @@ def build_evaluation(
             if tgt.empty:
                 coverage["skipped_no_fixture"] += 1
                 continue
-            tgt["pred"] = project_rows(tgt, ctx, games_played)
+            tgt["pred"] = project_rows(tgt, ctx, fixtures_played)
             # A DGW is two fixture rows; sum them, as the live projection does.
             # `xP` is deliberately NOT carried through. It is the archive's own
             # expected-points column, it is not FPL's pre-deadline `ep_next`, and

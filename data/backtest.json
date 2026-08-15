@@ -1,6 +1,6 @@
 {
   "schema_version": 6,
-  "model_version": "heuristic-0.3",
+  "model_version": "heuristic-0.4",
   "dataset": "vaastav/Fantasy-Premier-League merged_gw",
   "season": "2024-25",
   "decision_gameweeks": "GW1-GW38",
@@ -33,7 +33,7 @@
     "1": {
       "n": 27231,
       "mae": {
-        "gaffer": 1.564,
+        "gaffer": 1.565,
         "naive": 1.115
       },
       "rank_corr": {
@@ -43,11 +43,11 @@
       "decisions": {
         "gaffer": {
           "gameweeks_scored": 38,
-          "xi_points_per_gw": 50.8,
-          "xi_regret_per_gw": 86.7,
-          "captain_points_per_gw": 8.26,
-          "captain_regret_per_gw": 5.45,
-          "captain_accuracy_pct": 31.6
+          "xi_points_per_gw": 50.7,
+          "xi_regret_per_gw": 86.8,
+          "captain_points_per_gw": 8.76,
+          "captain_regret_per_gw": 5.0,
+          "captain_accuracy_pct": 34.2
         },
         "naive": {
           "gameweeks_scored": 38,
@@ -60,9 +60,9 @@
       },
       "transfers": {
         "gaffer": {
-          "with_transfers": 1496.0,
+          "with_transfers": 1494.0,
           "hold_squad": 1518.0,
-          "gain": -22.0,
+          "gain": -24.0,
           "gameweeks": 37
         },
         "naive": {
@@ -76,7 +76,7 @@
     "2": {
       "n": 26059,
       "mae": {
-        "gaffer": 1.575,
+        "gaffer": 1.576,
         "naive": 1.131
       },
       "rank_corr": {
@@ -98,7 +98,7 @@
     "4": {
       "n": 24461,
       "mae": {
-        "gaffer": 1.585,
+        "gaffer": 1.586,
         "naive": 1.149
       },
       "rank_corr": {
@@ -120,7 +120,7 @@
     "6": {
       "n": 23098,
       "mae": {
-        "gaffer": 1.605,
+        "gaffer": 1.606,
         "naive": 1.172
       },
       "rank_corr": {
@@ -169,21 +169,21 @@
       },
       {
         "pred": 1.07,
-        "actual": 0.67,
+        "actual": 0.66,
         "haul_rate": 1.4,
-        "n": 3404
+        "n": 3405
       },
       {
         "pred": 1.24,
-        "actual": 0.45,
+        "actual": 0.46,
         "haul_rate": 0.8,
-        "n": 3405
+        "n": 3403
       },
       {
         "pred": 1.43,
         "actual": 0.57,
         "haul_rate": 0.7,
-        "n": 3402
+        "n": 3403
       },
       {
         "pred": 1.88,
@@ -226,13 +226,13 @@
         },
         {
           "pred": 1.97,
-          "actual": 1.22,
+          "actual": 1.21,
           "haul_rate": 0.8,
           "n": 1805
         },
         {
           "pred": 3.5,
-          "actual": 2.67,
+          "actual": 2.68,
           "haul_rate": 3.0,
           "n": 1805
         }
@@ -257,13 +257,13 @@
           "n": 596
         },
         {
-          "pred": 2.15,
+          "pred": 2.16,
           "actual": 1.47,
           "haul_rate": 1.3,
           "n": 597
         },
         {
-          "pred": 4.05,
+          "pred": 4.06,
           "actual": 3.8,
           "haul_rate": 9.5,
           "n": 597
@@ -309,7 +309,7 @@
           "n": 2480
         },
         {
-          "pred": 1.07,
+          "pred": 1.08,
           "actual": 1.03,
           "haul_rate": 2.5,
           "n": 2481
@@ -322,12 +322,12 @@
         },
         {
           "pred": 1.95,
-          "actual": 1.7,
+          "actual": 1.71,
           "haul_rate": 2.5,
           "n": 2479
         },
         {
-          "pred": 3.55,
+          "pred": 3.56,
           "actual": 3.17,
           "haul_rate": 7.1,
           "n": 2479
@@ -336,7 +336,7 @@
     }
   },
   "shipped_projection": {
-    "model_version": "heuristic-0.3",
+    "model_version": "heuristic-0.4",
     "next_gameweek": "blend of Gaffer and FPL ep_next at w=0.7, scaled by availability",
     "later_gameweeks": "Gaffer only — ep_next does not exist beyond h=1",
     "next_gameweek_status": "POLICY, NOT MEASURED. The blend weight cannot be fitted on this dataset because the archive has no faithful copy of the live ep_next."
@@ -605,5 +605,5 @@
     "An in-sample gain is never evidence. Parameters were selected on 2023-24 and reported here on 2024-25, which selection never saw.",
     "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-08-15T06:50:32+00:00"
+  "generated_at": "2026-08-15T07:18:23+00:00"
 }

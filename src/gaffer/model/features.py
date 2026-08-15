@@ -228,6 +228,30 @@ class Fixture:
     fdr: int
 
 
+def played_fixtures_by_team(conn: sqlite3.Connection) -> dict[int, int]:
+    """Map team_id -> how many fixtures that team has actually completed.
+
+    Deliberately not the number of gameweeks elapsed, which is what
+    ``meta.last_finished_gw`` counts. The two differ whenever the calendar is not
+    one-fixture-per-team-per-event, which is most of a season:
+
+    * a **double** gives a team two fixtures in one event, so a player who
+      started four of his team's five fixtures scores 4/4 = 1.00 against an event
+      count and 4/5 = 0.80 against a fixture count;
+    * a **blank** gives none, so the same player is punished for a match that was
+      never played.
+
+    ``starts`` is a fixture-level count, so the denominator must be one too.
+    """
+    out: dict[int, int] = {}
+    for r in conn.execute(
+        "SELECT team_h, team_a FROM fixtures WHERE finished=1"
+    ):
+        out[r["team_h"]] = out.get(r["team_h"], 0) + 1
+        out[r["team_a"]] = out.get(r["team_a"], 0) + 1
+    return out
+
+
 def upcoming_fixtures_by_team(
     conn: sqlite3.Connection, from_gw: int, horizon: int
 ) -> dict[int, list[Fixture]]:

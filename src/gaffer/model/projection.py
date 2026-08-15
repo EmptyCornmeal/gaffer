@@ -22,7 +22,11 @@ from gaffer.model.features import TeamContext, clamp
 # 0.3 = M3: a zero in the prior-season baseline is read as a measurement only
 #       when the season could have measured it. Numbers move for every player
 #       whose baseline records a credible zero, so the version moves with them.
-MODEL_VERSION = "heuristic-0.3"
+# 0.4 = M3b: the start rate divides fixtures by FIXTURES. It used to divide a
+#       fixture-level `starts` tally by an event count, which agree only while
+#       every team plays exactly once per gameweek. In-season only, so no effect
+#       before GW1 — but it moves real numbers, so it moves the version.
+MODEL_VERSION = "heuristic-0.4"
 
 # Availability status -> baseline multiplier on the chance of featuring.
 _STATUS_MULT = {"a": 1.0, "d": 0.5, "i": 0.0, "s": 0.0, "u": 0.0, "n": 0.0}
@@ -279,7 +283,8 @@ def _field(player: Any, key: str, default: Any = None) -> Any:
 
 
 def fixture_rates(
-    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float, games_played: int = 0
+    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float,
+    fixtures_played: int = 0,
 ) -> dict[str, float]:
     """The underlying per-fixture rate bundle the projection is built from.
 
@@ -318,8 +323,11 @@ def fixture_rates(
     #     substitute appearances cannot exceed 38 cameos; more than that with no
     #     starts is a missing column, whatever the provenance says.
     zero_starts_possible = base_min <= _MAX_UNSTARTED_MINUTES
-    if games_played >= 3 and cur_min and player["starts"] is not None:
-        base_start = clamp(player["starts"] / games_played, 0.0, 0.98)
+    # `starts` counts FIXTURES, so the denominator counts fixtures too — the
+    # team's own completed fixtures, not the number of gameweeks that have
+    # elapsed. See `features.played_fixtures_by_team`.
+    if fixtures_played >= 3 and cur_min and player["starts"] is not None:
+        base_start = clamp(player["starts"] / fixtures_played, 0.0, 0.98)
     elif have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
         base_start = clamp(base_starts / 38.0, 0.0, 0.98)
     else:
@@ -414,9 +422,10 @@ def fixture_rates(
 
 
 def _project_one_fixture(
-    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float, games_played: int = 0
+    player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float,
+    fixtures_played: int = 0,
 ) -> dict[str, float]:
-    r = fixture_rates(player, fx, ctx, avail, games_played)
+    r = fixture_rates(player, fx, ctx, avail, fixtures_played)
     pos = r["pos"]
 
     exp_goal_pts = r["exp_goals"] * r["goal_pts_per"]
@@ -518,9 +527,13 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
     # Microsecond precision: snapshots are keyed by `as_of`, and two runs in
     # the same second would otherwise collide and overwrite each other.
     now = datetime.now(UTC).isoformat(timespec="microseconds")
-    # current-season games played (for start-probability denominator); 0 pre-season
+    # Two different counts, deliberately kept apart. `games_played` answers "has
+    # the season started", which is an event-level question. `played_by_team`
+    # answers "how many matches has THIS team completed", which is the only
+    # correct denominator for a fixture-level `starts` tally.
     lf = conn.execute("SELECT value FROM meta WHERE key='last_finished_gw'").fetchone()
     games_played = int(lf["value"]) if lf and str(lf["value"]).isdigit() else 0
+    played_by_team = F.played_fixtures_by_team(conn)
 
     rows: list[dict] = []
     avail_by_player: dict[int, float] = {}
@@ -540,7 +553,8 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
         ]
         for gw in range(from_gw, from_gw + horizon):
             parts = [
-                _project_one_fixture(p, fx, ctx, avail, games_played)
+                _project_one_fixture(p, fx, ctx, avail,
+                                     played_by_team.get(p["team_id"], 0))
                 for fx in by_gw.get(gw, [])
             ]
             acc = {k: sum(part[k] for part in parts) for k in additive}
