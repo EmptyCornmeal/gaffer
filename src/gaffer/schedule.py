@@ -67,6 +67,14 @@ MAX_AGE = {
 #: Fixture states that mean football is being played right now.
 LIVE_FIXTURE_STATES = frozenset({"live", "half_time", "awaiting_bonus"})
 
+#: How far ahead of us a published timestamp may sit and still be believed.
+#: Runner clocks drift by seconds, not hours. Beyond this the artifact is corrupt,
+#: and a corrupt artifact must never be able to switch the schedule off: with no
+#: bound, one bad timestamp makes ``age`` permanently negative and every later
+#: tick skips forever. Inside the bound we still treat it as current, so ordinary
+#: skew cannot trigger a refresh every 15 minutes.
+CLOCK_SKEW_GRACE = timedelta(minutes=10)
+
 
 @dataclass(frozen=True)
 class RefreshDecision:
@@ -98,16 +106,33 @@ def should_refresh(
     deadline: datetime | None = None,
     last_generated_at: datetime | None = None,
     fixture_states: list[str] | None = None,
+    degraded: str | None = None,
 ) -> RefreshDecision:
     """Decide whether this scheduled tick should actually run the pipeline.
 
     Pure: every input is data, so each boundary is testable against a fixed clock
     rather than by waiting for one.
+
+    ``degraded`` carries a description of why the published state could not be
+    trusted, or None when it could. It exists because the two ways of being wrong
+    here are not symmetric — see below.
     """
     now = now or datetime.now(UTC)
     window = _window(now, deadline, fixture_states)
     limit = MAX_AGE[window]
     limit_min = limit.total_seconds() / 60
+
+    if degraded:
+        # Corruption fails OPEN, deliberately. The window was derived from the
+        # very artifacts we just failed to read, so the bar it selected is not
+        # evidence of anything: an unreadable deadline silently downgrades a
+        # deadline day to the 6 h idle bar, and the reader is shown stale advice
+        # with nothing on screen to say so. A needless pipeline run costs a few
+        # minutes of CI and leaves a visible log line.
+        return RefreshDecision(
+            True, window, None, limit_min,
+            f"published state is unreliable ({degraded}) — refreshing rather "
+            f"than trusting the {window} bar computed from it")
 
     if last_generated_at is None:
         return RefreshDecision(
@@ -115,13 +140,20 @@ def should_refresh(
             "nothing is published, or its timestamp could not be read — "
             "refreshing rather than assuming the site is current")
     age = now - last_generated_at
-    if age < timedelta(0):
-        # A future timestamp is a clock problem, not freshness. Treat it as
-        # current so a skewed clock cannot trigger a refresh every 15 minutes.
+    if age < -CLOCK_SKEW_GRACE:
+        # Far in the future is not skew, it is a corrupt timestamp — and left
+        # unbounded it disables the schedule permanently, because every later
+        # tick also computes a negative age and skips.
+        ahead = -age.total_seconds() / 60
+        grace = CLOCK_SKEW_GRACE.total_seconds() / 60
         return RefreshDecision(
-            False, window, 0.0, limit_min,
-            f"published timestamp {last_generated_at.isoformat()} is in the "
-            "future; treating as current and skipping")
+            True, window, None, limit_min,
+            f"published timestamp {last_generated_at.isoformat()} is "
+            f"{ahead:.0f} min ahead of now, past the {grace:.0f} min clock-skew "
+            "allowance — treating the artifact as corrupt and refreshing")
+    if age < timedelta(0):
+        # Ordinary runner skew. Treat as current; it self-heals within minutes.
+        age = timedelta(0)
     age_min = age.total_seconds() / 60
     if age >= limit:
         return RefreshDecision(
@@ -138,26 +170,59 @@ def read_published_state(data_dir: Path | str = "data") -> dict[str, Any]:
     """Deadline, publish time and fixture states, from the committed artifacts.
 
     Deliberately tolerant: the gate runs before anything is installed and must
-    never be the reason a refresh does not happen. Anything unreadable comes back
-    as None, which `should_refresh` treats as "refresh".
+    never be the reason a refresh does not happen.
+
+    It separates two kinds of unreadable, because they mean opposite things:
+
+    * **absent** — ordinary. ``live.json`` does not exist before the first run,
+      and a deadline is legitimately absent once the season ends. Not degraded.
+    * **present but unusable** — truncated JSON, a payload of the wrong shape, a
+      timestamp that will not parse. That is corruption, and it comes back in
+      ``degraded`` so the caller can fail open instead of quietly selecting a
+      window from data it could not read.
     """
     d = Path(data_dir)
     out: dict[str, Any] = {"deadline": None, "generated_at": None,
-                           "fixture_states": []}
+                           "fixture_states": [], "degraded": None}
+    faults: list[str] = []
+
     try:
         meta = json.loads((d / "meta.json").read_text(encoding="utf-8"))
-        out["deadline"] = parse_timestamp(meta.get("deadline"))
-        out["generated_at"] = parse_timestamp(meta.get("generated_at"))
-    except (OSError, ValueError, TypeError):
-        pass
+        if not isinstance(meta, dict):
+            faults.append(f"meta.json is a {type(meta).__name__}, not an object")
+        else:
+            for field in ("deadline", "generated_at"):
+                raw = meta.get(field)
+                out[field] = parse_timestamp(raw)
+                if raw is not None and out[field] is None:
+                    faults.append(f"meta.{field}={raw!r} is not a timestamp")
+    except FileNotFoundError:
+        pass                          # first run: nothing has been published yet
+    except (OSError, ValueError, TypeError, AttributeError) as e:
+        faults.append(f"meta.json unreadable ({type(e).__name__})")
+
     try:
         live = json.loads((d / "live.json").read_text(encoding="utf-8"))
-        out["fixture_states"] = [
-            f.get("state") for f in (live.get("fixtures") or [])
-            if isinstance(f, dict)
-        ]
-    except (OSError, ValueError, TypeError):
+        if not isinstance(live, dict):
+            faults.append(f"live.json is a {type(live).__name__}, not an object")
+        else:
+            fixtures = live.get("fixtures")
+            if fixtures is None:
+                pass                  # a published gameweek with no fixture list
+            elif not isinstance(fixtures, list):
+                faults.append(
+                    f"live.fixtures is a {type(fixtures).__name__}, not a list")
+            else:
+                out["fixture_states"] = [
+                    f.get("state") for f in fixtures if isinstance(f, dict)
+                ]
+    except FileNotFoundError:
         pass
+    except (OSError, ValueError, TypeError, AttributeError) as e:
+        faults.append(f"live.json unreadable ({type(e).__name__})")
+
+    if faults:
+        out["degraded"] = "; ".join(faults)
     return out
 
 
@@ -284,23 +349,33 @@ def main(argv: list[str] | None = None) -> int:
 def _refresh_cli(args) -> int:
     """`--should-refresh`: one line for $GITHUB_OUTPUT, the reasoning on stderr.
 
-    Always exits 0. A gate that fails the build when it cannot decide would turn
-    a missing artifact into a red run for no reason; the decision itself already
-    fails open.
+    Always exits 0, and always prints a decision. The workflow runs the pipeline
+    only when this prints ``refresh=true``, so any path that crashes or prints
+    nothing switches the schedule off silently — far worse than a wasted run.
+    Whatever goes wrong in here, the answer is yes.
     """
     import sys
 
-    if args.force:
-        d = RefreshDecision(True, "forced", None, 0.0,
-                            "manual dispatch — always refreshes")
-    else:
-        state = read_published_state(args.data_dir)
-        d = should_refresh(
-            parse_timestamp(args.now),
-            deadline=state["deadline"],
-            last_generated_at=state["generated_at"],
-            fixture_states=state["fixture_states"],
-        )
+    try:
+        if args.force:
+            d = RefreshDecision(True, "forced", None, 0.0,
+                                "manual dispatch — always refreshes")
+        else:
+            state = read_published_state(args.data_dir)
+            d = should_refresh(
+                parse_timestamp(args.now),
+                deadline=state["deadline"],
+                last_generated_at=state["generated_at"],
+                fixture_states=state["fixture_states"],
+                degraded=state["degraded"],
+            )
+    except Exception as e:
+        # The catch-all is the point: an unanticipated shape must not be able to
+        # stop the schedule. It is reported loudly on stderr, never swallowed.
+        d = RefreshDecision(
+            True, "unknown", None, 0.0,
+            f"the gate itself failed ({type(e).__name__}: {e}) — refreshing, "
+            "because a broken gate must never be the reason nothing runs")
     print(f"refresh={'true' if d.should_refresh else 'false'}")
     print(f"window={d.window}")
     print(render_refresh(d), file=sys.stderr)

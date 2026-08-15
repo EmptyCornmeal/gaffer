@@ -268,7 +268,23 @@
 
           {#if player.last_season}
             <div class="rounded-lg bg-bg2 border border-line px-3 py-2.5">
-              <div class="text-[10px] uppercase tracking-wide text-muted2 mb-1.5">Last season · {player.last_season.season}</div>
+              <div class="text-[10px] uppercase tracking-wide mb-1.5
+                          {player.last_season.is_prior_season === false
+                            ? 'text-amber' : 'text-muted2'}">
+                {#if player.last_season.is_prior_season === false}
+                  {player.last_season.season} · not last season
+                {:else if player.last_season.season}
+                  Last season · {player.last_season.season}
+                {:else}
+                  Most recent recorded season
+                {/if}
+              </div>
+              {#if player.last_season.is_prior_season === false}
+                <div class="text-[10px] text-amber/90 mb-1.5 leading-snug">
+                  His last Premier League season, not the one just gone — the
+                  projection is leaning on old evidence.
+                </div>
+              {/if}
               <div class="grid grid-cols-4 gap-2 text-center text-[13px]">
                 <div><div class="font-bold tabular-nums">{player.last_season.minutes.toLocaleString()}</div><div class="text-[10px] text-muted2">mins</div></div>
                 <div><div class="font-bold tabular-nums">{player.last_season.starts}</div><div class="text-[10px] text-muted2">starts</div></div>

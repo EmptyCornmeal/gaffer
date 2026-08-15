@@ -484,11 +484,17 @@ def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
         past = summ.get("history_past") or []
         if not past:
             continue
-        last = past[-1]  # most recent prior season
+        # The most recent season FPL HAS for this player — which is only last
+        # season if he played in the Premier League last season. For anyone who
+        # spent the intervening years abroad or in the Championship this is an
+        # older record, so the season is captured with the numbers rather than
+        # assumed from the calendar downstream.
+        last = past[-1]
         mins = last.get("minutes") or 0
-        if mins < 300:
+        if mins < config.BASE_SAMPLE_MINUTES:
             continue
         per90 = 90.0 / mins  # FPL returns expected_* as strings -> cast with _f
+        season_name = str(last.get("season_name") or "").strip()
         vals = {
             "base_minutes": mins,
             "base_starts": last.get("starts") or 0,
@@ -496,8 +502,10 @@ def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
             "base_xa90": round(_f(last.get("expected_assists")) * per90, 3),
         }
         dc = _f(last.get("defensive_contribution"))
-        cols = "base_minutes=?, base_starts=?, base_xg90=?, base_xa90=?"
-        params = [vals["base_minutes"], vals["base_starts"], vals["base_xg90"], vals["base_xa90"]]
+        cols = ("base_minutes=?, base_starts=?, base_xg90=?, base_xa90=?, "
+                "base_season=?")
+        params = [vals["base_minutes"], vals["base_starts"], vals["base_xg90"],
+                  vals["base_xa90"], season_name]
         if dc:
             cols += ", defcon_per_90=?"
             params.append(round(dc * per90, 3))

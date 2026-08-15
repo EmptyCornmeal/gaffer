@@ -114,6 +114,24 @@ export function applyResult<T>(
   }
 }
 
+/**
+ * When the data on screen was *generated*, rather than when it was fetched.
+ *
+ * The two diverge exactly where it matters. Falling back to the published
+ * artifact is a *successful* fetch of a file that may be hours old, so the
+ * poller's `lastSuccess` says "just now" about data from this morning — a stale
+ * snapshot wearing a live label, which is the single thing this page must never
+ * do. Prefer the payload's own timestamp; use the fetch time only when it does
+ * not carry one.
+ */
+export function dataTimestamp(
+  generatedAtIso: string | null | undefined,
+  lastSuccess: number | null,
+): number | null {
+  const t = generatedAtIso ? Date.parse(generatedAtIso) : NaN
+  return Number.isFinite(t) ? t : lastSuccess
+}
+
 /** Human label for the last successful update. */
 export function freshnessLabel(
   lastSuccess: number | null, now: number = Date.now(),

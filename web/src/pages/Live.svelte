@@ -5,7 +5,7 @@
     parseLive, FIXTURE_STATE_LABELS, LIVE_UNAVAILABLE_LABELS, signed,
     type LiveState,
   } from '../lib/weekly'
-  import { Poller, freshnessLabel, isStale } from '../lib/refresh'
+  import { Poller, freshnessLabel, isStale, dataTimestamp } from '../lib/refresh'
   import Icon from '../components/Icon.svelte'
 
   let { bundle, onpick }: { bundle: Bundle | null; onpick: (id: number) => void } =
@@ -28,7 +28,10 @@
   const anyLive = $derived(
     !!s?.fixtures?.some((f) => f.state === 'live' || f.state === 'half_time'),
   )
-  const stale = $derived(isStale(lastSuccess, tick))
+  // Age of the DATA, not of the request that carried it. On the artifact
+  // fallback those differ by hours.
+  const dataAt = $derived(dataTimestamp(s?.as_of, lastSuccess))
+  const stale = $derived(isStale(dataAt, tick))
 
   $effect(() => {
     const poller = new Poller<unknown>(
@@ -85,14 +88,14 @@
     </div>
     <div class="text-right">
       <div class="text-[11px] text-muted2" aria-live="polite">
-        Updated {freshnessLabel(lastSuccess, tick)}
+        Updated {freshnessLabel(dataAt, tick)}
       </div>
       {#if source === 'artifact'}
         <span class="chip chip-warn" title={fallbackReason ?? ''}>
           published snapshot
         </span>
       {/if}
-      {#if stale && lastSuccess != null}
+      {#if stale && dataAt != null}
         <span class="chip chip-warn">stale</span>
       {/if}
       {#if status === 'loading'}<span class="chip chip-info">refreshing…</span>{/if}

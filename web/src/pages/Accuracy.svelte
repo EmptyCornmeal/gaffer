@@ -20,6 +20,10 @@
   const evidence = $derived(bt?.model_candidates ?? null)
   const heurXI = $derived(evidence?.heuristic_reference?.xi_points_per_gw ?? {})
   const shipped = $derived(bt?.shipped_projection ?? null)
+  // GW1 alone. Rendered apart from the horizon table because it is a different
+  // regime, not the first row of one.
+  const pre = $derived(
+    bt?.pre_season && 'n' in bt.pre_season ? bt.pre_season : null)
 
   const decisionClass = (d: string) =>
     d === 'rejected' ? 'text-red'
@@ -121,6 +125,45 @@
         {/if}
       </p>
     </section>
+
+    <!-- The pre-season decision, on its own -->
+    {#if pre}
+      <section class="card p-3">
+        <h2 class="font-bold">GW{pre.decision_gw} — the pre-season decision</h2>
+        <p class="text-[12px] text-muted2 mb-2">
+          The one evening a whole squad is picked from scratch, measured on its
+          own. {pre.regime}. Averaged into the {bt.coverage.decision_gws ?? 38}
+          gameweeks below it is invisible, and before schema 6 it was not
+          measured at all.
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+          <div class="card p-3">
+            <div class="text-xl font-black text-brand-light">
+              {fmt(pre.rank_corr.gaffer)}
+            </div>
+            <div class="text-[11px] text-muted">rank correlation</div>
+          </div>
+          <div class="card p-3">
+            <div class="text-xl font-black">{fmt(pre.mae.gaffer)}</div>
+            <div class="text-[11px] text-muted">MAE, points</div>
+          </div>
+          <div class="card p-3">
+            <div class="text-xl font-black">{pre.n.toLocaleString()}</div>
+            <div class="text-[11px] text-muted">players scored</div>
+          </div>
+          <div class="card p-3">
+            <div class="text-xl font-black">{pre.zero_minute_share_pct ?? '—'}%</div>
+            <div class="text-[11px] text-muted">did not play</div>
+          </div>
+        </div>
+        <p class="text-[12px] text-muted mt-2">
+          <b>No baseline to beat.</b> {pre.naive_baseline}
+        </p>
+        {#if pre.decisions_caveat}
+          <p class="text-[11px] text-muted2 mt-2">{pre.decisions_caveat}</p>
+        {/if}
+      </section>
+    {/if}
 
     <!-- Player-level accuracy, per horizon -->
     <section class="card p-3">

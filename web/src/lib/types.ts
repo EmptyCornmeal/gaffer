@@ -41,7 +41,17 @@ export interface PricePred {
 }
 
 export interface LastSeason {
-  season: string
+  /** The season the sample came from, or null when that was never recorded. */
+  season: string | null
+  /**
+   * Is this the season just gone?
+   *
+   * FPL's `history_past` holds the most recent season it has for a player, which
+   * for someone who has been abroad can be years old. false means the numbers
+   * are real but stale; null means the provenance is unknown, which is not the
+   * same as "current".
+   */
+  is_prior_season?: boolean | null
   minutes: number
   starts: number
   xg90: number

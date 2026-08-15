@@ -8,7 +8,7 @@
 // recognise, so that cannot silently recur.
 
 /** Schema versions this build can render. */
-export const SUPPORTED_SCHEMA_VERSIONS = [5] as const
+export const SUPPORTED_SCHEMA_VERSIONS = [6] as const
 /**
  * Versions we know about and deliberately refuse.
  *
@@ -19,8 +19,13 @@ export const SUPPORTED_SCHEMA_VERSIONS = [5] as const
  * 4 is refused: it reported one collapsed model verdict, which said trained
  * models lost every decision metric. Ridge did not. A v4 artifact cannot show
  * the per-candidate evidence, so it would repeat the claim it got wrong.
+ *
+ * 5 is refused: it evaluated GW2 onwards while describing itself as covering
+ * GW1, so its headline numbers are in-season numbers wearing an all-season
+ * label — and it carries no `pre_season` block, so a build rendering it would
+ * present the pre-season regime as measured when it never was.
  */
-export const REJECTED_SCHEMA_VERSIONS = [1, 2, 3, 4] as const
+export const REJECTED_SCHEMA_VERSIONS = [1, 2, 3, 4, 5] as const
 
 export interface CalBin {
   pred: number
@@ -46,6 +51,29 @@ export interface HorizonBlock {
   transfers?: Record<string, { with_transfers: number; hold_squad: number; gain: number; gameweeks: number }>
 }
 
+/**
+ * GW1 measured on its own.
+ *
+ * A separate block rather than a row in `per_horizon` because it is a separate
+ * regime: no season-to-date history exists, so the model runs on prior-season
+ * rates and the price prior alone, and the naive baseline — cumulative
+ * season-to-date points-per-game — does not exist at all. `naive_baseline`
+ * carries that explanation rather than a number, so the page cannot imply a
+ * comparison that was never made.
+ */
+export interface PreSeasonBlock {
+  decision_gw: number
+  n: number
+  regime: string
+  mae: Record<string, number>
+  rank_corr: Record<string, number>
+  decisions?: Record<string, HorizonDecisions | Record<string, never>>
+  /** Why the `decisions` numbers above are one evening, not a rate. */
+  decisions_caveat?: string
+  zero_minute_share_pct?: number
+  naive_baseline: string
+}
+
 /** A baseline that was published and then retracted, with its old numbers. */
 export interface WithdrawnBaseline {
   withdrawn_in_schema: number
@@ -53,7 +81,7 @@ export interface WithdrawnBaseline {
   reason: string
 }
 
-export interface BacktestV5 {
+export interface BacktestV6 {
   schema_version: number
   model_version: string
   dataset: string
@@ -73,6 +101,8 @@ export interface BacktestV5 {
     policy: string
   }
   per_horizon: Record<string, HorizonBlock>
+  /** Absent on an artifact whose season had no evaluable GW1. */
+  pre_season?: PreSeasonBlock | Record<string, never>
   calibration: { overall: CalBin[]; by_position?: Record<string, CalBin[]> }
   limitations: string[]
   generated_at: string
@@ -121,7 +151,7 @@ export interface ModelCandidates {
 }
 
 export type BacktestState =
-  | { kind: 'ok'; data: BacktestV5 }
+  | { kind: 'ok'; data: BacktestV6 }
   | { kind: 'missing' }
   | { kind: 'unsupported'; version: unknown; detail: string }
   | { kind: 'malformed'; detail: string }
@@ -158,7 +188,11 @@ export function parseBacktest(raw: unknown): BacktestState {
         'minutes, so its numbers do not describe the shipped model.',
     }
   }
-  if (typeof version !== 'number' || !SUPPORTED_SCHEMA_VERSIONS.includes(version as 5)) {
+  // Widened rather than cast to the current literal, matching `parseLive`. The
+  // old `version as 5` had to be edited on every schema bump and failed the type
+  // check when it was not — a compile error each time, but only by luck.
+  if (typeof version !== 'number'
+      || !(SUPPORTED_SCHEMA_VERSIONS as readonly number[]).includes(version)) {
     return {
       kind: 'unsupported',
       version,
@@ -184,16 +218,16 @@ export function parseBacktest(raw: unknown): BacktestState {
     return { kind: 'malformed', detail: "'leakage_check.enforced' must be a boolean" }
   }
 
-  return { kind: 'ok', data: obj as unknown as BacktestV5 }
+  return { kind: 'ok', data: obj as unknown as BacktestV6 }
 }
 
 /** Horizons present, in numeric order. */
-export function horizonKeys(bt: BacktestV5): string[] {
+export function horizonKeys(bt: BacktestV6): string[] {
   return Object.keys(bt.per_horizon).sort((a, b) => Number(a) - Number(b))
 }
 
 /** Every method named anywhere in the per-horizon blocks. */
-export function methodsIn(bt: BacktestV5): string[] {
+export function methodsIn(bt: BacktestV6): string[] {
   const seen = new Set<string>()
   for (const k of horizonKeys(bt)) {
     for (const m of Object.keys(bt.per_horizon[k].rank_corr ?? {})) seen.add(m)
@@ -202,7 +236,7 @@ export function methodsIn(bt: BacktestV5): string[] {
 }
 
 /** True when the leakage guard ran and found nothing. */
-export function leakageClean(bt: BacktestV5): boolean {
+export function leakageClean(bt: BacktestV6): boolean {
   return bt.leakage_check.enforced &&
     (bt.leakage_check.post_match_fields_in_features?.length ?? 0) === 0
 }
@@ -217,7 +251,7 @@ export const METHOD_LABELS: Record<string, string> = {
 }
 
 /** Baselines that were retracted, newest schema first. Empty when there are none. */
-export function withdrawn(bt: BacktestV5): Array<{ key: string; label: string; entry: WithdrawnBaseline }> {
+export function withdrawn(bt: BacktestV6): Array<{ key: string; label: string; entry: WithdrawnBaseline }> {
   const out: Array<{ key: string; label: string; entry: WithdrawnBaseline }> = []
   for (const [key, entry] of Object.entries(bt.withdrawn_baselines ?? {})) {
     if (entry && typeof entry === 'object' && 'reason' in entry) {
@@ -234,7 +268,7 @@ export function withdrawn(bt: BacktestV5): Array<{ key: string; label: string; e
  * summary came to say "trained models lose every decision metric" when ridge
  * beat the heuristic at h=1.
  */
-export function modelCandidates(bt: BacktestV5): ModelCandidate[] {
+export function modelCandidates(bt: BacktestV6): ModelCandidate[] {
   const c = bt.model_candidates?.candidates
   return Array.isArray(c) ? c.filter((x) => x && typeof x.candidate === 'string') : []
 }
@@ -248,7 +282,7 @@ export const DECISION_LABELS: Record<string, string> = {
 }
 
 /** Free-text consequence note on the withdrawal, when the artifact carries one. */
-export function withdrawalConsequence(bt: BacktestV5): string | null {
+export function withdrawalConsequence(bt: BacktestV6): string | null {
   const c = bt.withdrawn_baselines?.consequence
   return typeof c === 'string' ? c : null
 }

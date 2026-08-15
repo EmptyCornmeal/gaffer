@@ -34,15 +34,38 @@ def _prior_season_label(season: str) -> str:
 _PRIOR_SEASON = _prior_season_label(config.SEASON)
 
 
+def _col(r: Any, name: str, default: Any = None) -> Any:
+    """One column, or ``default`` if this row predates it. `sqlite3.Row` raises
+    IndexError on an unknown key, and a missing column must never take the export
+    down."""
+    try:
+        return r[name]
+    except (IndexError, KeyError):
+        return default
+
+
 def _last_season(r: Any) -> dict[str, Any] | None:
     """Prior-season baseline (the ``base_*`` we persist so projections survive the
     FPL stats reset), surfaced for the player card. None when there's no real
-    sample — e.g. a player new to the PL."""
+    sample — e.g. a player new to the PL.
+
+    ``season`` is the season the sample ACTUALLY came from. It used to be
+    computed from the calendar and stamped on every player alike, which turned a
+    2021/22 cameo by a player who has since been abroad into "last season" on the
+    card — stale data wearing the label of current evidence. Where the provenance
+    was never recorded it is reported as unknown, never inferred.
+    """
     bm = r["base_minutes"] or 0
-    if bm < 300:
+    if bm < config.BASE_SAMPLE_MINUTES:
         return None
+    recorded = str(_col(r, "base_season") or "").strip()
     return {
-        "season": _PRIOR_SEASON,
+        # None means "we did not record which season this was", which is a
+        # different statement from any particular year.
+        "season": recorded or None,
+        # True: the season just gone. False: older, so treat it as weaker
+        # evidence. None: unrecorded, so no claim either way.
+        "is_prior_season": (recorded == _PRIOR_SEASON) if recorded else None,
         "minutes": int(bm),
         "starts": int(r["base_starts"] or 0),
         "xg90": round(r["base_xg90"] or 0, 2),

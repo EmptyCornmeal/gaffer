@@ -1,9 +1,9 @@
 {
-  "schema_version": 5,
-  "model_version": "heuristic-0.2",
+  "schema_version": 6,
+  "model_version": "heuristic-0.3",
   "dataset": "vaastav/Fantasy-Premier-League merged_gw",
   "season": "2024-25",
-  "decision_gameweeks": "GW2-GW38",
+  "decision_gameweeks": "GW1-GW38",
   "horizons": [
     1,
     2,
@@ -13,12 +13,12 @@
     6
   ],
   "coverage": {
-    "decision_gws": 37,
-    "rows": 146073,
+    "decision_gws": 38,
+    "rows": 149769,
     "skipped_no_fixture": 0,
-    "rows_evaluated": 146073,
-    "zero_minute_rows_retained": 84999,
-    "zero_minute_share_pct": 58.2,
+    "rows_evaluated": 149769,
+    "zero_minute_rows_retained": 86927,
+    "zero_minute_share_pct": 58.0,
     "excluded": {
       "missing_position_price_or_fixture": 0,
       "note": "no row is excluded on post-match data"
@@ -31,10 +31,10 @@
   },
   "per_horizon": {
     "1": {
-      "n": 26615,
+      "n": 27231,
       "mae": {
-        "gaffer": 1.566,
-        "naive": 1.11
+        "gaffer": 1.564,
+        "naive": 1.115
       },
       "rank_corr": {
         "gaffer": 0.44,
@@ -42,53 +42,53 @@
       },
       "decisions": {
         "gaffer": {
-          "gameweeks_scored": 37,
-          "xi_points_per_gw": 50.9,
-          "xi_regret_per_gw": 87.2,
-          "captain_points_per_gw": 8.16,
-          "captain_regret_per_gw": 5.59,
-          "captain_accuracy_pct": 29.7
+          "gameweeks_scored": 38,
+          "xi_points_per_gw": 50.8,
+          "xi_regret_per_gw": 86.7,
+          "captain_points_per_gw": 8.26,
+          "captain_regret_per_gw": 5.45,
+          "captain_accuracy_pct": 31.6
         },
         "naive": {
-          "gameweeks_scored": 37,
-          "xi_points_per_gw": 52.5,
-          "xi_regret_per_gw": 85.6,
-          "captain_points_per_gw": 8.22,
-          "captain_regret_per_gw": 5.35,
-          "captain_accuracy_pct": 21.6
+          "gameweeks_scored": 38,
+          "xi_points_per_gw": 51.7,
+          "xi_regret_per_gw": 85.8,
+          "captain_points_per_gw": 8.0,
+          "captain_regret_per_gw": 5.42,
+          "captain_accuracy_pct": 21.1
         }
       },
       "transfers": {
         "gaffer": {
-          "with_transfers": 1715.0,
-          "hold_squad": 1044.0,
-          "gain": 671.0,
-          "gameweeks": 36
+          "with_transfers": 1496.0,
+          "hold_squad": 1518.0,
+          "gain": -22.0,
+          "gameweeks": 37
         },
         "naive": {
-          "with_transfers": 1673.0,
-          "hold_squad": 1274.0,
-          "gain": 399.0,
-          "gameweeks": 36
+          "with_transfers": 1624.0,
+          "hold_squad": 891.0,
+          "gain": 733.0,
+          "gameweeks": 37
         }
       }
     },
     "2": {
-      "n": 25443,
+      "n": 26059,
       "mae": {
-        "gaffer": 1.576,
-        "naive": 1.124
+        "gaffer": 1.575,
+        "naive": 1.131
       },
       "rank_corr": {
-        "gaffer": 0.423,
+        "gaffer": 0.425,
         "naive": 0.646
       }
     },
     "3": {
-      "n": 24644,
+      "n": 25260,
       "mae": {
-        "gaffer": 1.585,
-        "naive": 1.142
+        "gaffer": 1.583,
+        "naive": 1.143
       },
       "rank_corr": {
         "gaffer": 0.413,
@@ -96,10 +96,10 @@
       }
     },
     "4": {
-      "n": 23845,
+      "n": 24461,
       "mae": {
         "gaffer": 1.585,
-        "naive": 1.146
+        "naive": 1.149
       },
       "rank_corr": {
         "gaffer": 0.407,
@@ -107,10 +107,10 @@
       }
     },
     "5": {
-      "n": 23044,
+      "n": 23660,
       "mae": {
-        "gaffer": 1.596,
-        "naive": 1.163
+        "gaffer": 1.598,
+        "naive": 1.166
       },
       "rank_corr": {
         "gaffer": 0.401,
@@ -118,66 +118,90 @@
       }
     },
     "6": {
-      "n": 22482,
+      "n": 23098,
       "mae": {
         "gaffer": 1.605,
-        "naive": 1.171
+        "naive": 1.172
       },
       "rank_corr": {
-        "gaffer": 0.397,
+        "gaffer": 0.398,
         "naive": 0.606
       }
     }
+  },
+  "pre_season": {
+    "decision_gw": 1,
+    "n": 616,
+    "regime": "prior-season rates and the price prior only — no season-to-date history exists yet",
+    "mae": {
+      "gaffer": 1.542
+    },
+    "rank_corr": {
+      "gaffer": 0.439
+    },
+    "decisions": {
+      "gaffer": {
+        "gameweeks_scored": 1,
+        "xi_points_per_gw": 49.0,
+        "xi_regret_per_gw": 68.0,
+        "captain_points_per_gw": 12.0,
+        "captain_regret_per_gw": 0.0,
+        "captain_accuracy_pct": 100.0
+      }
+    },
+    "decisions_caveat": "ONE gameweek, not an average. captain_accuracy_pct here can only be 0 or 100 and is not a rate; xi_points_per_gw is a single score. Read these as what happened on one evening, never as performance.",
+    "zero_minute_share_pct": 50.2,
+    "naive_baseline": "UNDEFINED. The naive baseline is cumulative season-to-date points-per-game, which does not exist before the season starts; it predicts 0 for every player here. Its rank correlation is undefined (zero variance) and its MAE would measure only how many players failed to appear, so neither is reported. There is no baseline to beat at GW1 — which is itself the finding."
   },
   "calibration": {
     "overall": [
       {
         "pred": 0.45,
         "actual": 0.4,
-        "haul_rate": 0.1,
-        "n": 3327
+        "haul_rate": 0.2,
+        "n": 3404
       },
       {
-        "pred": 0.77,
+        "pred": 0.78,
         "actual": 0.59,
-        "haul_rate": 0.5,
-        "n": 3328
+        "haul_rate": 0.4,
+        "n": 3404
       },
       {
-        "pred": 1.06,
+        "pred": 1.07,
         "actual": 0.67,
         "haul_rate": 1.4,
-        "n": 3326
+        "n": 3404
       },
       {
         "pred": 1.24,
         "actual": 0.45,
         "haul_rate": 0.8,
-        "n": 3327
+        "n": 3405
       },
       {
         "pred": 1.43,
         "actual": 0.57,
         "haul_rate": 0.7,
-        "n": 3326
+        "n": 3402
       },
       {
         "pred": 1.88,
-        "actual": 1.35,
+        "actual": 1.36,
         "haul_rate": 1.5,
-        "n": 3327
+        "n": 3404
       },
       {
         "pred": 2.66,
         "actual": 2.25,
         "haul_rate": 3.0,
-        "n": 3327
+        "n": 3404
       },
       {
-        "pred": 4.02,
+        "pred": 4.01,
         "actual": 3.44,
         "haul_rate": 7.3,
-        "n": 3327
+        "n": 3404
       }
     ],
     "by_position": {
@@ -186,95 +210,95 @@
           "pred": 0.53,
           "actual": 0.4,
           "haul_rate": 0.1,
-          "n": 1765
+          "n": 1805
         },
         {
           "pred": 0.98,
-          "actual": 0.35,
+          "actual": 0.36,
           "haul_rate": 0.2,
-          "n": 1764
+          "n": 1805
         },
         {
           "pred": 1.31,
-          "actual": 0.45,
+          "actual": 0.46,
           "haul_rate": 0.3,
-          "n": 1764
+          "n": 1804
         },
         {
           "pred": 1.97,
-          "actual": 1.21,
+          "actual": 1.22,
           "haul_rate": 0.8,
-          "n": 1764
+          "n": 1805
         },
         {
-          "pred": 3.51,
-          "actual": 2.68,
-          "haul_rate": 3.1,
-          "n": 1764
+          "pred": 3.5,
+          "actual": 2.67,
+          "haul_rate": 3.0,
+          "n": 1805
         }
       ],
       "FWD": [
         {
           "pred": 0.52,
-          "actual": 0.52,
+          "actual": 0.53,
           "haul_rate": 0.2,
-          "n": 583
+          "n": 597
         },
         {
-          "pred": 1.07,
-          "actual": 0.63,
+          "pred": 1.09,
+          "actual": 0.64,
           "haul_rate": 0.5,
-          "n": 582
+          "n": 597
         },
         {
-          "pred": 1.46,
-          "actual": 0.42,
+          "pred": 1.47,
+          "actual": 0.4,
           "haul_rate": 0.7,
-          "n": 583
+          "n": 596
         },
         {
           "pred": 2.15,
-          "actual": 1.45,
-          "haul_rate": 1.2,
-          "n": 582
+          "actual": 1.47,
+          "haul_rate": 1.3,
+          "n": 597
         },
         {
-          "pred": 4.06,
-          "actual": 3.79,
-          "haul_rate": 9.4,
-          "n": 583
+          "pred": 4.05,
+          "actual": 3.8,
+          "haul_rate": 9.5,
+          "n": 597
         }
       ],
       "GKP": [
         {
           "pred": 0.68,
-          "actual": 0.31,
+          "actual": 0.3,
           "haul_rate": 0.0,
-          "n": 554
+          "n": 566
         },
         {
-          "pred": 1.02,
+          "pred": 1.03,
           "actual": 0.11,
           "haul_rate": 0.0,
-          "n": 551
+          "n": 565
         },
         {
-          "pred": 1.2,
-          "actual": 0.09,
+          "pred": 1.21,
+          "actual": 0.1,
           "haul_rate": 0.2,
-          "n": 552
+          "n": 565
         },
         {
-          "pred": 1.8,
+          "pred": 1.79,
           "actual": 1.01,
           "haul_rate": 1.4,
-          "n": 552
+          "n": 565
         },
         {
-          "pred": 3.33,
-          "actual": 2.94,
-          "haul_rate": 4.0,
-          "n": 552
+          "pred": 3.3,
+          "actual": 2.97,
+          "haul_rate": 3.9,
+          "n": 566
         }
       ],
       "MID": [
@@ -282,37 +306,37 @@
           "pred": 0.53,
           "actual": 0.54,
           "haul_rate": 0.4,
-          "n": 2424
+          "n": 2480
         },
         {
           "pred": 1.07,
-          "actual": 1.04,
-          "haul_rate": 2.6,
-          "n": 2424
+          "actual": 1.03,
+          "haul_rate": 2.5,
+          "n": 2481
         },
         {
           "pred": 1.33,
-          "actual": 0.53,
+          "actual": 0.54,
           "haul_rate": 0.9,
-          "n": 2424
+          "n": 2477
         },
         {
           "pred": 1.95,
-          "actual": 1.69,
+          "actual": 1.7,
           "haul_rate": 2.5,
-          "n": 2424
+          "n": 2479
         },
         {
           "pred": 3.55,
-          "actual": 3.18,
-          "haul_rate": 7.2,
-          "n": 2424
+          "actual": 3.17,
+          "haul_rate": 7.1,
+          "n": 2479
         }
       ]
     }
   },
   "shipped_projection": {
-    "model_version": "heuristic-0.2",
+    "model_version": "heuristic-0.3",
     "next_gameweek": "blend of Gaffer and FPL ep_next at w=0.7, scaled by availability",
     "later_gameweeks": "Gaffer only — ep_next does not exist beyond h=1",
     "next_gameweek_status": "POLICY, NOT MEASURED. The blend weight cannot be fitted on this dataset because the archive has no faithful copy of the live ep_next."
@@ -578,7 +602,8 @@
     "Transfer regret is a one-free-transfer greedy sequence, not the shipped multi-period solver.",
     "Squad selection maximises projected points under budget, quota and the club limit. It is close to, but not identical to, the shipped optimiser, which also carries a ceiling term and a goalkeeper spend penalty.",
     "The 'gaffer' column is the standalone component model. What ships for the NEXT gameweek is a blend of it with FPL's live ep_next, and that blend is unmeasurable here — see `withdrawn_baselines`. Beyond h=1 the shipped projection is exactly this column.",
-    "An in-sample gain is never evidence. Parameters were selected on 2023-24 and reported here on 2024-25, which selection never saw."
+    "An in-sample gain is never evidence. Parameters were selected on 2023-24 and reported here on 2024-25, which selection never saw.",
+    "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-08-07T07:30:17+00:00"
+  "generated_at": "2026-08-15T06:50:32+00:00"
 }

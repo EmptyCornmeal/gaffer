@@ -222,6 +222,50 @@ PENALTY_MISS_POINTS = -2
 APPEARANCE_SHORT = 1
 APPEARANCE_LONG = 2
 
+# --- prior-season baseline ---------------------------------------------------
+# How many minutes a prior season must contain before its rates count as a
+# sample. Below this, `base_*` is 0 because nothing was RECORDED; at or above
+# it, a 0 means the player genuinely did that thing zero times — a measurement,
+# and much stronger evidence than any positional prior.
+#
+# Named here because three places must agree or the distinction collapses:
+# `ingest.enrich_history` refuses to store a shorter sample, `histdata` zeroes
+# one out for the backtest, and `export.artifacts` hides it from the player card.
+# `model.projection` then tests this one number to tell absence from zero.
+BASE_SAMPLE_MINUTES = 300
+
+# FPL back-fills `history_past` for seasons that predate a statistic with 0
+# rather than omitting the key, so key-presence tells you nothing and a
+# structural zero is indistinguishable from a measurement unless you know which
+# season it came from. Verified against the live API on 2026-08-15 — one player,
+# seven consecutive seasons:
+#
+#     season     mins  starts     xG      xA   defcon
+#     2021/22    3110       0   0.00    0.00        0     <- fields did not exist
+#     2022/23    3317      37   9.33   10.70        0
+#     2024/25    3017      35   9.93    7.89      359
+#
+# 3110 minutes with 0 starts is not a substitute; it is a column that had not
+# been invented. Treating it as a measurement projects an ever-present as a
+# bench player.
+BASE_STATS_FROM_SEASON = "2022/23"      # starts, expected_goals, expected_assists
+BASE_DEFCON_FROM_SEASON = "2024/25"     # defensive_contribution
+
+
+def season_reports_advanced_stats(label: str | None) -> bool | None:
+    """Could a `history_past` season report starts/xG/xA at all?
+
+    Returns None when the season is not recorded — which is emphatically not the
+    same answer as False, and callers must not collapse the two.
+    """
+    if not label:
+        return None
+    try:
+        year = int(str(label).split("/")[0])
+    except (ValueError, IndexError):
+        return None
+    return year >= int(BASE_STATS_FROM_SEASON.split("/")[0])
+
 # --- ep_next ensemble (T-15, re-labelled by T-26) ---------------------------
 # FPL publishes its own expected points for the NEXT gameweek only, and the
 # shipped h=1 projection is a blend of it with Gaffer's component model.

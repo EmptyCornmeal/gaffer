@@ -18,7 +18,11 @@ from gaffer import season as season_mod
 from gaffer.model import features as F
 from gaffer.model.features import TeamContext, clamp
 
-MODEL_VERSION = "heuristic-0.2"  # T-13: goals conceded, saves, cards, OG, pens, bonus rate
+# 0.2 = T-13: goals conceded, saves, cards, OG, pens, bonus rate.
+# 0.3 = M3: a zero in the prior-season baseline is read as a measurement only
+#       when the season could have measured it. Numbers move for every player
+#       whose baseline records a credible zero, so the version moves with them.
+MODEL_VERSION = "heuristic-0.3"
 
 # Availability status -> baseline multiplier on the chance of featuring.
 _STATUS_MULT = {"a": 1.0, "d": 0.5, "i": 0.0, "s": 0.0, "u": 0.0, "n": 0.0}
@@ -257,6 +261,23 @@ def _start_prior(position: str, price: int) -> float:
     return 0.25 + frac * (ceiling - 0.25)
 
 
+#: The most minutes a player could accumulate in a season without ever starting:
+#: 38 appearances at the model's own cameo length. Above this, a `base_starts` of
+#: 0 is a column the source did not have, not a career on the bench — and unlike
+#: the season check this holds even when the provenance was never recorded.
+_MAX_UNSTARTED_MINUTES = 38 * _CAMEO_MINUTES
+
+
+def _field(player: Any, key: str, default: Any = None) -> Any:
+    """One optional input, whatever the row type. ``sqlite3.Row`` raises
+    IndexError for an unknown column and a dict raises KeyError; a column added
+    after a database was created must not take the projection down."""
+    try:
+        return player[key]
+    except (KeyError, IndexError):
+        return default
+
+
 def fixture_rates(
     player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float, games_played: int = 0
 ) -> dict[str, float]:
@@ -269,14 +290,38 @@ def fixture_rates(
     pos = player["position"]
     cur_min = player["minutes"] or 0
     base_min = player["base_minutes"] or 0
+    base_starts = _field(player, "base_starts") or 0
+    # Whether a prior season was RECORDED at all. Everything below turns on this
+    # rather than on truthiness, because `base_*` is 0 in two situations that
+    # mean opposite things: no sample exists, or a real sample measured zero.
+    # Both writers gate on the same figure, so the test is exact.
+    have_base = base_min >= config.BASE_SAMPLE_MINUTES
+    # ...and whether a zero in that sample can be believed. FPL back-fills old
+    # seasons with 0 instead of omitting the field, so a zero is only evidence
+    # when the season was capable of reporting it. None means unrecorded, which
+    # is treated as "believe it" — the physical check below is what protects the
+    # unrecorded case.
+    zero_is_evidence = config.season_reports_advanced_stats(
+        _field(player, "base_season")) is not False
 
     # --- minutes gate ---------------------------------------------------
     # start prob: current-season starts/games once enough games; else last-season
     # starts/38; else a price-based prior. (starts/38 mid-season is wrong.)
+    #
+    # Zero starts off a full sample is the strongest bench evidence there is, and
+    # the old truthiness test threw it away — sending exactly those players to a
+    # price prior that reads an expensive squad player as a probable starter. One
+    # start scores 1/38 and is believed; nought is believed on the same terms,
+    # but only when it is credible:
+    #   * the season could report `starts` at all, and
+    #   * the minutes are physically reachable without ever starting. A season of
+    #     substitute appearances cannot exceed 38 cameos; more than that with no
+    #     starts is a missing column, whatever the provenance says.
+    zero_starts_possible = base_min <= _MAX_UNSTARTED_MINUTES
     if games_played >= 3 and cur_min and player["starts"] is not None:
         base_start = clamp(player["starts"] / games_played, 0.0, 0.98)
-    elif base_min > 90 and player["base_starts"]:
-        base_start = clamp(player["base_starts"] / 38.0, 0.0, 0.98)
+    elif have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
+        base_start = clamp(base_starts / 38.0, 0.0, 0.98)
     else:
         base_start = _start_prior(pos, player["price"])
     p_start = clamp(base_start * avail, 0.0, 0.98)
@@ -289,8 +334,16 @@ def fixture_rates(
     # Shrink current-season rate toward the LAST-SEASON rate (survives the FPL
     # stats reset), falling back to a flat position prior for players with none.
     prior = F.XGI_PRIOR[pos]
-    tgt_xg = player["base_xg90"] or (prior * 0.55)
-    tgt_xa = player["base_xa90"] or (prior * 0.45)
+    # A measured zero outranks a prior. A holding midfielder with 2,000 minutes
+    # and no goals has told us what his xG rate is; substituting a positional
+    # average there is not caution, it is discarding the only evidence available.
+    # But a season that predated expected-goals reports 0.00 for everyone, and
+    # believing THAT would project Bruno Fernandes as a man who never threatens.
+    base_xg = player["base_xg90"] or 0.0
+    base_xa = player["base_xa90"] or 0.0
+    use_base_xgi = have_base and (zero_is_evidence or base_xg or base_xa)
+    tgt_xg = base_xg if use_base_xgi else prior * 0.55
+    tgt_xa = base_xa if use_base_xgi else prior * 0.45
     xg90 = F.shrink(player["xg_per_90"] or 0, cur_min, tgt_xg)
     xa90 = F.shrink(player["xa_per_90"] or 0, cur_min, tgt_xa)
     att_mult = ctx.attack_multiplier(fx.opponent_id, fx.at_home)

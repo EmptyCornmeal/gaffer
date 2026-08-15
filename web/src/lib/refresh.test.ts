@@ -1,8 +1,40 @@
 import { describe, it, expect, vi } from 'vitest'
 import {
   nextDelay, isStale, initialState, applyResult, freshnessLabel, Poller,
-  DEFAULTS,
+  DEFAULTS, dataTimestamp,
 } from './refresh'
+
+describe('dataTimestamp', () => {
+  const FETCHED = Date.parse('2026-08-22T16:00:00Z')
+
+  it('prefers when the data was generated over when it was fetched', () => {
+    // The C1 case: the proxy is down, so the page falls back to `live.json`.
+    // The fetch succeeded seconds ago; the file was written four hours ago.
+    expect(dataTimestamp('2026-08-22T12:00:00Z', FETCHED))
+      .toBe(Date.parse('2026-08-22T12:00:00Z'))
+  })
+
+  it('falls back to the fetch time when the payload carries no timestamp', () => {
+    expect(dataTimestamp(null, FETCHED)).toBe(FETCHED)
+    expect(dataTimestamp(undefined, FETCHED)).toBe(FETCHED)
+    expect(dataTimestamp('', FETCHED)).toBe(FETCHED)
+  })
+
+  it('falls back rather than believing an unparseable timestamp', () => {
+    expect(dataTimestamp('yesterday-ish', FETCHED)).toBe(FETCHED)
+  })
+
+  it('reads an offset-bearing timestamp as the same instant as Z', () => {
+    // `as_of` is written by Python as +00:00, not Z. Getting this wrong would
+    // shift the age by the local UTC offset and be invisible in a UK summer.
+    expect(dataTimestamp('2026-08-22T12:00:00+00:00', FETCHED))
+      .toBe(dataTimestamp('2026-08-22T12:00:00Z', FETCHED))
+  })
+
+  it('has nothing to report before the first successful fetch', () => {
+    expect(dataTimestamp(null, null)).toBeNull()
+  })
+})
 
 // --------------------------------------------------------------------------
 // Pacing

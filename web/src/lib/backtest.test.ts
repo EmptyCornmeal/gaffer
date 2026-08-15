@@ -5,16 +5,24 @@ import {
 } from './backtest'
 
 const valid = {
-  schema_version: 5,
+  schema_version: 6,
   model_version: 'heuristic-0.1',
   dataset: 'vaastav/Fantasy-Premier-League merged_gw',
   season: '2024-25',
-  decision_gameweeks: 'GW2-GW38',
+  decision_gameweeks: 'GW1-GW38',
   horizons: [1, 2],
   coverage: {
     rows_evaluated: 26615,
     zero_minute_rows_retained: 15491,
     zero_minute_share_pct: 58.2,
+  },
+  pre_season: {
+    decision_gw: 1,
+    n: 616,
+    regime: 'prior-season rates and the price prior only',
+    mae: { gaffer: 1.544 },
+    rank_corr: { gaffer: 0.439 },
+    naive_baseline: 'UNDEFINED. Cumulative season-to-date PPG is 0 for everyone.',
   },
   leakage_check: { enforced: true, post_match_fields_in_features: [], policy: 'shift(1)' },
   per_horizon: {
@@ -61,7 +69,7 @@ describe('parseBacktest — acceptance', () => {
   })
 
   it('only claims support for versions it can render', () => {
-    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([5])
+    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([6])
   })
 })
 
@@ -90,7 +98,7 @@ describe('parseBacktest — rejection', () => {
   it('rejects a superseded numeric schema version', () => {
     const s = parseBacktest({ ...valid, schema_version: 2 })
     expect(s.kind).toBe('unsupported')
-    if (s.kind === 'unsupported') expect(s.detail).toContain('supported: 5')
+    if (s.kind === 'unsupported') expect(s.detail).toContain('supported: 6')
   })
 
   it('rejects v3 — it reported baselines that were later withdrawn', () => {
@@ -107,8 +115,28 @@ describe('parseBacktest — rejection', () => {
     expect(parseBacktest({ ...valid, schema_version: 4 }).kind).toBe('unsupported')
   })
 
+  it('rejects v5 — it never evaluated the pre-season decision', () => {
+    // v5 ran from GW2 while its own constant comment claimed GW1 was included,
+    // so its headline numbers are in-season numbers under an all-season label,
+    // and it carries no `pre_season` block. Rendering one would present the
+    // regime that picks the opening squad as measured when it was not.
+    expect(parseBacktest({ ...valid, schema_version: 5 }).kind).toBe('unsupported')
+  })
+
   it('rejects a future schema version rather than guessing', () => {
     expect(parseBacktest({ ...valid, schema_version: 99 }).kind).toBe('unsupported')
+  })
+
+  it('carries the pre-season block through, with its missing baseline named', () => {
+    const s = parseBacktest(valid)
+    expect(s.kind).toBe('ok')
+    if (s.kind !== 'ok') return
+    expect(s.data.pre_season?.decision_gw).toBe(1)
+    expect(s.data.pre_season?.rank_corr.gaffer).toBe(0.439)
+    // The absent naive baseline must be explained, never rendered as a number:
+    // "no baseline" and "beat the baseline" must not look alike on the page.
+    expect(s.data.pre_season?.rank_corr.naive).toBeUndefined()
+    expect(s.data.pre_season?.naive_baseline).toContain('UNDEFINED')
   })
 
   it('rejects non-object payloads', () => {

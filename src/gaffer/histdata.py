@@ -34,6 +34,9 @@ FEATURE_COLUMNS = (
     "selected", "min_td", "starts_td", "xg90_td", "xa90_td", "defcon90_td",
     "pts_td", "games_td", "base_minutes", "base_starts", "base_xg90", "base_xa90",
     "base_defcon90",
+    # Which season base_* came from. Names a season already finished before this
+    # one began, so it is pre-deadline by construction.
+    "base_season",
 )
 
 #: Columns used only as evaluation targets.
@@ -263,7 +266,7 @@ def _prior_season_baseline(season: str) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame(
             columns=["name", "base_minutes", "base_starts", "base_xg90",
-                     "base_xa90", "base_defcon90"]
+                     "base_xa90", "base_defcon90", "base_season"]
         )
     df = pd.read_csv(path)
     agg = {"minutes": "sum", "total_points": "sum"}
@@ -283,8 +286,17 @@ def _prior_season_baseline(season: str) -> pd.DataFrame:
     ).fillna(0.0)
     # Prior seasons with <300 minutes are not a usable baseline (same rule the
     # live enrichment applies in ingest.enrich_history).
-    out.loc[out["base_minutes"] < 300, ["base_xg90", "base_xa90", "base_defcon90"]] = 0.0
-    out.loc[out["base_minutes"] < 300, ["base_minutes", "base_starts"]] = 0
+    short = out["base_minutes"] < config.BASE_SAMPLE_MINUTES
+    out.loc[short, ["base_xg90", "base_xa90", "base_defcon90"]] = 0.0
+    out.loc[short, ["base_minutes", "base_starts"]] = 0
+    # Which season the baseline came from, in FPL's own '2023/24' notation. The
+    # archive has the same gap the live API does — merged_gw files before 2022-23
+    # carry no `starts` or `expected_*` columns, so `tot.get(...)` above yields
+    # zeros that mean "not recorded". Passing the season through lets the
+    # projection apply exactly the test it applies live, rather than the backtest
+    # silently exercising a different branch from the one that ships.
+    start = prev.split("-")[0]
+    out["base_season"] = f"{start}/{prev.split('-')[1]}" if "-" in prev else prev
     return out
 
 
@@ -310,6 +322,11 @@ def load_season(season: str) -> SeasonHistory:
         if c not in df:
             df[c] = 0.0
         df[c] = df[c].fillna(0.0)
+    # Unmatched players get "", which the projection reads as unrecorded rather
+    # than as a season that could not report the stat.
+    if "base_season" not in df:
+        df["base_season"] = ""
+    df["base_season"] = df["base_season"].fillna("")
 
     return SeasonHistory(season=season, frame=df, teams=teams, name_to_id=name_to_id)
 

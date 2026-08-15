@@ -50,6 +50,12 @@ CREATE TABLE IF NOT EXISTS players (
     base_xa90           REAL DEFAULT 0,        -- last-season xA/90
     base_minutes        INTEGER DEFAULT 0,     -- last-season minutes (reliability baseline)
     base_starts         INTEGER DEFAULT 0,     -- last-season starts
+    -- WHICH season the base_* above came from, as FPL labels it ('2024/25').
+    -- history_past[-1] is the most recent season FPL HOLDS for that player, and
+    -- for anyone who spent time outside the Premier League that is not last
+    -- season at all. Without this the artifact stamped every baseline with the
+    -- current prior season and presented an old cameo as current evidence.
+    base_season         TEXT DEFAULT '',
     news                TEXT,
     set_piece_notes     TEXT
 );

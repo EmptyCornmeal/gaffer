@@ -106,10 +106,16 @@ def test_protected_fixture_strength_constants_are_untouched():
 
 
 def test_model_version_reflects_the_scoring_change():
-    """T-13 added goals conceded, saves, cards, OG and penalties, so the shipped
-    projection behaviour changed and the version must say so."""
-    assert projection.MODEL_VERSION == "heuristic-0.2"
-    assert projection.MODEL_VERSION != "heuristic-0.1"
+    """The rule, not the number: when shipped projection behaviour changes the
+    version changes with it, so a stored artifact can never be mistaken for one
+    produced by different arithmetic.
+
+    0.2 added goals conceded, saves, cards, OG and penalties (T-13). 0.3 stopped
+    reading an unmeasurable zero in the prior-season baseline as a measurement
+    (M3), which moves the projection for real players.
+    """
+    assert projection.MODEL_VERSION == "heuristic-0.3"
+    assert projection.MODEL_VERSION not in ("heuristic-0.1", "heuristic-0.2")
 
 
 def test_availability_path_is_the_real_one():
@@ -171,10 +177,30 @@ def test_player_inputs_carry_no_same_gameweek_outcome():
     # The model dict's keys are all season-to-date / prior-season / static.
     assert set(inputs) == {
         "position", "minutes", "starts", "base_minutes", "base_starts",
-        "base_xg90", "base_xa90", "price", "xg_per_90", "xa_per_90",
-        "defcon_per_90", "team_id",
+        "base_xg90", "base_xa90", "base_season", "price", "xg_per_90",
+        "xa_per_90", "defcon_per_90", "team_id",
     }
     assert inputs["minutes"] == 900.0  # to-date, not this gameweek's minutes
+    # The row above carries no `base_season`, as an older frame would not. It
+    # must come back as unrecorded rather than raise, and unrecorded must never
+    # be mistaken for a season that could not report a statistic.
+    assert inputs["base_season"] == ""
+
+
+def test_the_backtest_passes_the_baseline_season_through():
+    """Otherwise the harness silently takes a more forgiving zero-vs-missing
+    branch than the code that ships, and measures something that is not the
+    model. `base_season` names a season that finished before this one began, so
+    it is pre-deadline by construction."""
+    assert "base_season" in histdata.FEATURE_COLUMNS
+    assert not leakage.check_features(histdata.FEATURE_COLUMNS)
+    row = pd.DataFrame([{
+        "pos": "MID", "min_td": 0.0, "starts_td": 0.0, "xg90_td": 0.0,
+        "xa90_td": 0.0, "defcon90_td": 0.0, "base_minutes": 2000.0,
+        "base_starts": 0.0, "base_xg90": 0.0, "base_xa90": 0.0,
+        "base_season": "2021/22", "value": 75.0, "team_id": 1,
+    }]).itertuples(index=False)
+    assert backtest._player_inputs(next(row))["base_season"] == "2021/22"
 
 
 def test_season_to_date_never_includes_the_current_row():
@@ -189,6 +215,74 @@ def test_season_to_date_never_includes_the_current_row():
     assert out.loc[out["GW"] == 1, "min_td"].iloc[0] == 0
     assert out.loc[out["GW"] == 3, "min_td"].iloc[0] == 180
     assert out.loc[out["GW"] == 3, "pts_td"].iloc[0] == 8  # 2 + 6, not 18
+
+
+# --------------------------------------------------------------------------
+# M1 — the pre-season decision is actually evaluated
+# --------------------------------------------------------------------------
+
+def test_the_evaluation_starts_at_gameweek_one():
+    """For five schema versions this constant was 2 while the comment beside it
+    said GW1 was included. Every accuracy number the project has quoted about
+    itself therefore came from a harness that skipped the one decision made with
+    no season-to-date information at all — the evening a whole squad is picked
+    from scratch. The constant is the claim; assert it."""
+    assert backtest.FIRST_DECISION_GW == 1
+
+
+def _ev_frame(naive_values):
+    """Minimal evaluation frame: GW1 at h=1, plus an in-season row to be excluded."""
+    n = len(naive_values)
+    rows = {
+        "element": list(range(n)) + [900],
+        "decision_gw": [1] * n + [7],
+        "target_gw": [1] * n + [7],       # at h=1 the target IS the decision gw
+        "horizon": [1] * n + [1],
+        "pred": [0.5 * i for i in range(n)] + [3.0],
+        "actual": [float(i % 4) for i in range(n)] + [9.0],
+        "minutes": [90 if i % 2 else 0 for i in range(n)] + [90],
+        "naive": list(naive_values) + [2.0],
+        "value": [50] * n + [50],
+        "team_id": [1 + (i % 4) for i in range(n)] + [1],
+        "pos": ["MID"] * n + ["MID"],
+    }
+    return pd.DataFrame(rows)
+
+
+def test_the_pre_season_block_reports_gameweek_one_alone():
+    ev = _ev_frame([0.0] * 12)
+    block = backtest._pre_season_block(ev)
+    assert block["decision_gw"] == 1
+    assert block["n"] == 12, "the in-season row must not be counted"
+    assert block["rank_corr"]["gaffer"] != 0
+    assert block["zero_minute_share_pct"] == 50.0
+
+
+def test_an_undefined_naive_baseline_is_explained_not_scored():
+    """Cumulative season-to-date points-per-game is 0 for every player before a
+    ball is kicked. Publishing a rank correlation against a constant, or a
+    decision made by ranking one, would invent a baseline that does not exist —
+    and "no baseline" must not read like "beat the baseline"."""
+    block = backtest._pre_season_block(_ev_frame([0.0] * 12))
+    assert "naive" not in block["rank_corr"]
+    assert "naive" not in block["mae"]
+    assert "UNDEFINED" in block["naive_baseline"]
+
+
+def test_a_defined_naive_baseline_is_still_reported():
+    """The omission above is conditional on the data, not hardcoded: a season
+    whose GW1 did carry a usable baseline must still be measured against it."""
+    block = backtest._pre_season_block(_ev_frame([float(i) for i in range(12)]))
+    assert block["naive_baseline"] == "defined"
+    assert "naive" in block["rank_corr"] and "naive" in block["mae"]
+
+
+def test_one_gameweek_of_decisions_is_labelled_as_such():
+    """`captain_accuracy_pct` over a single decision is 0 or 100 and is not a
+    rate. A page showing "100% captain accuracy" from one evening would be worse
+    than showing nothing, so the artifact carries the caveat with the number."""
+    block = backtest._pre_season_block(_ev_frame([0.0] * 12))
+    assert "ONE gameweek" in block["decisions_caveat"]
 
 
 def test_missing_history_fails_loudly(monkeypatch, tmp_path):

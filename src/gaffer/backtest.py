@@ -47,13 +47,28 @@ from gaffer.model import projection
 #:       only and concluded "trained models lose every decision metric", which is
 #:       false — ridge beat the heuristic at h=1. `rejected` and `inconclusive`
 #:       are different findings and the artifact now carries both.
-SCHEMA_VERSION = 5
+#:   6 = evaluates GW1. Versions 1-5 started at GW2 while their own comment
+#:       claimed GW1 was included, so no genuinely pre-season decision had ever
+#:       been measured — the one regime in which a whole squad is picked from
+#:       scratch. Adds `pre_season`, because averaging that gameweek into 37
+#:       in-season ones hides it, and because the naive baseline does not exist
+#:       there and must not appear to have been beaten.
+SCHEMA_VERSION = 6
 
 TEST_SEASON = "2024-25"
 #: Decision gameweeks evaluated. GW1 has no season-to-date history, so the model
 #: runs on its prior/price path there — which is exactly the live GW1 regime and
 #: is therefore included rather than skipped.
-FIRST_DECISION_GW = 2
+#:
+#: It really is 1. This constant read 2 for five schema versions while the
+#: comment above said otherwise, and the code won: every number the project has
+#: ever quoted about itself came from an evaluation that skipped the pre-season
+#: decision entirely. Everything downstream handles GW1 without special-casing —
+#: `shift(1)` makes all season-to-date features 0, `team_form_ratings` finds no
+#: played matches and shrinks fully to its prior, and `team_xgc_to_date` returns
+#: nothing and falls back to the league mean. That is not a degraded path, it is
+#: the pre-season path, which is the point.
+FIRST_DECISION_GW = 1
 HORIZONS = (1, 2, 3, 4, 5, 6)
 SQUAD_SIZE = 15
 BUDGET = 1000  # tenths of a million, as the API reports prices
@@ -81,6 +96,9 @@ def _player_inputs(row: Any) -> dict[str, Any]:
         "base_starts": float(row.base_starts),
         "base_xg90": float(row.base_xg90),
         "base_xa90": float(row.base_xa90),
+        # Provenance, so the backtest takes the same zero-vs-missing branch the
+        # live projection takes rather than a more forgiving one.
+        "base_season": getattr(row, "base_season", "") or "",
         "price": float(row.value),
         "xg_per_90": float(row.xg90_td),
         "xa_per_90": float(row.xa90_td),
@@ -226,6 +244,56 @@ def _best_xi(grp: pd.DataFrame, squad: list[int], col: str) -> list[int]:
             chosen.append(idx)
             counts[row["pos"]] += 1
     return chosen
+
+
+def _pre_season_block(ev: pd.DataFrame) -> dict[str, Any]:
+    """The GW1 decision, reported on its own.
+
+    Not merely the first data point — a different regime. There is no
+    season-to-date anything, so the model runs entirely on prior-season rates and
+    the price prior, which is its exact state on the one evening of the year when
+    a whole squad is picked from scratch. Averaged into 37 in-season gameweeks it
+    is one thirty-eighth of a number and cannot be read at all.
+    """
+    sub = ev[(ev["decision_gw"] == FIRST_DECISION_GW) & (ev["horizon"] == 1)]
+    if sub.empty:
+        return {}
+
+    # Cumulative season-to-date PPG is 0 for every player before a ball is
+    # kicked. Reporting a rank correlation against a constant, or a decision made
+    # by ranking one, would manufacture a baseline that does not exist.
+    naive_defined = bool(sub["naive"].std() > 0)
+
+    out: dict[str, Any] = {
+        "decision_gw": FIRST_DECISION_GW,
+        "n": int(len(sub)),
+        "regime": "prior-season rates and the price prior only — no "
+                  "season-to-date history exists yet",
+        "mae": {"gaffer": round(_mae(sub["pred"], sub["actual"]), 3)},
+        "rank_corr": {"gaffer": round(_rank_corr(sub, "pred"), 3)},
+        "decisions": {"gaffer": _decision_metrics(sub, "pred")},
+        # A single gameweek renders `captain_accuracy_pct` as 0 or 100 and
+        # `xi_points_per_gw` as one observation. Both look like the rates they
+        # are named after, and a page showing "100% captain accuracy" from one
+        # decision would be worse than showing nothing.
+        "decisions_caveat": "ONE gameweek, not an average. captain_accuracy_pct "
+                            "here can only be 0 or 100 and is not a rate; "
+                            "xi_points_per_gw is a single score. Read these as "
+                            "what happened on one evening, never as performance.",
+        "zero_minute_share_pct": round(100.0 * (sub["minutes"] == 0).mean(), 1),
+    }
+    out["naive_baseline"] = "defined" if naive_defined else (
+        "UNDEFINED. The naive baseline is cumulative season-to-date "
+        "points-per-game, which does not exist before the season starts; it "
+        "predicts 0 for every player here. Its rank correlation is undefined "
+        "(zero variance) and its MAE would measure only how many players failed "
+        "to appear, so neither is reported. There is no baseline to beat at GW1 "
+        "— which is itself the finding."
+    )
+    if naive_defined:
+        out["mae"]["naive"] = round(_mae(sub["naive"], sub["actual"]), 3)
+        out["rank_corr"]["naive"] = round(_rank_corr(sub, "naive"), 3)
+    return out
 
 
 def _decision_metrics(df: pd.DataFrame, col: str) -> dict[str, Any]:
@@ -604,7 +672,7 @@ def build_evaluation(
             # Carry the frozen features onto the target fixture rows.
             cols = ["min_td", "starts_td", "xg90_td", "xa90_td", "defcon90_td",
                     "base_minutes", "base_starts", "base_xg90", "base_xa90",
-                    "value", "pos", "team_id"]
+                    "base_season", "value", "pos", "team_id"]
             for c in cols:
                 tgt[c] = tgt["element"].map(feat[c])
             tgt = tgt.dropna(subset=["pos", "value", "opponent_team", "team_id"])
@@ -693,6 +761,7 @@ def run(
 
     h1 = ev[ev["horizon"] == 1]
     zero_min = int((ev["minutes"] == 0).sum())
+    pre_season = _pre_season_block(ev)
 
     out: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -719,6 +788,7 @@ def run(
             "policy": "features use shift(1) season-to-date aggregates only",
         },
         "per_horizon": per_horizon,
+        "pre_season": pre_season,
         "calibration": {
             "overall": _calibration(h1, "pred"),
             "by_position": _calibration_by_position(h1, "pred"),
@@ -756,6 +826,13 @@ def run(
             "h=1 the shipped projection is exactly this column.",
             "An in-sample gain is never evidence. Parameters were selected on "
             "2023-24 and reported here on 2024-25, which selection never saw.",
+            "GW1 is included, and the naive baseline does not exist there: it is "
+            "cumulative season-to-date points-per-game, which is 0 for everyone "
+            "before a ball is kicked. `rank_corr` skips zero-variance "
+            "gameweeks, so the naive figure in `per_horizon` averages 37 "
+            "gameweeks where the model's averages 38. Read `pre_season` for the "
+            "GW1 regime on its own; do not read the two aggregates as a "
+            "like-for-like comparison there.",
         ],
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
     }

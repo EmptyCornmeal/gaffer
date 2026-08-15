@@ -99,12 +99,26 @@ def test_nothing_published_fails_open():
     assert "nothing is published" in d.reason
 
 
-def test_a_future_timestamp_does_not_trigger_a_refresh_loop():
+def test_ordinary_clock_skew_does_not_trigger_a_refresh_loop():
+    """Runner clocks drift by seconds. A publish timestamped slightly ahead of us
+    is current, not stale, and must not make every tick refresh."""
     now = before(48)
     d = schedule.should_refresh(
-        now, deadline=DEADLINE, last_generated_at=now + timedelta(hours=1))
+        now, deadline=DEADLINE,
+        last_generated_at=now + schedule.CLOCK_SKEW_GRACE / 2)
     assert d.should_refresh is False
-    assert "future" in d.reason
+    assert d.age_minutes == 0
+
+
+def test_a_far_future_timestamp_cannot_disable_the_schedule():
+    """C3. Skew has a bound. Without one, a single corrupt timestamp makes `age`
+    negative forever, every later tick skips, and the schedule is off with
+    nothing to say so — the failure is silent and unbounded in time."""
+    now = before(48)
+    d = schedule.should_refresh(
+        now, deadline=DEADLINE, last_generated_at=now + timedelta(days=2))
+    assert d.should_refresh is True
+    assert "corrupt" in d.reason
 
 
 def test_the_decision_reports_what_it_measured():
@@ -147,7 +161,58 @@ def test_unreadable_artifacts_never_block_a_refresh(tmp_path, setup):
     assert schedule.should_refresh(
         NOW, deadline=state["deadline"],
         last_generated_at=state["generated_at"],
-        fixture_states=state["fixture_states"]).should_refresh is True
+        fixture_states=state["fixture_states"],
+        degraded=state["degraded"]).should_refresh is True
+
+
+@pytest.mark.parametrize("payload", ["[]", "null", '"a string"', "7"])
+def test_valid_json_of_the_wrong_shape_is_reported_not_raised(tmp_path, payload):
+    """C2. `[].get(...)` raises AttributeError, which the old except tuple did not
+    catch. The gate job then died, `needs: gate` skipped, and every refresh
+    stopped — a crash in the cheap pre-check taking the pipeline with it."""
+    (tmp_path / "meta.json").write_text(payload, encoding="utf-8")
+    (tmp_path / "live.json").write_text(payload, encoding="utf-8")
+    state = schedule.read_published_state(tmp_path)          # must not raise
+    assert state["degraded"]
+    assert "meta.json" in state["degraded"] and "live.json" in state["degraded"]
+
+
+def test_an_unreadable_deadline_fails_open_rather_than_dropping_to_idle(tmp_path):
+    """C4. The window is computed from the artifacts. When the deadline is the
+    field that failed, `_window` sees None, answers "idle", and applies the 6 h
+    bar — so on deadline day a five-hour-old projection reads as fine. Partial
+    corruption must fail open, not quietly relax the standard."""
+    import json
+
+    (tmp_path / "meta.json").write_text(json.dumps({
+        "generated_at": "2026-08-21T12:30:00Z",
+        "deadline": "not a timestamp",
+    }), encoding="utf-8")
+    state = schedule.read_published_state(tmp_path)
+    assert state["generated_at"] is not None, "the readable half still parses"
+    assert state["deadline"] is None
+
+    d = schedule.should_refresh(
+        datetime(2026, 8, 21, 17, 25, tzinfo=UTC),
+        deadline=state["deadline"], last_generated_at=state["generated_at"],
+        fixture_states=state["fixture_states"], degraded=state["degraded"])
+    assert d.should_refresh is True
+    assert "unreliable" in d.reason
+
+
+def test_an_absent_file_is_not_corruption(tmp_path):
+    """The other half of C4, and the reason it is not simply "any failure fails
+    open": `live.json` does not exist before the first run, and a deadline is
+    legitimately absent at the end of a season. Treating absence as corruption
+    would refresh every 15 minutes forever."""
+    import json
+
+    (tmp_path / "meta.json").write_text(json.dumps({
+        "generated_at": "2026-08-21T12:30:00Z",
+    }), encoding="utf-8")                       # no deadline key, no live.json
+    state = schedule.read_published_state(tmp_path)
+    assert state["degraded"] is None
+    assert state["fixture_states"] == []
 
 
 # --------------------------------------------------------------------------
@@ -193,6 +258,32 @@ def test_cli_exits_zero_even_with_no_artifacts(tmp_path, capsys):
     code = schedule.main(["--should-refresh", "--data-dir", str(tmp_path / "nope")])
     assert code == 0
     assert "refresh=true" in capsys.readouterr().out
+
+
+def test_cli_survives_wrong_shaped_artifacts(tmp_path, capsys):
+    """C2, end to end. The workflow reads this line and skips the pipeline on
+    anything but `refresh=true`, so the CLI answering at all is the guarantee."""
+    (tmp_path / "meta.json").write_text("[]", encoding="utf-8")
+    (tmp_path / "live.json").write_text("[]", encoding="utf-8")
+    code = schedule.main(["--should-refresh", "--data-dir", str(tmp_path)])
+    assert code == 0
+    assert "refresh=true" in capsys.readouterr().out
+
+
+def test_cli_still_answers_when_the_gate_itself_explodes(tmp_path, capsys,
+                                                          monkeypatch):
+    """The catch-all is load-bearing, not defensive habit: an unhandled exception
+    anywhere in here prints nothing, and a missing `refresh=true` reads to the
+    workflow exactly like a considered no."""
+    def boom(*a, **k):
+        raise RuntimeError("unanticipated")
+
+    monkeypatch.setattr(schedule, "read_published_state", boom)
+    code = schedule.main(["--should-refresh", "--data-dir", str(tmp_path)])
+    out = capsys.readouterr()
+    assert code == 0
+    assert "refresh=true" in out.out
+    assert "unanticipated" in out.err, "and it says so, loudly"
 
 
 def ago(days: float) -> str:
@@ -323,6 +414,19 @@ def test_keepalive_cannot_trigger_a_deploy_loop():
 def test_keepalive_has_a_timeout():
     wf = _load("keepalive.yml")
     assert wf["jobs"]["keepalive"]["timeout-minutes"] <= 30
+
+
+def test_a_failed_gate_job_cannot_stop_the_refresh():
+    """C2, at the workflow level. The Python gate now answers whatever happens,
+    but a gate *job* that never got to run Python — bad checkout, setup-python
+    outage, the 5-minute timeout — emits no outputs, and `== 'true'` reads that
+    exactly like a considered no. Only an explicit `false` may stop the run."""
+    cond = _load("refresh.yml")["jobs"]["refresh"]["if"]
+    assert "!= 'false'" in cond, (
+        "the refresh job must fail OPEN when the gate did not decide; "
+        f"found: {cond}")
+    assert "== 'true'" not in cond
+    assert "cancelled()" in cond, "an explicit cancel should still stop it"
 
 
 def test_refresh_still_gates_publishing():

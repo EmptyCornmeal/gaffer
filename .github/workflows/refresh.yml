@@ -76,7 +76,13 @@ jobs:
 
   refresh:
     needs: gate
-    if: needs.gate.outputs.refresh == 'true'
+    # Note `!= 'false'`, not `== 'true'`. Only a gate that ran and decided "no"
+    # may stop this job. A gate that *failed* — a bad checkout, a setup-python
+    # outage, the 5-minute timeout, an exception before anything was printed —
+    # produces empty outputs, and under `== 'true'` that reads identically to a
+    # considered no: the refresh stops and the artifacts quietly go stale. The
+    # cheap pre-check must not be able to take the pipeline down with it.
+    if: ${{ !cancelled() && needs.gate.outputs.refresh != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
