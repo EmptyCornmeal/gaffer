@@ -329,6 +329,32 @@ def fixture_rates(
     if fixtures_played >= 3 and cur_min and player["starts"] is not None:
         base_start = clamp(player["starts"] / fixtures_played, 0.0, 0.98)
     elif have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
+        # `base_starts / 38` — and the denominator really is 38, which is known
+        # to conflate two different things. It assumes the player was available
+        # for every match, so a season missed through injury is recorded as a
+        # season of not being picked. Saka started 25 of 38 because he spent
+        # three months injured, and this reads 0.66.
+        #
+        # Two corrections were built and MEASURED, and neither survived:
+        #
+        #   symmetric blend with the price prior — wrong mechanism. A £4.5m
+        #   price prior is 0.30, so it dragged Shaw from 0.98 to 0.65 and Raya
+        #   from 0.97 to 0.72. Cheap does not mean benched. It improved the
+        #   aggregate while degrading the best-known estimates, which is exactly
+        #   the trade an average hides.
+        #
+        #   upward-only price floor — right mechanism, no effect. Held out on
+        #   2024-25, XI points were flat at 50.7/gw for every floor weight in
+        #   [0, 0.75] while rank correlation and MAE got monotonically WORSE as
+        #   the floor rose. 2023-24 agreed. Measured, not guessed.
+        #
+        # The likely reason, and it is a correction to the premise rather than
+        # to the code: absence predicts absence. A player who missed three
+        # months is more likely to miss time again, so conflating injury with
+        # rotation is crude but not the free win it looks like. Separating them
+        # needs per-fixture history — the run-length of a player's zero-minute
+        # gameweeks distinguishes an injury from rotation, and season aggregates
+        # cannot. That is roadmap M6, not a constant.
         base_start = clamp(base_starts / 38.0, 0.0, 0.98)
     else:
         base_start = _start_prior(pos, player["price"])

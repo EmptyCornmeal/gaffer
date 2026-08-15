@@ -500,7 +500,16 @@ def test_the_default_detail_is_summary():
     a = M.call("get_transfer_plan")
     b = M.call("get_transfer_plan", detail="summary")
     assert a.get("detail") == "summary"
-    assert a == b
+    # `freshness.age_seconds` is measured against the clock at call time, so two
+    # calls either side of a second tick differ by 1 and this compared unequal at
+    # random. It is a real flake with a real cost: the refresh workflow runs the
+    # suite before publishing, so a red run here stops a gameweek's data going
+    # out. Compare everything the argument actually controls.
+    assert a.keys() == b.keys()
+    assert {k: v for k, v in a.items() if k != "freshness"} == \
+           {k: v for k, v in b.items() if k != "freshness"}
+    assert a["freshness"]["generated_at"] == b["freshness"]["generated_at"]
+    assert a["freshness"]["stale"] == b["freshness"]["stale"]
 
 
 # --- D2: provenance comes from the artifact the tool actually read ----------

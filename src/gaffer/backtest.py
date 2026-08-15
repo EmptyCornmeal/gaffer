@@ -836,6 +836,15 @@ def run(
             "h=1 the shipped projection is exactly this column.",
             "An in-sample gain is never evidence. Parameters were selected on "
             "2023-24 and reported here on 2024-25, which selection never saw.",
+            "`p_start` from a prior season is `starts / 38`, which cannot "
+            "separate rotation from injury absence — the denominator assumes "
+            "the player was available for all 38. Two price-prior corrections "
+            "were measured and both were rejected: a symmetric blend degraded "
+            "nailed cheap players, and an upward-only floor left XI points flat "
+            "while worsening rank correlation and MAE at every weight on both "
+            "seasons. Absence appears to predict absence, so the conflation is "
+            "crude rather than simply wrong. A real fix needs per-fixture "
+            "history, not a constant.",
             "GW1 is included, and the naive baseline does not exist there: it is "
             "cumulative season-to-date points-per-game, which is 0 for everyone "
             "before a ball is kicked. `rank_corr` skips zero-variance "

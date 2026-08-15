@@ -151,6 +151,27 @@ def run(
     log["decision"] = f"{dec.action} ({dec.confidence} confidence)"
     log["snapshot"] = snap["outcome"]
 
+    # The prediction ledger: rival candidate squads, frozen before the deadline
+    # so the gameweek can settle which method was right. `weekly.persist` above
+    # snapshots what GAFFER said; this snapshots what the alternatives said, and
+    # without it there is nothing to compare against but memory.
+    #
+    # Refreshes on every pre-deadline run and locks the moment the deadline
+    # passes. Wrapped, because a missing week of evidence is a bad day and a
+    # pipeline that stops publishing is a bad season.
+    try:
+        from gaffer import ledger
+
+        slate = ledger.build_slate(
+            conn, from_gw, deadline=db.get_meta(conn, "deadline"),
+            model_version=projection.MODEL_VERSION, generated_at=generated_at)
+        path = ledger.freeze(slate, ledger.ledger_path(from_gw), now=now)
+        log["ledger"] = f"{len(slate['entries'])} candidates -> {path.name}"
+    except ledger.AlreadyFrozen as exc:
+        log["ledger"] = f"locked ({exc})"
+    except Exception as exc:                                  # noqa: BLE001
+        log["ledger"] = f"FAILED {type(exc).__name__}: {exc}"
+
     # T-22: live gameweek. Between deadlines this is an honest "not started".
     live_state = None
     if not skip_strategy:
