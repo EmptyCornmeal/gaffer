@@ -25,7 +25,7 @@ from gaffer.export import artifacts
 from gaffer.fpl.client import FplClient
 from gaffer.model import projection, scenarios, simulate
 from gaffer.solver import multiperiod, optimize
-from gaffer.store import db
+from gaffer.store import db, persist
 
 
 def run(
@@ -49,6 +49,20 @@ def run(
     log["ingest"] = ingest.run(skip_enrich=fast, now=now)
 
     conn = db.connect()
+
+    # G1. This runner has never seen a previous run: Actions machines are
+    # ephemeral and `data/*.db` is gitignored, so without this the database is
+    # empty every time and the pre-deadline record of what Gaffer advised is
+    # lost the moment the deadline passes. Restored here — after ingest has
+    # created and migrated the schema, before anything reads a snapshot table.
+    #
+    # Never fatal. A damaged archive costs the archive; refusing to publish a
+    # gameweek over it would cost the season.
+    try:
+        log["state_restored"] = persist.restore(conn)
+    except Exception as exc:                                  # noqa: BLE001
+        log["state_restored"] = f"FAILED {type(exc).__name__}: {exc}"
+
     from_gw = int(db.get_meta(conn, "current_gw") or 1)
     log["from_gw"] = from_gw
 
@@ -229,6 +243,18 @@ def run(
         n = news_mod.generate(clubs=clubs)
         log["news"] = f"{n['count']} items ({n['source']})"
     log["entry_id"] = settings.entry_id
+
+    # G1, the other half. Written last so it captures this run's own snapshot,
+    # and skipped on a dry run for the same reason the artifacts are: a dry run
+    # must not leave anything behind for the next one to inherit.
+    if dry_run:
+        log["state_saved"] = "skipped (dry run)"
+    else:
+        try:
+            log["state_saved"] = persist.dump(conn)
+        except Exception as exc:                              # noqa: BLE001
+            log["state_saved"] = f"FAILED {type(exc).__name__}: {exc}"
+
     log["elapsed_s"] = round(time.time() - t0, 1)
     conn.close()
     return log
