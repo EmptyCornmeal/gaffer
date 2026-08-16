@@ -51,7 +51,8 @@ class Spec:
 
     def __init__(self, table: str, filename: str, key: tuple[str, ...],
                  compact_by: tuple[str, ...] | None = None,
-                 newest: str | None = None) -> None:
+                 newest: str | None = None,
+                 horizon_col: str | None = None) -> None:
         self.table = table
         self.filename = filename
         self.key = key
@@ -59,6 +60,9 @@ class Spec:
         self.compact_by = compact_by
         #: The column that decides "newest" during compaction.
         self.newest = newest
+        #: When set, rows whose value in this column is beyond the current
+        #: gameweek are dropped — they are forecasts, not records. See SPECS.
+        self.horizon_col = horizon_col
 
 
 #: `projection_snapshots` is the one table that would not fit. It writes a row
@@ -82,7 +86,7 @@ SPECS: tuple[Spec, ...] = (
     Spec("projection_snapshots", "projections.ndjson",
          ("season", "target_gw", "player_id", "as_of"),
          compact_by=("season", "target_gw", "player_id", "is_pre_deadline"),
-         newest="as_of"),
+         newest="as_of", horizon_col="target_gw"),
 )
 
 
@@ -91,10 +95,57 @@ def state_dir(base: Path | None = None) -> Path:
     return (base or config.DATA_DIR) / "state"
 
 
+def _current_gw(conn: sqlite3.Connection) -> int | None:
+    try:
+        row = conn.execute("SELECT value FROM meta WHERE key='current_gw'").fetchone()
+    except sqlite3.Error:
+        return None
+    try:
+        return int(row[0])
+    except (TypeError, ValueError, IndexError):
+        return None
+
+
 def _sort_key(row: Mapping[str, Any], spec: Spec) -> tuple:
     # Mixed types across a column would raise on comparison; str() is stable and
     # only ever affects ordering, never content.
     return tuple(str(row.get(c, "")) for c in spec.key)
+
+
+def _drop_forecasts(rows: list[dict], spec: Spec, current_gw: int | None) -> list[dict]:
+    """Drop rows describing a gameweek that has not been decided yet.
+
+    Each run projects six gameweeks ahead, so a full dump is 587 players x 6
+    targets — and every one of those rows carries this run's `as_of`, so the
+    whole 1.7 MB file rewrites on every refresh. Several times a day, forever.
+
+    The far horizons are not worth that. Compaction keeps the newest row per
+    target, and the run where gameweek 6 becomes *imminent* writes a newer row
+    for it than the run six weeks earlier did — so today's h=6 forecast is
+    already guaranteed to be overwritten by its own h=1 version before anyone
+    reads it. It is churn that cannot survive to be evidence.
+
+    What must survive is the record of a decision as it stood: the imminent
+    target, and everything behind it. That is `target_gw <= current_gw`.
+    Both readers want exactly that — `latest_pre_deadline_snapshot` asks about a
+    specific event, and the blend-weight fit (see `fitting.py`) joins the
+    before-the-deadline row for the gameweek being decided to what actually
+    happened.
+
+    With no `current_gw` to compare against, keep everything: guessing in the
+    lossy direction is how evidence disappears.
+    """
+    if not spec.horizon_col or current_gw is None:
+        return rows
+    out = []
+    for r in rows:
+        v = r.get(spec.horizon_col)
+        try:
+            if int(v) <= current_gw:
+                out.append(r)
+        except (TypeError, ValueError):
+            out.append(r)          # unparseable: keep, do not silently discard
+    return out
 
 
 def _compact(rows: Iterable[Mapping[str, Any]], spec: Spec) -> list[dict]:
@@ -115,6 +166,7 @@ def dump(conn: sqlite3.Connection, base: Path | None = None) -> dict[str, int]:
     out_dir = state_dir(base)
     out_dir.mkdir(parents=True, exist_ok=True)
     written: dict[str, int] = {}
+    current_gw = _current_gw(conn)
     for spec in SPECS:
         try:
             rows = [dict(r) for r in conn.execute(f"SELECT * FROM {spec.table}")]
@@ -123,6 +175,7 @@ def dump(conn: sqlite3.Connection, base: Path | None = None) -> dict[str, int]:
             # on a first run has nothing to say.
             written[spec.filename] = 0
             continue
+        rows = _drop_forecasts(rows, spec, current_gw)
         rows = _compact(rows, spec)
         rows.sort(key=lambda r: _sort_key(r, spec))
         body = "".join(

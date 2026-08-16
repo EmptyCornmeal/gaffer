@@ -142,6 +142,38 @@ def test_projection_snapshots_are_compacted_to_what_is_actually_read(conn, tmp_p
     second.close()
 
 
+def test_forecasts_beyond_the_current_gameweek_are_not_archived(conn, tmp_path):
+    """Each run projects six gameweeks out, so a full dump is 587 x 6 rows all
+    stamped with this run's `as_of` — the whole file rewrites several times a
+    day, forever. And the far rows cannot survive to be evidence anyway:
+    compaction keeps the newest per target, so the run where gameweek 6 becomes
+    imminent overwrites the forecast made six weeks earlier. Churn, not record.
+    """
+    conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES ('current_gw', '3')")
+    rows = [_projection(1, "2026-08-20T09:00:00Z", target_gw=g) for g in (1, 2, 3, 4, 5, 6)]
+    db.upsert(conn, "projection_snapshots", rows,
+              ["season", "target_gw", "player_id", "as_of"])
+    conn.commit()
+    written = persist.dump(conn, tmp_path)
+    assert written["projections.ndjson"] == 3      # gw1-3 kept, gw4-6 dropped
+
+    second = _fresh(tmp_path, "b.db")
+    persist.restore(second, tmp_path)
+    kept = sorted(r["target_gw"] for r in second.execute(
+        "SELECT target_gw FROM projection_snapshots"))
+    assert kept == [1, 2, 3]
+    second.close()
+
+
+def test_an_unknown_current_gameweek_keeps_everything(conn, tmp_path):
+    """Guessing in the lossy direction is how evidence disappears."""
+    db.upsert(conn, "projection_snapshots",
+              [_projection(1, "2026-08-20T09:00:00Z", target_gw=g) for g in (1, 9)],
+              ["season", "target_gw", "player_id", "as_of"])
+    conn.commit()
+    assert persist.dump(conn, tmp_path)["projections.ndjson"] == 2
+
+
 def test_both_sides_of_the_deadline_survive_compaction(conn, tmp_path):
     """`is_pre_deadline` is a fact about the row, and only the pre-deadline side
     may inform a decision. Collapsing them would let a post-deadline number pass
