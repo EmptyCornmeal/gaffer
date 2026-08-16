@@ -13,9 +13,37 @@
   const sourcesFor = (ids: string[]): NewsItem[] =>
     ids.map((i) => byId.get(i)).filter((i): i is NewsItem => i !== undefined)
 
+  // `confirmed` pointed at `chip-ok`, which is not a class in app.css — so the
+  // firmest claims were the only ones rendering with no chip colour at all.
   const CERTAINTY: Record<string, string> = {
-    confirmed: 'chip-ok', reported: 'chip-info', rumoured: 'chip-warn',
+    confirmed: 'chip-good', reported: 'chip-info', rumoured: 'chip-warn',
   }
+
+  // The template digest emits one claim per headline, verbatim, so "The FPL
+  // angle" reprinted the feed sitting directly beneath it — the same sentences
+  // twice, the second copy carrying a source, a timestamp and a summary the
+  // first lacked. A claim keeps its own line only when it says something its
+  // sources' headlines do not. The rest survive where they are actually useful,
+  // as a marker on the story itself, because that is the card's real signal:
+  // which of the fetched stories bear on FPL, and how firm each one is.
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+  const additive = $derived(
+    claims.filter(
+      (c) => !sourcesFor(c.source_item_ids).some((s) => norm(s.title) === norm(c.text)),
+    ),
+  )
+  const FIRMNESS: Record<string, number> = { rumoured: 1, reported: 2, confirmed: 3 }
+  // item id -> the firmest certainty any claim asserts about it.
+  const angle = $derived.by(() => {
+    const m = new Map<string, string>()
+    for (const c of claims) {
+      for (const id of c.source_item_ids) {
+        const cur = m.get(id)
+        if (!cur || (FIRMNESS[c.certainty] ?? 0) > (FIRMNESS[cur] ?? 0)) m.set(id, c.certainty)
+      }
+    }
+    return m
+  })
   // One line per code in `grounding.ALL_FALLBACK_REASONS`. The reason arrives as
   // `code` or `code:detail`, and an unmapped code used to fall through to the raw
   // enum: the live page read "headline feed (narration_disabled)". A missing
@@ -64,13 +92,13 @@
     <div class="card p-6 text-center text-muted text-sm">No transfer stories fetched right now — check back after the next refresh.</div>
   {:else}
     <!-- FPL-angle claims, each beside the headlines that support it -->
-    {#if claims.length}
+    {#if additive.length}
       <div class="card p-4 border-brand/40 bg-brand/8">
         <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-2">
           The FPL angle
         </div>
         <ul class="space-y-3">
-          {#each claims as c}
+          {#each additive as c}
             <li>
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="text-[15px] leading-relaxed">{c.text}</span>
@@ -99,7 +127,16 @@
           </p>
         {/if}
       </div>
-    {:else}
+    {:else if angle.size}
+      <!-- Every claim just restated a headline, so there is no card to show. The
+           part the feed did not already carry — which stories were judged
+           FPL-relevant — becomes this legend plus the marker on each story. -->
+      <p class="text-[11px] text-muted2 -mb-1">
+        <span class="font-bold text-brand-light">{angle.size} of {news.items.length}</span>
+        stories carry an FPL angle, marked below. This digest restated each one
+        word for word, so the headline is printed once with how firm it is.
+      </p>
+    {:else if !claims.length}
       <div class="card p-4 border-brand/40 bg-brand/8">
         <div class="text-xs font-bold uppercase tracking-wider text-brand-light mb-1">The FPL angle</div>
         <div class="verdict text-[15px] leading-relaxed text-text">{@html mdLite(news.digest_md)}</div>
@@ -109,9 +146,16 @@
     <!-- headline feed -->
     <div class="card divide-y divide-line/60">
       {#each news.items as it}
-        <a href={it.link} target="_blank" rel="noopener noreferrer" class="group block px-4 py-3 hover:bg-card2 transition">
-          <div class="flex items-center gap-2 mb-0.5">
+        {@const cert = angle.get(it.id)}
+        <a
+          href={it.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group block px-4 py-3 hover:bg-card2 transition border-l-2 {cert ? 'border-l-brand/70' : 'border-l-transparent'}"
+        >
+          <div class="flex items-center gap-2 mb-0.5 flex-wrap">
             <span class="chip chip-info">{it.source}</span>
+            {#if cert}<span class="chip {CERTAINTY[cert] ?? 'chip-info'}">FPL angle · {cert}</span>{/if}
             {#if it.published}<span class="text-[10px] text-muted2" title={it.published.replace(/ \+\d{4}$/, '')}>{relTime(it.published) || it.published.replace(/ \+\d{4}$/, '')}</span>{/if}
           </div>
           <div class="font-semibold text-sm flex items-start gap-1 group-hover:text-brand-light transition-colors">

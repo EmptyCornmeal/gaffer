@@ -38,10 +38,36 @@
   const showYourBrief = $derived(view === 'your' && planValid)
   const P = $derived(bundle.players)
 
+  // U17: the page answered "what do I do this week?" twice. The generated
+  // briefing opens with `rec.summary` verbatim and repeats the captain rationale
+  // as its first bullet (see ai/verdict.py `_template_briefing`), and a second
+  // card printed both again 200px below it. One card owns the answer now, and it
+  // renders the best source that exists: your Planner brief, else the verdict,
+  // else the optimiser's own summary line.
+  //
+  // The order of that fallback is the load-bearing part. `verdict.json` is an
+  // optional artifact that already degrades to `source: 'template'` and can be
+  // absent entirely, so the branch that must never disappear is the last one —
+  // which is why `rec.summary` is the floor of this card rather than a card of
+  // its own that duplicates whatever sits above it.
+  const brief = $derived((showYourBrief ? teamBrief : '') || verdict?.briefing_md || '')
+
+  // Decided once so the chip, the caveat and the prose cannot disagree: a caveat
+  // reading "your team" over the model's scratch squad is the exact failure
+  // squadStatus.ts exists to prevent.
+  const subject = $derived(showYourBrief && teamBrief ? 'plan' : 'model')
+  const provenance = $derived(
+    subject === 'plan'
+      ? 'live'
+      : brief && verdict?.source.startsWith('ai')
+        ? 'AI'
+        : 'auto',
+  )
+
   // What the briefing is actually about. Decided from meta.squad_status, not
   // from the calendar: a mid-season fetch failure must caveat exactly as loudly
   // as pre-season does.
-  const caveat = $derived(briefingCaveat(bundle.meta, showYourBrief ? 'plan' : 'model'))
+  const caveat = $derived(briefingCaveat(bundle.meta, subject))
 
   // EO-aware so the widget agrees with the model/verdict (the rank-safe armband,
   // e.g. Haaland), not a raw-points list that would omit him.
@@ -91,6 +117,41 @@
   )
   const formTitle = $derived(hasForm ? 'In form' : 'Top underlying threat')
 
+  // U26: below the XI the page was seven interchangeable cards — same size, same
+  // border, same title-plus-rows-plus-right-aligned-number — so nothing was
+  // sized by importance and nothing read as important. They are shortlists you
+  // consult, not the answer, so they now collapse to a 44px row whose summary
+  // already carries the top entry's name and number. Shut, the lower half of the
+  // page is a six-line index readable in one screen; open, nothing is missing.
+  const DASH = '—'
+  const lead = $derived({
+    value: bestValue[0]
+      ? `${bestValue[0].name} ${(bestValue[0].next_gw_xp / bestValue[0].price).toFixed(2)}`
+      : DASH,
+    form: inForm[0]
+      ? `${inForm[0].name} ${hasForm ? inForm[0].form.toFixed(1) : `${inForm[0].xgi90.toFixed(2)} xGI`}`
+      : DASH,
+    ceiling: topCeiling[0] ? `${topCeiling[0].name} ${topCeiling[0].dist?.ceiling}` : DASH,
+    defcon: defconWatch[0]
+      ? `${defconWatch[0].name} ${Math.round((defconWatch[0].defcon?.p_hit ?? 0) * 100)}%`
+      : 'nothing projected',
+    template: templateMissing[0] ? `${templateMissing[0].name} ${templateMissing[0].owned_by}%` : DASH,
+    market: risers[0]
+      ? `▲ ${risers[0].name} +${fmtK(risers[0].net_transfers)}`
+      : fallers[0]
+        ? `▼ ${fallers[0].name} ${fmtK(fallers[0].net_transfers)}`
+        : 'quiet pre-season',
+  })
+
+  // Read once, at mount, and deliberately never re-read: a phone wants the index,
+  // a wide screen has the two columns to show everything, and a mid-session
+  // resize must not slam shut a section the reader just opened. `typeof` rather
+  // than a direct call because a test environment has no matchMedia.
+  const wide = typeof matchMedia === 'function' && matchMedia('(min-width: 768px)').matches
+  let open = $state({
+    value: wide, form: wide, ceiling: wide, defcon: wide, template: wide, market: wide,
+  })
+
   // Shareable image of whichever XI is on screen (your team or the model's).
   let sharing = $state(false)
   let toast = $state('')
@@ -120,54 +181,56 @@
 </script>
 
 <div class="flex flex-col gap-4 rise">
-  <!-- Gaffer's Verdict (AI briefing) -->
-  {#if verdict || showYourBrief}
-    <div class="card p-4 border-brand/40 bg-brand/8">
-      <div class="flex items-center justify-between mb-1">
-        <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-light">
-          <span class="flex items-center gap-1.5"><Icon name="zap" size={14} /> The Gaffer's Verdict</span>
-          <span class="chip {showYourBrief ? 'chip-good' : 'chip-info'}">{showYourBrief ? 'your team' : 'model'}</span>
-        </div>
-        <span class="text-[10px] text-muted2">{showYourBrief ? 'live' : verdict && verdict.source.startsWith('ai') ? 'AI' : 'auto'}</span>
+  <!-- The Gaffer's Verdict — the page's single answer to "what do I do this
+       week?", and the only place that answer is allowed to appear. Always
+       rendered: the fallback body is built from `rec`, a required artifact, so
+       this card cannot vanish the way an optional verdict can. -->
+  <div class="card p-4 border-brand/40 bg-brand/8">
+    <div class="flex items-center justify-between mb-1">
+      <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-light">
+        <span class="flex items-center gap-1.5"><Icon name="zap" size={14} /> The Gaffer's Verdict</span>
+        <span class="chip {subject === 'plan' ? 'chip-good' : 'chip-info'}">{subject === 'plan' ? 'your team' : 'model'}</span>
       </div>
+      <span class="text-[10px] text-muted2">{provenance}</span>
+    </div>
 
-      <!-- Above the briefing, never below it: by the time you have read "no hit
-           needed" it is too late to learn it was said about a squad that is not
-           yours. -->
-      {#if caveat}
-        <div
-          data-testid="briefing-caveat"
-          role="note"
-          class="mb-3 rounded-lg px-3 py-2 border {caveat.tone === 'unknown'
-            ? 'border-yellow/40 bg-yellow/10'
-            : 'border-line bg-bg3'}"
-        >
-          <p class="flex items-start gap-1.5 text-sm font-bold text-text">
-            <Icon name="alert" size={15} class="mt-0.5 shrink-0 {caveat.tone === 'unknown' ? 'text-yellow' : 'text-muted'}" />
-            <span>{caveat.headline}</span>
-          </p>
-          <p class="mt-1 text-[13px] text-muted leading-snug">{caveat.body}</p>
-          {#if caveat.reason}
-            <p class="mt-1 text-[11px] text-muted2">Why: {caveat.reason}.</p>
-          {/if}
-        </div>
-      {/if}
+    <!-- Above the briefing, never below it: by the time you have read "no hit
+         needed" it is too late to learn it was said about a squad that is not
+         yours. -->
+    {#if caveat}
+      <div
+        data-testid="briefing-caveat"
+        role="note"
+        class="mb-3 rounded-lg px-3 py-2 border {caveat.tone === 'unknown'
+          ? 'border-yellow/40 bg-yellow/10'
+          : 'border-line bg-bg3'}"
+      >
+        <p class="flex items-start gap-1.5 text-sm font-bold text-text">
+          <Icon name="alert" size={15} class="mt-0.5 shrink-0 {caveat.tone === 'unknown' ? 'text-yellow' : 'text-muted'}" />
+          <span>{caveat.headline}</span>
+        </p>
+        <p class="mt-1 text-[13px] text-muted leading-snug">{caveat.body}</p>
+        {#if caveat.reason}
+          <p class="mt-1 text-[11px] text-muted2">Why: {caveat.reason}.</p>
+        {/if}
+      </div>
+    {/if}
 
+    {#if brief}
       <div class="verdict text-[15px] leading-relaxed text-text">
-        {@html mdLite(showYourBrief ? teamBrief : (verdict?.briefing_md ?? ''))}
+        {@html mdLite(brief)}
       </div>
-    </div>
-  {/if}
-
-  <!-- headline recommendation -->
-  <div class="card p-4 bg-gradient-to-br from-bg3 to-card">
-    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand">
-      <span class="w-2 h-2 rounded-full bg-brand"></span>
-      {rec.mode === 'build' ? 'Model squad this week' : 'This week'}
-    </div>
-    <p class="mt-2 text-[15px] text-text/95">{rec.summary}</p>
-    {#if rec.captain.rationale}
-      <p class="mt-1 text-sm text-muted"><b class="text-brand-light">Captain {rec.captain.name}:</b> {rec.captain.rationale}</p>
+    {:else}
+      <!-- No briefing was generated this run. The optimiser's own line is not a
+           lesser answer — it is the sentence the briefing quotes — so it fills
+           the same slot rather than returning as a second card. -->
+      <p class="text-[11px] font-bold uppercase tracking-wider text-muted2">
+        {rec.mode === 'build' ? 'Model squad this week' : 'This week'}
+      </p>
+      <p class="mt-1 text-[15px] leading-relaxed text-text">{rec.summary}</p>
+      {#if rec.captain.rationale}
+        <p class="mt-1.5 text-sm text-muted"><b class="text-brand-light">Captain {rec.captain.name}:</b> {rec.captain.rationale}</p>
+      {/if}
     {/if}
   </div>
 
@@ -232,114 +295,166 @@
     </div>
   </div>
 
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="card p-3">
-      <h2 class="font-bold mb-2">Best value <span class="text-xs text-muted font-normal">(xP per £m)</span></h2>
-      <div class="divide-y divide-line/60">
-        {#each bestValue as p}
-          <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
-            <span class="text-sm"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span></span>
-            <span class="tabular-nums"><span class="text-brand-light font-bold">{(p.next_gw_xp / p.price).toFixed(2)}</span> <span class="text-muted text-xs">{p.next_gw_xp.toFixed(1)}xP</span></span>
-          </button>
-        {/each}
-      </div>
-    </div>
+  <!-- One header for every shortlist below. The collapsed state has to be worth
+       reading on its own, so the summary carries the top row's name and number —
+       otherwise this is a table of contents, not an answer. -->
+  {#snippet head(icon: string, tint: string, title: string, note: string, top: string)}
+    <Icon name={icon} size={15} class="shrink-0 {tint}" />
+    <span class="font-bold text-sm shrink-0">{title}</span>
+    <span class="hidden sm:block truncate text-[11px] text-muted font-normal">({note})</span>
+    <span class="ml-auto flex items-center gap-2 min-w-0">
+      <span class="truncate text-xs text-muted2 tabular-nums">{top}</span>
+      <Icon name="chevron-down" size={15} class="chev shrink-0 text-muted2" />
+    </span>
+  {/snippet}
 
-    <div class="card p-3">
-      <h2 class="font-bold mb-2">{formTitle}</h2>
-      <div class="divide-y divide-line/60">
-        {#each inForm as p}
-          <div class="flex items-center justify-between py-2">
-            <button onclick={() => onpick(p.id)} class="text-sm text-left hover:opacity-80"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></button>
-            <FixtureStrip fixtures={p.fixtures} max={4} />
-          </div>
-        {/each}
-      </div>
-    </div>
-  </div>
+  <!-- Two labelled bands. The XI, the verdict and the armband above are the
+       decision; everything from here down is a shortlist you go looking for, and
+       splitting them by what they answer stops seven cards competing at one
+       weight. Nothing is removed — it is one tap away and stays keyboard
+       reachable, because a details/summary disclosure is native. -->
+  <section class="flex flex-col gap-2" aria-labelledby="band-points">
+    <h2 id="band-points" class="band">Where the points are</h2>
 
-  <!-- template check: high-owned picks the value model leaves out -->
-  {#if templateMissing.length}
-    <div class="card p-3 border-yellow/30">
-      <h2 class="font-bold mb-1 flex items-center gap-1.5"><Icon name="shield" size={15} class="text-yellow" /> Template check <span class="text-xs text-muted font-normal">(popular picks the model leaves out)</span></h2>
-      <p class="text-xs text-muted mb-2">The model optimises points-per-£ and doesn't weigh ownership — so it punts these heavily-owned picks. If they haul (and you don't own them), your rank slips. Owning them is the safer play against the field; backing the model's alternatives is the differential bet.</p>
-      <div class="divide-y divide-line/60">
-        {#each templateMissing as p}
-          <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
-            <span class="text-sm min-w-0"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span></span>
-            <span class="flex items-center gap-3 shrink-0 tabular-nums">
-              {#if p.dist}<span class="text-[11px] text-muted2">ceil {p.dist.ceiling}</span>{/if}
-              <span class="text-[11px] text-muted">{p.next_gw_xp.toFixed(1)} xP</span>
-              <span class="font-bold text-yellow w-12 text-right">{p.owned_by}%</span>
-            </span>
-          </button>
-        {/each}
-      </div>
-    </div>
-  {/if}
+    <div class="grid md:grid-cols-2 gap-2 md:gap-4">
+      <details class="card" bind:open={open.value}>
+        <summary class="sec">{@render head('target', 'text-brand-light', 'Best value', 'xP per £m', lead.value)}</summary>
+        <div class="px-3 pb-2 divide-y divide-line/60">
+          {#each bestValue as p}
+            <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
+              <span class="text-sm min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span></span>
+              <span class="tabular-nums shrink-0"><span class="text-brand-light font-bold">{(p.next_gw_xp / p.price).toFixed(2)}</span> <span class="text-muted text-xs">{p.next_gw_xp.toFixed(1)}xP</span></span>
+            </button>
+          {/each}
+        </div>
+      </details>
 
-  <!-- DEFCON watch + highest ceiling -->
-  <div class="grid md:grid-cols-2 gap-4">
-    <div class="card p-3">
-      <h2 class="font-bold mb-2 flex items-center gap-1.5"><Icon name="shield" size={15} class="text-brand-light" /> DEFCON watch <span class="text-xs text-muted font-normal">(projected +2 this GW)</span></h2>
-      {#if defconWatch.length}
-        <div class="divide-y divide-line/60">
-          {#each defconWatch as p}
-            <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
-              <span class="text-sm min-w-0 flex items-center gap-1.5"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span>{#if p.defcon?.near_hit}<span class="chip chip-warn">near-hit</span>{/if}</span>
+      <details class="card" bind:open={open.form}>
+        <summary class="sec">{@render head('zap', 'text-brand-light', formTitle, hasForm ? 'form, last 30 days' : 'xGI per 90', lead.form)}</summary>
+        <div class="px-3 pb-2 divide-y divide-line/60">
+          {#each inForm as p}
+            <div class="flex items-center justify-between gap-2 py-2">
+              <button onclick={() => onpick(p.id)} class="text-sm text-left hover:opacity-80 min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></button>
+              <FixtureStrip fixtures={p.fixtures} max={4} />
+            </div>
+          {/each}
+        </div>
+      </details>
+
+      <details class="card" bind:open={open.ceiling}>
+        <summary class="sec">{@render head('flame', 'text-brand-light', 'Highest ceiling', 'boom potential', lead.ceiling)}</summary>
+        <div class="px-3 pb-2 divide-y divide-line/60">
+          {#each topCeiling as p}
+            <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
+              <span class="text-sm min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></span>
               <span class="flex items-center gap-2 shrink-0 tabular-nums">
-                <span class="text-[11px] text-muted2">{p.defcon?.per90}/{p.defcon?.threshold}</span>
-                <span class="font-bold text-brand-light w-9 text-right">{Math.round((p.defcon?.p_hit ?? 0) * 100)}%</span>
+                <span class="text-[11px] text-muted2">{p.dist?.boom}% haul</span>
+                <span class="font-bold text-brand-light w-8 text-right">{p.dist?.ceiling}</span>
               </span>
             </button>
           {/each}
         </div>
-      {:else}
-        <p class="text-sm text-muted">No standout defensive-contribution picks this week.</p>
+      </details>
+
+      <details class="card" bind:open={open.defcon}>
+        <summary class="sec">{@render head('shield', 'text-brand-light', 'DEFCON watch', 'projected +2 this GW', lead.defcon)}</summary>
+        <div class="px-3 pb-2 divide-y divide-line/60">
+          {#if defconWatch.length}
+            {#each defconWatch as p}
+              <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
+                <span class="text-sm min-w-0 flex items-center gap-1.5"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span>{#if p.defcon?.near_hit}<span class="chip chip-warn">near-hit</span>{/if}</span>
+                <span class="flex items-center gap-2 shrink-0 tabular-nums">
+                  <span class="text-[11px] text-muted2">{p.defcon?.per90}/{p.defcon?.threshold}</span>
+                  <span class="font-bold text-brand-light w-9 text-right">{Math.round((p.defcon?.p_hit ?? 0) * 100)}%</span>
+                </span>
+              </button>
+            {/each}
+          {:else}
+            <p class="py-2 text-sm text-muted">No standout defensive-contribution picks this week.</p>
+          {/if}
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="flex flex-col gap-2" aria-labelledby="band-field">
+    <h2 id="band-field" class="band">What the field is doing</h2>
+
+    <div class="grid md:grid-cols-2 gap-2 md:gap-4">
+      <!-- template check: high-owned picks the value model leaves out -->
+      {#if templateMissing.length}
+        <details class="card border-yellow/30" bind:open={open.template}>
+          <summary class="sec">{@render head('users', 'text-yellow', 'Template check', 'popular picks the model leaves out', lead.template)}</summary>
+          <div class="px-3 pb-2">
+            <p class="text-xs text-muted mb-2">The model optimises points-per-£ and doesn't weigh ownership — so it punts these heavily-owned picks. If they haul (and you don't own them), your rank slips. Owning them is the safer play against the field; backing the model's alternatives is the differential bet.</p>
+            <div class="divide-y divide-line/60">
+              {#each templateMissing as p}
+                <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
+                  <span class="text-sm min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span></span>
+                  <span class="flex items-center gap-3 shrink-0 tabular-nums">
+                    {#if p.dist}<span class="text-[11px] text-muted2">ceil {p.dist.ceiling}</span>{/if}
+                    <span class="text-[11px] text-muted">{p.next_gw_xp.toFixed(1)} xP</span>
+                    <span class="font-bold text-yellow w-12 text-right">{p.owned_by}%</span>
+                  </span>
+                </button>
+              {/each}
+            </div>
+          </div>
+        </details>
       {/if}
-    </div>
 
-    <div class="card p-3">
-      <h2 class="font-bold mb-2 flex items-center gap-1.5"><Icon name="flame" size={15} class="text-brand-light" /> Highest ceiling <span class="text-xs text-muted font-normal">(boom potential)</span></h2>
-      <div class="divide-y divide-line/60">
-        {#each topCeiling as p}
-          <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
-            <span class="text-sm min-w-0"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></span>
-            <span class="flex items-center gap-2 shrink-0 tabular-nums">
-              <span class="text-[11px] text-muted2">{p.dist?.boom}% haul</span>
-              <span class="font-bold text-brand-light w-8 text-right">{p.dist?.ceiling}</span>
-            </span>
-          </button>
-        {/each}
-      </div>
+      <details class="card" bind:open={open.market}>
+        <summary class="sec">{@render head('chart', 'text-brand-light', 'Price watch', 'transfer momentum this GW', lead.market)}</summary>
+        <div class="px-3 pb-3">
+          {#if !hasMarket}
+            <p class="text-sm text-muted">No transfer activity yet — the market is quiet pre-season. This lights up with predicted risers &amp; fallers once the season is under way.</p>
+          {:else}
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs uppercase text-brand-light font-bold mb-1">▲ Rising</div>
+                {#each risers as p}
+                  <button onclick={() => onpick(p.id)} class="w-full flex justify-between gap-2 py-1 text-sm hover:opacity-80"><span class="min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.team}</span></span><span class="text-brand tabular-nums shrink-0">+{fmtK(p.net_transfers)}</span></button>
+                {/each}
+              </div>
+              <div>
+                <div class="text-xs uppercase text-red font-bold mb-1">▼ Falling</div>
+                {#each fallers as p}
+                  <button onclick={() => onpick(p.id)} class="w-full flex justify-between gap-2 py-1 text-sm hover:opacity-80"><span class="min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.team}</span></span><span class="text-red tabular-nums shrink-0">{fmtK(p.net_transfers)}</span></button>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+      </details>
     </div>
-  </div>
-
-  <!-- price watch -->
-  <div class="card p-3">
-    <h2 class="font-bold mb-2 flex items-center gap-1.5"><Icon name="flame" size={15} /> Price watch <span class="text-xs text-muted font-normal">(transfer momentum this GW)</span></h2>
-    {#if !hasMarket}
-      <p class="text-sm text-muted">No transfer activity yet — the market is quiet pre-season. This lights up with predicted risers &amp; fallers once the season is under way.</p>
-    {:else}
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div>
-          <div class="text-xs uppercase text-brand-light font-bold mb-1">▲ Rising</div>
-          {#each risers as p}
-            <button onclick={() => onpick(p.id)} class="w-full flex justify-between py-1 text-sm hover:opacity-80"><span><b>{p.name}</b> <span class="text-muted">{p.team}</span></span><span class="text-brand tabular-nums">+{fmtK(p.net_transfers)}</span></button>
-          {/each}
-        </div>
-        <div>
-          <div class="text-xs uppercase text-red font-bold mb-1">▼ Falling</div>
-          {#each fallers as p}
-            <button onclick={() => onpick(p.id)} class="w-full flex justify-between py-1 text-sm hover:opacity-80"><span><b>{p.name}</b> <span class="text-muted">{p.team}</span></span><span class="text-red tabular-nums">{fmtK(p.net_transfers)}</span></button>
-          {/each}
-        </div>
-      </div>
-    {/if}
-  </div>
+  </section>
 </div>
 
 {#if toast}
   <div class="fixed left-1/2 -translate-x-1/2 z-50 rounded-full bg-brand text-[#05210f] text-sm font-semibold px-4 py-2 shadow-lg rise"
     style="bottom: calc(var(--gaffer-bottomnav, 0px) + env(safe-area-inset-bottom) + 1.25rem);" role="status">{toast}</div>
 {/if}
+
+<style>
+  /* Band label: a rule that runs to the edge, not another card. The bands exist
+     to break the wall of identical cards, so they must not look like one. */
+  .band {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin: 0.25rem 0 0;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--color-muted2);
+  }
+  .band::after { content: ''; flex: 1; height: 1px; background: var(--color-line); }
+
+  /* The whole 44px row is the target, not the 14px triangle. The native marker
+     cannot be laid out inside a flex row, so it is removed in both engines and
+     redrawn as the chevron, which is the only thing that then needs animating. */
+  .sec {
+    display: flex; align-items: center; gap: 0.5rem;
+    min-height: 44px; padding: 0 0.75rem;
+    cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent;
+  }
+  .sec::-webkit-details-marker { display: none; }
+  .sec :global(.chev) { transition: transform 0.15s ease; }
+  details[open] > .sec :global(.chev) { transform: rotate(180deg); }
+</style>

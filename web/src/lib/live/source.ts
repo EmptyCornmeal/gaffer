@@ -20,6 +20,28 @@ import { assembleLive, type LiveRivalInput, type LiveSquadInput } from './assemb
  *  scoreboard into a rate-limit problem. */
 export const MAX_RIVALS = 12
 
+// Per-request deadlines do not compose. `fpl.ts` bounds each read at 12s, which
+// is correct for one read and useless for twelve of them in series: against a
+// proxy that is slow but alive that is ~144s of spinner before the first live
+// load gives up, and during a match a page doing nothing is the failure. So the
+// rival phase gets a deadline of its own, on top of the per-request ones.
+//
+// 20s buys one full wave of the slowest permitted request plus most of a second,
+// so a merely slow proxy still returns a complete league table. Lower and a
+// 5s-per-request proxy silently loses its last wave of managers; higher and a
+// dead proxy holds up a score we already have in hand — the rival squads only
+// feed the league-swing view, never your own points.
+const RIVAL_BUDGET_MS = 20_000
+// Four in flight, not twelve. The proxy is shared and unauthenticated, so
+// restraint is a correctness property rather than manners (see refresh.ts);
+// four clears the whole set well inside the budget without arriving as a burst.
+const RIVAL_CONCURRENCY = 4
+// How long an INCOMPLETE locked snapshot is allowed to stand in for a complete
+// one. Long enough that a permanently unreadable league is not re-read on every
+// 60s poll; short enough that a blip during one over of injury time has healed
+// before the next goal.
+const INCOMPLETE_RETRY_MS = 3 * 60_000
+
 export type LiveSourceName = 'proxy' | 'artifact'
 
 export interface LiveResult {
@@ -27,12 +49,26 @@ export interface LiveResult {
   source: LiveSourceName
   /** Why we fell back, when we did. Shown, never swallowed. */
   fallbackReason: string | null
+  /**
+   * What this result could not read, when it was still worth rendering without
+   * it. A rivals table quietly four managers short looks exactly like a league
+   * of eight, so partial data has to say so out loud or it is just a wrong
+   * answer with a confident face.
+   */
+  incomplete: string | null
 }
 
-interface PicksLike {
+export interface PicksLike {
   picks?: { element: number; position: number; multiplier: number;
             is_captain: boolean; is_vice_captain: boolean }[]
   active_chip?: string | null
+}
+
+interface StandingRow {
+  entry: number
+  entry_name?: string
+  player_name?: string
+  total?: number
 }
 
 function squadFromPicks(payload: PicksLike | null | undefined): LiveSquadInput | null {
@@ -70,69 +106,194 @@ export function baselineAndHits(
   return { baseline, hits: here?.event_transfers_cost ?? 0 }
 }
 
-/** Per-gameweek cache for the things that cannot change once the deadline has
- *  passed. Keyed so switching entry or gameweek refetches. */
-const locked = new Map<string, Promise<{
+/**
+ * Settle `p` no later than `ms` from now.
+ *
+ * The request underneath keeps running — nothing out here can abort a fetch
+ * started inside `fpl.ts` — but the caller stops waiting on it, and how long the
+ * caller waits is the only thing the user experiences. `Promise.race` attaches
+ * its own handlers to `p`, so a loser that rejects later is already handled and
+ * never surfaces as an unhandled rejection.
+ */
+function deadlined<T>(p: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const cap = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`gave up after ${Math.round(ms / 1000)}s`)), ms)
+  })
+  return Promise.race([p, cap]).finally(() => clearTimeout(timer))
+}
+
+/**
+ * Rival squads: concurrent, and bounded as a phase rather than per request.
+ *
+ * Takes its reader as an argument for the same reason `assemble.ts` takes its
+ * payloads as arguments — every timeout and partial-failure path is then
+ * reachable from a test instead of requiring a slow Saturday.
+ *
+ * Results keep standings order. That is not cosmetic: `largestSwing` picks the
+ * closest rival with a strict `<`, so the first of two equally-close managers
+ * wins, and reordering here would change which one the page names.
+ */
+export async function gatherRivals(
+  rows: StandingRow[],
+  entryId: number,
+  picksFor: (entry: number) => Promise<PicksLike>,
+  opts: { budgetMs?: number; concurrency?: number } = {},
+): Promise<{ rivals: LiveRivalInput[]; wanted: number; unread: number }> {
+  const budgetMs = opts.budgetMs ?? RIVAL_BUDGET_MS
+  const concurrency = opts.concurrency ?? RIVAL_CONCURRENCY
+  const targets = rows.slice(0, MAX_RIVALS).filter((r) => r.entry !== entryId)
+  const got = new Array<LiveRivalInput | null>(targets.length).fill(null)
+  const deadline = Date.now() + budgetMs
+  let cursor = 0
+  // Counts answers, not squads. A manager who genuinely has no picks for this
+  // gameweek answered the question; treating that as missing data would keep
+  // the snapshot permanently "incomplete" and re-read the whole league forever.
+  let read = 0
+
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const i = cursor++
+      if (i >= targets.length) return
+      const left = deadline - Date.now()
+      if (left <= 0) return
+      const row = targets[i]
+      try {
+        const rp = await deadlined(picksFor(row.entry), left)
+        read += 1
+        const rs = squadFromPicks(rp)
+        if (!rs) continue
+        got[i] = {
+          ...rs,
+          entry_id: row.entry,
+          name: row.player_name || row.entry_name || String(row.entry),
+          // Mirrors the pipeline: FPL's standings `total` already moves
+          // during a gameweek. Diverging here would break parity with
+          // gaffer.live; it is a pre-existing question, not a new one.
+          total: row.total ?? 0,
+          hits: 0,
+          active_chip: rp.active_chip ?? null,
+        }
+      } catch {
+        // One unreadable rival must not cost the whole scoreboard.
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, targets.length) }, worker))
+  return {
+    rivals: got.filter((r): r is LiveRivalInput => r != null),
+    wanted: targets.length,
+    unread: targets.length - read,
+  }
+}
+
+interface LockedState {
   squad: LiveSquadInput | null
   activeChip: string | null
   rivals: LiveRivalInput[]
   baseline: number
   hits: number
-}>>()
+  /** Noun phrases for whatever could not be read. Empty when all of it was. */
+  missing: string[]
+}
 
-async function lockedState(entryId: number, gw: number, leagueIds: number[]) {
+interface LockedEntry {
+  task: Promise<LockedState>
+  settled: boolean
+  complete: boolean
+  at: number
+}
+
+/** Per-gameweek cache for the things that cannot change once the deadline has
+ *  passed. Keyed so switching entry or gameweek refetches. */
+const locked = new Map<string, LockedEntry>()
+
+async function lockedState(
+  entryId: number, gw: number, leagueIds: number[],
+): Promise<LockedState> {
   const key = `${entryId}:${gw}:${leagueIds.join(',')}`
   const hit = locked.get(key)
-  if (hit) return hit
-  const task = (async () => {
-    const picks = await fpl.picks(entryId, gw) as PicksLike
+  // Picks lock at the deadline, so a COMPLETE snapshot is good for the rest of
+  // the gameweek and is never refetched. C14: an INCOMPLETE one used to be kept
+  // just as permanently, so a single 500 from the league endpoint at 15:00
+  // deleted the rivals table until the tab was reloaded. Now it expires, and the
+  // next poll rebuilds it. An in-flight task is always shared, expiry or not, so
+  // this cannot fan out into duplicate requests.
+  if (hit && (!hit.settled || hit.complete
+              || Date.now() - hit.at < INCOMPLETE_RETRY_MS)) {
+    return hit.task
+  }
+
+  const task = (async (): Promise<LockedState> => {
+    const missing: string[] = []
+    // Three independent reads. Chained they are three 12s deadlines stacked into
+    // a 36s wait before the rival phase even begins; overlapped they cost one.
+    // The price is that a broken entry id now also spends a league read before
+    // failing, which is two extra requests a minute on a path that is already
+    // misconfigured.
+    const [picksR, historyR, standingsR] = await Promise.allSettled([
+      fpl.picks(entryId, gw),
+      fpl.entryHistory(entryId),
+      leagueIds.length ? fpl.league(leagueIds[0], 1) : Promise.resolve(null),
+    ])
+
+    // Your own picks are the one thing this cannot proceed without: no squad, no
+    // score, and `fetchLive` falls back to the published artifact.
+    if (picksR.status === 'rejected') throw picksR.reason
+    const picks = picksR.value as PicksLike
     const squad = squadFromPicks(picks)
+
     let baseline = 0
     let hits = 0
-    try {
-      const history = await fpl.entryHistory(entryId)
-      const b = baselineAndHits(history, gw)
+    if (historyR.status === 'fulfilled') {
+      const b = baselineAndHits(historyR.value, gw)
       baseline = b.baseline
       hits = b.hits
-    } catch {
+    } else {
       // A missing baseline costs a season total, not the live score.
+      missing.push('your season total so far')
     }
-    const rivals: LiveRivalInput[] = []
+
+    let rivals: LiveRivalInput[] = []
     if (leagueIds.length) {
-      try {
-        const standings = await fpl.league(leagueIds[0], 1)
-        const rows: { entry: number; entry_name?: string; player_name?: string;
-                      total?: number }[] =
-          standings?.standings?.results ?? []
-        for (const row of rows.slice(0, MAX_RIVALS)) {
-          if (row.entry === entryId) continue
-          try {
-            const rp = await fpl.picks(row.entry, gw) as PicksLike
-            const rs = squadFromPicks(rp)
-            if (!rs) continue
-            rivals.push({
-              ...rs,
-              entry_id: row.entry,
-              name: row.player_name || row.entry_name || String(row.entry),
-              // Mirrors the pipeline: FPL's standings `total` already moves
-              // during a gameweek. Diverging here would break parity with
-              // gaffer.live; it is a pre-existing question, not a new one.
-              total: row.total ?? 0,
-              hits: 0,
-              active_chip: rp.active_chip ?? null,
-            })
-          } catch {
-            // One unreadable rival must not cost the whole scoreboard.
-          }
+      if (standingsR.status === 'fulfilled') {
+        const rows: StandingRow[] = standingsR.value?.standings?.results ?? []
+        const out = await gatherRivals(
+          rows, entryId, (entry) => fpl.picks(entry, gw) as Promise<PicksLike>)
+        rivals = out.rivals
+        if (out.unread) {
+          missing.push(`${out.unread} of ${out.wanted} rival squads`)
         }
-      } catch {
+      } else {
         // No league data is a thinner view, not a broken one.
+        missing.push('the league standings')
       }
     }
-    return { squad, activeChip: picks?.active_chip ?? null, rivals, baseline, hits }
+    return {
+      squad, activeChip: picks?.active_chip ?? null, rivals, baseline, hits,
+      missing,
+    }
   })()
-  locked.set(key, task)
-  task.catch(() => locked.delete(key))   // a failure must be retryable
+
+  const entry: LockedEntry = {
+    task, settled: false, complete: false, at: Date.now(),
+  }
+  locked.set(key, entry)
+  task.then(
+    (v) => {
+      entry.settled = true
+      entry.complete = v.missing.length === 0
+      entry.at = Date.now()
+    },
+    () => {
+      // A failure must be retryable, and immediately: there is nothing here to
+      // keep. Guarded so a task that lost its slot cannot evict its successor.
+      if (locked.get(key) === entry) locked.delete(key)
+    },
+  )
   return task
 }
 
@@ -153,7 +314,7 @@ export async function fetchLive(
   const fallback = async (reason: string): Promise<LiveResult> => {
     const state = await loadLiveSnapshot()
     if (state == null) throw new Error(reason)
-    return { state, source: 'artifact', fallbackReason: reason }
+    return { state, source: 'artifact', fallbackReason: reason, incomplete: null }
   }
 
   const entryId = getEntryId()
@@ -174,8 +335,11 @@ export async function fetchLive(
   }
 
   try {
-    const lock = await lockedState(entryId, gw, getLeagueIds())
-    const [livePayload, fixturesPayload] = await Promise.all([
+    // The locked snapshot and the two live payloads share no data, so they are
+    // fetched together. Chained, an expired-snapshot retry would delay the score
+    // it exists to decorate; overlapped, a tick costs the slower of the two.
+    const [lock, livePayload, fixturesPayload] = await Promise.all([
+      lockedState(entryId, gw, getLeagueIds()),
       fpl.live(gw),
       fpl.fixtures(gw),
     ])
@@ -196,7 +360,12 @@ export async function fetchLive(
       activeChip: lock.activeChip,
       asOf: new Date().toISOString(),
     }) as LiveState
-    return { state, source: 'proxy', fallbackReason: null }
+    return {
+      state,
+      source: 'proxy',
+      fallbackReason: null,
+      incomplete: lock.missing.length ? lock.missing.join(', ') : null,
+    }
   } catch (e) {
     return fallback(e instanceof Error ? e.message : String(e))
   }

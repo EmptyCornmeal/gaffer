@@ -156,7 +156,19 @@
       importMsg = 'Picks unavailable yet — they appear once the GW1 deadline passes.'
     }
   }
+  // Clear throws away a squad that took minutes to assemble, and it used to sit
+  // in the same row of identical pills as the horizon switches. Arm on the first
+  // press, act on the second, and disarm shortly after so it never stays cocked.
+  let clearArmed = $state(false)
+  let disarm: ReturnType<typeof setTimeout> | undefined
   function clearAll() {
+    clearTimeout(disarm)
+    if (!clearArmed) {
+      clearArmed = true
+      disarm = setTimeout(() => (clearArmed = false), 4000)
+      return
+    }
+    clearArmed = false
     plan = { name: planName, ids: [], starters: [], captainId: -1, viceId: -1 }
   }
   function doSave() {
@@ -258,35 +270,60 @@
       </div>
     {/if}
     <div class="card p-3">
-      <div class="flex items-center justify-between mb-1 gap-2 flex-wrap">
-        <h2 class="font-bold">Squad Planner</h2>
-        <div class="flex gap-2 flex-wrap">
-          <button class="btn text-xs" onclick={importTeam}>Import my team</button>
-          <div class="flex flex-wrap items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Load the model's optimal squad for a planning window">
-            <span class="text-[10px] uppercase text-muted px-1.5 font-bold">Optimal</span>
-            {#each HORIZONS as o}
-              <button
-                onclick={() => loadOptimal(o.h, optimalRisk)}
-                class="px-2 py-1 rounded-md text-xs font-bold transition
-                  {shownOptimal && optimalHorizon === o.h ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
-              >{o.label}</button>
-            {/each}
+      <h2 class="font-bold">Squad Planner</h2>
+      <p class="text-[11px] text-muted mb-2">Import your real squad, plan transfers for the next GW, then compare its projection to the model.</p>
+
+      <!-- Eight controls used to share one row of lookalike pills, so a filter, a
+           mode and a verb were indistinguishable. Three treatments now: a sunken
+           panel fences everything that REPLACES the 15 (the window switches read
+           as filters while quietly overwriting the squad), a plain ghost button
+           carries the one edit that does not, and the one that destroys work is
+           red and asks twice. -->
+      <div class="rounded-xl border border-line2 bg-bg/50 p-2">
+        <div class="flex items-center gap-x-2 gap-y-1 flex-wrap mb-1.5">
+          <span class="text-[10px] uppercase tracking-wider font-bold text-muted">Start from</span>
+          <span class="text-[10px] text-muted2">— replaces all 15</span>
+          <button class="btn text-xs ml-auto" onclick={importTeam}>Import my team</button>
+        </div>
+        <div class="grid gap-2 sm:grid-cols-2">
+          <div>
+            <div class="text-[10px] uppercase tracking-wide font-bold text-muted2 mb-1">Model optimal · window</div>
+            <div class="flex gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Load the model's optimal squad for a planning window">
+              {#each HORIZONS as o}
+                <button
+                  onclick={() => loadOptimal(o.h, optimalRisk)}
+                  class="flex-1 min-w-0 px-1.5 py-1 rounded-md text-xs font-bold transition
+                    {shownOptimal && optimalHorizon === o.h ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+                >{o.label}</button>
+              {/each}
+            </div>
           </div>
-          <div class="flex flex-wrap items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
-            {#each RISKS as o}
-              <button
-                onclick={() => loadOptimal(optimalHorizon, o.key)}
-                class="px-2 py-1 rounded-md text-xs font-bold transition
-                  {shownOptimal && optimalRisk === o.key ? 'bg-accent text-white' : 'text-muted hover:text-text'}"
-              >{o.label}</button>
-            {/each}
+          <div>
+            <div class="text-[10px] uppercase tracking-wide font-bold text-muted2 mb-1">Risk stance</div>
+            <div class="flex gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
+              {#each RISKS as o}
+                <button
+                  onclick={() => loadOptimal(optimalHorizon, o.key)}
+                  class="flex-1 min-w-0 px-1 py-1 rounded-md text-xs font-bold transition
+                    {shownOptimal && optimalRisk === o.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+                >{o.label}</button>
+              {/each}
+            </div>
           </div>
-          <button class="btn-ghost btn text-xs" onclick={autofill} disabled={squad.length < 11} title="Pick the best starting XI + captain from your current 15 (doesn't change your squad)">Auto-pick XI</button>
-          <button class="btn-ghost btn text-xs" onclick={clearAll}>Clear</button>
         </div>
       </div>
-      <p class="text-[11px] text-muted mb-2">Import your real squad, plan transfers for the next GW, then compare its projection to the model.</p>
-      {#if importMsg}<div class="text-xs chip-info rounded px-2 py-1 mb-2">{importMsg}</div>{/if}
+      {#if importMsg}<div class="text-xs chip-info rounded px-2 py-1 mt-2">{importMsg}</div>{/if}
+
+      <div class="flex items-center gap-2 flex-wrap mt-2 mb-1">
+        <button class="btn-ghost btn text-xs" onclick={autofill} disabled={squad.length < 11} title="Pick the best starting XI + captain from your current 15 (doesn't change your squad)">Auto-pick XI</button>
+        <button
+          onclick={clearAll}
+          disabled={!squad.length}
+          title="Remove every player from this plan"
+          class="ml-auto rounded-lg border px-3 py-[7px] text-xs font-bold transition disabled:opacity-30 disabled:cursor-not-allowed
+            {clearArmed ? 'bg-red/25 border-red text-text' : 'border-red/40 text-red hover:bg-red/10'}"
+        >{clearArmed ? `Discard ${squad.length}?` : 'Clear squad'}</button>
+      </div>
 
       <!-- budget + counts -->
       <div class="flex items-center gap-3 text-sm mb-1 min-w-0">

@@ -18,6 +18,7 @@
   let raw = $state<unknown>(null)
   let source = $state<LiveSourceName>('proxy')
   let fallbackReason = $state<string | null>(null)
+  let incomplete = $state<string | null>(null)
   let status = $state<'idle' | 'loading' | 'ok' | 'stale' | 'error'>('idle')
   let lastSuccess = $state<number | null>(null)
   let lastError = $state<string | null>(null)
@@ -33,6 +34,15 @@
   const dataAt = $derived(dataTimestamp(s?.as_of, lastSuccess))
   const stale = $derived(isStale(dataAt, tick))
 
+  // The one number worth interrupting a screen reader for. `aria-live` used to
+  // sit on the "Updated Ns ago" clock, which re-renders every fifteen seconds
+  // and says nothing anybody needs, while the score itself moved in silence —
+  // exactly backwards. Svelte writes a text node only when the string it holds
+  // actually differs, so a poll that moves no points announces nothing.
+  const announcement = $derived(
+    s?.available && s.squad ? `Live total ${s.squad.current} points` : '',
+  )
+
   $effect(() => {
     const poller = new Poller<unknown>(
       // Read `bundle` at call time, not setup time, so arriving data does not
@@ -43,6 +53,7 @@
       ).then((r) => {
         source = r.source
         fallbackReason = r.fallbackReason
+        incomplete = r.incomplete
         return r.state
       }),
       (st) => {
@@ -75,6 +86,13 @@
 </script>
 
 <div class="rise flex flex-col gap-4 max-w-3xl mx-auto w-full">
+  <!-- Announced, never shown. It sits outside the branch chain below so the
+       region exists before the first score does — a live region created in the
+       same frame as its content is not reliably announced. `.sr-only` is this
+       app's visually-hidden class (app.css), already used by the skip link and
+       by the scoreboard's own heading. -->
+  <p class="sr-only" role="status">{announcement}</p>
+
   <div class="flex items-start justify-between gap-2 flex-wrap">
     <div>
       <h2 class="font-bold text-lg flex items-center gap-2">
@@ -89,8 +107,10 @@
     <div class="text-right">
       <!-- `freshnessLabel` returns a whole clause, not a duration: with nothing
            fetched yet it is "never updated", and the "Updated" prefix turned that
-           into "Updated never updated". Only a real timestamp takes the prefix. -->
-      <div class="text-[11px] text-muted2" aria-live="polite">
+           into "Updated never updated". Only a real timestamp takes the prefix.
+           Deliberately NOT a live region: this text changes on a 15s cosmetic
+           tick, so announcing it buries the score. See the status line above. -->
+      <div class="text-[11px] text-muted2">
         {dataAt == null ? 'Not updated yet' : `Updated ${freshnessLabel(dataAt, tick)}`}
       </div>
       {#if source === 'artifact'}
@@ -108,6 +128,16 @@
   {#if lastError && s}
     <div class="text-xs chip-warn rounded-lg px-3 py-2">
       Last refresh failed ({lastError}). Showing the last good state.
+    </div>
+  {/if}
+
+  {#if incomplete && s}
+    <!-- Partial data has to name itself. A rivals table four managers short is
+         indistinguishable from a smaller league, and silently wrong is a worse
+         failure than visibly incomplete. -->
+    <div class="text-xs chip-warn rounded-lg px-3 py-2">
+      Couldn't read {incomplete}. Everything else here is live; the rest is
+      retried within a few minutes.
     </div>
   {/if}
 
@@ -284,6 +314,21 @@
         </table>
       </section>
     {/if}
+  {:else}
+    <!-- Unreachable today: a null squad becomes `no_squad` upstream, and every
+         other parse outcome has a branch of its own above. Kept anyway, because
+         this chain and the shape it switches on are maintained in separate
+         files. If they ever drift, this is the difference between a page that
+         looks wrong and a page that is blank, and blank in the middle of a
+         gameweek is the worst thing this product can do. -->
+    <div class="card p-6">
+      <h3 class="font-bold text-lg">Live data arrived without a squad</h3>
+      <p class="text-sm text-muted mt-2">
+        The gameweek reports itself as scoreable and then carried nothing to
+        score, which should not be possible. Read this as a bug rather than as a
+        result. The page keeps refreshing every minute.
+      </p>
+    </div>
   {/if}
 
   <!-- ── fixtures ─────────────────────────────────────────────────── -->

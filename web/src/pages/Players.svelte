@@ -38,17 +38,42 @@
   let sortDir = $state<1 | -1>(-1)
 
   const positions: ('ALL' | Pos)[] = ['ALL', 'GKP', 'DEF', 'MID', 'FWD']
-  const cols: { key: keyof Player | 'value'; label: string }[] = [
-    { key: 'next_gw_xp', label: 'xP' },
-    { key: 'xp_window', label: '6GW' },
-    { key: 'value', label: 'Val' },
-    { key: 'price', label: '£' },
-    { key: 'owned_by', label: 'Own%' },
-    { key: 'form', label: 'Form' },
-    { key: 'ict', label: 'ICT' },
-    { key: 'xgi90', label: 'xGI90' },
-    { key: 'defcon90', label: 'DC90' },
+  // `at` is the width each stat has to earn. All nine at once is a good desktop
+  // table and an unusable phone one: the fixture strip alone is ~150px of a
+  // 366px viewport, which pushed xP — the number this product exists to produce
+  // — off-screen right with no scroll affordance. Only xP and price survive at
+  // 390px. Nothing dropped is lost: the PlayerDetail modal carries the rest, and
+  // the small-screen control below keeps every column's sort reachable.
+  const cols: { key: keyof Player | 'value'; label: string; at: string }[] = [
+    { key: 'next_gw_xp', label: 'xP', at: '' },
+    { key: 'xp_window', label: '6GW', at: 'hidden sm:table-cell' },
+    { key: 'value', label: 'Val', at: 'hidden md:table-cell' },
+    { key: 'price', label: '£', at: '' },
+    { key: 'owned_by', label: 'Own%', at: 'hidden md:table-cell' },
+    { key: 'form', label: 'Form', at: 'hidden lg:table-cell' },
+    { key: 'ict', label: 'ICT', at: 'hidden lg:table-cell' },
+    { key: 'xgi90', label: 'xGI90', at: 'hidden lg:table-cell' },
+    { key: 'defcon90', label: 'DC90', at: 'hidden lg:table-cell' },
   ]
+  // Pre-season every player's form is 0, so the column is 587 em-dashes taking
+  // width on every screen. Keyed off the data rather than the calendar, so it
+  // returns by itself the first time anyone has actually played.
+  const hasForm = $derived(players.some((p) => p.form > 0))
+  const visibleCols = $derived(cols.filter((c) => c.key !== 'form' || hasForm))
+  // FPL's availability code. The bare red dot this replaces put the entire
+  // signal in colour; `news` is the club's own sentence ("Knock - 75% chance of
+  // playing"), so the badge never has to invent a reason it doesn't have.
+  const FLAGS: Record<string, { short: string; label: string; kind: string }> = {
+    d: { short: 'DOUBT', label: 'Doubtful', kind: 'warn' },
+    i: { short: 'INJ', label: 'Injured', kind: 'bad' },
+    s: { short: 'SUSP', label: 'Suspended', kind: 'bad' },
+    u: { short: 'OUT', label: 'Unavailable', kind: 'bad' },
+    n: { short: 'N/A', label: 'Not in the squad', kind: 'bad' },
+  }
+  function flag(status: string | null) {
+    if (!status || status === 'a') return null
+    return FLAGS[status] ?? { short: 'FLAG', label: 'Flagged', kind: 'bad' }
+  }
   function val(p: Player, k: keyof Player | 'value'): number {
     if (k === 'value') return p.price ? p.next_gw_xp / p.price : 0
     return (p[k] as number) ?? 0
@@ -95,6 +120,27 @@
     <label class="flex items-center gap-1.5 text-xs text-muted" title="Sub-10% owned, likely to start, with a real projection">
       <input type="checkbox" bind:checked={onlyDiff} class="accent-brand" /> differentials
     </label>
+    <!-- Below `lg` most stat columns are hidden and their header sort handles go
+         with them, which would strand a phone on whatever xP happened to give
+         it. Same `sort()`, same keys, just reachable without the columns. -->
+    <div class="lg:hidden flex items-center gap-1.5">
+      <label class="flex items-center gap-1.5 text-xs text-muted">
+        Sort
+        <select
+          value={sortKey}
+          onchange={(e) => sort(e.currentTarget.value as keyof Player | 'value')}
+          class="rounded-lg bg-card border border-line px-2 min-h-11 text-xs focus:outline-none focus:border-accent"
+        >
+          <option value="name">Player</option>
+          {#each visibleCols as c}<option value={c.key}>{c.label}</option>{/each}
+        </select>
+      </label>
+      <button
+        onclick={() => (sortDir = (sortDir * -1) as 1 | -1)}
+        aria-label="Sort {sortDir === -1 ? 'ascending' : 'descending'}"
+        class="rounded-lg bg-card border border-line px-2.5 text-xs text-muted"
+      >{sortDir === -1 ? '▾' : '▴'}</button>
+    </div>
     <!-- Two different ratios: matches against the whole pool, then rendered rows
          against the matches. Run together as "587 of 587 (top 200)" they read as
          one contradictory claim, so each gets its own clause — and the second only
@@ -107,15 +153,25 @@
       <thead>
         <tr>
           <th class="!text-center" title="Add to comparison (up to 3)">⇄</th>
-          <th onclick={() => sort('name')}>Player</th>
-          <th class="!text-center">Fixtures</th>
-          {#each cols as c}
-            <th onclick={() => sort(c.key)}>{c.label}{sortKey === c.key ? (sortDir === -1 ? ' ▾' : ' ▴') : ''}</th>
+          <!-- A sort handle has to be a real button: a bare `<th onclick>` is
+               neither focusable nor announced as a control, and `aria-sort`
+               belongs on the cell rather than on it. The cell's padding moves to
+               the button so the 44px coarse-pointer floor doesn't double the
+               height of a sticky header. -->
+          <th class="!p-0" aria-sort={sortKey === 'name' ? (sortDir === -1 ? 'descending' : 'ascending') : 'none'}>
+            <button class="w-full px-2.5 py-2 text-left" onclick={() => sort('name')}>Player{sortKey === 'name' ? (sortDir === -1 ? ' ▾' : ' ▴') : ''}</button>
+          </th>
+          <th class="!text-center hidden sm:table-cell">Fixtures</th>
+          {#each visibleCols as c}
+            <th class="!p-0 {c.at}" aria-sort={sortKey === c.key ? (sortDir === -1 ? 'descending' : 'ascending') : 'none'}>
+              <button class="w-full px-2.5 py-2 text-right" onclick={() => sort(c.key)}>{c.label}{sortKey === c.key ? (sortDir === -1 ? ' ▾' : ' ▴') : ''}</button>
+            </th>
           {/each}
         </tr>
       </thead>
       <tbody>
         {#each rows as p (p.id)}
+          {@const f = flag(p.status)}
           <tr onclick={() => onpick(p.id)}>
             <td class="!text-center" onclick={(e) => e.stopPropagation()}>
               <input
@@ -128,39 +184,42 @@
               />
             </td>
             <td>
-              <div class="flex items-center gap-2">
+              <!-- The row keeps its click, but `<tr onclick>` is unreachable by
+                   keyboard and announced as nothing. The name becomes a real
+                   button firing the same `onpick` prop the row does. -->
+              <button class="flex items-center gap-2 w-full text-left" onclick={(e) => { e.stopPropagation(); onpick(p.id) }}>
                 <Crest code={p.team_code} short={p.team} size={22} />
-                <div>
-                  <div class="font-semibold flex items-center gap-1">
+                <span class="min-w-0">
+                  <span class="font-semibold flex items-center gap-1">
                     {p.name}
                     <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
-                    {#if p.status && p.status !== 'a'}<span class="w-1.5 h-1.5 rounded-full bg-red inline-block"></span>{/if}
-                  </div>
-                  <div class="text-[10px] text-muted">{p.pos} · {p.team}</div>
-                </div>
-              </div>
+                    {#if f}<span class="badge badge-{f.kind}" title={p.news || f.label}>{f.short}<span class="sr-only"> — {f.label}{p.news ? `: ${p.news}` : ''}</span></span>{/if}
+                  </span>
+                  <span class="block text-[10px] text-muted">{p.pos} · {p.team}</span>
+                </span>
+              </button>
             </td>
-            <td><div class="flex justify-center"><FixtureStrip fixtures={p.fixtures} max={4} /></div></td>
+            <td class="hidden sm:table-cell"><div class="flex justify-center"><FixtureStrip fixtures={p.fixtures} max={4} /></div></td>
             <td class="font-bold text-brand-light">{p.next_gw_xp.toFixed(1)}</td>
-            <td class="text-accent-light">{p.xp_window.toFixed(0)}</td>
-            <td>{p.price ? (p.next_gw_xp / p.price).toFixed(2) : '—'}</td>
+            <td class="text-accent-light hidden sm:table-cell">{p.xp_window.toFixed(0)}</td>
+            <td class="hidden md:table-cell">{p.price ? (p.next_gw_xp / p.price).toFixed(2) : '—'}</td>
             <td>
               <span class="tabular-nums">{p.price.toFixed(1)}</span>
               {#if p.price_pred.dir === 'up'}<span class="text-brand ml-0.5" title="Price rising">▲</span>
               {:else if p.price_pred.dir === 'down'}<span class="text-red ml-0.5" title="Price falling">▼</span>{/if}
             </td>
-            <td class="text-muted">{p.owned_by}</td>
-            <td class="text-muted">{p.form ? p.form.toFixed(1) : '—'}</td>
-            <td class="text-muted">{p.ict.toFixed(0)}</td>
-            <td class="text-muted">{p.xgi90.toFixed(2)}</td>
-            <td class="{p.defcon && p.defcon.p_hit >= 0.5 ? 'text-brand-light font-semibold' : 'text-muted'}">
+            <td class="text-muted hidden md:table-cell">{p.owned_by}</td>
+            {#if hasForm}<td class="text-muted hidden lg:table-cell">{p.form ? p.form.toFixed(1) : '—'}</td>{/if}
+            <td class="text-muted hidden lg:table-cell">{p.ict.toFixed(0)}</td>
+            <td class="text-muted hidden lg:table-cell">{p.xgi90.toFixed(2)}</td>
+            <td class="hidden lg:table-cell {p.defcon && p.defcon.p_hit >= 0.5 ? 'text-brand-light font-semibold' : 'text-muted'}">
               {p.defcon90 ? p.defcon90.toFixed(1) : '—'}
               {#if p.defcon?.near_hit}<span class="text-yellow ml-0.5" title="Near-hit — one tick from a consistent +2">•</span>{/if}
             </td>
           </tr>
         {/each}
         {#if rows.length === 0}
-          <tr><td colspan="12" class="!text-center text-muted py-6">No players match — try a different search or raise the price filter.</td></tr>
+          <tr><td colspan={visibleCols.length + 3} class="!text-center text-muted py-6">No players match — try a different search or raise the price filter.</td></tr>
         {/if}
       </tbody>
     </table>

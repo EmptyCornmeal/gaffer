@@ -139,11 +139,17 @@
           {#each squad.map((x) => x.p as Player).sort((a, b) => b.next_gw_xp - a.next_gw_xp) as p (p.id)}
             <tr onclick={() => onpick(p.id)}>
               <td>
-                <div class="flex items-center gap-1 font-semibold">{p.name}
-                  <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
-                  {#if p.id === captainId}<span class="badge badge-good">C</span>{/if}
-                </div>
-                <div class="text-[10px] text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</div>
+                <!-- `<tr onclick>` is not focusable and not announced as a
+                     control. The name becomes a real button on the same `onpick`
+                     the bench list above already uses; the row click is left
+                     alone as a pointer convenience. -->
+                <button class="w-full text-left" onclick={(e) => { e.stopPropagation(); onpick(p.id) }}>
+                  <span class="flex items-center gap-1 font-semibold">{p.name}
+                    <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
+                    {#if p.id === captainId}<span class="badge badge-good">C</span>{/if}
+                  </span>
+                  <span class="block text-[10px] text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span>
+                </button>
               </td>
               <td><div class="flex justify-center"><FixtureStrip fixtures={p.fixtures} max={4} /></div></td>
               <td class="font-bold text-brand-light">{p.next_gw_xp.toFixed(1)}</td>

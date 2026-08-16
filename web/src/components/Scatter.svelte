@@ -80,6 +80,65 @@
     const ids = new Set<number>()
     return [...byY, ...diffs].filter((p) => (ids.has(p.id) ? false : ids.add(p.id)))
   })
+
+  // Every name used to be pinned directly above its dot, so neighbours
+  // overprinted into an unreadable smear (Gabriel over Mbeumo, Tarkowski over
+  // Saka). Each name now takes the first anchor whose box clears everything
+  // already placed — earlier names and the quadrant captions — and a name with
+  // nowhere left to sit is dropped. Dots are drawn from `points` regardless, so
+  // losing a label never costs a click target.
+  const CHAR_W = 4.7 // ≈ advance width at 9px semibold; only needs to reserve space
+  const LINE_H = 11
+  type Box = [x1: number, y1: number, x2: number, y2: number]
+  type Anchor = 'middle' | 'start' | 'end'
+  type Placed = { p: Pt; x: number; y: number; anchor: Anchor }
+  // SVG text is positioned by baseline, so the box hangs above `y`.
+  function boxOf(x: number, y: number, w: number, anchor: Anchor): Box {
+    const x1 = anchor === 'middle' ? x - w / 2 : anchor === 'start' ? x : x - w
+    return [x1, y - LINE_H + 2, x1 + w, y + 2]
+  }
+  const overlaps = (a: Box, b: Box) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1]
+
+  const placed = $derived.by(() => {
+    const taken: Box[] = []
+    if (quadrants) {
+      // 10px bold uppercase with tracking — wider per char than the dot labels.
+      const cap = (t: string, x: number, y: number, a: Anchor) =>
+        boxOf(x, y, t.length * 6.2 + 4, a)
+      taken.push(
+        cap('Differentials', M.l + 6, M.t + 13, 'start'),
+        cap('Template', M.l + iw - 6, M.t + 13, 'end'),
+        cap('Traps', M.l + iw - 6, M.t + ih - 6, 'end'),
+        cap('Fringe', M.l + 6, M.t + ih - 6, 'start'),
+      )
+    }
+    const out: Placed[] = []
+    for (const p of labelled) {
+      const w = p.label.length * CHAR_W + 4
+      const cx = sx(p.x)
+      const cy = sy(p.y)
+      // Nearest-first: above, below, right, left, then the two diagonals — a
+      // label only drifts as far from its dot as it has to.
+      const tries: Placed[] = [
+        { p, x: cx, y: cy - 7, anchor: 'middle' },
+        { p, x: cx, y: cy + 15, anchor: 'middle' },
+        { p, x: cx + 7, y: cy + 3, anchor: 'start' },
+        { p, x: cx - 7, y: cy + 3, anchor: 'end' },
+        { p, x: cx + 6, y: cy - 6, anchor: 'start' },
+        { p, x: cx - 6, y: cy + 14, anchor: 'end' },
+      ]
+      for (const t of tries) {
+        const b = boxOf(t.x, t.y, w, t.anchor)
+        const inPlot =
+          b[0] >= M.l - 2 && b[2] <= M.l + iw + 2 && b[1] >= M.t && b[3] <= M.t + ih
+        if (!inPlot || taken.some((o) => overlaps(b, o))) continue
+        taken.push(b)
+        out.push(t)
+        break
+      }
+    }
+    return out
+  })
 </script>
 
 <div class="w-full max-w-2xl mx-auto">
@@ -125,11 +184,11 @@
       ><title>{p.label} · {p.x.toFixed(1)}% owned · {p.y.toFixed(1)}</title></circle>
     {/each}
 
-    <!-- persistent labels for standout dots -->
-    {#each labelled as p (p.id)}
-      {#if hover?.id !== p.id}
-        <text x={sx(p.x)} y={sy(p.y) - 7} text-anchor="middle" class="fill-muted text-[9px] font-semibold pointer-events-none"
-          style="paint-order:stroke;stroke:#0b1220;stroke-width:2.5px">{p.label}</text>
+    <!-- persistent labels for standout dots, at the anchors `placed` cleared -->
+    {#each placed as l (l.p.id)}
+      {#if hover?.id !== l.p.id}
+        <text x={l.x} y={l.y} text-anchor={l.anchor} class="fill-muted text-[9px] font-semibold pointer-events-none"
+          style="paint-order:stroke;stroke:#0b1220;stroke-width:2.5px">{l.p.label}</text>
       {/if}
     {/each}
 

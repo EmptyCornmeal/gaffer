@@ -155,6 +155,19 @@ body {
 :root[data-theme='light'] .fdr-3 { background: #cbd5e1; color: #1e293b; }
 
 /* ---- reusable primitives ---- */
+/* These live in `@layer components` for one reason: an UNLAYERED rule beats every
+   layered one regardless of specificity, and Tailwind puts its utilities in
+   `@layer utilities`. So while these sat outside any layer they silently won
+   every conflict against the utility written beside them —
+   `class="card bg-amber/5"` rendered the plain card background and no tint, and
+   `class="btn text-xs"` rendered 13px. Fourteen call sites were affected: every
+   tinted variant card on Accuracy, Fixtures, News and Overview, and every small
+   button. Nothing looked broken, which is why it survived — the same failure
+   mode as the `text-amber` class that compiled to nothing.
+   `table.data` and `.fdr-*` are deliberately left unlayered: the table rules have
+   `!`-important overrides at their call sites that are load-bearing today. */
+@layer components {
+
 /* The inset highlight is the load-bearing part: a 1px light line on the top edge
    is what separates a raised surface from its background in a dark UI. The two
    ambient shadows do the rest of the work and are near-invisible on their own. */
@@ -228,6 +241,8 @@ body {
 .btn:active { transform: translateY(1px); }
 .btn-ghost { background: transparent; color: var(--color-text); border: 1px solid var(--color-line2); }
 .btn-ghost:hover { background: var(--color-card2); filter: none; }
+
+}  /* @layer components */
 
 /* fixture difficulty — green(easy) -> slate(neutral) -> red(hard). The neutral 3
    is lifted to a clearly-filled mid-slate so an average fixture never recedes

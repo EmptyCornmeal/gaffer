@@ -64,17 +64,18 @@
     }
   }
 
-  // Outside click and Escape anywhere close it. Registered on the window so a
+  // Outside click and Escape anywhere close them. Registered on the window so a
   // click on the page body counts, not only one inside the header.
   function onWindowPointerDown(e: MouseEvent) {
-    if (!moreOpen) return
     const t = e.target as Node
-    if (moreMenu?.contains(t) || moreButton?.contains(t)) return
-    closeMore(false)
+    if (moreOpen && !moreMenu?.contains(t) && !moreButton?.contains(t)) closeMore(false)
+    if (searchOpen && !searchBar?.contains(t) && !searchButton?.contains(t)) closeSearch(false)
   }
 
   function onWindowKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') closeMore()
+    if (e.key !== 'Escape') return
+    closeMore()
+    closeSearch()
   }
 
   function goMore(key: string) {
@@ -95,7 +96,36 @@
   function choose(p: Player) {
     onpick(p.id)
     q = ''
+    searchOpen = false
   }
+  // Enter takes the top hit. This field jumps somewhere; it does not filter a
+  // list in place, and behaving like a launcher is half of saying so.
+  function onSearchKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' && results.length) {
+      e.preventDefault()
+      choose(results[0])
+    }
+  }
+
+  // On a 390px bar the field costs 144px it cannot shrink out of, which is what
+  // pushed the deadline countdown to `md` and above. Below `sm` it collapses to
+  // its icon and expands over the bar — which also stops it standing 40px above
+  // the Players filter looking like the same control.
+  let searchOpen = $state(false)
+  let searchBar = $state<HTMLDivElement | null>(null)
+  let searchButton = $state<HTMLButtonElement | null>(null)
+  let searchInput = $state<HTMLInputElement | null>(null)
+
+  function closeSearch(returnFocus = true) {
+    if (!searchOpen) return
+    searchOpen = false
+    q = ''
+    if (returnFocus) searchButton?.focus()
+  }
+  $effect(() => {
+    if (searchOpen) searchInput?.focus()
+  })
+
   // The heading below already says "<gameweek> deadline", so this slot holds
   // only the value. The old string form returned the whole clause "deadline
   // passed", which read as "GW1 DEADLINE / deadline passed".
@@ -118,27 +148,68 @@
       unknown: 'text-red border-red/40 bg-red/10',
     }[freshness.state],
   )
+
+  const SEARCH_FIELD =
+    'w-full rounded-full bg-bg3 border border-line2 pl-8 pr-3 py-1.5 text-sm ' +
+    'placeholder:text-muted2 focus:outline-none focus:border-accent'
 </script>
 
 <svelte:window onpointerdown={onWindowPointerDown} onkeydown={onWindowKeydown} />
 
+<!-- The results list is identical in both places the field appears, so it is
+     written once. Its own header states what picking a row does — the whole
+     reason this control is mistakable for the Players filter below it. -->
+{#snippet searchResults()}
+  {#if q.length >= 2}
+    <div class="absolute left-0 right-0 sm:left-auto sm:w-64 mt-1 card shadow-xl z-50 overflow-hidden">
+      <div class="px-3 py-1.5 text-[10px] uppercase font-bold text-muted2 border-b border-line">
+        Opens the player's card
+      </div>
+      {#each results as p}
+        <button
+          onclick={() => choose(p)}
+          class="w-full flex items-center justify-between gap-2 px-3 py-2 hover:bg-card2 text-left text-sm"
+        >
+          <span class="truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></span>
+          <span class="shrink-0 text-brand-light font-bold tabular-nums">{p.next_gw_xp.toFixed(1)}</span>
+        </button>
+      {/each}
+      {#if results.length === 0}
+        <div class="px-3 py-2 text-sm text-muted2">No players found</div>
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
 <header
-  class="glass sticky top-0 z-40 flex items-center gap-3 px-3"
+  class="glass sticky top-0 z-40 flex items-center gap-2 sm:gap-3 px-3"
   style="height: var(--gaffer-topbar);"
 >
   <button class="lg:hidden text-muted hover:text-text px-1" onclick={onmenu} aria-label="menu"><Icon name="menu" size={20} /></button>
 
+  <!-- The season pill that used to sit here has moved to the sidebar's "built
+       for" block. It never changed mid-season and it was holding ~52px that the
+       countdown below needs on a phone. -->
   <div class="flex items-center gap-2 shrink-0">
     <span class="text-lg font-black tracking-tight"><span class="text-brand">G</span>affer</span>
-    <span class="hidden sm:inline text-[10px] text-muted border border-line rounded px-1 py-0.5"
-      >{meta?.season ?? '2026-27'}</span
-    >
   </div>
 
   {#if meta}
-    <div class="hidden md:flex flex-col items-center px-3 border-l border-r border-line leading-tight">
-      <span class="text-[9px] uppercase text-muted">{meta.gw_name || 'GW' + meta.current_gw} deadline</span>
-      <span class="text-sm font-bold text-accent-light tabular-nums">{timeLeft || '—'}</span>
+    <!-- The countdown is the reason anyone opens this app twenty minutes before
+         a deadline, and it used to exist on a phone only on Home — not on
+         Players or Planner, where the move is actually being weighed. Compact
+         inline form below `md`; the bordered column above it. -->
+    <div
+      class="shrink-0 flex items-baseline gap-1.5 leading-tight
+             md:flex-col md:items-center md:gap-0 md:px-3 md:border-l md:border-r md:border-line"
+    >
+      <span class="text-[9px] uppercase text-muted whitespace-nowrap">
+        <span class="md:hidden">GW{meta.current_gw}</span>
+        <span class="hidden md:inline">{meta.gw_name || 'GW' + meta.current_gw} deadline</span>
+      </span>
+      <span class="text-xs md:text-sm font-bold text-accent-light tabular-nums whitespace-nowrap"
+        >{timeLeft || '—'}</span
+      >
     </div>
 
     <span
@@ -222,29 +293,28 @@
     </div>
   </nav>
 
-  <div class="relative ml-auto w-40 sm:w-56 shrink-0 min-w-[9rem]">
+  <!-- Phone: the icon only. Tapping it takes the whole bar. -->
+  <button
+    bind:this={searchButton}
+    class="sm:hidden ml-auto shrink-0 text-muted hover:text-text px-1"
+    aria-label="Search every player"
+    aria-expanded={searchOpen}
+    onclick={() => (searchOpen ? closeSearch() : (searchOpen = true))}
+  ><Icon name="search" size={18} /></button>
+
+  <!-- ≥sm: a pill with the magnifier inside it, deliberately unlike the square
+       filter box the Players page puts 40px below. Different shape, different
+       placeholder, and the dropdown says where a row takes you. -->
+  <div class="relative hidden sm:block ml-auto w-48 md:w-56 shrink-0">
+    <Icon name="search" size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted2 pointer-events-none" />
     <input
       bind:value={q}
-      placeholder="Search players…"
-      aria-label="Search players"
-      class="w-full rounded-lg bg-card border border-line px-3 py-1.5 text-sm placeholder:text-muted2 focus:outline-none focus:border-accent"
+      onkeydown={onSearchKeydown}
+      placeholder="Jump to any player…"
+      aria-label="Jump to any player — opens their card"
+      class={SEARCH_FIELD}
     />
-    {#if q.length >= 2}
-      <div class="absolute right-0 mt-1 w-64 card shadow-xl z-50 overflow-hidden">
-        {#each results as p}
-          <button
-            onclick={() => choose(p)}
-            class="w-full flex items-center justify-between px-3 py-2 hover:bg-card2 text-left text-sm"
-          >
-            <span><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></span>
-            <span class="text-brand-light font-bold tabular-nums">{p.next_gw_xp.toFixed(1)}</span>
-          </button>
-        {/each}
-        {#if results.length === 0}
-          <div class="px-3 py-2 text-sm text-muted2">No players found</div>
-        {/if}
-      </div>
-    {/if}
+    {@render searchResults()}
   </div>
 
   <button
@@ -253,4 +323,32 @@
     title="Toggle theme"
     aria-label="toggle theme"><Icon name={theme === 'dark' ? 'moon' : 'sun'} size={18} /></button
   >
+
+  {#if searchOpen}
+    <!-- Covers the bar rather than squeezing into it: on a phone there is no
+         width for both a usable field and the countdown, and the countdown is
+         the one that has to be there without being asked for. -->
+    <div
+      bind:this={searchBar}
+      class="sm:hidden absolute inset-0 z-50 flex items-center gap-2 px-3 bg-bg2"
+    >
+      <div class="relative flex-1 min-w-0">
+        <Icon name="search" size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted2 pointer-events-none" />
+        <input
+          bind:this={searchInput}
+          bind:value={q}
+          onkeydown={onSearchKeydown}
+          placeholder="Jump to any player…"
+          aria-label="Jump to any player — opens their card"
+          class={SEARCH_FIELD}
+        />
+        {@render searchResults()}
+      </div>
+      <button
+        class="shrink-0 text-muted hover:text-text px-1"
+        aria-label="Close search"
+        onclick={() => closeSearch()}
+      ><Icon name="x" size={18} /></button>
+    </div>
+  {/if}
 </header>
