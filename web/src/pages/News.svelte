@@ -16,8 +16,13 @@
   const CERTAINTY: Record<string, string> = {
     confirmed: 'chip-ok', reported: 'chip-info', rumoured: 'chip-warn',
   }
+  // One line per code in `grounding.ALL_FALLBACK_REASONS`. The reason arrives as
+  // `code` or `code:detail`, and an unmapped code used to fall through to the raw
+  // enum: the live page read "headline feed (narration_disabled)". A missing
+  // mapping is now a vaguer sentence, never a symbol from the pipeline.
   const FALLBACK: Record<string, string> = {
     no_credentials: 'no AI key configured',
+    narration_disabled: 'AI narration is switched off',
     no_source_items: 'no stories fetched',
     provider_error: 'the AI call failed',
     empty_output: 'the AI returned nothing',
@@ -25,7 +30,13 @@
     grounding_rejected: 'no generated claim could be traced to a source',
   }
   const fallbackText = (r: string | null) =>
-    r ? (FALLBACK[r.split(':')[0]] ?? r) : ''
+    r ? (FALLBACK[r.split(':')[0]] ?? 'the AI digest was not produced') : ''
+  // A template run always carries a reason, but an absent one must not render as
+  // an empty pair of brackets.
+  const feedLabel = (r: string | null) => {
+    const why = fallbackText(r)
+    return why ? `headline feed (${why})` : 'headline feed'
+  }
 
   // Relative time reads faster in a feed than a full RSS timestamp.
   function relTime(pub: string): string {
@@ -44,7 +55,7 @@
     {#if news}
       <span class="text-xs text-muted2">
         {news.count} stories ·
-        {news.source === 'ai' ? 'AI digest' : `headline feed (${fallbackText(news.fallback_reason)})`}
+        {news.source === 'ai' ? 'AI digest' : feedLabel(news.fallback_reason)}
       </span>
     {/if}
   </div>

@@ -268,7 +268,8 @@ def test_an_undefined_naive_baseline_is_explained_not_scored():
     block = backtest._pre_season_block(_ev_frame([0.0] * 12))
     assert "naive" not in block["rank_corr"]
     assert "naive" not in block["mae"]
-    assert "UNDEFINED" in block["naive_baseline"]
+    assert block["naive_baseline"] != "defined"
+    assert "predicts 0 for every player" in block["naive_baseline"]
 
 
 def test_a_defined_naive_baseline_is_still_reported():

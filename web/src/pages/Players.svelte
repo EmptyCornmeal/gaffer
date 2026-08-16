@@ -95,7 +95,11 @@
     <label class="flex items-center gap-1.5 text-xs text-muted" title="Sub-10% owned, likely to start, with a real projection">
       <input type="checkbox" bind:checked={onlyDiff} class="accent-brand" /> differentials
     </label>
-    <span class="text-xs text-muted2 ml-auto">{filtered.length} of {players.length}{filtered.length > rows.length ? ` (top ${rows.length})` : ''}</span>
+    <!-- Two different ratios: matches against the whole pool, then rendered rows
+         against the matches. Run together as "587 of 587 (top 200)" they read as
+         one contradictory claim, so each gets its own clause — and the second only
+         when the table is actually cut short. -->
+    <span class="text-xs text-muted2 ml-auto">{filtered.length} of {players.length} players{filtered.length > rows.length ? ` · showing the first ${rows.length}` : ''}</span>
   </div>
 
   <div class="card overflow-x-auto">

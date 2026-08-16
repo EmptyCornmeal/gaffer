@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Meta, Player } from '../lib/types'
-  import { countdown } from '../lib/data'
+  import { deadlineState } from '../lib/data'
   import { getTheme, setTheme } from '../lib/config'
   import { classifyFreshness } from '../lib/freshness'
   import { matches } from '../lib/search'
@@ -96,7 +96,13 @@
     onpick(p.id)
     q = ''
   }
-  const timeLeft = $derived(meta ? countdown(meta.deadline, now) : '')
+  // The heading below already says "<gameweek> deadline", so this slot holds
+  // only the value. The old string form returned the whole clause "deadline
+  // passed", which read as "GW1 DEADLINE / deadline passed".
+  const dl = $derived(meta?.deadline ? deadlineState(meta.deadline, now) : null)
+  const timeLeft = $derived(
+    dl?.state === 'until' ? dl.remaining : dl?.state === 'passed' ? 'Passed' : '',
+  )
 
   // Data age. The deadline countdown ticks regardless of how old the underlying
   // projections are, so freshness gets its own always-visible state.

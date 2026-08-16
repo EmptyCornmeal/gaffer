@@ -22,7 +22,8 @@ const valid = {
     regime: 'prior-season rates and the price prior only',
     mae: { gaffer: 1.544 },
     rank_corr: { gaffer: 0.439 },
-    naive_baseline: 'UNDEFINED. Cumulative season-to-date PPG is 0 for everyone.',
+    naive_baseline: 'The naive baseline here is cumulative season-to-date ' +
+      'points-per-game: it predicts 0 for every player.',
   },
   leakage_check: { enforced: true, post_match_fields_in_features: [], policy: 'shift(1)' },
   per_horizon: {
@@ -136,7 +137,7 @@ describe('parseBacktest — rejection', () => {
     // The absent naive baseline must be explained, never rendered as a number:
     // "no baseline" and "beat the baseline" must not look alike on the page.
     expect(s.data.pre_season?.rank_corr.naive).toBeUndefined()
-    expect(s.data.pre_season?.naive_baseline).toContain('UNDEFINED')
+    expect(s.data.pre_season?.naive_baseline).toContain('predicts 0 for every player')
   })
 
   it('rejects non-object payloads', () => {

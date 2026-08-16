@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fpl, type LeagueStanding } from '../lib/fpl'
+  import { displayName, fpl, ProxyTimeoutError, type LeagueStanding } from '../lib/fpl'
   import { getLeagueIds, getEntryId } from '../lib/config'
   import Icon from '../components/Icon.svelte'
   import LineChart from '../components/LineChart.svelte'
@@ -9,6 +9,10 @@
   let leagueIds = $state(getLeagueIds())
   let active = $state(0)
   let phase = $state<'idle' | 'loading' | 'ok' | 'error' | 'nosetup'>('idle')
+  // A timeout and a wrong league id both land in 'error', but only one of them is
+  // the user's settings and only one of them is worth retrying in place.
+  let failure = $state<'timeout' | 'other'>('other')
+  let retry = $state(0)
   let name = $state('')
   let rows = $state<LeagueStanding[]>([])
   let preseason = $state(false)
@@ -30,6 +34,7 @@
   const PALETTE = ['#3987e5', '#d95926', '#c98500', '#d55181', '#9085e9', '#e66767', '#199e70', '#60a5fa', '#f59e0b', '#a78bfa']
 
   $effect(() => {
+    void retry // read so the effect re-runs when the user asks for another go
     const ids = getLeagueIds()
     leagueIds = ids
     if (!ids.length || !fpl.configured()) {
@@ -59,7 +64,8 @@
         }
         phase = 'ok'
       })
-      .catch(() => {
+      .catch((e) => {
+        failure = e instanceof ProxyTimeoutError ? 'timeout' : 'other'
         phase = 'error'
       })
   })
@@ -72,7 +78,11 @@
     for (let page = 1; page <= MAX_PAGES; page++) {
       const data = await fpl.league(id, page)
       leagueName = data?.league?.name ?? leagueName
-      const chunk = (data?.standings?.results ?? []) as LeagueStanding[]
+      const chunk = ((data?.standings?.results ?? []) as LeagueStanding[]).map((r) => ({
+        ...r,
+        entry_name: displayName(r.entry_name),
+        player_name: displayName(r.player_name),
+      }))
       results.push(...chunk)
       newcomers.push(...(data?.new_entries?.results ?? []))
       const more = data?.standings?.has_next || data?.new_entries?.has_next
@@ -81,8 +91,8 @@
     if (results.length) return { leagueName, results, pre: false }
     const pre: LeagueStanding[] = newcomers.map((e, i) => ({
       entry: e.entry,
-      entry_name: e.entry_name,
-      player_name: `${e.player_first_name ?? ''} ${e.player_last_name ?? ''}`.trim(),
+      entry_name: displayName(e.entry_name),
+      player_name: displayName(`${e.player_first_name ?? ''} ${e.player_last_name ?? ''}`),
       rank: i + 1,
       last_rank: i + 1,
       total: 0,
@@ -190,8 +200,14 @@
       <div class="flex justify-center py-24 text-muted"><div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div></div>
     {:else if phase === 'error'}
       <div class="card p-6 text-center rise max-w-lg mx-auto">
-        <h2 class="font-bold">Couldn't load that league</h2>
-        <p class="text-sm text-muted mt-2">Double-check your <b>Classic League ID</b> in Settings — it's the number in your league's URL on the FPL site.</p>
+        {#if failure === 'timeout'}
+          <h2 class="font-bold">That took too long</h2>
+          <p class="text-sm text-muted mt-2">The FPL proxy didn't answer in time. That's a slow connection or a busy matchday, not your settings.</p>
+          <button class="btn mt-4" onclick={() => retry++}>Try again</button>
+        {:else}
+          <h2 class="font-bold">Couldn't load that league</h2>
+          <p class="text-sm text-muted mt-2">Double-check your <b>Classic League ID</b> in Settings — it's the number in your league's URL on the FPL site.</p>
+        {/if}
       </div>
     {:else if phase === 'ok'}
       <div class="flex items-center gap-2 flex-wrap">

@@ -5,7 +5,7 @@
     type Card,
   } from '../lib/weekly'
   import { classifyFreshness } from '../lib/freshness'
-  import { countdown } from '../lib/data'
+  import { deadlineState } from '../lib/data'
   import Icon from '../components/Icon.svelte'
   import Crest from '../components/Crest.svelte'
 
@@ -23,16 +23,23 @@
   // Deadline-aware: near a deadline, and after one, plain age is the wrong
   // question. See lib/freshness.ts.
   const fresh = $derived(classifyFreshness(meta?.generated_at, now, meta?.deadline))
+  const dl = $derived(meta?.deadline ? deadlineState(meta.deadline, now) : null)
   const cmp = $derived(body?.comparison ?? null)
   const exe = $derived(body?.executability ?? null)
   const chip = $derived((d?.chip ?? null) as { recommendation?: string; reason?: string; expected_gain?: number } | null)
+  // Whether the squad below is the owner's or one the optimiser invented. The
+  // artifact says so directly; `action` does not — an unavailable recommendation
+  // and an unknown squad are separate facts that merely coincide pre-season.
+  const squadKnown = $derived(d?.squad_state?.known === true)
 
   let showEvidence = $state(false)
 
   const tone = $derived(body ? ACTION_TONE[body.action] : 'info')
+  // 'neutral' is the bare .chip: no colour at all, for a state that is neither
+  // an outcome nor a fault.
   const toneClass = $derived(
     tone === 'good' ? 'chip-good' : tone === 'warn' ? 'chip-warn'
-      : tone === 'bad' ? 'chip-bad' : 'chip-info',
+      : tone === 'bad' ? 'chip-bad' : tone === 'neutral' ? '' : 'chip-info',
   )
   const confidenceClass = $derived(
     body?.confidence === 'high' ? 'text-brand-light'
@@ -50,9 +57,13 @@
     <div class="flex items-start justify-between gap-3 flex-wrap">
       <div>
         <h1 class="font-black text-xl">{meta?.gw_name ?? `Gameweek ${meta?.current_gw ?? '?'}`}</h1>
-        {#if meta?.deadline}
+        {#if dl?.state === 'until'}
           <p class="text-sm text-muted">
-            Deadline in <b class="text-text">{countdown(meta.deadline, now)}</b>
+            Deadline in <b class="text-text">{dl.remaining}</b>
+          </p>
+        {:else if dl?.state === 'passed'}
+          <p class="text-sm text-muted">
+            <b class="text-text">Deadline passed</b>
           </p>
         {/if}
       </div>
@@ -119,10 +130,32 @@
         </div>
       {/if}
 
-      <!-- captain / vice -->
+      <!-- captain / vice
+           Buttons, not labels. On deadline day the captaincy is frequently the
+           whole decision, and these were the only picks on this screen with no
+           route to their own reasoning — the transfer chips either side of them
+           already open it. Same `onpick` handler, so there is one way in. -->
       <div class="flex gap-2 mt-3 flex-wrap">
-        <span class="chip chip-good">C: {label(body.captain)}</span>
-        <span class="chip chip-info">V: {label(body.vice)}</span>
+        {#if body.captain}
+          {@const c = body.captain}
+          <button
+            class="chip chip-good"
+            onclick={() => onpick(c.id)}
+            aria-label="Captain {label(c)} — open player detail"
+          >C: {label(c)}</button>
+        {:else}
+          <span class="chip chip-good">C: {label(body.captain)}</span>
+        {/if}
+        {#if body.vice}
+          {@const v = body.vice}
+          <button
+            class="chip chip-info"
+            onclick={() => onpick(v.id)}
+            aria-label="Vice-captain {label(v)} — open player detail"
+          >V: {label(v)}</button>
+        {:else}
+          <span class="chip chip-info">V: {label(body.vice)}</span>
+        {/if}
         {#if chip?.recommendation && chip.recommendation !== 'hold'}
           <span class="chip chip-warn">
             Chip: {chip.recommendation} {signed(chip.expected_gain)}
@@ -210,7 +243,14 @@
     <!-- ── team sheet ─────────────────────────────────────────────── -->
     {#if body.starting.length}
       <section class="card p-4" aria-labelledby="sheet">
-        <h3 id="sheet" class="font-bold text-sm mb-2">Your XI and bench order</h3>
+        <!-- Before the first deadline the optimiser builds this XI from a blank
+             £100m budget, so it is not the owner's team and calling it "yours"
+             contradicts the risk note three cards above. -->
+        <h3 id="sheet" class="font-bold text-sm mb-2">
+          {squadKnown
+            ? 'Your XI and bench order'
+            : "The model's suggested XI and bench order"}
+        </h3>
         <ul class="grid grid-cols-2 sm:grid-cols-3 gap-1">
           {#each body.starting as p (p.id)}
             <li>

@@ -87,8 +87,11 @@
       </p>
     </div>
     <div class="text-right">
+      <!-- `freshnessLabel` returns a whole clause, not a duration: with nothing
+           fetched yet it is "never updated", and the "Updated" prefix turned that
+           into "Updated never updated". Only a real timestamp takes the prefix. -->
       <div class="text-[11px] text-muted2" aria-live="polite">
-        Updated {freshnessLabel(dataAt, tick)}
+        {dataAt == null ? 'Not updated yet' : `Updated ${freshnessLabel(dataAt, tick)}`}
       </div>
       {#if source === 'artifact'}
         <span class="chip chip-warn" title={fallbackReason ?? ''}>
@@ -108,9 +111,20 @@
     </div>
   {/if}
 
-  {#if parsed.kind === 'missing' && status !== 'loading'}
+  {#if parsed.kind === 'missing' && (status === 'idle' || status === 'loading')}
+    <!-- Every branch below describes data we already have. Until the first fetch
+         settles there is none, and saying nothing rendered the page as an empty
+         rectangle for however long the proxy took to answer. -->
+    <div class="flex flex-col items-center gap-3 py-24 text-muted">
+      <div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin"></div>
+      <p class="text-sm">Reading the live scores…</p>
+    </div>
+  {:else if parsed.kind === 'missing'}
     <div class="card p-6 text-center">
-      <h3 class="font-bold">No live data</h3>
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/12 text-accent-light mb-3">
+        <Icon name="hourglass" size={22} />
+      </div>
+      <h3 class="font-bold text-lg">No live data</h3>
       <p class="text-sm text-muted mt-2">
         {#if fallbackReason}
           The live proxy could not answer ({fallbackReason}) and no published
@@ -118,6 +132,9 @@
         {:else}
           Nothing has been published for this gameweek yet.
         {/if}
+      </p>
+      <p class="text-sm text-muted mt-2">
+        This page fills itself in from the first whistle of the gameweek.
       </p>
     </div>
   {:else if parsed.kind === 'unsupported' || parsed.kind === 'malformed'}
@@ -127,13 +144,21 @@
     </div>
   {:else if s && !s.available}
     <div class="card p-6 text-center">
-      <h3 class="font-bold">Nothing to score yet</h3>
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-accent/12 text-accent-light mb-3">
+        <Icon name="hourglass" size={22} />
+      </div>
+      <h3 class="font-bold text-lg">Nothing to score yet</h3>
       <p class="text-sm text-muted mt-2">
         {LIVE_UNAVAILABLE_LABELS[s.unavailable_reason ?? ''] ?? s.note ?? ''}
       </p>
+      <p class="text-sm text-muted mt-2">
+        Your XI, the league swing and every player's points appear here once the
+        first match kicks off.
+      </p>
       {#if s.fixture_summary?.total}
         <p class="text-[11px] text-muted2 mt-2">
-          {s.fixture_summary.total} fixture(s) in GW{s.gameweek}.
+          {s.fixture_summary.total}
+          fixture{s.fixture_summary.total === 1 ? '' : 's'} in GW{s.gameweek}.
         </p>
       {/if}
     </div>

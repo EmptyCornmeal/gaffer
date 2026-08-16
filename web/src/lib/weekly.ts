@@ -149,11 +149,21 @@ export const ACTION_LABELS: Record<Action, string> = {
   unavailable: 'No recommendation available',
 }
 
+/**
+ * Chip tone per action.
+ *
+ * `bad` is this app's *fault* colour — expired data, a failed leakage check —
+ * so it is reserved for something actually being wrong. `unavailable` is not
+ * wrong: before the first deadline FPL publishes nobody's picks, and the app
+ * saying so is it working correctly. It gets `neutral`, the uncoloured chip, so
+ * an honest limit cannot be mistaken for a broken pipeline at a glance.
+ * `too_close` stays `warn` — that one really is a caution about the advice.
+ */
 export const ACTION_TONE: Record<Action, string> = {
   transfer: 'good',
   roll: 'info',
   too_close: 'warn',
-  unavailable: 'bad',
+  unavailable: 'neutral',
 }
 
 /** Does the comparison clear the bar the backend used? Purely for wording. */

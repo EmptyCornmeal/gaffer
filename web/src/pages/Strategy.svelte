@@ -170,6 +170,11 @@
       <!-- Coverage is stated from the counts every time, whether or not a placing
            probability came out, because it is what those probabilities are worth. -->
       {@const cov = describeCoverage(l.data_quality)}
+      <!-- `p_first` is P(finish first) and `p_target` is P(finish in the top N);
+           they are simulated separately, but `default_target` makes N = 1 for a
+           tiny or small league, where the two are the same event and the second
+           tile just restates the first under another label. -->
+      {@const separateTarget = l.target_position > 1}
       <div class="card p-4">
         <button class="w-full text-left" onclick={() => (openLeague = lg(l) ? null : l.league_id)}>
           <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -181,15 +186,17 @@
           </div>
         </button>
 
-        <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+        <div class="grid {separateTarget ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-3 text-center">
           <div class="rounded-lg bg-bg3 p-2">
             <div class="text-[10px] uppercase text-muted2 font-bold">Win it</div>
             <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_first) : '—'}</div>
           </div>
-          <div class="rounded-lg bg-bg3 p-2">
-            <div class="text-[10px] uppercase text-muted2 font-bold">Top {l.target_position}</div>
-            <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_target) : '—'}</div>
-          </div>
+          {#if separateTarget}
+            <div class="rounded-lg bg-bg3 p-2">
+              <div class="text-[10px] uppercase text-muted2 font-bold">Top {l.target_position}</div>
+              <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_target) : '—'}</div>
+            </div>
+          {/if}
           <div class="rounded-lg bg-bg3 p-2">
             <div class="text-[10px] uppercase text-muted2 font-bold">Exp. place</div>
             <div class="text-xl font-black tabular-nums">

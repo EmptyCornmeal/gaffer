@@ -290,13 +290,16 @@ def _pre_season_block(ev: pd.DataFrame) -> dict[str, Any]:
                             "what happened on one evening, never as performance.",
         "zero_minute_share_pct": round(100.0 * (sub["minutes"] == 0).mean(), 1),
     }
+    # The Accuracy page prints this immediately after its own "No baseline to
+    # beat." lede, so it has to be a sentence rather than a status word: opening
+    # on a bare UNDEFINED read as a stringification bug on the one page whose
+    # whole job is looking rigorous.
     out["naive_baseline"] = "defined" if naive_defined else (
-        "UNDEFINED. The naive baseline is cumulative season-to-date "
-        "points-per-game, which does not exist before the season starts; it "
-        "predicts 0 for every player here. Its rank correlation is undefined "
-        "(zero variance) and its MAE would measure only how many players failed "
-        "to appear, so neither is reported. There is no baseline to beat at GW1 "
-        "— which is itself the finding."
+        "The naive baseline here is cumulative season-to-date points-per-game, "
+        "which does not exist before a ball is kicked: it predicts 0 for every "
+        "player. Its rank correlation is undefined against that zero variance, "
+        "and its MAE would measure only how many players failed to appear, so "
+        "neither is reported. That absence is itself the finding."
     )
     if naive_defined:
         out["mae"]["naive"] = round(_mae(sub["naive"], sub["actual"]), 3)

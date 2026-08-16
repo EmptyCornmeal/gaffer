@@ -1,15 +1,26 @@
 @import 'tailwindcss';
 
 /* ===== Gaffer design system — navy + emerald, elevated ============================
-   Depth comes from surface *lightness*, not shadow (shadows barely register on a
-   near-black navy). Each nested surface steps ~5% lighter. Saturation is spent only
-   on meaning: emerald = positive / CTA / "on"; everything else is navy/slate. */
+   Depth comes from surface *lightness* plus a top inset highlight. The original
+   note here said shadows "barely register on a near-black navy" — true of a drop
+   shadow, which is dark-on-dark, but not of the 1px light line along a surface's
+   top edge, which is how dark UIs actually read as raised.
+
+   Measured 2026-08-16: `card` sat only ΔL* 3.3 above `bg`, so every boundary in
+   the app was carried by a single hairline border and the whole page read as one
+   flat black field. The ladder below is ~6-7 L* per step and `.card` now carries
+   an inset highlight, which is [[#U29-root-cause-1]] — the largest single visual
+   change available.
+
+   Saturation is spent only on meaning: emerald = positive / CTA / "on"; everything
+   else is navy/slate. */
 @theme {
-  --color-bg: #080e1a;      /* page plane */
-  --color-bg2: #0e1626;     /* surface-1: topbar, sidebar, headers */
-  --color-bg3: #152034;     /* surface-2: nested, row hover */
-  --color-card: #0e1626;    /* surface-1 */
-  --color-card2: #152034;   /* surface-2 */
+  --color-bg: #080e1a;      /* page plane           L*  4.0 */
+  --color-bg2: #0e1626;     /* chrome: topbar, sidebar, table headers — stays
+                               recessed so cards come forward of it   L*  7.3 */
+  --color-bg3: #1c2942;     /* surface-2: nested, row hover           L* 16.6 */
+  --color-card: #131d30;    /* surface-1: the default card            L* 10.8 */
+  --color-card2: #1c2942;   /* surface-2                              L* 16.6 */
   --color-line: #1e2a41;    /* hairline separators (~rgba(255,255,255,.08)) */
   --color-line2: #2b3a56;   /* stronger borders */
   --color-text: #f4f7fb;    /* ~92% white, not pure #fff */
@@ -22,6 +33,15 @@
   --color-red: #f04452;
   --color-yellow: #fab219;
   --color-orange: #ec835a;
+  /* `text-amber` and `text-green` were used in eight places and compiled to
+     NOTHING — Tailwind fails silently on a class with no token, so the colour
+     coding on Accuracy and PlayerDetail was simply absent and neither
+     `svelte-check` nor the perf budget noticed. These are deliberate ALIASES of
+     colours the palette already has, not new hues: the app's problem is that
+     colour is decorative, and adding two more would make it worse. Consolidating
+     the call sites onto `yellow`/`brand-light` is the real fix; this unblocks it. */
+  --color-amber: #fab219;   /* = yellow */
+  --color-green: #34d399;   /* = brand-light */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --gaffer-topbar: 56px;
@@ -111,23 +131,41 @@ body {
   --color-brand-light: #047857;
   --color-accent-light: #1d4ed8;
   --color-accent: #2563eb;
+  /* Bare utilities were never overridden for light, only the `chip-*` classes:
+     `text-yellow` on white measured 1.83:1 and `text-red` 3.71:1. Darkened here
+     so `text-yellow`/`text-red`/`text-amber`/`text-green` are legible; every
+     class that used these tokens as a *background* is pinned below so it does
+     not turn muddy. */
+  --color-yellow: #7a5605;  /* 6.64:1 on white */
+  --color-red: #c02233;     /* 5.97:1 on white */
+  --color-amber: #7a5605;
+  --color-green: #047857;
 }
 :root[data-theme='light'] { color-scheme: light; }
-:root[data-theme='light'] .card { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); }
+:root[data-theme='light'] .card,
+:root[data-theme='light'] .tile { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06); }
 :root[data-theme='light'] .chip-good { background: color-mix(in srgb, var(--color-brand) 22%, white); color: #065f46; }
 :root[data-theme='light'] .chip-info { background: color-mix(in srgb, var(--color-accent) 20%, white); color: #1e40af; }
-:root[data-theme='light'] .chip-warn { background: color-mix(in srgb, var(--color-yellow) 30%, white); color: #92600a; }
-:root[data-theme='light'] .chip-bad  { background: color-mix(in srgb, var(--color-red) 20%, white); color: #9f1239; }
+/* Pinned, not mixed: the tokens above are now dark so a mix would read as sludge. */
+:root[data-theme='light'] .chip-warn { background: #fdf0d5; color: #92600a; }
+:root[data-theme='light'] .chip-bad  { background: #fde0e4; color: #9f1239; }
 :root[data-theme='light'] .badge-good { color: #065f46; }
 :root[data-theme='light'] .badge-warn { color: #92600a; }
 :root[data-theme='light'] .badge-bad  { color: #9f1239; }
 :root[data-theme='light'] .fdr-3 { background: #cbd5e1; color: #1e293b; }
 
 /* ---- reusable primitives ---- */
+/* The inset highlight is the load-bearing part: a 1px light line on the top edge
+   is what separates a raised surface from its background in a dark UI. The two
+   ambient shadows do the rest of the work and are near-invisible on their own. */
 .card {
   background: var(--color-card);
   border: 1px solid var(--color-line);
   border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 6px 16px -8px rgba(0, 0, 0, 0.5);
 }
 /* interactive cards lift toward the viewer (surface-2 + faint emerald hairline) */
 .card-hover { transition: background 0.15s, border-color 0.15s, transform 0.15s; }
@@ -142,6 +180,7 @@ body {
   border: 1px solid var(--color-line);
   border-radius: 12px;
   padding: 12px 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 .tile-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
 .tile-value { font-variant-numeric: tabular-nums; font-weight: 800; line-height: 1.05; }
@@ -170,12 +209,14 @@ body {
 .chip-good { background: color-mix(in srgb, var(--color-brand) 16%, transparent); color: var(--color-brand-light); border-color: transparent; }
 .chip-info { background: color-mix(in srgb, var(--color-accent) 16%, transparent); color: var(--color-accent-light); border-color: transparent; }
 .chip-warn { background: color-mix(in srgb, var(--color-yellow) 16%, transparent); color: var(--color-yellow); border-color: transparent; }
-.chip-bad  { background: color-mix(in srgb, var(--color-red) 16%, transparent); color: var(--color-red); border-color: transparent; }
+/* `--color-red` on its own 16% tint measures 3.90:1 — under the 4.5 floor for
+   small text. The tint stays (it is the fault signal); the text lifts. 6.43:1. */
+.chip-bad  { background: color-mix(in srgb, var(--color-red) 16%, transparent); color: #ff8a93; border-color: transparent; }
 
 .badge { font-size: 9px; font-weight: 800; letter-spacing: 0.03em; padding: 1px 5px; border-radius: 4px; }
 .badge-good { background: color-mix(in srgb, var(--color-brand) 22%, transparent); color: var(--color-brand-light); }
 .badge-warn { background: color-mix(in srgb, var(--color-yellow) 22%, transparent); color: var(--color-yellow); }
-.badge-bad  { background: color-mix(in srgb, var(--color-red) 22%, transparent); color: var(--color-red); }
+.badge-bad  { background: color-mix(in srgb, var(--color-red) 22%, transparent); color: #ff8a93; }  /* was 3.58:1 at 9px; now 5.90:1 */
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;

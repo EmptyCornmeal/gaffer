@@ -157,14 +157,44 @@ export async function loadLiveSnapshot(): Promise<unknown | null> {
   }
 }
 
-export function countdown(deadline: string, nowMs: number = Date.now()): string {
-  if (!deadline) return ''
+/**
+ * Time to a deadline as a state, not a phrase.
+ *
+ * The duration and the expired case are different kinds of answer, and folding
+ * them into one string is what produced "Deadline in deadline passed": a caller
+ * that prefixes a label word has no way to tell a duration from a whole clause.
+ * Callers get the state and compose their own sentence.
+ */
+export type DeadlineState =
+  | { state: 'until'; remaining: string }
+  | { state: 'passed' }
+  | { state: 'unknown' }
+
+export function deadlineState(
+  deadline: string,
+  nowMs: number = Date.now(),
+): DeadlineState {
+  if (!deadline) return { state: 'unknown' }
   const ms = new Date(deadline).getTime() - nowMs
-  if (ms <= 0) return 'deadline passed'
+  // An unparseable deadline is unknown, not imminent: NaN fails every
+  // comparison below and used to render as "NaN d NaN h".
+  if (!Number.isFinite(ms)) return { state: 'unknown' }
+  if (ms <= 0) return { state: 'passed' }
   const d = Math.floor(ms / 86400000)
   const h = Math.floor((ms % 86400000) / 3600000)
   const m = Math.floor((ms % 3600000) / 60000)
-  if (d > 0) return `${d}d ${h}h`
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
+  if (d > 0) return { state: 'until', remaining: `${d}d ${h}h` }
+  if (h > 0) return { state: 'until', remaining: `${h}h ${m}m` }
+  return { state: 'until', remaining: `${m}m` }
+}
+
+/**
+ * The bare label form, kept for the topbar, which prints it under its own
+ * "<gameweek> deadline" heading where the standalone phrase reads correctly.
+ * Anything building a sentence around the value wants `deadlineState`.
+ */
+export function countdown(deadline: string, nowMs: number = Date.now()): string {
+  const s = deadlineState(deadline, nowMs)
+  if (s.state === 'until') return s.remaining
+  return s.state === 'passed' ? 'deadline passed' : ''
 }
