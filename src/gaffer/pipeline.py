@@ -313,20 +313,50 @@ def _build_live(conn, client, settings, from_gw, now, generated_at):
             "SELECT player_id, exp_points FROM projections WHERE gw=?", (from_gw,))
     }
     rivals = _live_rivals(client, settings, from_gw)
-    baseline, hits, baseline_source = _live_baseline(conn, client, settings, from_gw)
+    baseline, hits, baseline_source = _live_baseline(client, settings, from_gw)
     state = live_mod.assemble(
         gw=from_gw, live_payload=live_payload, fixtures_payload=fixtures_payload,
         squad=squad, positions=positions, team_of=team_of, now=now or
         datetime.now(UTC), predictions=preds, rivals=rivals, names=names,
         entry_id=settings.entry_id,
-        baseline=baseline, hits=hits,
+        # An unknown baseline reaches the scorer as 0 and every figure built on
+        # it is withheld below. Passing None through would put it into
+        # arithmetic `gaffer.live` shares byte-for-byte with the browser port.
+        baseline=baseline or 0, hits=hits,
         active_chip=db.get_meta(conn, "active_chip") or None,
         as_of=generated_at)
     state["baseline_source"] = baseline_source
+    _mark_live_gaps(state, squad, live_payload, baseline)
     return state
 
 
-def _live_baseline(conn, client, settings, gw) -> tuple[int, int, str]:
+def _baseline_from_row(row) -> tuple[int, int] | None:
+    """Season points carried in, and the hit paid, from ONE history row.
+
+    That row is what the picks endpoint returns under ``entry_history``. Its
+    ``total_points`` is cumulative, net of every hit taken so far, and INCLUDES
+    the gameweek the row belongs to; ``points`` is that gameweek's gross score.
+    So what was carried in is ``total_points - points + this week's hit``, the
+    same figure ``entry_baseline_and_hits`` reaches by walking the whole
+    history.
+
+    Returns None rather than a guess when the row is not a history row, so an
+    unreadable baseline stays unreadable. Mirrors ``baselineFromRow`` in
+    web/src/lib/live/source.ts.
+    """
+    def num(v) -> bool:
+        return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+    if not isinstance(row, dict):
+        return None
+    total, points = row.get("total_points"), row.get("points")
+    if not num(total) or not num(points):
+        return None
+    hits = int(row.get("event_transfers_cost") or 0)
+    return int(total) - int(points) + hits, hits
+
+
+def _live_baseline(client, settings, gw) -> tuple[int | None, int, str]:
     """Season points carried into ``gw`` and the transfer cost paid for it.
 
     Both were wrong before this existed: `overall_points` was never written at
@@ -334,22 +364,102 @@ def _live_baseline(conn, client, settings, gw) -> tuple[int, int, str]:
     looked four points better than it was.
 
     The entry history is preferred because its cumulative `total_points` at the
-    previous event is exactly "before this gameweek"; the ingested season total
-    already contains the in-progress gameweek once scoring starts, so it is only
-    a fallback — and the source is reported so no screen can present it as exact.
+    previous event is exactly "before this gameweek".
+
+    C9: the fallback used to be the ingested season total, which the paragraph
+    above this one already said contains the in-progress gameweek. So whenever
+    the history read failed, the live score was added to a figure that already
+    held it and the projected season total came out a full gameweek too high —
+    while the browser failed the same moment the opposite way, caching a
+    baseline of 0 for the session. The fallback is now the picks endpoint's own
+    ``entry_history`` row, which carries the same arithmetic in one line and is
+    a read this path can make anyway; and when neither answers the baseline is
+    None, reported as unavailable rather than substituted. The source is stated
+    either way, so no screen can present any of them as exact.
     """
-    if settings.entry_id:
-        try:
-            history = client.entry_history(settings.entry_id)
-        except Exception:  # noqa: BLE001 - a baseline is never worth losing the run
-            history = None
-        if history:
-            baseline, hits = live_mod.entry_baseline_and_hits(history, gw)
-            return baseline, hits, "entry_history"
+    if not settings.entry_id:
+        return None, 0, "unavailable"
     try:
-        return int(db.get_meta(conn, "overall_points") or 0), 0, "overall_points"
-    except (TypeError, ValueError):
-        return 0, 0, "unknown"
+        history = client.entry_history(settings.entry_id)
+    except Exception:  # noqa: BLE001 - a baseline is never worth losing the run
+        history = None
+    # A payload without a `current` list is not a history, however cheerfully it
+    # arrived. The browser applies the same test, in the same order.
+    if isinstance(history, dict) and isinstance(history.get("current"), list):
+        baseline, hits = live_mod.entry_baseline_and_hits(history, gw)
+        return baseline, hits, "entry_history"
+    try:
+        picks = client.entry_picks(settings.entry_id, gw) or {}
+    except Exception:  # noqa: BLE001 - the fallback is allowed to fail too
+        picks = {}
+    row = _baseline_from_row(picks.get("entry_history"))
+    if row is None:
+        return None, 0, "unavailable"
+    return row[0], row[1], "picks_entry_history"
+
+
+def _live_missing_players(squad, live_payload) -> list[int]:
+    """Squad members the live endpoint carried no row for.
+
+    C13. ``player_live`` invents a row for anyone it has a fixture for but no
+    live data on, and the invented row holds that player's full PRE-MATCH
+    projection against zero confirmed points. Before kick-off that is right and
+    is what lets a squad render at all; once his match is running it is a guess
+    wearing a live score's clothes, and a payload truncated at 70 minutes then
+    reports "yet to kick off" for a man who may already have scored twice.
+
+    The invention is left alone — it is the browser's behaviour too, and
+    tests/test_live_parity.py holds both sides to it. What this adds is the
+    means to say so. Mirrors ``missingFromLive`` in
+    web/src/lib/live/assemble.ts.
+
+    An empty payload names nobody: that is ``no_live_data``, a state the view
+    already reports on its own, not fifteen individually missing players.
+    """
+    have = {e.get("id") for e in ((live_payload or {}).get("elements") or [])
+            if isinstance(e, dict) and isinstance(e.get("id"), int)}
+    if not squad or not have:
+        return []
+    ours = list(squad.get("starting") or []) + list(squad.get("bench") or [])
+    return sorted(set(ours) - have)
+
+
+def _mark_live_gaps(state, squad, live_payload, baseline) -> None:
+    """Record on the state what could not be read, and withhold whatever cannot
+    honestly be shown without it.
+
+    Mirror of ``markLiveGaps`` in web/src/lib/live/source.ts. The Live page
+    renders whichever of the two answered — the browser while matches are on,
+    this artifact when the proxy is down — so both must blank the same fields
+    and name the same gaps, or how honest the page is depends on which half of
+    the system it got.
+
+    Deliberately outside ``gaffer.live.assemble``: that is the scoring rulebook,
+    pinned byte-for-byte against the browser port by tests/test_live_parity.py,
+    and it never sees the I/O that failed. This is the layer that knows.
+    """
+    gaps: list[str] = []
+    if baseline is None:
+        gaps.append("your season total so far")
+        sq = state.get("squad")
+        if isinstance(sq, dict):
+            # A zero baseline is not a smaller answer than the real one, it is a
+            # different and wrong one: the season total renders as this
+            # gameweek's score. Nothing beats that.
+            sq["season_total_before"] = None
+            sq["season_total_projected"] = None
+        if state.get("rivals"):
+            # The table is ordered on season totals. Without yours you sort as
+            # though the season began this morning, which moves every rival up a
+            # place and hands the swing the wrong "closest" manager.
+            state["rivals"] = []
+            state["largest_swing"] = None
+            gaps.append("the league table, which needs it")
+    absent = _live_missing_players(squad, live_payload)
+    if absent:
+        state["missing_players"] = absent
+        gaps.append(f"{len(absent)} of your players missing from the live feed")
+    state["incomplete"] = ", ".join(gaps) or None
 
 
 def _live_rivals(client, settings, gw) -> list[dict]:
@@ -369,7 +479,17 @@ def _live_rivals(client, settings, gw) -> list[dict]:
     return [
         {"entry_id": e.entry_id, "name": e.manager or e.entry_name,
          "starting": e.starting, "bench": e.bench, "captain": e.captain,
-         "vice": e.vice, "total": e.total, "hits": e.hits,
+         "vice": e.vice,
+         # C10. `total` is a season total that MOVES during the gameweek, so
+         # handing it to the scorer as a baseline adds this week's live points
+         # to a figure that already contains them — and that one number decides
+         # the league table, the closest-rival choice and the swing together.
+         # `event_total` is FPL's own account of what this gameweek contributed
+         # to `total` (the table is built as the sum of them), so the difference
+         # is exactly what was carried in, and it holds still while the matches
+         # run. `gatherRivals` in web/src/lib/live/source.ts subtracts the same
+         # pair; the two must not drift.
+         "total": e.total - e.event_total, "hits": e.hits,
          "active_chip": (e.chips_used or [None])[0]}
         for e in state.entries if e.has_picks
     ]

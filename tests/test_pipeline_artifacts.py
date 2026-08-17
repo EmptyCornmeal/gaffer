@@ -12,11 +12,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from gaffer import config, pipeline
 from gaffer.export import artifacts
+from gaffer.store import db
 
 # Fixed clock: before the GW1 deadline of 2026-08-21T17:30Z. Never Date.now().
 PRE_GW1 = datetime(2026, 8, 6, 12, 0, tzinfo=UTC)
@@ -264,6 +266,170 @@ def test_pipeline_labels_a_personalised_build(stub_pipeline):
     assert meta["build_mode"] == "personalised"
     assert meta["entry_id"] == 1066421
     assert meta["league_ids"] == [271619, 314]  # multi-league preserved
+
+
+# ---------------------------------------------------------------------------
+# What the live view does when one of its reads does not land.
+#
+# The same live state is computed twice — here from the pipeline, and in the
+# browser by web/src/lib/live/source.ts — and the page renders whichever one
+# answered. So a failed read has to produce the same answer on both sides, or
+# the honesty of the page depends on which half of the system you got. These
+# mirror `fetchLive` in web/src/lib/live/source.test.ts, case for case.
+# ---------------------------------------------------------------------------
+
+GW = 5
+KICKOFF = "2026-09-19T14:00:00+00:00"
+NOW = datetime(2026, 9, 19, 15, 0, tzinfo=UTC)
+AS_OF = "2026-09-19T15:00:00+00:00"
+
+# A legal XI and bench out of the conftest pool: GKP 1, four DEF, five MID, one
+# FWD, and a bench with the reserve keeper first.
+LIVE_XI = [1, 7, 8, 9, 10, 19, 20, 21, 22, 23, 31]
+LIVE_BENCH = [2, 11, 24, 32]
+
+# GW5 in progress: 211 banked through GW4, 30 scored this week, a -4 taken for
+# it. The cumulative 237 therefore ALREADY contains what the live view computes.
+LIVE_HISTORY = {"current": [
+    {"event": 1, "points": 62, "total_points": 62, "event_transfers_cost": 0},
+    {"event": 2, "points": 51, "total_points": 109, "event_transfers_cost": 4},
+    {"event": 3, "points": 70, "total_points": 179, "event_transfers_cost": 0},
+    {"event": 4, "points": 40, "total_points": 211, "event_transfers_cost": 8},
+    {"event": 5, "points": 30, "total_points": 237, "event_transfers_cost": 4},
+]}
+# The same gameweek as the picks endpoint reports it, in one row.
+PICKS_ROW = {"points": 30, "total_points": 237, "event_transfers_cost": 4}
+
+
+class LiveClient:
+    """Only the reads `_build_live` makes, each independently breakable."""
+
+    def __init__(self, *, live_ids=None, history=None, picks=None):
+        self.live_ids = LIVE_XI + LIVE_BENCH if live_ids is None else live_ids
+        self.history = history
+        self.picks = picks
+
+    def fixtures(self):
+        pairs = ((1, 2), (3, 4), (5, 6))   # every club the squad plays for
+        return [{"id": 100 + h, "event": GW, "team_h": h, "team_a": a,
+                 "minutes": 60, "started": True, "finished": False,
+                 "finished_provisional": False, "kickoff_time": KICKOFF,
+                 "stats": []} for h, a in pairs]
+
+    def event_live(self, gw):
+        return {"elements": [
+            {"id": pid, "stats": {"minutes": 90, "total_points": 2, "bps": 0}}
+            for pid in self.live_ids]}
+
+    def entry_history(self, entry_id):
+        if self.history is None:
+            raise RuntimeError("history -> 500")
+        return self.history
+
+    def entry_picks(self, entry_id, gw):
+        if self.picks is None:
+            raise RuntimeError("picks -> 500")
+        return self.picks
+
+
+def _live_settings(league_ids=None):
+    return SimpleNamespace(entry_id=7, league_ids=list(league_ids or []))
+
+
+def _seed_live_squad(conn):
+    db.upsert(conn, "my_squad", [
+        {"gw": GW, "player_id": pid,
+         "is_captain": int(pid == LIVE_XI[0]),
+         "is_vice": int(pid == LIVE_XI[1]),
+         "multiplier": 1 if pid in LIVE_XI else 0}
+        for pid in LIVE_XI + LIVE_BENCH], ["gw", "player_id"])
+    db.upsert(conn, "projections", [
+        {"player_id": pid, "gw": GW, "exp_points": 3.0}
+        for pid in LIVE_XI + LIVE_BENCH], ["player_id", "gw"])
+
+
+def test_a_readable_history_scores_on_the_total_carried_in(conn):
+    _seed_live_squad(conn)
+    state = pipeline._build_live(
+        conn, LiveClient(history=LIVE_HISTORY), _live_settings(), GW, NOW, AS_OF)
+    assert state["available"] is True
+    assert state["baseline_source"] == "entry_history"
+    assert state["squad"]["season_total_before"] == 211
+    assert state["squad"]["hits"] == 4
+    assert state["incomplete"] is None
+
+
+def test_a_dead_history_read_never_falls_back_to_the_season_total(conn):
+    """C9. `overall_points` is the season total INCLUDING the gameweek being
+    scored — `_live_baseline`'s own docstring said as much — so falling back to
+    it added the live score to a figure that already held it, and every screen
+    counted this week twice. The browser failed the same moment the opposite
+    way, caching a baseline of 0 for the session. The picks payload carries the
+    same arithmetic in one row and is a read this path can make anyway, so both
+    now recover the exact number instead of inventing a plausible one.
+    """
+    _seed_live_squad(conn)
+    db.set_meta(conn, "overall_points", 237)
+    state = pipeline._build_live(
+        conn, LiveClient(history=None, picks={"entry_history": PICKS_ROW}),
+        _live_settings(), GW, NOW, AS_OF)
+    assert state["baseline_source"] == "picks_entry_history"
+    assert state["squad"]["season_total_before"] == 211
+    assert state["squad"]["hits"] == 4
+
+
+def test_an_unreadable_season_total_is_withheld_rather_than_guessed(conn):
+    """Nothing could supply it, so nothing is shown. A zero baseline renders the
+    season total as this gameweek's score, which is not a smaller answer than
+    the truth but a different and wrong one."""
+    _seed_live_squad(conn)
+    db.set_meta(conn, "overall_points", 237)
+    state = pipeline._build_live(
+        conn, LiveClient(history=None, picks={"picks": []}),
+        _live_settings(), GW, NOW, AS_OF)
+    assert state["baseline_source"] == "unavailable"
+    assert state["squad"]["season_total_before"] is None
+    assert state["squad"]["season_total_projected"] is None
+    assert "your season total so far" in state["incomplete"]
+
+
+def test_a_squad_player_missing_from_the_live_feed_is_named(conn):
+    """C13. `player_live` invents a row for a squad member the live endpoint did
+    not carry, and the invented row holds his full PRE-MATCH projection against
+    zero confirmed points — so a truncated payload at 70 minutes reads as "yet
+    to kick off" for a man who may already have scored. The invention stays (it
+    is what lets a squad render before kick-off) but it is no longer silent."""
+    _seed_live_squad(conn)
+    absent = LIVE_XI[4]
+    state = pipeline._build_live(
+        conn,
+        LiveClient(history=LIVE_HISTORY,
+                   live_ids=[p for p in LIVE_XI + LIVE_BENCH if p != absent]),
+        _live_settings(), GW, NOW, AS_OF)
+    assert state["missing_players"] == [absent]
+    assert "1 of your players missing from the live feed" in state["incomplete"]
+
+
+def test_a_rival_baseline_excludes_the_gameweek_it_already_contains(monkeypatch):
+    """C10. The standings `total` moves during the gameweek, so handing it to
+    the scorer as a season baseline adds this week's live points to a figure
+    that already contains them. `event_total` is FPL's own account of what this
+    gameweek contributed to `total`, so the difference is what was carried in
+    and it holds still while the matches run. Mirrors `gatherRivals` in
+    web/src/lib/live/source.ts, which subtracts the same pair."""
+    from gaffer import league as LG
+
+    rival = LG.RivalEntry(
+        entry_id=999, entry_name="Theirs", manager="Them", total=400,
+        event_total=60, starting=list(range(1, 12)), bench=[12, 13, 14, 15],
+        captain=1, vice=2, picks_status=LG.PICKS_OK, hits=8)
+    monkeypatch.setattr(LG, "fetch_league", lambda *a, **k: LG.LeagueState(
+        league_id=7, name="L", league_type="x", classification="c", size=2,
+        me=7, entries=[rival]))
+
+    rivals = pipeline._live_rivals(object(), _live_settings([7]), GW)
+    assert rivals[0]["total"] == 340, "400 already contains this week's 60"
+    assert rivals[0]["hits"] == 8, "a -8 read eight points better than reality"
 
 
 def test_pipeline_labels_a_generic_build(stub_pipeline, monkeypatch):

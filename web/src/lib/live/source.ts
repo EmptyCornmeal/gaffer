@@ -14,7 +14,9 @@ import { loadLiveSnapshot } from '../data'
 import { fpl } from '../fpl'
 import type { Player } from '../types'
 import type { LiveState } from '../weekly'
-import { assembleLive, type LiveRivalInput, type LiveSquadInput } from './assemble'
+import {
+  assembleLive, missingFromLive, type LiveRivalInput, type LiveSquadInput,
+} from './assemble'
 
 /** How many rivals to score. A live view that walks a 200-player league turns a
  *  scoreboard into a rate-limit problem. */
@@ -41,6 +43,20 @@ const RIVAL_CONCURRENCY = 4
 // 60s poll; short enough that a blip during one over of injury time has healed
 // before the next goal.
 const INCOMPLETE_RETRY_MS = 3 * 60_000
+// ...doubling from there, to a ceiling. The first retry is quick because the
+// common failure really is one 500, but an endpoint that is still refusing
+// after three attempts is not having a blip, and re-reading a whole league
+// every three minutes for the rest of a gameweek spends a shared,
+// unauthenticated proxy's budget on an answer we already have. The ceiling is
+// under half an hour so a league that comes back mid-afternoon is picked up
+// within the same match.
+const INCOMPLETE_RETRY_MAX_MS = 24 * 60_000
+
+/** How long to wait before rebuilding after `n` consecutive incomplete builds. */
+export function retryDelay(n: number): number {
+  return Math.min(INCOMPLETE_RETRY_MAX_MS,
+                  INCOMPLETE_RETRY_MS * 2 ** Math.max(0, n - 1))
+}
 
 export type LiveSourceName = 'proxy' | 'artifact'
 
@@ -62,6 +78,12 @@ export interface PicksLike {
   picks?: { element: number; position: number; multiplier: number;
             is_captain: boolean; is_vice_captain: boolean }[]
   active_chip?: string | null
+  /** FPL's own history row for this gameweek, carried on the picks response. */
+  entry_history?: {
+    points?: number
+    total_points?: number
+    event_transfers_cost?: number
+  } | null
 }
 
 interface StandingRow {
@@ -69,6 +91,8 @@ interface StandingRow {
   entry_name?: string
   player_name?: string
   total?: number
+  /** This gameweek's contribution to `total`. Both move during the gameweek. */
+  event_total?: number
 }
 
 function squadFromPicks(payload: PicksLike | null | undefined): LiveSquadInput | null {
@@ -104,6 +128,33 @@ export function baselineAndHits(
   }
   const here = rows.find((r) => r.event === gw)
   return { baseline, hits: here?.event_transfers_cost ?? 0 }
+}
+
+/**
+ * The same two numbers, from ONE history row — the block a picks payload
+ * carries under `entry_history`.
+ *
+ * `total_points` there is cumulative, net of every hit taken so far, and it
+ * INCLUDES the gameweek the row belongs to; `points` is that gameweek's gross
+ * score. So what was carried in is `total_points - points + this week's hit`,
+ * which is the figure `baselineAndHits` reaches by walking the whole history.
+ *
+ * This exists because the history endpoint is a request of its own and can fail
+ * while the picks request — which the live view cannot proceed without anyway —
+ * succeeds. Returns null when the row is not a history row, so an unreadable
+ * baseline stays unreadable instead of quietly becoming zero.
+ */
+export function baselineFromRow(
+  row: { points?: number; total_points?: number;
+         event_transfers_cost?: number } | null | undefined,
+): { baseline: number; hits: number } | null {
+  const total = row?.total_points
+  const points = row?.points
+  if (typeof total !== 'number' || typeof points !== 'number') return null
+  const hits = typeof row?.event_transfers_cost === 'number'
+    ? row.event_transfers_cost
+    : 0
+  return { baseline: total - points + hits, hits }
 }
 
 /**
@@ -168,11 +219,21 @@ export async function gatherRivals(
           ...rs,
           entry_id: row.entry,
           name: row.player_name || row.entry_name || String(row.entry),
-          // Mirrors the pipeline: FPL's standings `total` already moves
-          // during a gameweek. Diverging here would break parity with
-          // gaffer.live; it is a pre-existing question, not a new one.
-          total: row.total ?? 0,
-          hits: 0,
+          // C10. `total` is a season total that MOVES during the gameweek, so
+          // handing it to `scoreSquad` as a baseline adds this week's live
+          // points to a figure that already contains them. `event_total` is
+          // FPL's own account of what this gameweek contributed to `total` —
+          // the table is built as the sum of them — so the difference is
+          // exactly what the manager carried in, and it holds still while the
+          // matches run. Mirrors `_live_rivals` in pipeline.py, which subtracts
+          // the same pair; the two must not drift, because the swing, the
+          // closest-rival choice and the league table all read this one number.
+          total: (row.total ?? 0) - (row.event_total ?? 0),
+          // And his hits are read rather than assumed. Hardcoding zero showed a
+          // rival who took a -8 as eight points better than he was, in the
+          // table and in the swing at once. The picks payload carries them and
+          // we have already paid for the request.
+          hits: Number(rp.entry_history?.event_transfers_cost ?? 0) || 0,
           active_chip: rp.active_chip ?? null,
         }
       } catch {
@@ -194,8 +255,12 @@ interface LockedState {
   squad: LiveSquadInput | null
   activeChip: string | null
   rivals: LiveRivalInput[]
-  baseline: number
+  /** Season points carried into this gameweek, or null when nothing could
+   *  supply it. Null is a value here, not a missing one — see `markLiveGaps`. */
+  baseline: number | null
   hits: number
+  /** Which read produced the baseline, in the words pipeline.py uses. */
+  baselineSource: string
   /** Noun phrases for whatever could not be read. Empty when all of it was. */
   missing: string[]
 }
@@ -205,6 +270,72 @@ interface LockedEntry {
   settled: boolean
   complete: boolean
   at: number
+  /** Consecutive incomplete builds, for the backoff. Reset by a complete one. */
+  attempts: number
+}
+
+/**
+ * The parts of an assembled state this file is allowed to write on.
+ *
+ * `LiveState` describes what the scoring rules produce; these fields describe
+ * what the fetching could not read, which is a different question and belongs
+ * to a different layer. Kept as a narrow view rather than an `any` so a typo
+ * here is still a compile error.
+ */
+interface AnnotatedLiveState {
+  squad?: { season_total_before: number | null
+            season_total_projected: number | null }
+  rivals?: unknown[]
+  largest_swing?: unknown
+  baseline_source?: string
+  missing_players?: number[]
+  incomplete?: string | null
+}
+
+/**
+ * Write onto an assembled state what could not be read, and withhold whatever
+ * cannot honestly be shown without it.
+ *
+ * Mirror of `_mark_live_gaps` in `src/gaffer/pipeline.py`. The Live page renders
+ * whichever of the two answered — the browser during a match, the published
+ * artifact when the proxy is down — so they must blank the same fields and name
+ * the same gaps, or the page's honesty would depend on which one it got.
+ *
+ * Deliberately outside `assembleLive`: that is the scoring rulebook, pinned
+ * byte-for-byte against `gaffer.live` by the parity tests, and it never sees the
+ * I/O that failed. This is the layer that knows.
+ */
+export function markLiveGaps(
+  state: AnnotatedLiveState,
+  lock: { baseline: number | null; baselineSource: string; missing: string[] },
+  absent: number[],
+): string | null {
+  const gaps: string[] = [...lock.missing]
+  state.baseline_source = lock.baselineSource
+  if (lock.baseline == null) {
+    // C9. A baseline of zero is not a smaller answer than the real one, it is a
+    // different and wrong one: the season total renders as this gameweek's
+    // score. Nothing beats that.
+    if (state.squad) {
+      state.squad.season_total_before = null
+      state.squad.season_total_projected = null
+    }
+    if (state.rivals?.length) {
+      // The table is ordered on season totals. Without yours you sort as though
+      // the season began this morning, which quietly moves every rival up a
+      // place and hands `largestSwing` the wrong "closest" manager.
+      state.rivals = []
+      state.largest_swing = null
+      gaps.push('the league table, which needs it')
+    }
+  }
+  if (absent.length) {
+    state.missing_players = absent
+    gaps.push(`${absent.length} of your players missing from the live feed`)
+  }
+  const named = [...new Set(gaps)]
+  state.incomplete = named.length ? named.join(', ') : null
+  return state.incomplete
 }
 
 /** Per-gameweek cache for the things that cannot change once the deadline has
@@ -220,10 +351,12 @@ async function lockedState(
   // the gameweek and is never refetched. C14: an INCOMPLETE one used to be kept
   // just as permanently, so a single 500 from the league endpoint at 15:00
   // deleted the rivals table until the tab was reloaded. Now it expires, and the
-  // next poll rebuilds it. An in-flight task is always shared, expiry or not, so
-  // this cannot fan out into duplicate requests.
+  // next poll rebuilds it — on a widening delay, so a league that is genuinely
+  // unreadable stops costing a full re-read every three minutes. An in-flight
+  // task is always shared, expiry or not, so this cannot fan out into duplicate
+  // requests.
   if (hit && (!hit.settled || hit.complete
-              || Date.now() - hit.at < INCOMPLETE_RETRY_MS)) {
+              || Date.now() - hit.at < retryDelay(hit.attempts))) {
     return hit.task
   }
 
@@ -246,14 +379,38 @@ async function lockedState(
     const picks = picksR.value as PicksLike
     const squad = squadFromPicks(picks)
 
-    let baseline = 0
+    // C9. This used to cache `baseline = 0, hits = 0` whenever the history read
+    // failed — for the whole session, because the snapshot never expired — so
+    // the season total silently became "this gameweek's score" and the league
+    // table put you last. Python failed the same moment differently, falling
+    // back to `overall_points`, which its own docstring says already contains
+    // the live gameweek: one wrong answer too low, one too high, neither
+    // labelled. Both now do this, in this order.
+    let baseline: number | null = null
     let hits = 0
-    if (historyR.status === 'fulfilled') {
-      const b = baselineAndHits(historyR.value, gw)
+    let baselineSource = 'unavailable'
+    // A payload without a `current` list is not a history, however cheerfully
+    // it arrived. `_live_baseline` in pipeline.py applies the same test in the
+    // same order.
+    const history = historyR.status === 'fulfilled' ? historyR.value : null
+    const row = baselineFromRow(picks?.entry_history)
+    if (Array.isArray(history?.current)) {
+      const b = baselineAndHits(history, gw)
       baseline = b.baseline
       hits = b.hits
+      baselineSource = 'entry_history'
+    } else if (row) {
+      // The picks response carries the same arithmetic in a single row, and it
+      // is a request this path cannot proceed without anyway. So the usual
+      // outcome of an unreadable history is now an exact baseline, not a
+      // plausible one — and no extra call.
+      baseline = row.baseline
+      hits = row.hits
+      baselineSource = 'picks_entry_history'
     } else {
-      // A missing baseline costs a season total, not the live score.
+      // Nothing could supply it. `baseline` stays null and `markLiveGaps` shows
+      // the season total as unavailable; naming it here is also what keeps the
+      // snapshot incomplete, so the next window retries the history endpoint.
       missing.push('your season total so far')
     }
 
@@ -274,18 +431,20 @@ async function lockedState(
     }
     return {
       squad, activeChip: picks?.active_chip ?? null, rivals, baseline, hits,
-      missing,
+      baselineSource, missing,
     }
   })()
 
   const entry: LockedEntry = {
     task, settled: false, complete: false, at: Date.now(),
+    attempts: hit?.attempts ?? 0,
   }
   locked.set(key, entry)
   task.then(
     (v) => {
       entry.settled = true
       entry.complete = v.missing.length === 0
+      entry.attempts = entry.complete ? 0 : entry.attempts + 1
       entry.at = Date.now()
     },
     () => {
@@ -314,7 +473,16 @@ export async function fetchLive(
   const fallback = async (reason: string): Promise<LiveResult> => {
     const state = await loadLiveSnapshot()
     if (state == null) throw new Error(reason)
-    return { state, source: 'artifact', fallbackReason: reason, incomplete: null }
+    // The artifact names its own gaps — pipeline.py writes the same field for
+    // the same reasons. Dropping it here would make the fallback look more
+    // complete than the live path it replaced, which is the wrong way round.
+    const carried = (state as { incomplete?: unknown }).incomplete
+    return {
+      state,
+      source: 'artifact',
+      fallbackReason: reason,
+      incomplete: typeof carried === 'string' && carried ? carried : null,
+    }
   }
 
   const entryId = getEntryId()
@@ -355,17 +523,21 @@ export async function fetchLive(
       rivals: lock.rivals,
       names,
       entryId,
-      baseline: lock.baseline,
+      // Zero only ever reaches the scorer here; nothing downstream reads the
+      // season total it produces, because `markLiveGaps` blanks it below when
+      // the real baseline is unknown. Passing null instead would put a null
+      // into arithmetic `assembleLive` shares with gaffer.live.
+      baseline: lock.baseline ?? 0,
       hits: lock.hits,
       activeChip: lock.activeChip,
       asOf: new Date().toISOString(),
     }) as LiveState
-    return {
-      state,
-      source: 'proxy',
-      fallbackReason: null,
-      incomplete: lock.missing.length ? lock.missing.join(', ') : null,
-    }
+    const incomplete = markLiveGaps(
+      state as unknown as AnnotatedLiveState,
+      lock,
+      missingFromLive(lock.squad, livePayload),
+    )
+    return { state, source: 'proxy', fallbackReason: null, incomplete }
   } catch (e) {
     return fallback(e instanceof Error ? e.message : String(e))
   }

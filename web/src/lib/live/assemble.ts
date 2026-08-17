@@ -50,6 +50,38 @@ export interface AssembleInput {
   asOf?: string | null
 }
 
+/**
+ * Squad members the live payload carried no row for.
+ *
+ * C13. `playerLive` invents a row for anyone it has a fixture for but no live
+ * data on, and that invented row holds the player's full PRE-MATCH projection
+ * against zero confirmed points. Before kick-off that is exactly right and is
+ * what lets a squad render at all. Once his match is running it is a guess
+ * wearing a live score's clothes: a payload truncated at 70 minutes reports
+ * "yet to kick off" for a man who may already have scored twice, and the squad
+ * total absorbs his projection without a word.
+ *
+ * The invention is deliberately left alone — it is `gaffer.live`'s behaviour
+ * too, and the parity tests hold both sides to it. What this adds is the means
+ * to say so: the caller (`./source.ts`, mirroring `_mark_live_gaps` in
+ * `pipeline.py`) names the gap rather than presenting the result as whole.
+ *
+ * An empty payload returns nothing: that is `no_live_data`, a state assemble
+ * already reports on its own, not fifteen individually missing players.
+ */
+export function missingFromLive(
+  squad: LiveSquadInput | null | undefined,
+  livePayload: RawLivePayload | null | undefined,
+): number[] {
+  const have = new Set<number>()
+  for (const el of livePayload?.elements ?? []) {
+    if (typeof el?.id === 'number') have.add(el.id)
+  }
+  if (!squad || have.size === 0) return []
+  const ours = [...(squad.starting ?? []), ...(squad.bench ?? [])]
+  return [...new Set(ours)].filter((p) => !have.has(p)).sort((a, b) => a - b)
+}
+
 function fixtureDict(s: FixtureState) {
   return {
     id: s.id, event: s.event, team_h: s.team_h, team_a: s.team_a,
