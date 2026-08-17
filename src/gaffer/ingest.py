@@ -471,8 +471,17 @@ def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
     (NOT current minutes, which reset to 0) so the enrichment still selects players
     after the reset. One cached call per player (~350).
     """
+    # The `base_defcon90 IS NULL` arm is a backfill, and it is why that column is
+    # nullable. Any database written before DEFCON had its own baseline column
+    # already carries base_minutes > 0 for every enriched player, so the
+    # `base_minutes=0` gate alone would never revisit them and `base_defcon90`
+    # would stay empty forever — which the projection reads as "no prior-season
+    # DEFCON evidence" and answers with a positional average, for exactly the
+    # ball-winners the column exists to protect. NULL is "never read" and 0.0 is
+    # "read, and none", so each player is selected once and then stops matching.
     targets = conn.execute(
-        "SELECT id FROM players WHERE (price>=45 OR selected_by_pct>=0.5) AND base_minutes=0"
+        "SELECT id FROM players WHERE (price>=45 OR selected_by_pct>=0.5) "
+        "AND (base_minutes=0 OR base_defcon90 IS NULL)"
     ).fetchall()
     updated = 0
     for row in targets:
@@ -502,10 +511,16 @@ def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
             "base_xa90": round(_f(last.get("expected_assists")) * per90, 3),
         }
         dc = _f(last.get("defensive_contribution"))
+        # `base_defcon90` is written on EVERY pass, including when the answer is
+        # 0.0: that is what turns NULL ("never read") into a recorded value and
+        # takes the player out of the backfill arm of the query above.
+        # `defcon_per_90` keeps its existing behaviour and is only overwritten by
+        # a non-zero figure, because a zero written there would erase a rate the
+        # bootstrap may legitimately still be carrying.
         cols = ("base_minutes=?, base_starts=?, base_xg90=?, base_xa90=?, "
-                "base_season=?")
+                "base_defcon90=?, base_season=?")
         params = [vals["base_minutes"], vals["base_starts"], vals["base_xg90"],
-                  vals["base_xa90"], season_name]
+                  vals["base_xa90"], round(dc * per90, 3), season_name]
         if dc:
             cols += ", defcon_per_90=?"
             params.append(round(dc * per90, 3))

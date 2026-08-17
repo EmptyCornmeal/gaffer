@@ -26,7 +26,12 @@ from gaffer.model.features import TeamContext, clamp
 #       fixture-level `starts` tally by an event count, which agree only while
 #       every team plays exactly once per gameweek. In-season only, so no effect
 #       before GW1 — but it moves real numbers, so it moves the version.
-MODEL_VERSION = "heuristic-0.4"
+# 0.5 = G-L/G-M/G-P: `defcon_per_90` is empirical-Bayes shrunk like every other
+#       rate instead of being read raw, the NegBin dispersion behind it is
+#       fitted rather than guessed, and xA is calibrated to FPL's assist
+#       definition per position. Every projected DEFCON and assist number moves,
+#       so the version moves with them.
+MODEL_VERSION = "heuristic-0.5"
 
 # Availability status -> baseline multiplier on the chance of featuring.
 _STATUS_MULT = {"a": 1.0, "d": 0.5, "i": 0.0, "s": 0.0, "u": 0.0, "n": 0.0}
@@ -282,6 +287,38 @@ def _field(player: Any, key: str, default: Any = None) -> Any:
         return default
 
 
+def shrunk_defcon90(player: Any) -> float:
+    """The DEFCON rate the projection actually believes, per 90.
+
+    Lifted out of ``fixture_rates`` so a player card cannot quote a different
+    number from the one the model scores. ``export.artifacts`` published
+    ``players.defcon_per_90`` straight off the row, so once the shrinkage landed
+    a card could read *"reliable DEFCON points (90.0/90 → +2 most weeks)"*
+    directly above a P(hit) of 0.000 — two numbers on one card, describing the
+    same player, disagreeing by two orders of magnitude. The badge is the half
+    of this defect a reader can actually see, so it must come from here rather
+    than from a second copy of the arithmetic that can drift.
+
+    Returns 0.0 where DEFCON does not score, so callers may keep reading a zero
+    as "not applicable" exactly as they did before.
+    """
+    pos = player["position"]
+    if config.DEFCON_THRESHOLD.get(pos, 99) >= 99:
+        return 0.0
+    cur_min = player["minutes"] or 0
+    base_min = player["base_minutes"] or 0
+    have_base = base_min >= config.BASE_SAMPLE_MINUTES
+    base_dc = _rate(player, "base_defcon90")
+    dc_recorded = config.season_reports_defcon(
+        _field(player, "base_season")) is not False
+    tgt_dc = (base_dc if (have_base and dc_recorded and base_dc > 0)
+              else F.DEFCON_PRIOR[pos])
+    # Whichever season produced the rate is the season that sized it.
+    dc_minutes = cur_min if cur_min > 0 else base_min
+    return F.shrink(_rate(player, "defcon_per_90"), dc_minutes, tgt_dc,
+                    F.DEFCON_SHRINK_K)
+
+
 def fixture_rates(
     player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float,
     fixtures_played: int = 0,
@@ -391,11 +428,52 @@ def fixture_rates(
         p_cs = F.poisson_p0(lam)
 
     # --- DEFCON ---------------------------------------------------------
+    # G-L. This read the rate raw while both attacking rates above it were
+    # shrunk, and a per-90 rate is a division: two players in the shipped 2026/27
+    # pre-season artifact carried exactly 90.0 defensive contributions per 90 —
+    # one contribution in one minute of football — and the model answered
+    # P(hit) = 0.945 and 0.952 and printed "elite defensive volume" on a card
+    # that said CAMEO? ~29' three lines further up.
+    #
+    # The obvious fix ships a worse bug. `defcon_per_90` does not mean what
+    # `xg_per_90` means. FPL resets `minutes` at the season rollover but KEEPS
+    # its per-90 fields, and `ingest.ingest_players` additionally falls back to
+    # the enriched last-season figure when the bootstrap ships a zero — so out of
+    # season this column holds a rate derived from ~3,000 prior-season minutes
+    # while `cur_min` is 0. Shrinking that against `cur_min` would throw away the
+    # best DEFCON evidence in the system and answer with a positional average.
+    #
+    # So two things are made explicit rather than one:
+    #
+    #   the TARGET is `base_defcon90`, the prior-season rate, mirroring
+    #   `base_xg90` exactly (schema + `ingest.enrich_history`; `histdata` has
+    #   computed the column all along for the backtest path);
+    #
+    #   the SAMPLE SIZE is the minutes that actually generated the rate, which
+    #   is last season's whenever the current season has none yet. Without this
+    #   second half, an existing database — where `base_defcon90` has not been
+    #   backfilled yet but `defcon_per_90` is already correct — would send every
+    #   elite ball-winner to a positional average on the first run after the
+    #   migration. With it they lose about 3% instead: Anderson 13.91 -> 13.47,
+    #   Gabriel 9.06 -> 8.93. Once the backfill runs they are exactly unmoved.
+    #
+    # A zero in `base_defcon90` is never read as a measurement. 392 outfielders
+    # cleared `BASE_SAMPLE_MINUTES` in 2025-26 and not one recorded zero
+    # defensive contributions; the floor is 2.25 per 90. Defensive contributions
+    # are a high-frequency count, so a zero over a real sample is a column that
+    # was not read — the same distinction `base_xg90` draws for seasons that
+    # predated expected goals, and `season_reports_defcon` draws it against
+    # DEFCON's own later cutoff.
+    #
+    # Verified on the live artifact: Mheuka 90.0 -> 4.7 (P(hit) 0.945 -> 0.000)
+    # and Fredricson 90.0 -> 7.7 (0.952 -> 0.000), while Anderson (13.91),
+    # Senesi (11.47), Tarkowski (10.16), Rice (10.94) and Gabriel (9.06) keep
+    # their rate to the decimal and move only by the dispersion refit.
     thr = config.DEFCON_THRESHOLD[pos]
     defcon_mu = 0.0
     p_hit = 0.0
-    if player["defcon_per_90"] and thr < 99:
-        defcon_mu = player["defcon_per_90"] * mins_frac
+    if thr < 99:
+        defcon_mu = shrunk_defcon90(player) * mins_frac
         p_hit = F.nbinom_sf(thr, defcon_mu, F.DEFCON_NB_DISPERSION)
 
     # --- goals conceded / saves (T-13) ----------------------------------

@@ -48,11 +48,91 @@ def poisson_sf(threshold: int, mu: float) -> float:
     return max(0.0, 1.0 - cdf)
 
 
-# Negative-binomial dispersion (size r) for defensive-action counts. CBIT/CBIRT
-# are over-dispersed (game-to-game variance > mean), so a NegBin threshold model
-# fits the "does he hit 10/12?" question better than Poisson. Smaller r = fatter
-# tail; ~6 is a mild, defensible over-dispersion.
-DEFCON_NB_DISPERSION = 6.0
+# --- DEFCON -----------------------------------------------------------------
+# All three constants below were fitted or measured on 2025-26. That is not a
+# preference: it is the only season in the archive that carries a
+# `defensive_contribution` column at all, and the only season in which DEFCON
+# scored points, so it is the only season capable of measuring any of this.
+
+#: Positional prior for defensive contributions per 90, the DEFCON analogue of
+#: XGI_PRIOR. Measured as the minutes-weighted league rate over players with at
+#: least 900 minutes in 2025-26: DEF 7.66, MID 8.62, FWD 4.73, rounded.
+#:
+#: Restricting to regulars IS the measurement. Taken over every player
+#: regardless of minutes the DEF mean is 8.55, because the under-90-minute band
+#: averages 22.5 per 90 — three contributions divided by four minutes, which is
+#: precisely the artifact the shrinkage exists to remove. Letting it into the
+#: prior would launder the defect into the thing meant to correct it.
+#:
+#: GKP is a measured zero, not a placeholder: goalkeepers recorded no defensive
+#: contributions at all across 68,395 keeper minutes. `DEFCON_THRESHOLD["GKP"]`
+#: is 999 so the branch is never entered anyway, but the number is honest.
+#:
+#: Checked against the case it exists for. Over rows where the player had no
+#: season-to-date minutes yet — a genuine unknown — the prior predicts 0.078 for
+#: defenders against an actual 0.070, and 0.021 for midfielders against an
+#: actual 0.026. The shipped behaviour there was a flat 0.000, which is not
+#: caution: it asserts that a player about whom nothing is known is incapable of
+#: making a defensive contribution.
+DEFCON_PRIOR = {"GKP": 0.0, "DEF": 7.7, "MID": 8.6, "FWD": 4.7}
+
+#: Minutes at which a player's own DEFCON rate is half-trusted against the
+#: target above. Deliberately half of XGI_SHRINK_K's 600: defensive
+#: contributions arrive about ten a match where xG arrives a third of one, so
+#: the per-90 rate converges far faster per minute played and shrinking it as
+#: hard as an xG rate would discard real evidence.
+#:
+#: Fitted jointly with DEFCON_NB_DISPERSION on GW2-19 of 2025-26 and reported on
+#: GW20-38 (protocol below). The TRAIN surface is flat — every (k, r) in
+#: k in [180,420] x r in [12,30] lands within 0.0006 logloss of the joint
+#: minimum at (300, 20) — so this is a basin, not a knife edge, and the third
+#: significant figure would be false precision.
+DEFCON_SHRINK_K = 300.0
+
+#: Negative-binomial dispersion (size r) for defensive-action counts. CBIT/CBIRT
+#: are over-dispersed (game-to-game variance > mean), so a NegBin threshold model
+#: fits the "does he hit 10/12?" question better than Poisson. Smaller r = fatter
+#: tail.
+#:
+#: This was 6.0, and the comment that shipped with it said "~6 is a mild,
+#: defensible over-dispersion". That was a GUESS, and it had to be: DEFCON did
+#: not score before 2025-26, so no held-out sample existed to check it against.
+#:
+#: One exists now. Held-out protocol, stated because the answer depends on it:
+#: features are the leak-free season-to-date aggregates from `histdata`
+#: (`shift(1)`, so gameweek G is predicted from GW1..G-1 only); TRAIN is GW2-19
+#: (5,126 rows, 13.34% hit rate) and TEST is GW20-38 (5,325 rows, 13.30%); the
+#: constants are chosen on TRAIN and every number below is TEST. Scoring uses
+#: the player's ACTUAL minutes in the target gameweek, so this measures the rate
+#: model and not the minutes model.
+#:
+#:     variant                    TRAIN ll   TEST ll   TEST Brier   TEST meanP
+#:     raw rate, r=6.0 (shipped)   0.31817   0.27106      0.08606       0.1548
+#:     shrunk k=300, r=6.0         0.27804   0.26779      0.08573       0.1504
+#:     shrunk k=300, r=20.0        0.27425   0.26084      0.08433       0.1374
+#:                                                          actual hit: 0.1330
+#:
+#: The old value over-predicted across the entire low band and was honest only
+#: at the top, which is why looking at the ball-winners never caught it. TEST
+#: predicted-over-actual by band, shipped then new: 2.25x -> 1.56x below 0.05,
+#: 2.14x -> 1.54x in [0.05,0.10), 1.59x -> 1.16x in [0.10,0.20), 1.34x -> 1.07x
+#: in [0.20,0.30), 1.06x -> 0.96x in [0.30,0.45), 0.99x -> 0.96x above. The top
+#: band now reads about 4% low; that is the price of the corrections below it.
+#:
+#: ORDER MATTERS, and this is the trap the exercise turns on. Fitting r on the
+#: UNSHRUNK rates the model used to feed it picks r=4.0 on TRAIN — the wrong
+#: direction entirely — because a fatter tail is the only way one dispersion
+#: parameter can absorb rates like 90.0 per 90. That same variant's TEST optimum
+#: is r≈20, so the two halves flatly disagree and the in-sample answer is an
+#: artifact of the bug rather than a property of the data. r must be fitted
+#: AFTER the shrinkage and on shrunk inputs, or it is fitted to compensate for a
+#: defect that has since been removed.
+#:
+#: What did not work: fitting on the whole season at once. Logloss then falls
+#: monotonically out to r=120 with no interior minimum, which reads as "these
+#: counts are barely over-dispersed" and is simply the model memorising. The
+#: train/test split is what makes the question answerable, not a refinement of it.
+DEFCON_NB_DISPERSION = 20.0
 
 
 def nbinom_pmf(k: int, mu: float, r: float) -> float:

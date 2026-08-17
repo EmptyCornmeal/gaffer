@@ -222,6 +222,20 @@ def _player_inputs(row: Any) -> dict[str, Any]:
         "base_starts": float(row.base_starts),
         "base_xg90": float(row.base_xg90),
         "base_xa90": float(row.base_xa90),
+        # G-L. The projection reads a prior-season DEFCON baseline, so this
+        # module has to pass one or it is not scoring the shipped model. It went
+        # missing silently for exactly the reason the parity test below now
+        # guards against: `projection._rate` answers 0.0 for an absent column, so
+        # every backtested player fell to the "no prior season recorded" branch
+        # and a positional average, and nothing raised. `histdata` had been
+        # computing the column all along.
+        #
+        # Zero is not a measurement here and does not need to be filtered: a
+        # season whose prior file predates `defensive_contribution` yields 0.0
+        # and `histdata` also zeroes it for samples under BASE_SAMPLE_MINUTES,
+        # and `fixture_rates` reads both as "not recorded" — the same branch it
+        # takes live against an un-backfilled database.
+        "base_defcon90": float(getattr(row, "base_defcon90", 0.0) or 0.0),
         # Provenance, so the backtest takes the same zero-vs-missing branch the
         # live projection takes rather than a more forgiving one.
         "base_season": getattr(row, "base_season", "") or "",
@@ -904,7 +918,7 @@ def build_evaluation(
             # Carry the frozen features onto the target fixture rows.
             cols = ["min_td", "starts_td", "xg90_td", "xa90_td", "defcon90_td",
                     "base_minutes", "base_starts", "base_xg90", "base_xa90",
-                    "base_season", "value", "pos", "team_id"]
+                    "base_defcon90", "base_season", "value", "pos", "team_id"]
             for c in cols:
                 tgt[c] = tgt["element"].map(feat[c])
             tgt = tgt.dropna(subset=["pos", "value", "opponent_team", "team_id"])

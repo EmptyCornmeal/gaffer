@@ -266,6 +266,103 @@ def season_reports_advanced_stats(label: str | None) -> bool | None:
         return None
     return year >= int(BASE_STATS_FROM_SEASON.split("/")[0])
 
+
+def season_reports_defcon(label: str | None) -> bool | None:
+    """Could a `history_past` season report `defensive_contribution` at all?
+
+    The same contract as `season_reports_advanced_stats` against a different
+    cutoff — DEFCON arrived two seasons after starts/xG/xA — and the same
+    three-valued answer, because None ("not recorded") is emphatically not False
+    ("recorded, and could not have measured this"). A prior season from before
+    2024/25 reports 0 defensive contributions for every player alive, and
+    reading that as a measurement would project the league's best ball-winners
+    as men who never make a tackle.
+    """
+    if not label:
+        return None
+    try:
+        year = int(str(label).split("/")[0])
+    except (ValueError, IndexError):
+        return None
+    return year >= int(BASE_DEFCON_FROM_SEASON.split("/")[0])
+
+# --- xA -> FPL assists calibration (G-P): MEASURED, RECORDED, NOT APPLIED ----
+# Opta's expected assists and FPL's assists are not the same quantity. FPL's
+# assist rules are more generous — a shot rebounding to a scorer, a won free
+# kick or penalty, and a deflection all pay an FPL assist that xA does not model.
+# The mismatch is specific to assists, which is the evidence that it is a
+# DEFINITIONAL gap and not general model error: over the same rows goals track
+# xG to within 2% (MID 1.014 fit / 0.981 held out, FWD 0.991 / 0.981) while
+# assists run 22% to 111% ahead of xA depending on position.
+#
+# Fitted as sum(assists)/sum(expected_assists) on 2023-24 + 2024-25, held out on
+# 2025-26:
+#
+#     pos   factor   held-out error   at 1.0 (today)   at a blanket 1.400
+#     DEF    1.221        -5.5%           -22.6%              +8.3%
+#     MID    1.358        +2.5%           -24.5%              +5.6%
+#     FWD    2.107        +0.1%           -52.5%             -33.5%
+#
+# Per-position rather than one number precisely because of that last column: a
+# blanket 1.400 under-corrects forwards by a third, because a forward's pass to
+# a teammate in the box is a low-xA ball to a high-quality finisher.
+#
+# GKP is 1.0 and is NOT fitted. The naive fit is 5.179, off 1.4 xA and 5 assists
+# across two entire seasons; the same fit one season earlier gives 2.922 and
+# misses the next season by -62.5%. There is no sample, so no correction.
+#
+# ---------------------------------------------------------------------------
+# THE FACTORS ARE NOT APPLIED. `model.projection.fixture_rates` still computes
+# `exp_assists = xa90 * mins_frac * att_mult` with no calibration, and that is
+# deliberate. Two independent measurements, both held out, said not to:
+#
+#   DECISIONS. Driving the shipped projection over the leak-free historical
+#   frame and comparing PAIRED per gameweek (same gameweeks, same players, so
+#   the difference is what is being tested rather than the level):
+#
+#     2025-26   rank corr -0.00050 +/- 0.00036 (t=-1.37, 24 of 38 gws worse)
+#               XI points -0.868  +/- 0.760    (t=-1.14, 14 of 38 gws worse)
+#     2024-25   rank corr -0.00050 +/- 0.00025 (t=-1.98)   XI -0.763 +/- 1.034
+#     2023-24   rank corr -0.00164 +/- 0.00046 (t=-3.58)   XI -0.368 +/- 0.881
+#
+#   No single season's XI delta clears its own noise, but all six numbers are
+#   negative and pooling the three rank correlations gives t = -4.2. It degrades
+#   the ORDERING, which is the only thing the solver consumes.
+#
+#   THE QUANTITY IS WRONG, which is why. The factors above were fitted against
+#   Opta's raw per-match xA. The model does not consume that: it consumes a
+#   season-to-date xA/90 that has already been empirical-Bayes shrunk toward a
+#   prior-season baseline and then multiplied by a fixture strength term. Those
+#   are different numbers, and the model's own assist total is already 20.8%
+#   UNDER the realised figure on 2025-26 rows where the player played 60+
+#   minutes (626.1 projected against 791 actual) rather than the 30% under that
+#   a 1.4x gap would imply. Applying these factors overshoots to +10.5%, and
+#   forwards swing from -27.7% to +52.4%.
+#
+#   Refitting on the model's own output instead of on Opta's (DEF 1.220,
+#   MID 1.291, FWD 1.693) does not rescue it: 2025-26 XI points -1.342 +/- 0.625
+#   (t = -2.15), and forwards are still +22.4% out of sample.
+#
+# So the honest state is: the gap is real and measured, the correction as fitted
+# makes the decision worse, and the constant is kept here so the next attempt
+# starts from the measurement rather than repeating it. Wiring it in needs a
+# factor fitted against what `fixture_rates` actually produces, and needs to
+# beat the paired numbers above, not the aggregate ratio.
+#
+# STABILITY CAVEAT. Refitting on 2022-23 + 2023-24 and holding out on 2024-25
+# gives DEF 1.441, MID 1.606, FWD 2.642 with held-out errors of +30.1%, +17.1%
+# and +27.2%. 2022-23's league-wide A/xA is 2.111 against 1.42, 1.37 and 1.38
+# for the three seasons after it, so that season's xA column is not measuring
+# the same thing. Anything fitted here must exclude it.
+XA_TO_ASSIST = {"GKP": 1.0, "DEF": 1.221, "MID": 1.358, "FWD": 2.107}
+#: The seasons XA_TO_ASSIST was fitted on and the season it was held out on,
+#: named rather than described so a refit can state them instead of guessing.
+XA_TO_ASSIST_FIT_SEASONS = ("2023-24", "2024-25")
+XA_TO_ASSIST_HELDOUT_SEASON = "2025-26"
+#: False while the factors above are recorded but not multiplied into any
+#: projection. The projection and its tests read this rather than restating it.
+XA_TO_ASSIST_APPLIED = False
+
 # --- ep_next ensemble (T-15, re-labelled by T-26) ---------------------------
 # FPL publishes its own expected points for the NEXT gameweek only, and the
 # shipped h=1 projection is a blend of it with Gaffer's component model.

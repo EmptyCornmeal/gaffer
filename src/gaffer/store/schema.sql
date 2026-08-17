@@ -50,6 +50,21 @@ CREATE TABLE IF NOT EXISTS players (
     base_xa90           REAL DEFAULT 0,        -- last-season xA/90
     base_minutes        INTEGER DEFAULT 0,     -- last-season minutes (reliability baseline)
     base_starts         INTEGER DEFAULT 0,     -- last-season starts
+    -- Last-season defensive contributions per 90 (G-L). The DEFCON counterpart
+    -- of base_xg90, and it exists so the projection can tell a CURRENT-season
+    -- rate from a PRIOR-season one. `defcon_per_90` alone cannot: FPL resets
+    -- `minutes` at the season rollover but keeps its per-90 fields, and
+    -- `ingest.ingest_players` additionally falls back to last season's figure,
+    -- so out of season that column holds a prior-season rate beside a
+    -- current-season minutes count of 0. Shrinking one against the other threw
+    -- away the best DEFCON evidence in the system.
+    --
+    -- Nullable ON PURPOSE, and it is the only base_* column that is. NULL means
+    -- "no prior season has been read for this player" and 0.0 means "read, and
+    -- he made none" — two different claims, and `ingest.enrich_history` needs to
+    -- tell them apart to know whom to backfill exactly once. A DEFAULT 0 here
+    -- would make every already-enriched player look permanently unread.
+    base_defcon90       REAL,
     -- WHICH season the base_* above came from, as FPL labels it ('2024/25').
     -- history_past[-1] is the most recent season FPL HOLDS for that player, and
     -- for anyone who spent time outside the Premier League that is not last

@@ -24,11 +24,29 @@ FROZEN_PLAYER = {
     "base_starts": 28.0,
     "base_xg90": 0.31,
     "base_xa90": 0.22,
+    # Non-zero on purpose: with a zero here the projection falls to its
+    # positional DEFCON prior on BOTH sides of the parity check, and the two
+    # agree while neither exercises the column. That is precisely how the
+    # backtest came to be missing it.
+    "base_defcon90": 9.5,
     "price": 75.0,
     "xg_per_90": 0.42,
     "xa_per_90": 0.18,
     "defcon_per_90": 4.5,
     "team_id": 1,
+}
+
+#: Inputs `fixture_rates` reads that the historical adapter genuinely cannot
+#: supply, each with the reason. Anything NOT named here must be threaded
+#: through `backtest._player_inputs`, and the test below is what enforces that.
+KNOWN_ABSENT_PROJECTION_INPUTS = {
+    # The T-13 scoring rates. `histdata` computes no season-to-date equivalent
+    # of any of them, so the backtest scores a model without cards, saves, own
+    # goals, penalties or the historical half of the bonus term. Recorded rather
+    # than fixed: supplying them moves every published backtest number and needs
+    # its own measurement, and it is a wider change than the adapter.
+    "saves_per_90", "yellow_per_90", "red_per_90", "og_per_90",
+    "pen_save_per_90", "pen_miss_per_90", "bonus_per_90",
 }
 FROZEN_RATINGS = {
     "att_home": {1: 1200.0, 2: 1050.0},
@@ -64,12 +82,71 @@ def test_backtest_reproduces_the_live_projection_exactly():
         "base_starts": FROZEN_PLAYER["base_starts"],
         "base_xg90": FROZEN_PLAYER["base_xg90"],
         "base_xa90": FROZEN_PLAYER["base_xa90"],
+        "base_defcon90": FROZEN_PLAYER["base_defcon90"],
         "team_id": 1,
     }])
     via_backtest = backtest.project_rows(frame, ctx, fixtures_played=11)
 
     assert via_backtest.iloc[0] == pytest.approx(live["exp_points"], abs=1e-12)
     assert live["exp_points"] > 0
+
+
+def test_the_backtest_row_carries_every_input_the_projection_reads():
+    """A parity module that can silently stop passing a feature is the defect;
+    a missing column is only ever today's instance of it.
+
+    `projection._rate` and `projection._field` both answer 0.0/None for an
+    absent column — deliberately, so a schema migration that has not run yet
+    cannot take the live projection down. The cost is that a backtest missing an
+    input looks exactly like a working one while the model quietly takes a
+    different branch. That is how `base_defcon90` went missing: `histdata`
+    computed it, `fixture_rates` read it, `_player_inputs` never carried it, and
+    every backtested player fell to a positional DEFCON prior while the module
+    whose entire purpose is measuring the shipped model measured a different one.
+
+    So record every key `fixture_rates` actually asks for, across every position
+    (the goalkeeper and outfield branches read different columns), and require
+    each to be supplied or explicitly named as unavailable.
+    """
+    import types
+
+    class Recorder(dict):
+        """A player row that remembers what was asked of it."""
+
+        def __init__(self, base):
+            super().__init__(base)
+            self.read: set[str] = set()
+
+        def __getitem__(self, key):
+            self.read.add(key)
+            return super().__getitem__(key)  # KeyError for absent, as a dict does
+
+    ctx = _frozen_ctx()
+    fx = F.Fixture(gw=12, opponent_id=2, at_home=True, fdr=3)
+    asked: set[str] = set()
+    supplied: set[str] = set()
+    for pos in ("GKP", "DEF", "MID", "FWD"):
+        row = types.SimpleNamespace(
+            pos=pos, min_td=900.0, starts_td=10.0, base_minutes=2400.0,
+            base_starts=28.0, base_xg90=0.31, base_xa90=0.22,
+            base_defcon90=9.5, base_season="2025/26", value=75.0,
+            xg90_td=0.42, xa90_td=0.18, defcon90_td=4.5, team_id=1,
+        )
+        inputs = backtest._player_inputs(row)
+        supplied |= set(inputs)
+        rec = Recorder(inputs)
+        projection.fixture_rates(rec, fx, ctx, avail=1.0, fixtures_played=11)
+        asked |= rec.read
+
+    missing = asked - supplied - KNOWN_ABSENT_PROJECTION_INPUTS
+    assert not missing, (
+        f"`backtest._player_inputs` does not carry {sorted(missing)}, which "
+        "`projection.fixture_rates` reads. The backtest is scoring a different "
+        "model than the one that ships. Thread the column through, or add it to "
+        "KNOWN_ABSENT_PROJECTION_INPUTS with the reason it cannot be supplied."
+    )
+    # And the guard must be load-bearing: these are the columns it exists for.
+    assert {"base_defcon90", "base_xg90", "base_season"} <= asked & supplied
 
 
 def test_backtest_uses_the_real_team_context_not_a_stand_in():
@@ -113,11 +190,14 @@ def test_model_version_reflects_the_scoring_change():
     0.2 added goals conceded, saves, cards, OG and penalties (T-13). 0.3 stopped
     reading an unmeasurable zero in the prior-season baseline as a measurement
     (M3). 0.4 fixed the start-rate denominator to count fixtures rather than
-    gameweeks (M3b). Each moves the projection for real players.
+    gameweeks (M3b). 0.5 shrank `defcon_per_90` against the minutes that
+    generated it instead of reading it raw, and refitted the negative-binomial
+    dispersion behind it from a guessed 6.0 to a held-out 20.0 (G-L, G-M). Each
+    moves the projection for real players.
     """
-    assert projection.MODEL_VERSION == "heuristic-0.4"
+    assert projection.MODEL_VERSION == "heuristic-0.5"
     assert projection.MODEL_VERSION not in (
-        "heuristic-0.1", "heuristic-0.2", "heuristic-0.3")
+        "heuristic-0.1", "heuristic-0.2", "heuristic-0.3", "heuristic-0.4")
 
 
 def test_availability_path_is_the_real_one():
@@ -177,16 +257,21 @@ def test_player_inputs_carry_no_same_gameweek_outcome():
     }]).itertuples(index=False)
     inputs = backtest._player_inputs(next(row))
     # The model dict's keys are all season-to-date / prior-season / static.
+    # `base_defcon90` is a PRIOR-season aggregate over a season that finished
+    # before this one began, so it is pre-deadline by construction — the same
+    # standing as `base_xg90` beside it.
     assert set(inputs) == {
         "position", "minutes", "starts", "base_minutes", "base_starts",
-        "base_xg90", "base_xa90", "base_season", "price", "xg_per_90",
-        "xa_per_90", "defcon_per_90", "team_id",
+        "base_xg90", "base_xa90", "base_defcon90", "base_season", "price",
+        "xg_per_90", "xa_per_90", "defcon_per_90", "team_id",
     }
     assert inputs["minutes"] == 900.0  # to-date, not this gameweek's minutes
-    # The row above carries no `base_season`, as an older frame would not. It
-    # must come back as unrecorded rather than raise, and unrecorded must never
-    # be mistaken for a season that could not report a statistic.
+    # The row above carries neither `base_season` nor `base_defcon90`, as an
+    # older frame would not. Both must come back as unrecorded rather than
+    # raise, and unrecorded must never be mistaken for a season that could not
+    # report a statistic.
     assert inputs["base_season"] == ""
+    assert inputs["base_defcon90"] == 0.0
 
 
 def test_the_backtest_passes_the_baseline_season_through():

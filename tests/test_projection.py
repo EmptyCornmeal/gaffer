@@ -271,3 +271,228 @@ def test_clean_sheet_only_for_defensive_positions(conn):
         "WHERE pl.position='FWD' AND pr.gw=1 LIMIT 1"
     ).fetchone()
     assert fwd["exp_cs_pts"] == 0.0
+
+
+# --------------------------------------------------------------------------
+# G-L — `defcon_per_90` is a division, and it was read raw
+#
+# Every attacking rate above it is empirical-Bayes shrunk; this one was not. In
+# the shipped 2026/27 pre-season artifact that put two players at exactly 90.0
+# defensive contributions per 90 — one contribution in one minute of football —
+# reading as P(hit) 0.945 and 0.952 with "elite defensive volume" printed on a
+# card that also said CAMEO? ~29'.
+#
+# The fix cannot simply be `shrink(defcon_per_90, minutes, prior)`. FPL resets
+# `minutes` at the season rollover but KEEPS its per-90 fields, so out of season
+# that rate came from last season while `minutes` is 0, and shrinking one
+# against the other would discard the best DEFCON evidence in the system. So the
+# target is an explicit `base_defcon90` and the sample size is the minutes that
+# actually generated the rate.
+# --------------------------------------------------------------------------
+
+def _defcon_rate(r):
+    """The shrunk per-90 rate behind a projection, recovered from its own mu."""
+    return r["defcon_mu"] / r["mins_frac"]
+
+
+@pytest.mark.parametrize("label,expected", [
+    ("2023/24", False),   # the column did not exist yet
+    ("2024/25", True), ("2025/26", True),
+    ("", None), (None, None), ("garbage", None),
+])
+def test_which_seasons_could_report_defensive_contributions(label, expected):
+    assert config.season_reports_defcon(label) is expected
+
+
+def test_a_one_minute_contribution_does_not_read_as_elite():
+    """Mheuka and Fredricson, by name. Both shipped at 90.0 per 90 with no
+    prior-season sample at all, and both must fall to their positional prior."""
+    fwd = _rates(position="FWD", price=45, defcon_per_90=90.0)
+    assert _defcon_rate(fwd) == pytest.approx(F.DEFCON_PRIOR["FWD"], abs=1e-9)
+    assert fwd["defcon_p_hit"] < 0.01, "was 0.945 in the shipped artifact"
+
+    dfn = _rates(position="DEF", price=40, defcon_per_90=90.0)
+    assert _defcon_rate(dfn) == pytest.approx(F.DEFCON_PRIOR["DEF"], abs=1e-9)
+    assert dfn["defcon_p_hit"] < 0.01, "was 0.952 in the shipped artifact"
+
+
+def test_a_full_season_ball_winner_is_not_flattened():
+    """The regression the naive fix would have shipped. Elliot Anderson's
+    2025/26: 13.91 per 90 over 3,332 minutes. Pre-season his current-season
+    minutes are 0, so shrinking against THEM would replace the best DEFCON
+    evidence in the system with a positional average. Against the minutes that
+    produced the rate he is unmoved to the decimal."""
+    r = _rates(position="MID", price=65, defcon_per_90=13.91,
+               base_defcon90=13.91, base_minutes=3332, base_starts=37,
+               base_season="2025/26")
+    assert _defcon_rate(r) == pytest.approx(13.91, rel=1e-9)
+    assert r["defcon_p_hit"] > 0.4
+
+
+def test_an_unbackfilled_baseline_still_protects_the_ball_winner():
+    """The migration window. A database written before `base_defcon90` existed
+    carries the right rate in `defcon_per_90` and nothing in the new column, so
+    the target degrades to the positional prior — but the SAMPLE SIZE is still
+    last season's minutes, so the rate survives almost intact instead of
+    collapsing. Anderson keeps 13.47 of 13.91."""
+    r = _rates(position="MID", price=65, defcon_per_90=13.91,
+               base_minutes=3332, base_starts=37, base_season="2025/26")
+    assert _defcon_rate(r) == pytest.approx(13.47, abs=0.05)
+    assert _defcon_rate(r) > 0.95 * 13.91
+
+
+def test_a_zero_defcon_baseline_is_never_read_as_a_measurement():
+    """Unlike `base_xg90`, a zero here is ALWAYS a column that was not read. 392
+    outfielders cleared BASE_SAMPLE_MINUTES in 2025-26 and not one recorded zero
+    defensive contributions; the floor is 2.25 per 90. Believing the zero would
+    send every ball-winner in an un-enriched database to nothing."""
+    r = _rates(position="DEF", price=55, defcon_per_90=11.0, base_defcon90=0.0,
+               base_minutes=3000, base_starts=34, base_season="2025/26")
+    assert _defcon_rate(r) > 10.0
+
+
+def test_a_baseline_from_before_defcon_existed_is_not_a_target():
+    """`defensive_contribution` arrived in 2024/25. A 2023/24 baseline reports 0
+    for every player alive, which is the same trap `base_xg90` has for seasons
+    that predated expected goals — and the same three-valued answer."""
+    r = _rates(position="DEF", price=55, defcon_per_90=11.0, base_defcon90=0.0,
+               base_minutes=3000, base_starts=34, base_season="2023/24")
+    assert _defcon_rate(r) > 10.0
+
+
+def test_in_season_the_current_rate_is_shrunk_toward_last_season():
+    """One match played, twelve contributions in it, against a 3,000-minute
+    baseline of 8.0. The single match is worth 90/(90+300) of the answer, so the
+    rate reads 8.92 rather than the 12.0 the raw column would have given."""
+    r = _rates(fixtures_played=1, position="MID", price=65, minutes=90, starts=1,
+               defcon_per_90=12.0, base_defcon90=8.0, base_minutes=3000,
+               base_starts=34, base_season="2025/26")
+    assert _defcon_rate(r) == pytest.approx(8.923, abs=0.01)
+
+
+def test_goalkeepers_are_left_alone_entirely():
+    """`DEFCON_THRESHOLD["GKP"]` is 999 and keepers recorded no defensive
+    contributions at all in the measured season, so the branch must not run even
+    when the column contains nonsense."""
+    r = _rates(position="GKP", price=45, defcon_per_90=90.0)
+    assert r["defcon_mu"] == 0.0
+    assert r["defcon_p_hit"] == 0.0
+
+
+def test_the_schema_carries_the_defcon_baseline(conn):
+    """Nullable on purpose: NULL is "no prior season has been read for this
+    player" and 0.0 is "read, and he made none". `ingest.enrich_history` needs
+    both to backfill an existing database exactly once."""
+    cols = {r["name"]: r for r in conn.execute("PRAGMA table_info(players)")}
+    assert "base_defcon90" in cols
+    assert cols["base_defcon90"]["dflt_value"] is None, (
+        "a DEFAULT 0 would make every already-enriched player look permanently "
+        "unread, and the backfill would run forever or never")
+
+
+def test_enrich_history_backfills_the_defcon_baseline_exactly_once(conn):
+    """The migration path. An existing database has base_minutes > 0 already, so
+    the old `AND base_minutes=0` gate alone would never revisit those players and
+    the new column would stay empty for exactly the ball-winners it protects."""
+    from gaffer import ingest
+
+    pid = conn.execute("SELECT id FROM players LIMIT 1").fetchone()["id"]
+    conn.execute("UPDATE players SET price=100 WHERE id=?", (pid,))
+    conn.execute("UPDATE players SET price=30, selected_by_pct=0 WHERE id<>?", (pid,))
+    conn.commit()
+    # The fixture player already has a prior-season sample and no DEFCON baseline
+    # — precisely the state this migration has to reach.
+    row = conn.execute(
+        "SELECT base_minutes, base_defcon90 FROM players WHERE id=?", (pid,)).fetchone()
+    assert row["base_minutes"] >= config.BASE_SAMPLE_MINUTES
+    assert row["base_defcon90"] is None
+
+    class Client:
+        def element_summary(self, _pid):
+            return {"history_past": [
+                {"season_name": "2025/26", "minutes": 3000, "starts": 34,
+                 "expected_goals": "3.00", "expected_assists": "6.00",
+                 "defensive_contribution": 300},
+            ]}
+
+    assert ingest.enrich_history(conn, Client()) == 1
+    got = conn.execute(
+        "SELECT base_defcon90, defcon_per_90 FROM players WHERE id=?",
+        (pid,)).fetchone()
+    assert got["base_defcon90"] == pytest.approx(9.0, abs=1e-6)
+    assert got["defcon_per_90"] == pytest.approx(9.0, abs=1e-6)
+    # ...and the player no longer matches either arm, so the ~350 cached calls
+    # are paid once rather than on every run.
+    assert ingest.enrich_history(conn, Client()) == 0
+
+
+def test_a_prior_season_that_recorded_no_defcon_is_still_marked_as_read(conn):
+    """0.0 written rather than left NULL. Otherwise a player whose most recent
+    FPL season predates the stat would be re-fetched on every single run."""
+    from gaffer import ingest
+
+    pid = conn.execute("SELECT id FROM players LIMIT 1").fetchone()["id"]
+    conn.execute("UPDATE players SET price=100 WHERE id=?", (pid,))
+    conn.execute("UPDATE players SET price=30, selected_by_pct=0 WHERE id<>?", (pid,))
+    conn.commit()
+
+    class Client:
+        def element_summary(self, _pid):
+            return {"history_past": [
+                {"season_name": "2021/22", "minutes": 3110, "starts": 0,
+                 "expected_goals": "0.00", "expected_assists": "0.00"},
+            ]}
+
+    assert ingest.enrich_history(conn, Client()) == 1
+    got = conn.execute(
+        "SELECT base_defcon90 FROM players WHERE id=?", (pid,)).fetchone()
+    assert got["base_defcon90"] == 0.0
+    assert ingest.enrich_history(conn, Client()) == 0
+
+
+def test_a_projection_survives_a_row_without_the_defcon_baseline_column():
+    """Same contract as `base_season`: a migration that has not run yet must not
+    take the projection down."""
+    player = _player(base_minutes=2000, base_starts=25, defcon_per_90=9.0)
+    assert "base_defcon90" not in player
+    out = projection.fixture_rates(
+        player, F.Fixture(gw=1, opponent_id=2, at_home=True, fdr=3),
+        _ctx(), avail=1.0, fixtures_played=0)
+    assert out["defcon_mu"] > 0
+
+
+# --------------------------------------------------------------------------
+# G-P — the xA factors are measured and recorded, and deliberately NOT applied
+# --------------------------------------------------------------------------
+
+def test_the_xa_factors_are_per_position_and_ordered_by_the_measurement():
+    """FPL awards 22% (DEF), 36% (MID) and 111% (FWD) more assists than Opta xA
+    over 2023-24 + 2024-25, while goals track xG to within 2% over the same
+    rows — so the gap is definitional and specific to assists. A blanket 1.400
+    would under-correct forwards by a third, which is why the constant is a
+    table and not a number."""
+    f = config.XA_TO_ASSIST
+    assert set(f) == {"GKP", "DEF", "MID", "FWD"}
+    assert f["FWD"] > f["MID"] > f["DEF"] > 1.0
+    assert f["GKP"] == 1.0, "1.4 xA and 5 assists in two seasons is not a sample"
+    assert config.XA_TO_ASSIST_FIT_SEASONS == ("2023-24", "2024-25")
+    assert config.XA_TO_ASSIST_HELDOUT_SEASON == "2025-26"
+
+
+def test_the_xa_factors_are_not_applied_to_the_projection():
+    """Held out on 2025-26 the correction moves paired per-gameweek rank
+    correlation by -0.0005 (t=-1.37, 24 of 38 gameweeks worse) and best-legal-XI
+    points by -0.87 per gameweek; pooled over three seasons the rank-correlation
+    loss is t = -4.2 and every one of the six deltas is negative. It degrades
+    the ordering the solver consumes, so it is measured, recorded and left out.
+
+    Pinned structurally rather than by asserting a number: a player whose xG and
+    xA baselines are identical must project identical expected goals and
+    assists, because neither carries a positional multiplier the other lacks.
+    Any per-position assist factor separates them, so this fails the moment one
+    is wired in without the evidence above being revisited."""
+    assert config.XA_TO_ASSIST_APPLIED is False
+    for pos in ("DEF", "MID", "FWD"):
+        r = _rates(position=pos, base_minutes=2500, base_starts=30,
+                   base_season="2025/26", base_xg90=0.20, base_xa90=0.20)
+        assert r["exp_goals"] == pytest.approx(r["exp_assists"], rel=1e-9)
