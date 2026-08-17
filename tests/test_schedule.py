@@ -80,9 +80,15 @@ def test_a_deadline_outranks_live_football():
 @pytest.mark.parametrize("hours,age,expected", [
     (7, 200, False), (7, 400, True),        # idle: 6h bar
     (5, 30, False), (5, 100, True),         # pre-deadline: 90 min bar
-    (1, 10, False), (1, 30, True),          # final approach: 20 min bar
+    (1.5, 10, False), (1, 30, True),        # final approach: 20 min bar
 ])
 def test_each_window_has_its_own_staleness_bar(hours, age, expected):
+    """Each window's nominal bar, sampled where it has not yet been tightened.
+
+    The final-approach sample moved from 1 h out to 1.5 h out when C6 was fixed:
+    inside the last hour the bar is no longer the flat 20 minutes, because the
+    tick that finds 10-minute-old data an hour before a deadline may well be the
+    last tick there is. That behaviour has its own tests below."""
     assert decide(hours, age).should_refresh is expected
 
 
@@ -122,10 +128,71 @@ def test_a_far_future_timestamp_cannot_disable_the_schedule():
 
 
 def test_the_decision_reports_what_it_measured():
-    d = decide(1, 30)
+    d = decide(1.5, 30)
     assert d.age_minutes == pytest.approx(30, abs=0.1)
     assert d.max_age_minutes == 20
     assert d.window in d.reason
+
+
+# --------------------------------------------------------------------------
+# C6 — the last usable tick before a deadline
+# --------------------------------------------------------------------------
+
+def test_the_last_usable_tick_before_a_deadline_is_not_skipped():
+    """C6. Deadline 17:30. At the 17:00 tick the data is 19 minutes old, which
+    is inside the flat 20-minute bar, so nothing runs. By 17:15 the window has
+    shut. The reader makes the only decision this product exists for on data
+    from 16:41 — 49 minutes old at the deadline."""
+    d = decide(0.5, age_min=19)
+    assert d.should_refresh is True
+
+
+@pytest.mark.parametrize("minutes_out", [21, 25, 30, 40, 50])
+@pytest.mark.parametrize("age", [6, 12, 19])
+def test_a_tick_close_to_the_deadline_does_not_tolerate_stale_data(
+        minutes_out, age):
+    """GitHub delivers roughly one tick in 2.2, median gap 33 min, worst 69. So
+    no tick may be skipped on the assumption that a later one will fire: inside
+    the last stretch every tick is judged as though it were the last."""
+    assert decide(minutes_out / 60, age_min=age).should_refresh is True
+
+
+def test_the_bar_tightens_as_the_deadline_approaches():
+    """Deadline-relative, not age-relative: the less window remains, the less
+    staleness there is time left to fix."""
+    bars = [decide(m / 60).max_age_minutes for m in (120, 90, 70, 50, 30, 21)]
+    assert bars == sorted(bars, reverse=True), bars
+    assert bars[0] == 20, "far out, the final-approach bar is unchanged"
+    assert bars[-1] <= 5, "at the close, only a just-published artifact stands"
+
+
+def _age_at_the_deadline(delivered, published_minutes_out, run_minutes=5):
+    """Play a run of delivered ticks through the gate and report the only number
+    the reader ever experiences: how old the projection is at the deadline.
+
+    ``delivered`` is minutes-before-the-deadline, descending — the ticks that
+    actually fired, not the ones the cron asked for.
+    """
+    published = DEADLINE - timedelta(minutes=published_minutes_out)
+    for minutes_out in delivered:
+        now = DEADLINE - timedelta(minutes=minutes_out)
+        if schedule.should_refresh(now, deadline=DEADLINE,
+                                   last_generated_at=published).should_refresh:
+            published = now + timedelta(minutes=run_minutes)
+    return (DEADLINE - published).total_seconds() / 60
+
+
+@pytest.mark.parametrize("gap", [15, 30, 45])
+@pytest.mark.parametrize("phase", [0, 5, 10])
+def test_the_deadline_data_survives_missed_ticks(gap, phase):
+    """Walk the 15-minute cron at the rate GitHub actually delivers it — 1 tick
+    in 2.2, so gaps of 15, 30 and 45 minutes, swept across three phases — and
+    measure what the reader holds at 17:30. The bar shape is a mechanism; this
+    is the outcome, and it is what must not regress."""
+    close = int(schedule.PRE_DEADLINE_CLOSE.total_seconds() // 60)
+    ticks = list(range(120 - phase, close, -gap))
+    age = _age_at_the_deadline(ticks, published_minutes_out=180)
+    assert age <= gap + 30, f"{age:.0f} min old at the deadline, ticks {ticks}"
 
 
 # --------------------------------------------------------------------------
@@ -220,6 +287,12 @@ def test_an_absent_file_is_not_corruption(tmp_path):
 # --------------------------------------------------------------------------
 
 def test_cli_emits_github_output_lines(tmp_path, capsys):
+    """The 17:00 tick before a 17:30 deadline, holding data from 16:50.
+
+    This test used to assert `refresh=false`, which is C6 written down: the tick
+    is 30 minutes out, the window shuts at 20, and the 17:15 tick — if it fires
+    at all — arrives too late to act. Skipping here hands the reader a 40-minute
+    -old projection at the only moment the projection is worth anything."""
     import json
 
     (tmp_path / "meta.json").write_text(json.dumps({
@@ -230,7 +303,7 @@ def test_cli_emits_github_output_lines(tmp_path, capsys):
                           "--now", "2026-08-21T17:00:00Z"])
     out = capsys.readouterr().out
     assert code == 0, "the gate must never fail the build"
-    assert "refresh=false" in out and "window=final_approach" in out
+    assert "refresh=true" in out and "window=final_approach" in out
 
 
 def test_cli_inside_the_cutoff_stops_asking(tmp_path, capsys):
@@ -244,7 +317,31 @@ def test_cli_inside_the_cutoff_stops_asking(tmp_path, capsys):
     }), encoding="utf-8")
     schedule.main(["--should-refresh", "--data-dir", str(tmp_path),
                    "--now", "2026-08-21T17:20:00Z"])
-    assert "window=idle" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "window=idle" in out and "refresh=false" in out
+
+
+def test_cli_notices_football_the_published_artifact_predates(tmp_path, capsys):
+    """C12. The live window is selected from fixture states read out of the very
+    artifact a refresh would update, so it cannot bootstrap. This morning's
+    publish says every fixture is `scheduled`, and it will keep saying so until
+    something refreshes it — which is the decision being made here. At 15:30 on a
+    Saturday the gate therefore sees an idle day and applies the 6 h bar while
+    the football it exists to report is actually being played."""
+    import json
+
+    (tmp_path / "meta.json").write_text(json.dumps({
+        "generated_at": "2026-08-22T11:00:00Z",
+    }), encoding="utf-8")
+    (tmp_path / "live.json").write_text(json.dumps({"fixtures": [
+        {"state": "scheduled", "kickoff": "2026-08-22T14:00:00+00:00"},
+        {"state": "scheduled", "kickoff": "2026-08-22T16:30:00+00:00"},
+    ]}), encoding="utf-8")
+    schedule.main(["--should-refresh", "--data-dir", str(tmp_path),
+                   "--now", "2026-08-22T15:30:00Z"])
+    out = capsys.readouterr().out
+    assert "window=live" in out
+    assert "refresh=true" in out
 
 
 def test_cli_force_always_refreshes(tmp_path, capsys):

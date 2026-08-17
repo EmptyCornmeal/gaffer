@@ -56,7 +56,9 @@ PRE_DEADLINE_CLOSE = timedelta(minutes=20)
 #: The last stretch, where team news lands and the bar tightens.
 FINAL_APPROACH = timedelta(hours=2)
 
-#: Maximum tolerated age of the published artifacts, per window.
+#: Maximum tolerated age of the published artifacts, per window. These are the
+#: *loosest* bars. Inside the pre-deadline windows `_age_bar` tightens them as
+#: the deadline closes in; nothing ever loosens them.
 MAX_AGE = {
     "final_approach": timedelta(minutes=20),
     "pre_deadline": timedelta(minutes=90),
@@ -64,8 +66,33 @@ MAX_AGE = {
     "idle": timedelta(hours=6),
 }
 
+#: No bar ever goes below this, whatever the deadline arithmetic asks for. The
+#: workflow installs, runs the tests, runs the pipeline and commits before
+#: anything changes on screen, so two runs started a couple of minutes apart
+#: publish very nearly the same artifact and the second is pure cost. Five
+#: minutes is a deliberate floor, not a measurement — it is the point below
+#: which a refresh is competing with the run already in flight.
+MIN_AGE_BAR = timedelta(minutes=5)
+
+#: How far apart *delivered* ticks actually are. The workflow asks every 15
+#: minutes; GitHub delivers roughly 1 tick in 2.2, a median gap of 33 minutes
+#: and a worst observed gap of 69. The bar below is discounted by the median,
+#: not the worst case: discounting by 69 would pin the bar to MIN_AGE_BAR across
+#: the whole two-hour final approach — a pipeline run on every delivered tick
+#: for two hours — to insure against a gap seen once. The median already says
+#: "expect no further chance" for everything inside ~53 minutes of the close,
+#: which is where the damage in C6 was done.
+TICK_GAP = timedelta(minutes=33)
+
 #: Fixture states that mean football is being played right now.
 LIVE_FIXTURE_STATES = frozenset({"live", "half_time", "awaiting_bonus"})
+
+#: How long after kick-off a fixture can still be moving points: 90 minutes of
+#: football, 15 of half time, stoppage at both ends, and the stretch after the
+#: whistle where FPL is still settling bonus. Rounded up on purpose. Being wrong
+#: on the high side costs one cheap tick that finds nothing to do; being wrong on
+#: the low side freezes the live scores in the middle of a match.
+MATCH_LIVE_WINDOW = timedelta(hours=2, minutes=45)
 
 #: How far ahead of us a published timestamp may sit and still be believed.
 #: Runner clocks drift by seconds, not hours. Beyond this the artifact is corrupt,
@@ -85,8 +112,36 @@ class RefreshDecision:
     reason: str
 
 
+def _football_is_on(now: datetime, fixture_states: list[str] | None,
+                    fixture_kickoffs: list[datetime] | None) -> bool:
+    """Is a match in progress?
+
+    C12: asking the fixture *states* alone cannot bootstrap. A state only changes
+    when a refresh writes it, and the refresh only runs when this function says
+    football is on — so a Saturday that begins with every fixture ``scheduled``
+    keeps saying ``scheduled``, the gate stays in ``idle``, and the 6 h bar holds
+    the live scores frozen right through the afternoon. The artifact was both the
+    evidence and the thing that evidence was used to decide whether to update.
+
+    Kick-off times break the loop, because they do not need a refresh to become
+    true: this morning's publish already carries this afternoon's kick-offs, and
+    a clock is enough to read them. States are still honoured first — they are
+    the better signal whenever they are current, and they cover a match that runs
+    long or sits in ``awaiting_bonus``.
+
+    A kick-off moved after the last publish is still missed, and no reading of a
+    stale artifact can fix that. The age bar remains the backstop for it.
+    """
+    if any(s in LIVE_FIXTURE_STATES for s in (fixture_states or [])):
+        return True
+    return any(
+        ko is not None and timedelta(0) <= now - ko <= MATCH_LIVE_WINDOW
+        for ko in (fixture_kickoffs or []))
+
+
 def _window(now: datetime, deadline: datetime | None,
-            fixture_states: list[str] | None) -> str:
+            fixture_states: list[str] | None,
+            fixture_kickoffs: list[datetime] | None = None) -> str:
     """Which regime we are in. Deadline proximity outranks live football: if both
     are true you are picking a team, and that is the more urgent number."""
     if deadline is not None:
@@ -95,9 +150,42 @@ def _window(now: datetime, deadline: datetime | None,
             return "final_approach"
         if FINAL_APPROACH < until <= PRE_DEADLINE_OPEN:
             return "pre_deadline"
-    if any(s in LIVE_FIXTURE_STATES for s in (fixture_states or [])):
+    if _football_is_on(now, fixture_states, fixture_kickoffs):
         return "live"
     return "idle"
+
+
+def _age_bar(window: str, now: datetime, deadline: datetime | None) -> timedelta:
+    """How old the published data may be, at this tick.
+
+    A flat bar is an age-relative answer to a deadline-relative question, and C6
+    is what that costs. With a flat 20-minute final-approach bar, the 17:00 tick
+    before a 17:30 deadline sees data 19 minutes old, rules it inside the bar and
+    skips; the 17:15 tick is past PRE_DEADLINE_CLOSE so the window never opens
+    again; and the reader picks a team on a projection built at 16:41. The one
+    decision this product exists for is made on the stalest data of the day.
+
+    So stop asking "is this old?" and ask "is there still time to fix it?".
+    Inside the pre-deadline windows the bar is the *usable* window remaining —
+    the time left before the close, minus one tick gap, because one gap is the
+    chance you can actually expect to be given — clamped to the window's own bar
+    and floored at MIN_AGE_BAR.
+
+    Two properties matter more than the exact numbers:
+
+    * it only ever tightens a bar, never relaxes one, so nothing that refreshed
+      under the old rule refreshes less often under this one; and
+    * it assumes no future tick exists. Every tick is judged as though it were
+      the last, which is the only assumption that survives a scheduler that
+      delivers 1 tick in 2.2. "Skip it, the 17:15 tick will catch this" is
+      precisely the reasoning that produced C6, and it is not repaired by
+      choosing a different flat number.
+    """
+    limit = MAX_AGE[window]
+    if deadline is None or window not in ("final_approach", "pre_deadline"):
+        return limit
+    usable = (deadline - now) - PRE_DEADLINE_CLOSE - TICK_GAP
+    return max(MIN_AGE_BAR, min(limit, usable))
 
 
 def should_refresh(
@@ -106,6 +194,7 @@ def should_refresh(
     deadline: datetime | None = None,
     last_generated_at: datetime | None = None,
     fixture_states: list[str] | None = None,
+    fixture_kickoffs: list[datetime] | None = None,
     degraded: str | None = None,
 ) -> RefreshDecision:
     """Decide whether this scheduled tick should actually run the pipeline.
@@ -118,8 +207,8 @@ def should_refresh(
     here are not symmetric — see below.
     """
     now = now or datetime.now(UTC)
-    window = _window(now, deadline, fixture_states)
-    limit = MAX_AGE[window]
+    window = _window(now, deadline, fixture_states, fixture_kickoffs)
+    limit = _age_bar(window, now, deadline)
     limit_min = limit.total_seconds() / 60
 
     if degraded:
@@ -183,7 +272,8 @@ def read_published_state(data_dir: Path | str = "data") -> dict[str, Any]:
     """
     d = Path(data_dir)
     out: dict[str, Any] = {"deadline": None, "generated_at": None,
-                           "fixture_states": [], "degraded": None}
+                           "fixture_states": [], "fixture_kickoffs": [],
+                           "degraded": None}
     faults: list[str] = []
 
     try:
@@ -213,8 +303,23 @@ def read_published_state(data_dir: Path | str = "data") -> dict[str, Any]:
                 faults.append(
                     f"live.fixtures is a {type(fixtures).__name__}, not a list")
             else:
-                out["fixture_states"] = [
-                    f.get("state") for f in fixtures if isinstance(f, dict)
+                entries = [f for f in fixtures if isinstance(f, dict)]
+                out["fixture_states"] = [f.get("state") for f in entries]
+                # Kick-offs, because states alone cannot bootstrap the live
+                # window — see `_football_is_on`. `kickoff` is what the artifact
+                # writes and `kickoff_time` is FPL's own name for the same
+                # field, accepted so a future artifact that passes it through
+                # unrenamed still reads.
+                #
+                # A missing or unparseable kick-off is dropped, not recorded as a
+                # fault: a fixture with no confirmed date legitimately has none,
+                # and `degraded` forces a refresh on every single tick — far too
+                # big a hammer to hand to one odd row in a fixture list.
+                out["fixture_kickoffs"] = [
+                    ts for ts in (
+                        parse_timestamp(f.get("kickoff") or f.get("kickoff_time"))
+                        for f in entries)
+                    if ts is not None
                 ]
     except FileNotFoundError:
         pass
@@ -367,6 +472,7 @@ def _refresh_cli(args) -> int:
                 deadline=state["deadline"],
                 last_generated_at=state["generated_at"],
                 fixture_states=state["fixture_states"],
+                fixture_kickoffs=state["fixture_kickoffs"],
                 degraded=state["degraded"],
             )
     except Exception as e:
