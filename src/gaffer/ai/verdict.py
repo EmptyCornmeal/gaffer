@@ -5,7 +5,7 @@ to write the week's plan in plain English grounded ONLY in the model's numbers,
 and writes ``verdict.json``. Degrades to a deterministic templated briefing when
 no API credentials are present, so the pipeline never fails.
 
-Model defaults to ``claude-opus-4-8`` (best writing); set ``GAFFER_VERDICT_MODEL``
+Model defaults to ``claude-opus-5`` (best writing); set ``GAFFER_VERDICT_MODEL``
 to ``claude-haiku-4-5`` to keep it lean/cheap. No key set -> template fallback.
 """
 
@@ -23,7 +23,7 @@ from gaffer.ai import grounding as G
 from gaffer.ai import llm
 from gaffer.io import write_json_atomic
 
-VERDICT_MODEL = os.environ.get("GAFFER_VERDICT_MODEL", "claude-opus-4-8")
+VERDICT_MODEL = os.environ.get("GAFFER_VERDICT_MODEL", "claude-opus-5")
 
 SYSTEM = (
     "You are 'The Gaffer', a sharp, confident FPL analyst writing a short weekly "
@@ -281,7 +281,8 @@ def _ai_briefing(ctx: dict[str, Any], model: str, correction: str | None = None)
         )
     msg = client.messages.create(
         model=model,
-        max_tokens=1200,
+        # Thinking and prose share this budget on Opus 5 (see llm.DEFAULT_MODEL).
+        max_tokens=1800,
         thinking={"type": "adaptive"},
         output_config={"effort": "low"},
         system=SYSTEM,

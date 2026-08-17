@@ -18,7 +18,18 @@ from __future__ import annotations
 
 import os
 
-DEFAULT_MODEL = os.environ.get("GAFFER_AI_MODEL", "claude-opus-4-8")
+#: Claude Opus 5. Two properties of this model shape the calls below.
+#:
+#: Thinking is ON BY DEFAULT — omitting the parameter runs adaptive, where Opus
+#: 4.8 ran without thinking at all. Both call sites already pass
+#: ``thinking={"type": "adaptive"}`` explicitly, so the default never applies and
+#: the upgrade did not silently change what we ask for. Keep it explicit.
+#:
+#: ``max_tokens`` caps thinking AND response text together, and this model writes
+#: longer by default than 4.8 did. The budgets below therefore carry more
+#: headroom than a 4.8-era number would: a truncated briefing ships as a sentence
+#: that stops mid-word, which reads as a bug rather than as brevity.
+DEFAULT_MODEL = os.environ.get("GAFFER_AI_MODEL", "claude-opus-5")
 
 #: Explicit opt-in for metered narration. Anything else is off.
 NARRATION_ENV = "GAFFER_AI_NARRATION"
@@ -36,7 +47,7 @@ def narration_enabled() -> bool:
     return has_credentials()
 
 
-def complete(system: str, prompt: str, model: str | None = None, max_tokens: int = 1000) -> str:
+def complete(system: str, prompt: str, model: str | None = None, max_tokens: int = 1500) -> str:
     from anthropic import Anthropic  # lazy import
 
     client = Anthropic()
