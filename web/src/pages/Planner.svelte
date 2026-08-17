@@ -116,6 +116,16 @@
   let optimalHorizon = $state(3)
   let optimalRisk = $state<RiskStance>('balanced')
   let shownOptimal = $state<OptimalHorizon | null>(null)
+  // Ownership weighting is currently neutralised, so all three stances solve to
+  // byte-identical squads — verified in the artifact: squad, XI, bench, captain
+  // and headline match across differential/balanced/template at every horizon.
+  // The pipeline already knew and said so in `risk_note`; nothing rendered it,
+  // so the toggle looked like a live choice. Showing the note is the honest
+  // interim — the control stays wired for when placing objectives land (T-17),
+  // but it stops claiming to change an answer it does not change. See G13.
+  const riskNote = $derived(
+    bundle.recommendation.by_horizon?.[String(optimalHorizon)]?.risk_note ?? '',
+  )
 
   function loadOptimal(h = optimalHorizon, r = optimalRisk) {
     optimalHorizon = h
@@ -309,6 +319,9 @@
                 >{o.label}</button>
               {/each}
             </div>
+            {#if riskNote}
+              <p class="text-[10px] leading-snug text-muted2 mt-1">{riskNote}</p>
+            {/if}
           </div>
         </div>
       </div>

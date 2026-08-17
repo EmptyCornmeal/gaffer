@@ -189,6 +189,13 @@ export interface HorizonBlock {
   horizon: number
   label: string
   default_risk: RiskStance
+  /**
+   * Why the three risk stances currently return the same answer. The pipeline
+   * has always written this field and the Planner has never rendered it, so the
+   * toggle presented three choices the solver was not actually making. Optional
+   * because an artifact published before this was read will not carry the key.
+   */
+  risk_note?: string
   by_risk: Record<RiskStance, OptimalHorizon>
 }
 
