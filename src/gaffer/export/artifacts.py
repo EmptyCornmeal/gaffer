@@ -14,7 +14,7 @@ from typing import Any
 from gaffer import config
 from gaffer.io import write_json_atomic
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
-from gaffer.solver.optimize import Solution
+from gaffer.solver.optimize import MarginReport, Solution, squad_margins
 from gaffer.store import db
 
 
@@ -379,11 +379,23 @@ def _risk_note() -> str:
 def build_recommendation(
     conn: sqlite3.Connection, sol: Solution, players_index: list[dict[str, Any]],
     generated_at: str | None = None,
+    margins: MarginReport | None = None,
 ) -> dict[str, Any]:
     idx = {p["id"]: p for p in players_index}
 
     def card(pid: int) -> dict[str, Any]:
-        return _rec_card(pid, idx)
+        """A squad card, carrying its near-optimal margin when one was measured.
+
+        The margin rides on the card rather than living only in the block below
+        because the number belongs next to the name: "how much does this pick
+        actually matter" is a per-row question, and a screen that has to join two
+        structures to answer it will end up not answering it. Cards for players
+        with no margin (a transfer-out, an unmeasured pool player) are unchanged,
+        so nothing downstream may assume the key is present.
+        """
+        c = _rec_card(pid, idx)
+        m = margins.get(pid) if margins is not None else None
+        return {**c, "margin": m.as_dict()} if m is not None else c
 
     cap = card(sol.captain)
     summary = _summarise(sol, idx)
@@ -402,6 +414,11 @@ def build_recommendation(
         "transfers_out": [card(i) for i in sol.transfers_out],
         "hits": sol.hits,
         "summary": summary,
+        # Provenance for the per-card numbers above: which objective they were
+        # measured against, what the baseline was, how long it took, and whether
+        # the replay reproduced the squad being published. Null when the sweep
+        # was skipped or had nothing honest to say.
+        "margins": margins.as_dict() if margins is not None else None,
     }
 
 
@@ -731,6 +748,7 @@ def write_all(
     review: dict[str, Any] | None = None,
     notifications: dict[str, Any] | None = None,
     verify_paths: bool = True,
+    margins: bool = True,
     dry_run: bool = False,
 ) -> list[str]:
     out_dir = Path(out_dir) if out_dir is not None else config.DATA_DIR
@@ -744,7 +762,27 @@ def write_all(
     players = build_players(
         conn, from_gw, horizon, team_fixtures=fixtures, distributions=distributions
     )
-    reco = build_recommendation(conn, sol, players, generated_at=generated_at)
+    # G-O: what each of the fifteen picks is actually worth — an exact forced-out
+    # re-solve per player, measured against the same objective that chose them.
+    # ~3s on the real 587-player pool against ~0.2s for the headline solve, so it
+    # ships on by default; `margins=False` is the opt-out for a caller that wants
+    # the artifacts and not the extra second-and-a-bit.
+    #
+    # Deliberately NOT computed for the `by_horizon` grid below: that is nine
+    # further solves, so margins there would cost nine sweeps (~27s) to decorate
+    # squads the user is comparing rather than fielding.
+    #
+    # Wrapped, because a margin is a nice-to-have and a run that stops publishing
+    # is not. A failure becomes a null `margins` block, not a lost gameweek.
+    margin_report: MarginReport | None = None
+    if margins:
+        try:
+            margin_report = squad_margins(conn, sol, distributions=distributions)
+        except Exception as exc:                              # noqa: BLE001
+            margin_report = MarginReport.unavailable(
+                f"margin sweep failed: {type(exc).__name__}: {exc}")
+    reco = build_recommendation(conn, sol, players, generated_at=generated_at,
+                                margins=margin_report)
     # Grid of optimal squads — planning window (this GW / next 3 / next 5) ×
     # risk stance (differential / balanced / template) — each with a fact-grounded
     # explanation, so the Planner can toggle both and show *why*.

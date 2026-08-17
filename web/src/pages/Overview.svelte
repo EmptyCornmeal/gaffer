@@ -9,6 +9,7 @@
   import { generateTeamBrief } from '../lib/teamBrief'
   import { briefingCaveat } from '../lib/squadStatus'
   import { renderTeamCard, downloadBlob, type SharePlayer } from '../lib/shareImage'
+  import { formatMargin, marginHeadline, marginsUsable, rankedPicks } from '../lib/margins'
 
   let { bundle, onpick, onnav }: { bundle: Bundle; onpick: (id: number) => void; onnav: (r: string) => void } = $props()
   const rec = $derived(bundle.recommendation)
@@ -86,6 +87,12 @@
   // Template check: high-owned players the value-optimizer punts. The model
   // maximises points-per-£ and is EO-blind, so it can leave out a near-must-own
   // like Haaland — a big rank risk. Surface it honestly.
+  // What each of the fifteen is actually worth. The pitch above shows the squad
+  // as fifteen equal tiles; this is the card that admits they are not, and it
+  // renders nothing at all rather than guessing when the sweep did not run.
+  const showMargins = $derived(marginsUsable(rec))
+  const picks = $derived(showMargins ? rankedPicks(rec) : [])
+
   const modelSquadIds = $derived(new Set([...rec.starting, ...rec.bench].map((p) => p.id)))
   const templateMissing = $derived(
     [...P]
@@ -274,6 +281,44 @@
         {/if}
       {/if}
     </div>
+
+    <!-- How much each pick matters.
+         The pitch renders fifteen tiles at one visual weight, which implies
+         fifteen equally settled decisions. On real data the spread runs from
+         0.10 to 8.29 points over the horizon and a third of the squad sits
+         inside the projection error — so the ranking, not the squad list, is
+         the thing worth reading. -->
+    {#if showMargins}
+      <div class="card p-3">
+        <div class="flex items-baseline justify-between mb-1 gap-2">
+          <h2 class="font-bold">How much each pick matters</h2>
+          <span class="text-[10px] text-muted2">pts given up</span>
+        </div>
+        <p class="text-[11px] text-muted mb-2">{marginHeadline(rec)}</p>
+        <div class="divide-y divide-line/60">
+          {#each picks as { player, margin, band }}
+            <button onclick={() => onpick(player.id)} class="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:opacity-80">
+              <span class="text-sm min-w-0 truncate"><b>{player.name}</b> <span class="text-muted">{player.team} · {player.pos}</span></span>
+              <span class="flex items-center gap-2 shrink-0">
+                {#if band}
+                  <span class="rounded px-1.5 text-[10px] font-bold leading-4 {band.tone}" title={band.hint}>{band.label}</span>
+                {/if}
+                <span class="font-bold tabular-nums w-11 text-right {band?.name === 'free' ? 'text-muted' : 'text-white/90'}">{formatMargin(margin)}</span>
+              </span>
+            </button>
+          {/each}
+        </div>
+        <p class="mt-2 text-[10px] text-muted2 leading-snug">
+          Each number is what the squad loses over {rec.margins?.horizon ?? '?'} GWs if that one pick is
+          forced out and the optimiser rebuilds around it — a full re-solve per player, not an estimate.
+        </p>
+        {#if rec.margins && !rec.margins.baseline_matches_solution}
+          <p class="mt-1 text-[10px] chip-warn rounded px-2 py-1">
+            The margin re-solve did not reproduce this exact squad, so read these as indicative.
+          </p>
+        {/if}
+      </div>
+    {/if}
 
     <!-- top captains -->
     <div class="card p-3">

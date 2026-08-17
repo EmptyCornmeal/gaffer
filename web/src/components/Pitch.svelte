@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Pos, RecPlayer } from '../lib/types'
   import { playerPhoto } from '../lib/img'
+  import { formatMargin, marginBand } from '../lib/margins'
   import Crest from './Crest.svelte'
 
   let {
@@ -42,6 +43,7 @@
         {#each row as p}
           {@const isCap = p.id === captainId}
           {@const isVice = p.id === viceId}
+          {@const band = marginBand(p.margin)}
           <button
             class="group w-[62px] sm:w-[74px] flex flex-col items-center"
             onclick={() => onpick(p)}
@@ -78,6 +80,20 @@
             <div class="mt-0.5 rounded-full bg-brand/15 px-1.5 text-[10px] font-bold text-brand-light tabular-nums leading-4">
               {p.next_gw_xp.toFixed(1)}
             </div>
+            <!-- What this slot is actually worth, under what it is projected to
+                 score. The two disagree often enough to be the point: a tile
+                 showing 27.6 xP and 0.62 margin is a good player in a contested
+                 position, and the pitch used to imply all eleven were equally
+                 settled. Rendered only where a margin was measured — an absent
+                 one shows nothing rather than a zero. -->
+            {#if band}
+              <div
+                class="mt-0.5 rounded-full px-1.5 text-[9px] font-bold tabular-nums leading-4 {band.tone}"
+                title="{band.label} — {band.hint}"
+              >
+                {formatMargin(p.margin)}
+              </div>
+            {/if}
           </button>
         {/each}
       </div>

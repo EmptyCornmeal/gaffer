@@ -148,6 +148,38 @@ export interface Meta {
   league_ids?: number[]
 }
 
+export type MarginStatus = 'optimal' | 'required' | 'impossible' | 'not_computed' | 'anomaly'
+export type MarginBandName = 'required' | 'spine' | 'settled' | 'free'
+
+/**
+ * What one squad slot is worth: the objective points given up by overruling the
+ * solver on this single pick, measured by an exact forced-out re-solve.
+ *
+ * `points` is null whenever no number is honest. The important case is
+ * `required` — forcing the player out leaves no legal squad at all, which is a
+ * meaningful answer ("structurally required") and not an error. Anything
+ * consuming this must branch on `status` rather than defaulting null to zero.
+ */
+export interface Margin {
+  points: number | null
+  status: MarginStatus
+  note?: string
+}
+
+/** Provenance for the per-card margins: what they were measured against. */
+export interface MarginReport {
+  status: 'ok' | 'truncated' | 'unavailable'
+  method: string
+  objective_version: string
+  horizon: number | null
+  baseline_objective: number | null
+  /** False means the replay did not reproduce the published squad or its score. */
+  baseline_matches_solution: boolean
+  elapsed_s: number
+  note: string
+  by_player: Record<string, Margin>
+}
+
 export interface RecPlayer {
   id: number
   code: number | null
@@ -161,6 +193,11 @@ export interface RecPlayer {
   rationale?: string
   tags?: Tag[]
   xmins_badge?: XminsBadge
+  /**
+   * Optional because it is only measured for the headline squad, and only when
+   * the sweep ran. Absent is a state; it must not render as zero.
+   */
+  margin?: Margin
 }
 
 export interface OptimalExplanation {
@@ -216,6 +253,14 @@ export interface Recommendation {
   hits: number
   summary: string
   by_horizon?: Record<string, HorizonBlock>
+  /**
+   * Null when the sweep was skipped or had nothing honest to say; absent
+   * entirely on an artifact published before margins existed. Only the headline
+   * squad carries margins — the `by_horizon` grid deliberately does not, since
+   * that would be nine more sweeps to decorate squads being compared rather
+   * than fielded.
+   */
+  margins?: MarginReport | null
 }
 
 export interface PlanStep {
