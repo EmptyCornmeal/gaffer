@@ -39,6 +39,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The Whitespace step below diffs against the PR base sha, or HEAD~1 on
+          # a branch push. `actions/checkout` defaults to a depth-1 clone, in
+          # which NEITHER object exists — so `git diff --check` was not merely
+          # reporting nothing, it was aborting with "fatal: bad object" on every
+          # single run, and the `|| true` it used to carry turned that into a
+          # green tick. The gate has never once run. 103 commits and 7.8 MB of
+          # history, so fetching all of it costs nothing worth optimising.
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -91,7 +100,10 @@ jobs:
           python scripts/verify.py --help > /dev/null
 
       - name: Whitespace
-        run: git diff --check "${{ github.event.pull_request.base.sha || 'HEAD~1' }}" HEAD || true
+        # Deliberately no `|| true` — see the checkout above for what it hid.
+        # Verified clean over HEAD~10..HEAD before removing the mask, so turning
+        # the gate on does not fail the branch on pre-existing damage.
+        run: git diff --check "${{ github.event.pull_request.base.sha || 'HEAD~1' }}" HEAD
 
       - name: Nothing that should not be committed
         run: |
