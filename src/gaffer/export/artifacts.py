@@ -13,6 +13,7 @@ from typing import Any
 
 from gaffer import config
 from gaffer.io import write_json_atomic
+from gaffer.model.projection import shrunk_defcon90
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
 from gaffer.solver.optimize import MarginReport, Solution, squad_margins
 from gaffer.store import db
@@ -155,18 +156,29 @@ def build_meta(
     return meta
 
 
-def _defcon_view(pos: str, defcon90: float, exp_defcon_pts: float) -> dict[str, Any] | None:
+def _defcon_view(
+    pos: str, observed90: float, believed90: float, exp_defcon_pts: float,
+) -> dict[str, Any] | None:
     """Projected DEFCON for the next GW: P(+2 hit), per-90 rate, and a 'near-hit'
-    flag (≥80% of the position threshold but under it — one tactical tick away)."""
+    flag (≥80% of the position threshold but under it — one tactical tick away).
+
+    Gated on the OBSERVED rate and rendered from the BELIEVED one, which are two
+    different questions and were previously answered by the same number. A
+    player who has never recorded a defensive contribution should not sprout a
+    DEFCON block merely because the model falls back to a positional prior for
+    him; a player who recorded one in a single minute should not be shown
+    "90.0/90" beside a P(hit) of 0.000. Gating on observed keeps the first from
+    happening, displaying believed keeps the second from happening.
+    """
     thr = config.DEFCON_THRESHOLD.get(pos, 99)
-    if thr >= 99 or not defcon90:
+    if thr >= 99 or not observed90:
         return None
     p_hit = round(min(1.0, (exp_defcon_pts or 0) / config.DEFCON_POINTS), 3)
     return {
         "p_hit": p_hit,
-        "per90": round(defcon90, 1),
+        "per90": round(believed90, 1),
         "threshold": thr,
-        "near_hit": bool(0.8 * thr <= defcon90 < thr),
+        "near_hit": bool(0.8 * thr <= believed90 < thr),
     }
 
 
@@ -216,13 +228,16 @@ def build_players(
         t = teams.get(r["team_id"], {})
         short = t.get("short", "?")
         fixtures = team_fixtures.get(short, {}).get("fixtures", [])[:5]
+        # What the model believes, not what the raw column says. See
+        # `projection.shrunk_defcon90` for why those differ and why it matters.
+        believed_dc = shrunk_defcon90(r)
         rat_input = {
             "position": r["position"],
             "price": r["price"] / 10.0,
             "p_start": round(r["p_start"] or 0, 2),
             "exp_minutes": r["exp_minutes"] or 0,
             "xgi90": round(r["xgi_per_90"], 2),
-            "defcon90": round(r["defcon_per_90"], 2),
+            "defcon90": round(believed_dc, 2),
             "form": r["form"],
             "owned_by": r["selected_by_pct"],
             "set_pieces": r["set_piece_notes"] or "",
@@ -261,9 +276,10 @@ def build_players(
                 "ict": round(r["ict_index"] or 0, 1),
                 "last_season": _last_season(r),
                 "dist": distributions.get(r["id"]),
-                "defcon": _defcon_view(r["position"], r["defcon_per_90"], r["exp_defcon_pts"]),
+                "defcon": _defcon_view(
+                    r["position"], r["defcon_per_90"], believed_dc, r["exp_defcon_pts"]),
                 "xgi90": round(r["xgi_per_90"], 2),
-                "defcon90": round(r["defcon_per_90"], 2),
+                "defcon90": round(believed_dc, 2),
                 "next_gw_xp": round(r["exp_points"], 2) if r["exp_points"] is not None else 0.0,
                 "horizon_xp": horizon_sum.get(r["id"], 0.0),
                 "xp_window": horizon_sum.get(r["id"], 0.0),
