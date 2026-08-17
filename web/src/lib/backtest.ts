@@ -7,8 +7,27 @@
 // model. This module makes the schema explicit and refuses anything it does not
 // recognise, so that cannot silently recur.
 
-/** Schema versions this build can render. */
-export const SUPPORTED_SCHEMA_VERSIONS = [6] as const
+/**
+ * Schema versions this build can render.
+ *
+ * 7 is the current one: it moves the test season to 2025-26, adds `season_split`
+ * and relabels the frozen `model_candidates` block. Every change is additive —
+ * nothing in `web/src` reads `season_split` — so a v6 and a v7 artifact render
+ * identically today.
+ *
+ * 6 is kept alongside it deliberately, and this is a transition state rather
+ * than a permanent pair. The pipeline writes `data/` and `web/public/data/` on
+ * the same run, so between a deploy carrying this code and the next scheduled
+ * refresh the published artifact is still v6; accepting only 7 would blank the
+ * Accuracy page for that window. Drop 6 once the deployed artifact is v7.
+ *
+ * Supported rather than rejected because v6 is not *wrong*. Versions 3, 4 and 5
+ * are refused below because rendering them would put a withdrawn or mislabelled
+ * number back on the page. A v6 artifact is an honest measurement of an earlier
+ * split — superseded, not retracted — and that distinction is the entire reason
+ * the two lists exist separately.
+ */
+export const SUPPORTED_SCHEMA_VERSIONS = [6, 7] as const
 /**
  * Versions we know about and deliberately refuse.
  *

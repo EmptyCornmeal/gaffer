@@ -63,14 +63,19 @@ const valid = {
 }
 
 describe('parseBacktest — acceptance', () => {
-  it('accepts a well-formed v5 artifact', () => {
+  it('accepts a well-formed v6 artifact', () => {
     const s = parseBacktest(valid)
     expect(s.kind).toBe('ok')
     if (s.kind === 'ok') expect(s.data.model_version).toBe('heuristic-0.1')
   })
 
+  it('accepts a v7 artifact, which differs from v6 only by addition', () => {
+    const s = parseBacktest({ ...valid, schema_version: 7, season: '2025-26' })
+    expect(s.kind).toBe('ok')
+  })
+
   it('only claims support for versions it can render', () => {
-    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([6])
+    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([6, 7])
   })
 })
 
