@@ -46,13 +46,26 @@ backtest uses. One row per `(decision_gw, target_gw, element)`; features frozen
 at the decision deadline and carried onto each target gameweek, so horizon 6 sees
 exactly what horizon 1 saw.
 
-| Season | Rows | Decision GWs | Zero-minute rows retained | Role |
+| Season | Rows | Decision GWs | Zero-minute rows retained | Role **in this experiment** |
 |---|---|---|---|---|
 | 2022-23 | 128,424 | 36 | 57.2% | train |
 | 2023-24 | 151,475 | 37 | 61.6% | selection |
 | 2024-25 | 146,073 | 37 | 58.2% | **test — untouched until selection closed** |
 
-Row counts match `gaffer.backtest.build_evaluation` exactly (146,073 for 2024-25).
+Those row counts matched `gaffer.backtest.build_evaluation` when they were taken.
+They no longer do, and neither do the roles — twice over:
+
+- **Schema 6** started evaluating GW1, which the first five schema versions
+  skipped while their own comment claimed otherwise. 2024-25 is now 149,769 rows
+  over 38 decision gameweeks, not 146,073 over 37.
+- **G-N** moved the project's split forward a season and **G-Q** took 2022-23 out
+  of it. What ships is `gaffer.backtest.SEASON_SPLIT`: train **2023-24**, select
+  **2024-25**, test **2025-26** — 161,700 rows, 38 decision gameweeks, 61.4%
+  zero-minute.
+
+The table above is left standing because it is what *this experiment* ran on. It
+is not the current configuration and must not be read as one — see
+[§11](#11-what-g-n-and-g-q-changed).
 
 **Zero-minute outcomes are kept.** They are 58% of the population and they are
 the majority of what a picker gets wrong.
@@ -86,6 +99,41 @@ missing and evaluated where it exists.
 
 Name and team keys are consistent across the join (2021-22 → 2022-23 overlap
 53.5%, versus 59.1% and 60.9% for the later pairs — normal squad turnover).
+
+#### Superseded by G-Q: the prior was not the whole problem
+
+The paragraph above is right about the prior and wrong about the conclusion it
+drew from it. It claims the missing attacking prior "runs in the harder
+direction". Measured end-to-end, it does not run in a harder direction — it runs
+off the map.
+
+2022-23's **own** `expected_goals` and `expected_assists` are identically **zero
+for GW1-15**. The first gameweek carrying any xG at all is 16, and the covered
+window holds 64.2% of the season's minutes. The whole-season goals/xG ratio of
+**1.419** — which reads like a finishing-quality signal and is not one — is
+entirely that gap: over GW16-38 alone it is **0.913**, i.e. ordinary. Assists
+behave identically (A/xA 2.111 season-wide, 1.357 over the covered window,
+against ~1.37 everywhere else).
+
+| Season | goals/xG | assists/xA | first GW with xG |
+|---|---|---|---|
+| 2021-22 | — (no `expected_goals` column) | — | — |
+| **2022-23** | **1.419** (0.913 over GW16-38) | **2.111** (1.357 over GW16-38) | **16** |
+| 2023-24 | 0.998 | 1.424 | 1 |
+| 2024-25 | 0.982 | 1.374 | 1 |
+| 2025-26 | 0.943 | 1.379 | 1 |
+
+So the column is not mis-scaled, it is 40% absent, and no multiplier repairs it:
+zero times anything is zero. Stacked on a 2021-22 prior that cannot report xG
+either, the model's h=1 numbers on 2022-23 are rank correlation **−0.050**, a
+legal XI of **26.8** points per gameweek against the naive baseline's **48.2**,
+and **8.1%** captain accuracy. That is not a weak season. It is the model reading
+columns that are not there, and training on it teaches the shape of the gap.
+
+2022-23 is therefore out of the split. It is still downloaded, because 2023-24's
+`base_*` priors are read from its file — a residual documented in
+`backtest.SEASON_SPLIT["residual"]`, and measured: correcting it costs 0.8
+legal-XI points on 2023-24, so it was left alone.
 
 ## 3. Feature contract
 
@@ -148,13 +196,29 @@ how well the move predicts the move in his points:
 
 | Quantity | sd of within-player deviation | corr. with points deviation |
 |---|---|---|
-| **`xP`** | **1.71 – 1.81** | **+0.40 to +0.46** |
+| **`xP`** | **1.71 – 1.86** | **+0.15 to +0.46** |
 | `ppg_td` — pre-deadline by construction | 0.94 – 1.03 | −0.10 to −0.11 |
 | `expected_goals` — post-match by definition | 0.17 – 0.22 | +0.22 to +0.41 |
 
-Consistent across 2022-23, 2023-24 and 2024-25. A forecast for a fixed player
-moves mainly with the fixture and the team news; this moves with the *result*, as
-strongly as the xG he actually generated in the match.
+A forecast for a fixed player moves mainly with the fixture and the team news;
+on 2022-23, 2023-24 and 2024-25 this moves with the *result*, about as strongly
+as the xG he actually generated in the match.
+
+**It does not reproduce on 2025-26**, and that season was added to the
+diagnostic's default the moment it became the test season, because excluding a
+season for disagreeing is how a diagnostic becomes an argument:
+
+| Season | `xP` sd within player | `xP` corr. with points deviation |
+|---|---|---|
+| 2022-23 | 1.80 | +0.45 |
+| 2023-24 | 1.71 | +0.46 |
+| 2024-25 | 1.75 | +0.40 |
+| **2025-26** | **1.86** | **+0.15** |
+
+The withdrawal does not move, because it never rested on this measurement — the
+grounds are the provenance statement above, and they are unchanged. What 2025-26
+adds is that the correlation is not a stable property of the column, which is one
+more reason it was right not to lean on it.
 
 This is **consistent with** the upstream warning and it is why the warning was
 taken seriously. It is not by itself proof of when the value was written — a
@@ -215,6 +279,11 @@ it alone gave nothing, and permutation importance put it at +1.01 MAE against
 went with it.
 
 ### Test season (2024-25), reported once, after selection closed
+
+*This experiment's test season. The project's is now 2025-26 — see
+[§11](#11-what-g-n-and-g-q-changed). Nothing in this section has been restated on
+2025-26, because the candidates cannot be re-run: `src/gaffer/ml.py` was deleted
+by the same batch that recorded them.*
 
 Read this table by candidate. GBM and ridge did **not** produce the same result,
 and the earlier version of this document was wrong to summarise them together.
@@ -388,3 +457,58 @@ candidate, if `rejected` and `inconclusive` collapse into one value, or if the
 
 Removing a rejected architecture is easy. Keeping the *reasoning* honest is the
 part that needs a test.
+
+## 11. What G-N and G-Q changed
+
+Everything above is the T-26 record and is deliberately left at the numbers it
+was measured on. This section says what is no longer true of the project.
+
+**The split moved forward one season** (G-N), and 2022-23 left it (G-Q):
+
+| | before | now |
+|---|---|---|
+| train | 2022-23 + 2023-24 | **2023-24** |
+| select | 2023-24 *(also in the training set)* | **2024-25** |
+| test | 2024-25 | **2025-26** |
+| excluded | — | 2021-22, 2022-23 *(prior sources only)* |
+
+Source of truth: `gaffer.backtest.SEASON_SPLIT`. `gaffer.fitting` still carries
+its own pre-G-N triple and has **not** been reconciled.
+
+**Why 2025-26 is worth reporting on.** It is the only season in the archive
+carrying a `defensive_contribution` column, so it is the only one on which the
+projection's DEFCON term can be measured rather than assumed. Ablated there it is
+worth **+3.4 legal-XI points per gameweek** (49.3 with, 45.9 without), +0.90
+captain points and +2.7pp captain accuracy — while making MAE 0.014 *worse*. The
+same ablation on 2024-25 moves the XI by 0.1 in the *wrong* direction (50.6 with,
+50.7 without): that season has no `defensive_contribution` column, so whatever
+the term contributes there is fabricated from a positional prior.
+
+**The headline, both halves.** At h=1, legal XI, model against the naive
+baseline:
+
+| | 2024-25 | 2025-26 |
+|---|---|---|
+| legal XI, model | 50.6 | 49.3 |
+| legal XI, naive | 51.7 | 44.6 |
+| **verdict** | **loses by 1.1** | **wins by 4.7**, and leads at all six horizons |
+| captain pts, model | 8.76 | 5.87 |
+| captain pts, naive | 8.00 | 5.97 |
+| **verdict** | **wins** | **loses** |
+| rank corr, model / naive | 0.440 / 0.666 | 0.447 / 0.692 |
+| MAE, model / naive | 1.565 / 1.115 | 1.592 / 1.075 |
+
+This is the first season in which the component model beats a rolling points
+average at picking a legal XI. It is also a season in which it lost the captaincy
+comparison it had won the year before, in which its absolute XI score *fell* from
+50.6 to 49.3, and in which the naive baseline still beats it on both statistical
+metrics — as it does in every season measured. Nothing about the model changed
+between the two artifacts. Only the season did.
+
+Every 2025-26 figure here was measured at `projection.MODEL_VERSION ==
+"heuristic-0.5"`, while G-L/G-M/G-P was landing DEFCON shrinkage and xA
+calibration. Under `heuristic-0.4` the same run gave 48.9 / 5.47 / 0.450 / 1.600:
+every conclusion above survived the bump, the third decimal did not.
+
+`data/backtest.json` is schema **7**. A 6 and a 7 describe different seasons with
+different available columns and must not be differenced.

@@ -12,7 +12,8 @@ decision point from pre-deadline information only, and evaluates horizons 1-6.
 
 It establishes a baseline. It does not tune anything.
 
-    python -m gaffer.backtest                 # writes data/backtest.json
+    python -m gaffer.backtest                 # prints, writes nothing
+    python -m gaffer.backtest --write         # overwrites data/backtest.json
     python -m gaffer.backtest --horizons 1 3  # faster subset
 """
 
@@ -54,9 +55,133 @@ from gaffer.model import projection
 #:       scratch. Adds `pre_season`, because averaging that gameweek into 37
 #:       in-season ones hides it, and because the naive baseline does not exist
 #:       there and must not appear to have been beaten.
-SCHEMA_VERSION = 6
+#:   7 = reports on 2025-26 and re-cuts the split behind it (G-N), and removes
+#:       2022-23 from that split (G-Q). Every figure in a version-6 artifact was
+#:       measured on 2024-25 — a season in which `defensive_contribution` does
+#:       not exist, so the projection's DEFCON term contributed exactly nothing
+#:       to it. A 6 and a 7 are two different models measured on two different
+#:       seasons and must never be diffed as though one were an improvement on
+#:       the other. Adds `season_split`, so the artifact states its own
+#:       train/select/test instead of leaving it to a comment that never ships.
+SCHEMA_VERSION = 7
 
-TEST_SEASON = "2024-25"
+#: The chronological split. Disjoint, ordered, and no season used twice.
+#:
+#:   train   2023-24
+#:   select  2024-25
+#:   test    2025-26  — reported once; nothing has ever been fitted, swept or
+#:                      rejected against it
+#:
+#: Exactly one season later than the split it replaces (train 2022-23 + 2023-24,
+#: select 2023-24, report 2024-25). The shift buys three separate things.
+#:
+#: 1. DEFCON becomes measurable at all. 2025-26 is the only season in the
+#:    archive carrying `defensive_contribution`; in every earlier season
+#:    `defcon90_td` is identically zero. Ablated on 2025-26 — thresholds
+#:    neutralised, which is the only ablation that still means "no DEFCON" now
+#:    the rate is shrunk toward a positional prior — it is worth +3.4 legal-XI
+#:    points per gameweek (49.3 with, 45.9 without), +0.90 captain points and
+#:    +2.7pp captain accuracy, while making MAE 0.014 WORSE. The same ablation
+#:    on 2024-25 moves the legal XI by 0.1 (50.6 against 50.7) in the WRONG
+#:    direction: since heuristic-0.5 the term no longer switches itself off on a
+#:    season with no DEFCON column, it falls back to `F.DEFCON_PRIOR` and awards
+#:    a small fabricated contribution. Reported rather than smoothed — see the
+#:    note on `_player_inputs`.
+#: 2. The reporting season stops being one that selection had already touched.
+#:    T-12's clamp sweep was fitted on 2023-24, but `projection.py`'s two
+#:    rejected p_start corrections were measured on 2023-24 AND 2024-25 — so
+#:    "reported on a season selection never saw" was true of one piece of
+#:    parameter work and not of the other. Demoting 2024-25 to the selection
+#:    season makes the claim true rather than nearly true.
+#: 3. 2022-23 leaves the split, which the freed 2024-25 slot makes free. See
+#:    `SEASON_SPLIT["excluded"]` — the reason is a measurement, not a preference.
+#:
+#: What the move does NOT buy, recorded here because a season change is exactly
+#: where a project starts quoting only the half that improved. At h=1, legal XI,
+#: model against the naive baseline: 2024-25 was 50.6 vs 51.7, a LOSS by 1.1;
+#: 2025-26 is 49.3 vs 44.6, a WIN by 4.7, and the model leads at all six
+#: horizons (+4.7, +2.5, +5.1, +6.9, +3.0, +0.8). But captaincy flips the other
+#: way — 5.87 vs 5.97 here, where 2024-25 was 8.76 vs 8.00 — the naive baseline
+#: still beats the model on MAE and rank correlation in both seasons by a wide
+#: margin, and the absolute level FELL: 49.3 is below 2024-25's 50.6. This is a
+#: better season to be measured on. It is not a better score.
+#:
+#: Every figure in this block was measured at `projection.MODEL_VERSION ==
+#: "heuristic-0.5"` and is stamped as such below. G-L/G-M/G-P was landing DEFCON
+#: shrinkage and xA calibration into that same version while this was measured:
+#: under heuristic-0.4 the identical run gave 48.9 / 5.47 / rank corr 0.450 /
+#: MAE 1.600. The direction of every conclusion survived the bump; the third
+#: decimal did not, which is why the stamp is here rather than the reader's
+#: assumption.
+#:
+#: `gaffer.fitting` carries its own TRAIN_SEASON / VALIDATION_SEASON /
+#: TEST_SEASON triple, still holding the pre-G-N values, and its
+#: `EXCLUDED_SEASONS` still explains 2022-23's exclusion by the absence of a
+#: 2021-22 file that has since been fetched. That module was out of scope for
+#: this change; the two are now inconsistent and THIS block is the intended
+#: source of truth.
+SEASON_SPLIT = {
+    "train": ("2023-24",),
+    "select": "2024-25",
+    "test": "2025-26",
+    #: The projection these figures were taken from. Anything that moves
+    #: `projection.MODEL_VERSION` invalidates them.
+    "measured_at_model_version": "heuristic-0.5",
+    "excluded": {
+        "2021-22": "Predates FPL's `expected_goals` / `expected_assists` / "
+                   "`starts` columns entirely. On disk only as 2022-23's prior "
+                   "source, which since G-Q has exactly one caller — "
+                   "`xp_leakage_diagnostic`.",
+        "2022-23": "G-Q. Its `expected_goals` and `expected_assists` are "
+                   "identically ZERO for GW1-15: the first gameweek carrying "
+                   "any xG at all is 16, and the covered window holds 64.2% of "
+                   "the season's minutes. The season-wide goals/xG of 1.419 is "
+                   "entirely that gap — over GW16-38 alone it is 0.913, i.e. "
+                   "ordinary, and assists behave the same way (A/xA 2.111 "
+                   "season-wide, 1.357 over the covered window, against ~1.37 "
+                   "in every other season). So the column is not mis-scaled, it "
+                   "is 40% absent. Compounding it, the 2021-22 prior cannot "
+                   "report xG either, so `base_xg90 > 0` holds for 0.0% of "
+                   "2022-23 players against 35-39% elsewhere. Measured "
+                   "end-to-end, the model scores h=1 rank correlation -0.050 on "
+                   "that season, a legal XI of 26.8 pts/gw against the naive "
+                   "baseline's 48.2, and 8.1% captain accuracy. That is not a "
+                   "weak season. It is the model running on inputs that are not "
+                   "there.",
+    },
+    #: The alternatives to dropping it, both measured before it was dropped.
+    "rejected_fixes": {
+        "rescale 2022-23's xG": "The only rescaling the data supports is to "
+            "recompute the rate over the window the archive actually covers "
+            "(GW16-38) rather than over 38 gameweeks — a flat multiplier cannot "
+            "work, because zero times anything is still zero. It does fix the "
+            "level: 2023-24's mean `base_xg90` moves 0.1074 -> 0.1609, into "
+            "line with 2024-25's 0.1674. It does not pay for itself. On "
+            "2023-24: rank correlation 0.4267 -> 0.4316 and captain points 5.45 "
+            "-> 5.63, but MAE 1.5010 -> 1.5179 and the legal XI 46.9 -> 46.1. "
+            "The decision metric — the one that decides things — got WORSE. "
+            "Rejected on the measurement, and it would additionally have needed "
+            "a per-season special case wired into "
+            "`histdata._prior_season_baseline`.",
+        "keep it with a caveat": "A caveat describes a limitation. A rank "
+            "correlation of -0.050 is not a limitation of a season, it is a "
+            "model reading a column that does not exist. Training on it teaches "
+            "the shape of the gap.",
+    },
+    #: Dropping 2022-23 from the split does NOT remove it from the causal chain:
+    #: 2023-24's `base_xg90` / `base_xa90` are still read from its totals, and
+    #: are therefore still ~33% low. That residual was measured and left alone —
+    #: it is precisely the `rescale` row above, and correcting it costs 0.8
+    #: legal-XI points on 2023-24. The test season is untouched by any of this:
+    #: 2025-26's priors come from 2024-25, which is clean.
+    "residual": "2023-24's attacking priors still come from the degraded "
+                "2022-23 file. Correcting them was measured and made the "
+                "decision metric worse; see rejected_fixes.",
+}
+
+#: The season every published figure in this artifact was measured on. Derived,
+#: so it cannot drift from the split above.
+TEST_SEASON = SEASON_SPLIT["test"]
 #: Decision gameweeks evaluated. GW1 has no season-to-date history, so the model
 #: runs on its prior/price path there — which is exactly the live GW1 regime and
 #: is therefore included rather than skipped.
@@ -449,23 +574,104 @@ WITHDRAWN_BASELINES = {
 #: heuristic at h=1 on legal-XI points and on captaincy. It is not a *win* — the
 #: interval spans zero and it does not hold up past h=1 — but "not selected" and
 #: "rejected" are different findings, and flattening them hid real evidence.
+#:
+#: FROZEN AT 2024-25, and G-N is why this now has to be said out loud. Every
+#: number below was measured on the pre-G-N split (train 2022-23 + 2023-24,
+#: select 2023-24, report 2024-25) against a code path that no longer exists:
+#: the same batch that recorded this experiment deleted `src/gaffer/ml.py` and
+#: the joblib. So the candidate rows cannot be re-measured on the current split
+#: without rebuilding a trainer, and re-labelling them "2025-26" would be a
+#: fabrication in the opposite direction to the one they are guarding against.
+#: `heuristic_reference` therefore KEEPS its 2024-25 values — the candidate
+#: rows are paired against it gameweek by gameweek, and swapping in 2025-26
+#: figures would compare a 2024-25 model against a 2025-26 baseline and
+#: manufacture a result. What the shipped heuristic does on the CURRENT test
+#: season is `current_split_reference`, measured fresh for G-N and paired with
+#: nothing.
 MODEL_CANDIDATES = {
-    "evaluation_version": "candidates-1.0",
+    "evaluation_version": "candidates-1.1",
     "outcome": "no trained points model ships",
+    "measured_on_season": "2024-25",
+    "status": "FROZEN at 2024-25, on the pre-G-N split, against a removed code "
+              "path (`src/gaffer/ml.py`). Not re-runnable. Nothing here "
+              "describes what ships today.",
     "protocol": "Features from the same leakage-checked adapter; trained on "
                 "2022-23 + 2023-24 (2021-22 supplies 2022-23's priors); selected "
                 "on 2023-24; reported once on 2024-25, untouched until selection "
                 "closed. Decision metric = legal 15 under budget, quota and the "
                 "three-per-club limit, best legal XI from it, scored on what "
                 "actually happened; paired by gameweek against the shipped "
-                "heuristic with a 4000-sample bootstrap.",
+                "heuristic with a 4000-sample bootstrap. NO LONGER THE PROJECT'S "
+                "SPLIT — see `season_split`. Two things in it are wrong rather "
+                "than merely superseded: selection ran on 2023-24, which was "
+                "also in the training set; and 2022-23 has no `expected_goals` "
+                "or `expected_assists` at all before GW16 (G-Q).",
     "heuristic_reference": {
+        "measured_on_season": "2024-25",
+        "why_not_restated": "The candidate rows are paired against these by "
+                            "gameweek. Restating them on 2025-26 would pair a "
+                            "2024-25 model with a 2025-26 baseline.",
         "xi_points_per_gw": {"1": 50.86, "2": 52.58, "3": 51.03,
                              "4": 51.15, "5": 48.91, "6": 49.47},
         "captain_accuracy_pct_h1": 29.7,
         "captain_regret_per_gw_h1": 5.59,
         "rank_corr": {"1": 0.440, "3": 0.413, "6": 0.397},
         "mae": {"1": 1.566, "3": 1.585, "6": 1.605},
+    },
+    #: The shipped heuristic on the CURRENT test season. Here so that
+    #: `heuristic_reference` can never be read as a description of the live
+    #: configuration — which is exactly what it had become.
+    "current_split_reference": {
+        "measured_on_season": "2025-26",
+        "measured_at_model_version": "heuristic-0.5",
+        "note": "Re-measured for G-N. No trained candidate was ever run on this "
+                "season, so nothing here is paired, and none of it may be "
+                "differenced against the candidate rows.",
+        "xi_points_per_gw": {"1": 49.3, "2": 47.8, "3": 46.6,
+                             "4": 47.1, "5": 45.6, "6": 44.3},
+        "captain_points_per_gw_h1": 5.87,
+        "captain_accuracy_pct_h1": 21.1,
+        "captain_regret_per_gw_h1": 6.03,
+        "rank_corr": {"1": 0.447, "2": 0.433, "3": 0.420,
+                      "4": 0.413, "5": 0.406, "6": 0.402},
+        "mae": {"1": 1.592, "2": 1.606, "3": 1.613,
+                "4": 1.628, "5": 1.633, "6": 1.637},
+        "naive_baseline": {
+            "xi_points_per_gw": {"1": 44.6, "2": 45.3, "3": 41.5,
+                                 "4": 40.2, "5": 42.6, "6": 43.5},
+            "rank_corr": {"1": 0.692, "2": 0.677, "3": 0.664,
+                          "4": 0.653, "5": 0.647, "6": 0.640},
+            "mae": {"1": 1.075, "2": 1.091, "3": 1.104,
+                    "4": 1.126, "5": 1.133, "6": 1.138},
+            "captain_points_per_gw_h1": 5.97,
+            "reading": "The model leads legal-XI points at every horizon "
+                       "(+4.7, +2.5, +5.1, +6.9, +3.0, +0.8) — a first. It "
+                       "still loses captaincy (5.87 to 5.97), and loses MAE and "
+                       "rank correlation heavily: 61.4% of rows are zero-minute "
+                       "and a rolling points average predicts non-appearance far "
+                       "better. On 2024-25 it ran the other way: 50.6 to 51.7 on "
+                       "the XI, 8.76 to 8.00 on the captain.",
+        },
+        "defcon_ablation_h1": {
+            "method": "DEFCON_THRESHOLD neutralised to 999 everywhere. Zeroing "
+                      "`defcon_per_90` is no longer an ablation: since "
+                      "heuristic-0.5 the rate shrinks toward `F.DEFCON_PRIOR`, "
+                      "so zero still yields a contribution.",
+            "with": {"xi_points_per_gw": 49.3, "rank_corr": 0.447, "mae": 1.592,
+                     "captain_points_per_gw": 5.87,
+                     "captain_accuracy_pct": 21.1},
+            "without": {"xi_points_per_gw": 45.9, "rank_corr": 0.442,
+                        "mae": 1.578, "captain_points_per_gw": 4.97,
+                        "captain_accuracy_pct": 18.4},
+            "reading": "+3.4 legal-XI points per gameweek: about 72% of the "
+                       "model's whole 4.7-point margin over the naive baseline, "
+                       "from the one component measurable for exactly one "
+                       "season. It also makes MAE 0.014 worse. On 2024-25 it "
+                       "moves the XI 0.1 the WRONG way (50.6 with, 50.7 "
+                       "without) — that season has no `defensive_contribution` "
+                       "column, so the term's contribution there is fabricated "
+                       "from a positional prior.",
+        },
     },
     "candidates": [
         {
@@ -598,8 +804,9 @@ def candidate_decisions() -> dict[str, str]:
     return {c["candidate"]: c["decision"] for c in MODEL_CANDIDATES["candidates"]}
 
 
-def xp_leakage_diagnostic(seasons: tuple[str, ...] = ("2022-23", "2023-24",
-                                                      "2024-25")) -> dict[str, Any]:
+def xp_leakage_diagnostic(
+    seasons: tuple[str, ...] = ("2022-23", "2023-24", "2024-25", "2025-26"),
+) -> dict[str, Any]:
     """Reproduce the measurement that withdrew `fpl_xp`.
 
     Within one player, across gameweeks he played 60+ minutes of and his team
@@ -608,6 +815,18 @@ def xp_leakage_diagnostic(seasons: tuple[str, ...] = ("2022-23", "2023-24",
 
     A pre-deadline forecast can only move with the fixture and the team news.
     Anything that moves with the *result* is not one.
+
+    2025-26 was added to the default when it became the test season, and it
+    WEAKENS the corroboration rather than strengthening it: `xP` correlates
+    +0.147 with the points deviation there, against +0.45 / +0.46 / +0.40 on
+    2022-23 / 2023-24 / 2024-25, while its within-player spread is the largest of
+    the four (sd 1.86). Recorded rather than dropped — a season is not excluded
+    from a diagnostic for disagreeing with it. The withdrawal does not move,
+    because it never rested on this measurement: the grounds are that the archive
+    cannot certify `xP` as the pre-deadline forecast and the upstream dataset
+    warns it may contain post-match information. What 2025-26 does show is that
+    the correlation is not a stable property of the column, which is one more
+    reason not to have leant on it.
     """
     out: dict[str, Any] = {"method": xp_leakage_diagnostic.__doc__, "seasons": {}}
     for season in seasons:
@@ -781,6 +1000,10 @@ def run(
         "model_version": projection.MODEL_VERSION,
         "dataset": "vaastav/Fantasy-Premier-League merged_gw",
         "season": season,
+        # The artifact states its own split. A reader who only ever sees the
+        # published JSON should not have to trust that some comment in the
+        # repository still matches it.
+        "season_split": SEASON_SPLIT,
         "decision_gameweeks": f"GW{FIRST_DECISION_GW}-GW{int(ev['decision_gw'].max())}",
         "horizons": list(horizons),
         "coverage": {
@@ -825,8 +1048,15 @@ def run(
             "The dataset carries no status/chance-of-playing column, so every "
             "player resolves to the model's available branch; the availability "
             "path is exercised but never varied.",
-            "DEFCON did not score in 2024-25, so its contribution here is "
-            "structural only.",
+            "DEFCON is measured here for the first time, and it carries most of "
+            "the headline. 2025-26 is the only season in the archive with a "
+            "`defensive_contribution` column, so every backtest before this one "
+            "ran with `defcon90_td` identically zero. Ablated here (thresholds "
+            "neutralised) it is worth +3.4 legal-XI points per gameweek (49.3 "
+            "with, 45.9 without) and +0.90 captain points, while making MAE "
+            "0.014 WORSE — so ~72% of the model's 4.7-point margin over the "
+            "naive baseline comes from the one component measurable for exactly "
+            "one season. One season is one season; read the margin accordingly.",
             "Transfer regret is a one-free-transfer greedy sequence, not the "
             "shipped multi-period solver.",
             "Squad selection maximises projected points under budget, quota and "
@@ -837,17 +1067,30 @@ def run(
             "for the NEXT gameweek is a blend of it with FPL's live ep_next, and "
             "that blend is unmeasurable here — see `withdrawn_baselines`. Beyond "
             "h=1 the shipped projection is exactly this column.",
-            "An in-sample gain is never evidence. Parameters were selected on "
-            "2023-24 and reported here on 2024-25, which selection never saw.",
+            "An in-sample gain is never evidence. T-12's clamp sweep was fitted "
+            "on 2023-24, and the two p_start corrections below were rejected on "
+            "2023-24 AND 2024-25 — now the train and select seasons. Nothing has "
+            "ever been fitted, swept or rejected against 2025-26. That is a "
+            "stronger claim than this line used to make: while 2024-25 was the "
+            "reporting season, a rejection had already looked at it.",
             "`p_start` from a prior season is `starts / 38`, which cannot "
             "separate rotation from injury absence — the denominator assumes "
             "the player was available for all 38. Two price-prior corrections "
             "were measured and both were rejected: a symmetric blend degraded "
             "nailed cheap players, and an upward-only floor left XI points flat "
             "while worsening rank correlation and MAE at every weight on both "
-            "seasons. Absence appears to predict absence, so the conflation is "
+            "2023-24 and 2024-25 — which are now the train and select seasons, "
+            "not this one. Absence appears to predict absence, so the conflation is "
             "crude rather than simply wrong. A real fix needs per-fixture "
             "history, not a constant.",
+            "This artifact reports 2025-26; the one before it reported 2024-25. "
+            "They are not two readings of one instrument. 2025-26 has a DEFCON "
+            "column and 2024-25 has none, zero-minute share is 61.4% against "
+            "58.0%, and the results invert: the model WINS legal-XI points here "
+            "(49.3 to 44.6, leading at all six horizons) while LOSING captaincy "
+            "(5.87 to 5.97), where on 2024-25 it lost the XI (50.6 to 51.7) and "
+            "won the captaincy (8.76 to 8.00). The naive baseline beats it on "
+            "MAE and rank correlation in both. Only the season changed.",
             "GW1 is included, and the naive baseline does not exist there: it is "
             "cumulative season-to-date points-per-game, which is 0 for everyone "
             "before a ball is kicked. `rank_corr` skips zero-variance "
