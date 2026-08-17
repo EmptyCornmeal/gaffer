@@ -99,8 +99,15 @@ class FixtureState:
 
         Only once the match is over. Mid-match a benched player may still come on,
         so autosubbing him would be guessing.
+
+        A postponed fixture counts too. It is over in the only sense this
+        question asks about: it will not be played inside this gameweek, so a
+        player left in it has blanked and FPL substitutes him. Leaving postponed
+        out kept those players permanently mid-match, which is why a postponed
+        captain never handed the armband to the vice.
         """
-        return self.state in (STATE_AWAITING_BONUS, STATE_FINISHED)
+        return self.state in (STATE_AWAITING_BONUS, STATE_FINISHED,
+                              STATE_POSTPONED)
 
     def as_dict(self) -> dict[str, Any]:
         return {"id": self.id, "event": self.event, "team_h": self.team_h,
@@ -264,6 +271,41 @@ class PlayerLive:
         }
 
 
+def remaining_fixtures(fx: list[FixtureState], minutes: int) -> list[FixtureState]:
+    """The fixtures in ``fx`` that can still deliver points to this player.
+
+    Both of the numbers a caller has are gameweek aggregates: one projection for
+    the week and one minutes figure for the week. So "has he played yet" cannot
+    be answered from the player at all in a double gameweek — only the calendar
+    knows, and it is asked here rather than inferred from his minutes.
+
+    A fixture that has not kicked off is always still to come. One that is under
+    way counts only while he has no minutes anywhere: with an aggregate we cannot
+    tell which of his matches those minutes came from, and a player already on
+    the pitch is scoring into ``confirmed`` rather than into a projection.
+    """
+    pending = [f for f in fx if not f.counts_as_played]
+    if minutes == 0:
+        return pending
+    return [f for f in pending if f.state == STATE_SCHEDULED]
+
+
+def remaining_xp(xp: float, remaining: int, total: int) -> float:
+    """The share of a gameweek projection that is still to be played.
+
+    The projection is one number for the whole gameweek, so in a double it
+    already covers both matches. An even split across the club's fixtures is the
+    only division the data supports — neither the artifact nor the projections
+    table carries a per-fixture breakdown — and it is right in both directions
+    that matter: a player with one of two still to come is worth about half of
+    it rather than nothing, and one who was left out of the first of two is
+    worth about half of it rather than all of it.
+    """
+    if total <= 0 or remaining <= 0:
+        return 0.0
+    return float(xp) * remaining / total
+
+
 def player_live(
     live: dict[str, Any], states: dict[int, FixtureState],
     prov_bonus: dict[int, int], team_of: dict[int, int],
@@ -271,10 +313,15 @@ def player_live(
 ) -> dict[int, PlayerLive]:
     """Fold the live endpoint into per-player state.
 
-    A player is ``yet_to_play`` when at least one of his fixtures this gameweek
-    has not finished — which is *not* the same as "has zero minutes". Confusing
-    the two is what makes a live tool declare a substitution before the second
-    half has kicked off.
+    A player is ``yet_to_play`` when one of his fixtures this gameweek can still
+    deliver points — which is *not* the same as "has zero minutes". Confusing the
+    two is what makes a live tool declare a substitution before the second half
+    has kicked off.
+
+    ``finished`` is the mirror image: every fixture of his is over, *including*
+    the gameweek in which his club has no fixture at all. A blank is not a
+    gameweek that never ends, and a player in one has to become substitutable —
+    with ``bool(fx) and ...`` he never did.
     """
     predictions = predictions or {}
     per_fixture: dict[int, list[FixtureState]] = {}
@@ -291,32 +338,32 @@ def player_live(
         mins = int(stats.get("minutes") or 0)
         pts = int(stats.get("total_points") or 0)
         fx = per_fixture.get(team_of.get(pid, -1), [])
-        all_done = bool(fx) and all(f.counts_as_played for f in fx)
-        pending = [f for f in fx if not f.counts_as_played
-                   and f.state != STATE_POSTPONED]
+        remaining = remaining_fixtures(fx, mins)
         out[pid] = PlayerLive(
             id=pid, minutes=mins, confirmed=pts,
             provisional=int(prov_bonus.get(pid, 0)),
-            predicted=float(predictions.get(pid, 0.0)) if pending and mins == 0
-            else 0.0,
-            played=mins > 0, finished=all_done,
-            yet_to_play=bool(pending) and mins == 0,
+            predicted=remaining_xp(predictions.get(pid, 0.0), len(remaining),
+                                   len(fx)),
+            played=mins > 0,
+            finished=all(f.counts_as_played for f in fx),
+            yet_to_play=bool(remaining),
             states=sorted({f.state for f in fx}),
         )
 
-    # Players with a fixture but no live row yet (endpoint lags kick-off).
+    # Players with no live row yet: the endpoint lags kick-off, and it has no row
+    # at all for a club that is not playing. Both are zero-minute players, so both
+    # are read from the calendar alone.
     for pid, team in team_of.items():
         if pid in out:
             continue
         fx = per_fixture.get(team, [])
-        if not fx:
-            continue
-        pending = [f for f in fx if not f.counts_as_played
-                   and f.state != STATE_POSTPONED]
+        remaining = remaining_fixtures(fx, 0)
         out[pid] = PlayerLive(
-            id=pid, predicted=float(predictions.get(pid, 0.0)) if pending else 0.0,
-            finished=bool(fx) and all(f.counts_as_played for f in fx),
-            yet_to_play=bool(pending), states=sorted({f.state for f in fx}))
+            id=pid,
+            predicted=remaining_xp(predictions.get(pid, 0.0), len(remaining),
+                                   len(fx)),
+            finished=all(f.counts_as_played for f in fx),
+            yet_to_play=bool(remaining), states=sorted({f.state for f in fx}))
     return out
 
 
@@ -607,9 +654,15 @@ def largest_swing(
 ) -> dict[str, Any] | None:
     """Which live player has moved the league most, and by how much.
 
-    Differential ownership is what actually moves a mini-league: a player both of
-    you own changes nothing. The swing is measured against the closest rival, so
-    it answers "what is deciding my week", not "who scored the most points".
+    What moves a mini-league is not ownership but *effective* ownership: how many
+    copies of a player's points land in your total against how many land in your
+    rival's. Owning him is only one way to differ. You both own him and only one
+    of you captained him is the other, and it is the commoner of the two — the
+    ownership-only version of this returned "no swing" for the single most
+    ordinary way a week turns.
+
+    Measured against the closest rival, so it answers "what is deciding my week",
+    not "who scored the most points".
     """
     names = names or {}
     if not rivals:
@@ -620,29 +673,38 @@ def largest_swing(
     my_ids = set(mine.autosubs.xi)
     their_ids = set(closest.autosubs.xi)
 
+    def weight(pid: int, squad: SquadLive, ids: set[int]) -> int:
+        """How many copies of this player's points land in ``squad``'s total."""
+        if pid not in ids:
+            return 0
+        return squad.autosubs.multiplier if pid == squad.autosubs.captain else 1
+
     best_pid, best_delta = None, 0.0
-    for pid in my_ids ^ their_ids:
+    # Iterated in ascending id, so an exact tie resolves to the lowest id in both
+    # implementations. Set iteration order would not: CPython lays small ints out
+    # by value modulo the table size, so `{9, 40} ^ set()` comes out [40, 9]
+    # while the TypeScript port, which sorts, would answer 9.
+    for pid in sorted(my_ids | their_ids):
         st = live.get(pid)
         if st is None or not (st.confirmed or st.provisional):
             continue
-        pts = st.confirmed + st.provisional
-        m = 1
-        if pid == mine.autosubs.captain:
-            m = mine.autosubs.multiplier
-        elif pid == closest.autosubs.captain:
-            m = closest.autosubs.multiplier
-        delta = pts * m * (1 if pid in my_ids else -1)
+        edge = weight(pid, mine, my_ids) - weight(pid, closest, their_ids)
+        if edge == 0:                     # he scores identically for both of you
+            continue
+        delta = (st.confirmed + st.provisional) * edge
         if abs(delta) > abs(best_delta):
             best_pid, best_delta = pid, delta
     if best_pid is None:
         return None
+    shared = best_pid in my_ids and best_pid in their_ids
     return {
         "player_id": best_pid,
         "name": names.get(best_pid, str(best_pid)),
         "swing": round(best_delta, 2),
         "in_your_xi": best_pid in my_ids,
         "against": closest.entry_id,
-        "note": ("a differential you own" if best_pid in my_ids
+        "note": ("a player you both own but captain differently" if shared
+                 else "a differential you own" if best_pid in my_ids
                  else "a differential your closest rival owns"),
     }
 

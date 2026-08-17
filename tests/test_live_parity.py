@@ -208,6 +208,37 @@ def build_cases() -> list[dict]:
                 live_payload={"elements": live_els},
             ),
         },
+        {
+            # Team 2 — players 9-15, which is three of the XI and the whole
+            # bench — has no fixture at all. Every case above gives both clubs a
+            # match, and that is exactly how a gameweek that never ends went
+            # unnoticed: with no fixtures, "all his fixtures are over" was false
+            # forever, so the blanked captain kept the armband.
+            "name": "a blank gameweek ends, and the armband moves",
+            "input": base(
+                squad=squad(captain=9, vice=5),
+                fixtures_payload=[fixture(1, team_h=1, team_a=3, started=True,
+                                          minutes=90, finished=True)],
+                live_payload={"elements": [element(p, 90, 2) for p in range(1, 9)]
+                              + [element(p, 0, 0) for p in range(9, 16)]},
+                predictions={str(p): 3.5 for p in range(9, 16)},
+            ),
+        },
+        {
+            # Team 1 plays twice, one match done and one still to come. The
+            # projection is a gameweek aggregate covering both, so half of it is
+            # still ahead of them — reading their aggregate minutes as "done"
+            # wrote all of it off.
+            "name": "a double gameweek splits the projection across both fixtures",
+            "input": base(
+                fixtures_payload=[
+                    fixture(1, started=True, minutes=90, finished=True),
+                    fixture(2, team_h=1, team_a=3),
+                ],
+                live_payload={"elements": live_els},
+                predictions={str(p): 4.0 for p in range(1, 16)},
+            ),
+        },
     ]
 
 

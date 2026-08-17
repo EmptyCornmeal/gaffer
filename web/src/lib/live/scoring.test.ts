@@ -1,0 +1,190 @@
+// Unit tests for `./scoring.ts`, kept deliberately in step with the Python ones
+// in tests/test_live.py — same scenarios, same names, same numbers. The shared
+// case file in ./parity.test.ts proves the two agree on a whole view; these
+// prove they agree on the calendar cases that file does not reach: blanks,
+// doubles, postponements and the league swing.
+
+import { describe, expect, it } from 'vitest'
+import { fixtureStates, type RawFixture } from './fixtures'
+import {
+  applyAutosubs, largestSwing, playerLive, scoreSquad, type PlayerLive,
+} from './scoring'
+
+const KO = '2026-08-22T14:00:00Z'
+const NOW = new Date('2026-08-22T16:00:00Z')
+
+function fx(over: Partial<RawFixture> = {}): RawFixture {
+  return {
+    id: 1, event: 1, team_h: 1, team_a: 2, minutes: 0, started: false,
+    finished: false, finished_provisional: false, kickoff_time: KO, stats: [],
+    ...over,
+  }
+}
+
+function el(id: number, minutes = 0, points = 0) {
+  return { id, stats: { minutes, total_points: points } }
+}
+
+const POS = new Map<number, string>([
+  ...[1, 12].map((p) => [p, 'GKP'] as [number, string]),
+  ...[2, 3, 4, 13].map((p) => [p, 'DEF'] as [number, string]),
+  ...[5, 6, 7, 8, 14].map((p) => [p, 'MID'] as [number, string]),
+  ...[9, 10, 11, 15].map((p) => [p, 'FWD'] as [number, string]),
+])
+const XI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+const BENCH = [12, 13, 14, 15]
+
+// Two clubs, exactly as tests/test_live.py splits them: 1-10 play for team 1,
+// 11-20 for team 2.
+const TEAMS = new Map<number, number>(
+  Array.from({ length: 20 }, (_, i) => [i + 1, i + 1 <= 10 ? 1 : 2]))
+
+function liveState(
+  fixtures: RawFixture[],
+  elements: ReturnType<typeof el>[],
+  predictions: Record<number, number> = {},
+  teams: Map<number, number> = TEAMS,
+): Map<number, PlayerLive> {
+  return playerLive(
+    { elements }, fixtureStates(fixtures, 1, NOW), new Map(), teams,
+    new Map(Object.entries(predictions).map(([k, v]) => [Number(k), v])))
+}
+
+/** Every squad player played 90 and scored 2, unless `over` says otherwise. */
+function plive(over: Record<number, [number, number]> = {}): Map<number, PlayerLive> {
+  const out = new Map<number, PlayerLive>()
+  for (const p of [...XI, ...BENCH]) {
+    const [confirmed, provisional] = over[p] ?? [2, 0]
+    out.set(p, {
+      id: p, minutes: 90, confirmed, provisional, predicted: 0,
+      played: true, finished: true, yetToPlay: false, states: [],
+    })
+  }
+  return out
+}
+
+// ---------------------------------------------------------------------------
+// Blanks and postponements
+// ---------------------------------------------------------------------------
+
+describe('a gameweek that does not happen still ends', () => {
+  it('a club without a fixture has blanked rather than stalled', () => {
+    const pl = liveState(
+      [fx({ started: true, minutes: 90, finished: true, team_a: 3 })],
+      [el(1, 90, 6), el(11)], { 11: 4.5 })
+    expect(pl.get(11)?.finished).toBe(true)
+    expect(pl.get(11)?.yetToPlay).toBe(false)
+    expect(pl.get(11)?.predicted).toBe(0)
+  })
+
+  it('a postponed fixture is over for the players in it', () => {
+    const pl = liveState([fx({ kickoff_time: null })], [el(1)], { 1: 5 })
+    expect(pl.get(1)?.finished).toBe(true)
+    expect(pl.get(1)?.yetToPlay).toBe(false)
+    expect(pl.get(1)?.predicted).toBe(0)
+  })
+
+  it('a blank gameweek starter is substituted', () => {
+    const teams = new Map<number, number>(
+      Array.from({ length: 15 }, (_, i) => [i + 1, i + 1 === 11 ? 2 : 1]))
+    const pl = liveState(
+      [fx({ started: true, minutes: 90, finished: true, team_a: 3 })],
+      Array.from({ length: 15 }, (_, i) => el(i + 1, i + 1 === 11 ? 0 : 90, 2)),
+      {}, teams)
+    const a = applyAutosubs(XI, BENCH, POS, pl)
+    expect(a.subs_out).toEqual([11])
+    expect(a.subs_in).toEqual([13])
+  })
+
+  it('a blanking captain hands the armband over', () => {
+    const pl = liveState(
+      [fx({ started: true, minutes: 90, finished: true, team_a: 3 })],
+      [...Array.from({ length: 10 }, (_, i) => el(i + 1, 90, 2)),
+        ...Array.from({ length: 5 }, (_, i) => el(i + 11, 0, 0))])
+    const a = applyAutosubs(XI, BENCH, POS, pl, { captain: 11, vice: 10 })
+    expect(a.captain).toBe(10)
+    expect(a.captain_source).toBe('vice')
+    expect(a.multiplier).toBe(2)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Double gameweeks
+// ---------------------------------------------------------------------------
+
+describe('a double gameweek is two fixtures against one projection', () => {
+  const played = fx({ id: 1, started: true, minutes: 90, finished: true, team_a: 3 })
+  const toCome = fx({ id: 2, team_h: 4, team_a: 1 })
+
+  it('keeps the projection for the fixture still to come', () => {
+    const pl = liveState([played, toCome], [el(1, 90, 6)], { 1: 5 })
+    expect(pl.get(1)?.predicted).toBeCloseTo(2.5, 10)
+    expect(pl.get(1)?.yetToPlay).toBe(true)
+  })
+
+  it('does not credit a blank in the first with both fixtures', () => {
+    const pl = liveState([played, toCome], [el(1, 0, 0)], { 1: 5 })
+    expect(pl.get(1)?.predicted).toBeCloseTo(2.5, 10)
+  })
+
+  it('shares the projection for a player with no live row yet', () => {
+    const pl = liveState([played, toCome], [], { 1: 5 })
+    expect(pl.get(1)?.predicted).toBeCloseTo(2.5, 10)
+  })
+
+  it('keeps the whole projection while both fixtures are to come', () => {
+    const pl = liveState(
+      [fx({ id: 1, team_a: 3 }), fx({ id: 2, team_h: 4, team_a: 1 })],
+      [el(1)], { 1: 5 })
+    expect(pl.get(1)?.predicted).toBeCloseTo(5, 10)
+  })
+
+  it('projects nothing more for a player already on the pitch', () => {
+    const pl = liveState([fx({ started: true, minutes: 60 })], [el(1, 60, 4)], { 1: 5 })
+    expect(pl.get(1)?.predicted).toBe(0)
+    expect(pl.get(1)?.yetToPlay).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// League swing
+// ---------------------------------------------------------------------------
+
+describe('the largest swing', () => {
+  it('counts a shared player the two of you captain differently', () => {
+    const st = plive({ 9: [20, 3] })
+    const mine = scoreSquad(XI, BENCH, POS, st, { captain: 9, entryId: 1 })
+    const theirs = scoreSquad(XI, BENCH, POS, st, { captain: 1, entryId: 2 })
+    const swing = largestSwing(mine, [theirs], st, new Map([[9, 'Haaland']]))
+    expect(swing).not.toBeNull()
+    expect(swing?.player_id).toBe(9)
+    expect(swing?.swing).toBe(23)
+    expect(swing?.in_your_xi).toBe(true)
+  })
+
+  it('signs a captaincy swing against you when the rival doubled him', () => {
+    const st = plive({ 9: [20, 3] })
+    const mine = scoreSquad(XI, BENCH, POS, st, { captain: 1, entryId: 1 })
+    const theirs = scoreSquad(XI, BENCH, POS, st, { captain: 9, entryId: 2 })
+    expect(largestSwing(mine, [theirs], st)?.swing).toBe(-23)
+  })
+
+  it('reports nothing when the two of you score identically', () => {
+    const st = plive({ 9: [20, 3] })
+    const mine = scoreSquad(XI, BENCH, POS, st, { captain: 1, entryId: 1 })
+    const theirs = scoreSquad(XI, BENCH, POS, st, { captain: 1, entryId: 2 })
+    expect(largestSwing(mine, [theirs], st)).toBeNull()
+  })
+
+  it('resolves an exact tie to the lowest player id, as Python now does', () => {
+    const st = new Map<number, PlayerLive>([9, 40].map((p) => [p, {
+      id: p, minutes: 90, confirmed: 5, provisional: 0, predicted: 0,
+      played: true, finished: true, yetToPlay: false, states: [],
+    }] as [number, PlayerLive]))
+    const mine = scoreSquad([9, 40], [], POS, st, { entryId: 1 })
+    const theirs = scoreSquad([], [], POS, st, { entryId: 2 })
+    const swing = largestSwing(mine, [theirs], st)
+    expect(swing?.swing).toBe(5)
+    expect(swing?.player_id).toBe(9)
+  })
+})

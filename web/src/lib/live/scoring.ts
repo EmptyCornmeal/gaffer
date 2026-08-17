@@ -4,7 +4,7 @@
 import { FORMATION_MIN, FORMATION_MAX } from '../squad'
 import type { Pos } from '../types'
 import {
-  countsAsPlayed, round2, STATE_POSTPONED,
+  countsAsPlayed, round2, STATE_SCHEDULED,
   type FixtureState,
 } from './fixtures'
 
@@ -37,12 +37,52 @@ export function playerTotal(p: PlayerLive): number {
 }
 
 /**
+ * The fixtures in `fx` that can still deliver points to this player.
+ *
+ * Both of the numbers a caller has are gameweek aggregates: one projection for
+ * the week and one minutes figure for the week. So "has he played yet" cannot be
+ * answered from the player at all in a double gameweek — only the calendar
+ * knows, and it is asked here rather than inferred from his minutes.
+ *
+ * A fixture that has not kicked off is always still to come. One that is under
+ * way counts only while he has no minutes anywhere: with an aggregate we cannot
+ * tell which of his matches those minutes came from, and a player already on the
+ * pitch is scoring into `confirmed` rather than into a projection.
+ */
+export function remainingFixtures(fx: FixtureState[], minutes: number): FixtureState[] {
+  const pending = fx.filter((f) => !countsAsPlayed(f))
+  if (minutes === 0) return pending
+  return pending.filter((f) => f.state === STATE_SCHEDULED)
+}
+
+/**
+ * The share of a gameweek projection that is still to be played.
+ *
+ * The projection is one number for the whole gameweek, so in a double it already
+ * covers both matches. An even split across the club's fixtures is the only
+ * division the data supports — neither the artifact nor the projections table
+ * carries a per-fixture breakdown — and it is right in both directions that
+ * matter: a player with one of two still to come is worth about half of it
+ * rather than nothing, and one who was left out of the first of two is worth
+ * about half of it rather than all of it.
+ */
+export function remainingXp(xp: number, remaining: number, total: number): number {
+  if (total <= 0 || remaining <= 0) return 0
+  return xp * remaining / total
+}
+
+/**
  * Fold the live endpoint into per-player state.
  *
- * A player is `yetToPlay` when at least one of his fixtures this gameweek has
- * not finished — which is NOT the same as "has zero minutes". Confusing the two
- * is what makes a live tool declare a substitution before the second half has
- * kicked off.
+ * A player is `yetToPlay` when one of his fixtures this gameweek can still
+ * deliver points — which is NOT the same as "has zero minutes". Confusing the
+ * two is what makes a live tool declare a substitution before the second half
+ * has kicked off.
+ *
+ * `finished` is the mirror image: every fixture of his is over, INCLUDING the
+ * gameweek in which his club has no fixture at all. A blank is not a gameweek
+ * that never ends, and a player in one has to become substitutable — with
+ * `fx.length > 0 && ...` he never did.
  */
 export function playerLive(
   live: RawLivePayload | null | undefined,
@@ -69,32 +109,32 @@ export function playerLive(
     const mins = Number(stats.minutes ?? 0) || 0
     const pts = Number(stats.total_points ?? 0) || 0
     const fx = perTeam.get(teamOf.get(pid) ?? -1) ?? []
-    const allDone = fx.length > 0 && fx.every(countsAsPlayed)
-    const pending = fx.filter((f) => !countsAsPlayed(f) && f.state !== STATE_POSTPONED)
+    const remaining = remainingFixtures(fx, mins)
     out.set(pid, playerRecord({
       id: pid,
       minutes: mins,
       confirmed: pts,
       provisional: provBonus.get(pid) ?? 0,
-      predicted: pending.length > 0 && mins === 0 ? (preds.get(pid) ?? 0) : 0,
+      predicted: remainingXp(preds.get(pid) ?? 0, remaining.length, fx.length),
       played: mins > 0,
-      finished: allDone,
-      yetToPlay: pending.length > 0 && mins === 0,
+      finished: fx.every(countsAsPlayed),
+      yetToPlay: remaining.length > 0,
       states: [...new Set(fx.map((f) => f.state))].sort(),
     }))
   }
 
-  // Players with a fixture but no live row yet (the endpoint lags kick-off).
+  // Players with no live row yet: the endpoint lags kick-off, and it has no row
+  // at all for a club that is not playing. Both are zero-minute players, so both
+  // are read from the calendar alone.
   for (const [pid, team] of teamOf) {
     if (out.has(pid)) continue
     const fx = perTeam.get(team) ?? []
-    if (fx.length === 0) continue
-    const pending = fx.filter((f) => !countsAsPlayed(f) && f.state !== STATE_POSTPONED)
+    const remaining = remainingFixtures(fx, 0)
     out.set(pid, playerRecord({
       id: pid,
-      predicted: pending.length > 0 ? (preds.get(pid) ?? 0) : 0,
-      finished: fx.length > 0 && fx.every(countsAsPlayed),
-      yetToPlay: pending.length > 0,
+      predicted: remainingXp(preds.get(pid) ?? 0, remaining.length, fx.length),
+      finished: fx.every(countsAsPlayed),
+      yetToPlay: remaining.length > 0,
       states: [...new Set(fx.map((f) => f.state))].sort(),
     }))
   }
@@ -353,9 +393,15 @@ export function scoreSquad(
 /**
  * Which live player has moved the league most, and by how much.
  *
- * Differential ownership is what actually moves a mini-league: a player you both
- * own changes nothing. Measured against the closest rival, so it answers "what
- * is deciding my week", not "who scored the most points".
+ * What moves a mini-league is not ownership but EFFECTIVE ownership: how many
+ * copies of a player's points land in your total against how many land in your
+ * rival's. Owning him is only one way to differ. You both own him and only one
+ * of you captained him is the other, and it is the commoner of the two — the
+ * ownership-only version of this reported no swing at all for the single most
+ * ordinary way a week turns.
+ *
+ * Measured against the closest rival, so it answers "what is deciding my week",
+ * not "who scored the most points".
  */
 export function largestSwing(
   mine: SquadLive,
@@ -375,36 +421,44 @@ export function largestSwing(
   }
   const mineIds = new Set(mine.autosubs.xi)
   const theirIds = new Set(closest.autosubs.xi)
-  // Sorted so an exact tie resolves the same way it does in Python, whose small
-  // integer sets iterate in ascending order.
-  const differential = [...new Set([...mineIds, ...theirIds])]
-    .filter((p) => mineIds.has(p) !== theirIds.has(p))
-    .sort((a, b) => a - b)
+
+  /** How many copies of this player's points land in `squad`'s total. */
+  const weight = (pid: number, squad: SquadLive, ids: Set<number>): number => {
+    if (!ids.has(pid)) return 0
+    return pid === squad.autosubs.captain ? squad.autosubs.multiplier : 1
+  }
+
+  // Ascending id, so an exact tie resolves to the lowest id in both
+  // implementations. Set iteration order does not do that on either side:
+  // CPython lays small ints out by value modulo the table size, so
+  // `{9, 40} ^ set()` comes out [40, 9] while this sorted pass answers 9.
+  const candidates = [...new Set([...mineIds, ...theirIds])].sort((a, b) => a - b)
 
   let bestPid: number | null = null
   let bestDelta = 0
-  for (const pid of differential) {
+  for (const pid of candidates) {
     const st = live.get(pid)
     if (!st || !(st.confirmed || st.provisional)) continue
-    const pts = st.confirmed + st.provisional
-    let m = 1
-    if (pid === mine.autosubs.captain) m = mine.autosubs.multiplier
-    else if (pid === closest.autosubs.captain) m = closest.autosubs.multiplier
-    const delta = pts * m * (mineIds.has(pid) ? 1 : -1)
+    const edge = weight(pid, mine, mineIds) - weight(pid, closest, theirIds)
+    if (edge === 0) continue          // he scores identically for both of you
+    const delta = (st.confirmed + st.provisional) * edge
     if (Math.abs(delta) > Math.abs(bestDelta)) {
       bestPid = pid
       bestDelta = delta
     }
   }
   if (bestPid === null) return null
+  const shared = mineIds.has(bestPid) && theirIds.has(bestPid)
   return {
     player_id: bestPid,
     name: names?.get(bestPid) ?? String(bestPid),
     swing: round2(bestDelta),
     in_your_xi: mineIds.has(bestPid),
     against: closest.entry_id,
-    note: mineIds.has(bestPid)
-      ? 'a differential you own'
-      : 'a differential your closest rival owns',
+    note: shared
+      ? 'a player you both own but captain differently'
+      : mineIds.has(bestPid)
+        ? 'a differential you own'
+        : 'a differential your closest rival owns',
   }
 }

@@ -271,6 +271,84 @@ def test_a_postponed_fixture_leaves_a_player_neither_played_nor_pending():
 
 
 # ==========================================================================
+# Blanks, doubles and postponements
+#
+# A gameweek is not "one fixture per team, and then it finishes". Blanks and
+# doubles are most of a season, and the defects below all came from modelling
+# the calendar as though they were the exception.
+# ==========================================================================
+
+def test_a_club_without_a_fixture_has_blanked_rather_than_stalled():
+    """`finished` was ``bool(fx) and all(...)``, so a player whose club has no
+    fixture at all was never done — his gameweek could not end. Nothing
+    downstream could then treat him as having blanked: he was never substituted
+    and, as captain, never handed the armband on."""
+    fixtures = [fx(started=True, minutes=90, finished=True, team_h=1, team_a=3)]
+    pl = _live_state(fixtures, [el(1, 90, 6), el(11)], predictions={11: 4.5})
+    assert pl[11].finished is True, "a gameweek that never began is over"
+    assert pl[11].yet_to_play is False
+    assert pl[11].predicted == 0.0, "there is no fixture left to deliver them"
+
+
+def test_a_postponed_fixture_is_over_for_the_players_in_it():
+    """Postponed is not pending. The match is off, nobody scores in it, so a
+    player left in it has blanked and must become substitutable."""
+    raw = fx(kickoff=None)          # still in the event, but with no date
+    assert live.classify_fixture(raw, NOW).state == live.STATE_POSTPONED
+    pl = _live_state([raw], [el(1)], predictions={1: 5.0})
+    assert pl[1].finished is True
+    assert pl[1].yet_to_play is False
+    assert pl[1].predicted == 0.0
+
+
+def test_a_double_gameweek_keeps_the_projection_for_the_fixture_still_to_come():
+    """Predictions are a gameweek aggregate and so are live minutes. He has
+    played one of his two, so half of the projection is still to come; reading
+    the aggregate minutes as "done" wrote all of it off."""
+    played = fx(fid=1, started=True, minutes=90, finished=True,
+                team_h=1, team_a=3)
+    to_come = fx(fid=2, team_h=4, team_a=1)
+    pl = _live_state([played, to_come], [el(1, 90, 6)], predictions={1: 5.0})
+    assert pl[1].predicted == pytest.approx(2.5)
+    assert pl[1].yet_to_play is True, "he has another match this gameweek"
+
+
+def test_a_double_gameweek_blank_is_not_credited_with_both_fixtures():
+    """The same defect in the other direction: he was left out of the first of
+    his two, and was then handed the whole gameweek's projection for the one
+    fixture that is left."""
+    played = fx(fid=1, started=True, minutes=90, finished=True,
+                team_h=1, team_a=3)
+    to_come = fx(fid=2, team_h=4, team_a=1)
+    pl = _live_state([played, to_come], [el(1, 0, 0)], predictions={1: 5.0})
+    assert pl[1].predicted == pytest.approx(2.5)
+
+
+def test_a_double_gameweek_share_reaches_a_player_with_no_live_row_yet():
+    played = fx(fid=1, started=True, minutes=90, finished=True,
+                team_h=1, team_a=3)
+    to_come = fx(fid=2, team_h=4, team_a=1)
+    pl = _live_state([played, to_come], [], predictions={1: 5.0})
+    assert pl[1].predicted == pytest.approx(2.5)
+
+
+def test_a_double_gameweek_with_both_fixtures_to_come_keeps_the_whole_projection():
+    a = fx(fid=1, team_h=1, team_a=3)
+    b = fx(fid=2, team_h=4, team_a=1)
+    pl = _live_state([a, b], [el(1)], predictions={1: 5.0})
+    assert pl[1].predicted == pytest.approx(5.0)
+
+
+def test_a_player_already_on_the_pitch_has_no_remaining_projection():
+    """The guard on the fix above: one fixture, in progress, and his points are
+    accruing as `confirmed` right now. Projecting him again double-counts."""
+    pl = _live_state([fx(started=True, minutes=60)], [el(1, 60, 4)],
+                     predictions={1: 5.0})
+    assert pl[1].predicted == 0.0
+    assert pl[1].yet_to_play is False
+
+
+# ==========================================================================
 # Autosubs
 # ==========================================================================
 
@@ -385,6 +463,32 @@ def test_both_captain_and_vice_blanking_multiplies_nobody():
                             captain=9, vice=10)
     assert a.captain is None and a.captain_source == "none" and a.multiplier == 1
     assert any("no player is multiplied" in n for n in a.notes)
+
+
+def test_a_blank_gameweek_starter_is_substituted():
+    """End to end from the payloads: player 11's club has no fixture, so he has
+    blanked and FPL replaces him. He is not "yet to play" — there is nothing
+    left for him to play in."""
+    teams = {p: (2 if p == 11 else 1) for p in range(1, 16)}
+    states = live.fixture_states(
+        [fx(started=True, minutes=90, finished=True, team_h=1, team_a=3)], 1, NOW)
+    pl = live.player_live(
+        {"elements": [el(p, 0 if p == 11 else 90, 2) for p in range(1, 16)]},
+        states, {}, teams)
+    a = live.apply_autosubs(XI, BENCH, POS, pl)
+    assert a.subs_out == [11] and a.subs_in == [13]
+
+
+def test_a_blanking_captain_hands_the_armband_over():
+    """The sharpest consequence of a blank that never ends: the captain never
+    counted as having blanked, so the vice never took over and the whole
+    multiplier was lost in precisely the gameweek the fallback exists for."""
+    fixtures = [fx(started=True, minutes=90, finished=True, team_h=1, team_a=3)]
+    pl = _live_state(fixtures, [el(p, 90, 2) for p in range(1, 11)]
+                     + [el(p, 0, 0) for p in range(11, 16)])
+    a = live.apply_autosubs(XI, BENCH, POS, pl, captain=11, vice=10)
+    assert a.captain == 10 and a.captain_source == "vice" and a.multiplier == 2
+    assert any("vice" in n for n in a.notes)
 
 
 def test_substitutions_are_provisional_until_every_fixture_is_over():
@@ -591,3 +695,60 @@ def test_no_rivals_means_no_swing():
     st = plive()
     mine = live.score_squad(XI, BENCH, POS, st, captain=9, entry_id=1)
     assert live.largest_swing(mine, [], st) is None
+
+
+def test_a_shared_player_captained_by_only_one_of_you_still_swings_the_league():
+    """The commonest way a mini-league actually moves: you both own him and only
+    one of you doubled him. Searching only players exactly one of you owns
+    misses it entirely and reports no swing at all."""
+    st = plive(p9=(20, 3))
+    mine = live.score_squad(XI, BENCH, POS, st, captain=9, entry_id=1)
+    theirs = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=2)
+    swing = live.largest_swing(mine, [theirs], st, names={9: "Haaland"})
+    assert swing is not None, "the armband is the difference between you"
+    assert swing["player_id"] == 9 and swing["name"] == "Haaland"
+    assert swing["swing"] == pytest.approx(23), "one extra copy of 23, not two"
+    assert swing["in_your_xi"] is True
+
+
+def test_a_captaincy_swing_is_signed_against_you_when_the_rival_doubled_him():
+    st = plive(p9=(20, 3))
+    mine = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=1)
+    theirs = live.score_squad(XI, BENCH, POS, st, captain=9, entry_id=2)
+    swing = live.largest_swing(mine, [theirs], st)
+    assert swing["player_id"] == 9 and swing["swing"] == pytest.approx(-23)
+
+
+def test_an_exact_tie_resolves_to_the_lowest_player_id():
+    """The tie-break has to be a rule rather than a side effect of how CPython
+    happens to lay out a small set of ints: ``{9, 40} ^ set()`` iterates
+    ``[40, 9]``, so whichever came first won — and the TypeScript port, which
+    sorts, picked the other one."""
+    st = {p: live.PlayerLive(id=p, minutes=90, confirmed=5, played=True,
+                             finished=True) for p in (9, 40)}
+    mine = live.score_squad([9, 40], [], POS, st, entry_id=1)
+    theirs = live.score_squad([], [], POS, st, entry_id=2)
+    swing = live.largest_swing(mine, [theirs], st)
+    assert swing["swing"] == pytest.approx(5)
+    assert swing["player_id"] == 9, "the lower id, not whichever the set yields"
+
+
+# ==========================================================================
+# round(x, 2) — the value the TypeScript port has to reproduce
+# ==========================================================================
+
+#: Inputs chosen because they are where a scale-by-100-then-round port parts
+#: company with CPython, which rounds the *binary* value of the double half to
+#: even. `web/src/lib/live/fixtures.test.ts` holds this same table and asserts
+#: `round2` returns these values, so if either side moves, one of the two fails.
+ROUND2_TABLE = [
+    (2.675, 2.67), (-2.675, -2.67), (1.115, 1.11), (3.145, 3.15),
+    (0.615, 0.61), (10.235, 10.23), (0.005, 0.01), (-0.005, -0.01),
+    (0.125, 0.12), (0.375, 0.38), (-0.125, -0.12), (-0.375, -0.38),
+    (8.835, 8.84), (7.625, 7.62), (2.5, 2.5), (0.0, 0.0),
+]
+
+
+@pytest.mark.parametrize(("value", "expected"), ROUND2_TABLE)
+def test_the_shared_rounding_table_is_what_python_actually_does(value, expected):
+    assert round(value, 2) == expected
