@@ -111,3 +111,88 @@ def test_unpublished_divisors_are_named_rather_than_assumed_verified():
     """Saves-per-3 and conceded-per-2 are not in the payload. Say so."""
     joined = " ".join(rules.UNVERIFIABLE)
     assert "saves" in joined and "conceded" in joined and "DEFCON" in joined
+
+
+# --------------------------------------------------------------------------
+# C5 — "verified" must mean checked, not merely un-contradicted
+# --------------------------------------------------------------------------
+
+def test_an_empty_scoring_table_is_not_stamped_verified():
+    """C5. `scoring: {}` compares nothing, so it produces no drift — and the run
+    was stamped with maximum confidence at the one moment it had no evidence at
+    all. Absent data has to be distinguishable from agreeing data."""
+    record = rules.verify(bootstrap({}))
+    assert record["status"] != rules.STATUS_VERIFIED
+    assert record["status"] == rules.STATUS_UNVERIFIED
+    assert record["unchecked"], "the rules nobody checked have to be named"
+
+
+def test_a_truncated_scoring_table_names_what_it_could_not_check():
+    """The Friday-afternoon shape: the payload arrives with half the table. The
+    half that is there agrees; the half that is missing is not evidence."""
+    half = {"long_play": 2, "short_play": 1, "assists": 3}
+    record = rules.verify(bootstrap(half))
+    assert record["status"] == rules.STATUS_UNVERIFIED
+    assert record["drift"] == []
+    joined = " ".join(record["unchecked"])
+    assert "goals_scored" in joined and "clean_sheets" in joined
+    assert "assists" not in joined, "the keys that were there are checked"
+
+
+def test_a_positional_table_missing_a_position_is_not_fully_checked():
+    """Per-position, not per-key: a `goals_scored` block carrying only GKP and
+    DEF leaves two of Gaffer's four positions unverified."""
+    partial = {**LIVE_SCORING, "goals_scored": {"GKP": 10, "DEF": 6}}
+    record = rules.verify(bootstrap(partial))
+    assert record["status"] == rules.STATUS_UNVERIFIED
+    gap = " ".join(record["unchecked"])
+    assert "MID" in gap and "FWD" in gap and "GKP" not in gap
+
+
+def test_drift_outranks_incompleteness():
+    """A payload that is both wrong and incomplete is drift. Evidence of a
+    changed rule beats absence of evidence about the others."""
+    with pytest.raises(rules.ScoringRuleDrift):
+        rules.verify(bootstrap({"goals_scored": {"MID": 6}}))
+
+
+def test_a_full_table_is_still_verified_with_nothing_outstanding():
+    record = rules.verify(bootstrap(LIVE_SCORING))
+    assert record["status"] == rules.STATUS_VERIFIED
+    assert record["unchecked"] == []
+
+
+# --------------------------------------------------------------------------
+# C16 — the override is consent, and consent has to be explicit
+# --------------------------------------------------------------------------
+
+@pytest.mark.parametrize("value", [
+    "False", "false", "FALSE", "0", "no", "off", "OFF", "n", "", "   ",
+    "nope", "yess", "true-ish", "2",
+])
+def test_only_a_recognised_yes_silences_the_drift_check(monkeypatch, value):
+    """C16. The old test was `value not in ("", "0", "false", "no")`, so the
+    literal string `False` — what `str(bool)` writes, and what a templating
+    layer therefore hands you — read as consent to silence a safety check. So
+    did `off`, and so did every typo."""
+    monkeypatch.setenv(rules.DRIFT_OVERRIDE_ENV, value)
+    with pytest.raises(rules.ScoringRuleDrift):
+        rules.verify(bootstrap({**LIVE_SCORING, "assists": 4}))
+
+
+@pytest.mark.parametrize("value", ["1", "true", "TRUE", " yes ", "on", "y"])
+def test_the_recognised_yeses_are_still_honoured(monkeypatch, value):
+    monkeypatch.setenv(rules.DRIFT_OVERRIDE_ENV, value)
+    record = rules.verify(bootstrap({**LIVE_SCORING, "assists": 4}))
+    assert record["status"] == rules.STATUS_DRIFT_ALLOWED
+
+
+def test_an_unrecognised_override_says_it_was_ignored(monkeypatch):
+    """Refusing consent silently would leave an operator staring at a drift
+    report they thought they had already answered."""
+    monkeypatch.setenv(rules.DRIFT_OVERRIDE_ENV, "yess")
+    with pytest.raises(rules.ScoringRuleDrift) as exc:
+        rules.verify(bootstrap({**LIVE_SCORING, "assists": 4}))
+    message = str(exc.value)
+    assert "yess" in message
+    assert "not" in message.lower() and "consent" in message.lower()
