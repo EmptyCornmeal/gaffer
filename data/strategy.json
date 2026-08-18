@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-18T13:23:02+00:00",
+  "generated_at": "2026-08-18T19:38:55+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.4",
     "gameweek": 1,
     "fixtures": 20,
-    "players": 514,
+    "players": 509,
     "assumptions": [
       "One goal draw per attacking side, shared by every player in the match; clean sheets and goals conceded read the same draw.",
       "Goals are allocated multinomially in proportion to each player's deterministic expected goals, so teammates compete for the same goals and marginals are preserved.",
@@ -24,16 +24,6 @@
   "basis": "the recommended squad (no readable squad of your own yet)",
   "squad": {
     "starting": [
-      {
-        "id": 4,
-        "name": "Gabriel",
-        "team": "ARS",
-        "pos": "DEF",
-        "price": 8.0,
-        "code": 226597,
-        "team_code": 3,
-        "next_gw_xp": 5.86
-      },
       {
         "id": 8,
         "name": "Calafiori",
@@ -53,6 +43,16 @@
         "code": 223340,
         "team_code": 3,
         "next_gw_xp": 5.13
+      },
+      {
+        "id": 55,
+        "name": "Watkins",
+        "team": "AVL",
+        "pos": "FWD",
+        "price": 8.0,
+        "code": 178301,
+        "team_code": 7,
+        "next_gw_xp": 5.31
       },
       {
         "id": 106,
@@ -105,16 +105,6 @@
         "next_gw_xp": 5.99
       },
       {
-        "id": 367,
-        "name": "Gakpo",
-        "team": "LIV",
-        "pos": "MID",
-        "price": 7.0,
-        "code": 243298,
-        "team_code": 14,
-        "next_gw_xp": 4.95
-      },
-      {
         "id": 426,
         "name": "B.Fernandes",
         "team": "MUN",
@@ -133,6 +123,16 @@
         "code": 446008,
         "team_code": 1,
         "next_gw_xp": 6.04
+      },
+      {
+        "id": 445,
+        "name": "Thiaw",
+        "team": "NEW",
+        "pos": "DEF",
+        "price": 5.0,
+        "code": 465642,
+        "team_code": 4,
+        "next_gw_xp": 2.93
       }
     ],
     "bench": [
@@ -147,24 +147,24 @@
         "next_gw_xp": 3.02
       },
       {
-        "id": 169,
-        "name": "Mheuka",
-        "team": "CHE",
-        "pos": "FWD",
-        "price": 4.5,
-        "code": 567119,
-        "team_code": 8,
-        "next_gw_xp": 4.06
-      },
-      {
-        "id": 425,
-        "name": "Fredricson",
+        "id": 423,
+        "name": "Shaw",
         "team": "MUN",
         "pos": "DEF",
-        "price": 4.0,
-        "code": 547676,
+        "price": 4.5,
+        "code": 106760,
         "team_code": 1,
-        "next_gw_xp": 3.89
+        "next_gw_xp": 4.49
+      },
+      {
+        "id": 542,
+        "name": "E.Le Fée",
+        "team": "SUN",
+        "pos": "MID",
+        "price": 6.0,
+        "code": 484420,
+        "team_code": 56,
+        "next_gw_xp": 4.75
       },
       {
         "id": 304,
@@ -203,12 +203,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.07,
-        "p_target": 0.07,
+        "p_first": 0.0665,
+        "p_target": 0.0665,
         "target_position": 1,
-        "expected_position": 3.04,
+        "expected_position": 3.06,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0112,
+        "ci95_halfwidth": 0.0109,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
@@ -219,24 +219,6 @@
       },
       "shields": [],
       "differentials": [
-        {
-          "player_id": 4,
-          "owners": 0,
-          "n_rivals": 0,
-          "ownership_pct": 0.0,
-          "effective_ownership_pct": 0.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 4,
-            "name": "Gabriel",
-            "team": "ARS",
-            "pos": "DEF",
-            "price": 8.0,
-            "code": 226597,
-            "team_code": 3,
-            "next_gw_xp": 5.86
-          }
-        },
         {
           "player_id": 8,
           "owners": 0,
@@ -271,6 +253,24 @@
             "code": 223340,
             "team_code": 3,
             "next_gw_xp": 5.13
+          }
+        },
+        {
+          "player_id": 55,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 55,
+            "name": "Watkins",
+            "team": "AVL",
+            "pos": "FWD",
+            "price": 8.0,
+            "code": 178301,
+            "team_code": 7,
+            "next_gw_xp": 5.31
           }
         },
         {
@@ -364,24 +364,6 @@
           }
         },
         {
-          "player_id": 367,
-          "owners": 0,
-          "n_rivals": 0,
-          "ownership_pct": 0.0,
-          "effective_ownership_pct": 0.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 367,
-            "name": "Gakpo",
-            "team": "LIV",
-            "pos": "MID",
-            "price": 7.0,
-            "code": 243298,
-            "team_code": 14,
-            "next_gw_xp": 4.95
-          }
-        },
-        {
           "player_id": 426,
           "owners": 0,
           "n_rivals": 0,
@@ -397,6 +379,24 @@
             "code": 141746,
             "team_code": 1,
             "next_gw_xp": 7.4
+          }
+        },
+        {
+          "player_id": 427,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 427,
+            "name": "Mbeumo",
+            "team": "MUN",
+            "pos": "MID",
+            "price": 8.0,
+            "code": 446008,
+            "team_code": 1,
+            "next_gw_xp": 6.04
           }
         }
       ],
@@ -419,54 +419,46 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 69.244,
+      "expected_points": 65.64,
       "p_target": {
-        "271619": 0.07
+        "271619": 0.0665
       }
     },
     {
       "key": "captain:155",
       "label": "Captain Enzo",
-      "expected_points": 67.612,
+      "expected_points": 64.181,
       "p_target": {
-        "271619": 0.07
+        "271619": 0.0655
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 67.374,
+      "expected_points": 64.056,
       "p_target": {
-        "271619": 0.0725
+        "271619": 0.0615
       }
     },
     {
       "key": "captain:356",
       "label": "Captain Virgil",
-      "expected_points": 66.842,
+      "expected_points": 63.462,
       "p_target": {
-        "271619": 0.0645
+        "271619": 0.065
       }
     }
   ],
   "resolution": {
-    "default": null,
-    "reason": "no league weights configured, and no option dominates. Set [leagues].weights to express which league matters most; until then this is a genuine choice, not a calculation.",
+    "default": "captain:426",
+    "reason": "one option dominates on every objective",
     "shortlist": [
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 69.244,
+        "expected_points": 65.64,
         "p_target": {
-          "271619": 0.07
-        }
-      },
-      {
-        "key": "captain:427",
-        "label": "Captain Mbeumo",
-        "expected_points": 67.374,
-        "p_target": {
-          "271619": 0.0725
+          "271619": 0.0665
         }
       }
     ],
@@ -476,19 +468,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 10.28,
+    "expected_gain": 15.09,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "bboost",
         "gameweek": 1,
-        "expected_gain": 10.28,
+        "expected_gain": 15.09,
         "ci95": [
-          10.06,
-          10.51
+          14.85,
+          15.34
         ],
-        "baseline_points": 69.24,
-        "with_chip_points": 79.53,
+        "baseline_points": 65.64,
+        "with_chip_points": 80.73,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -497,13 +489,13 @@
       {
         "chip": "3xc",
         "gameweek": 1,
-        "expected_gain": 8.3,
+        "expected_gain": 8.06,
         "ci95": [
-          8.06,
-          8.55
+          7.82,
+          8.31
         ],
-        "baseline_points": 69.24,
-        "with_chip_points": 77.55,
+        "baseline_points": 65.64,
+        "with_chip_points": 73.7,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
