@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-20T17:01:58+00:00",
+  "generated_at": "2026-08-20T23:18:32+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -203,12 +203,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.0735,
-        "p_target": 0.0735,
+        "p_first": 0.077,
+        "p_target": 0.077,
         "target_position": 1,
         "expected_position": 3.04,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0114,
+        "ci95_halfwidth": 0.0117,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
@@ -419,33 +419,33 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 66.193,
+      "expected_points": 66.068,
       "p_target": {
-        "271619": 0.0735
+        "271619": 0.077
       }
     },
     {
       "key": "captain:155",
       "label": "Captain Enzo",
-      "expected_points": 64.743,
+      "expected_points": 64.55,
       "p_target": {
-        "271619": 0.072
+        "271619": 0.0745
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 64.447,
+      "expected_points": 64.269,
       "p_target": {
-        "271619": 0.069
+        "271619": 0.077
       }
     },
     {
       "key": "captain:55",
       "label": "Captain Watkins",
-      "expected_points": 63.957,
+      "expected_points": 63.819,
       "p_target": {
-        "271619": 0.0705
+        "271619": 0.073
       }
     }
   ],
@@ -456,9 +456,9 @@
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 66.193,
+        "expected_points": 66.068,
         "p_target": {
-          "271619": 0.0735
+          "271619": 0.077
         }
       }
     ],
@@ -468,19 +468,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 15.12,
+    "expected_gain": 15.08,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "bboost",
         "gameweek": 1,
-        "expected_gain": 15.12,
+        "expected_gain": 15.08,
         "ci95": [
-          14.88,
-          15.37
+          14.83,
+          15.33
         ],
-        "baseline_points": 66.19,
-        "with_chip_points": 81.32,
+        "baseline_points": 66.07,
+        "with_chip_points": 81.15,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -489,13 +489,13 @@
       {
         "chip": "3xc",
         "gameweek": 1,
-        "expected_gain": 8.24,
+        "expected_gain": 8.26,
         "ci95": [
-          7.99,
-          8.48
+          8.01,
+          8.51
         ],
-        "baseline_points": 66.19,
-        "with_chip_points": 74.43,
+        "baseline_points": 66.07,
+        "with_chip_points": 74.33,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
