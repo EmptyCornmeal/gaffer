@@ -56,4 +56,26 @@ describe('LineChart', () => {
     expect(tickLabels.length).toBeGreaterThan(0)
     expect(tickLabels.every((t) => !t.startsWith('-'))).toBe(true)
   })
+
+  it('draws a visible mark for a single gameweek', () => {
+    // A path of one point is 'M x y', which paints nothing. Every league chart
+    // is single-gameweek after GW1 — the first time anyone looks at it.
+    const out = render(LineChart as any, {
+      props: {
+        series: [{ key: 1, name: 'You', color: '#34d399', you: true, values: [10] }],
+        labels: ['GW1'],
+      },
+    }).body
+    expect(out).toContain('<circle')
+  })
+
+  it('marks a point stranded between gaps', () => {
+    const out = render(LineChart as any, {
+      props: {
+        series: [{ key: 1, name: 'You', color: '#34d399', values: [null, 7, null] }],
+        labels: ['GW1', 'GW2', 'GW3'],
+      },
+    }).body
+    expect(out).toContain('<circle')
+  })
 })

@@ -135,7 +135,11 @@
     const ranked = [...rows].filter((r) => (histories.get(r.entry)?.length ?? 0) > 0)
     const shown = ranked.slice(0, 10)
     if (myEntry && !shown.some((r) => r.entry === myEntry)) {
-      const me = ranked.find((r) => r.entry === myEntry)
+      // Look in `rows`, not `ranked`. `ranked` has already dropped anyone whose
+      // history came back empty, so searching it for yourself finds nothing in
+      // exactly the case this fallback exists for — and you vanish from your own
+      // league chart while every rival is drawn.
+      const me = rows.find((r) => r.entry === myEntry)
       if (me) shown.push(me)
     }
     return shown.map((r, i) => {

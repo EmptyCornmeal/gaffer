@@ -110,7 +110,7 @@
 <!-- One column on a phone, which is the layout that matters. At `lg` the same
      cards split into two so the answer and its arithmetic stop running off the
      bottom of a desktop viewport while 240px sits unused to the right. -->
-<div class="rise flex flex-col gap-4 max-w-3xl lg:max-w-5xl mx-auto w-full">
+<div class="rise flex flex-col gap-4 w-full">
   <!-- ── the week, at a glance ────────────────────────────────────── -->
   <div class="card p-4">
     <div class="flex items-start justify-between gap-3 flex-wrap">

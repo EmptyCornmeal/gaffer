@@ -167,7 +167,7 @@
 {:else}
 
 
-<div class="max-w-4xl mx-auto space-y-4">
+<div class="max-w-6xl mx-auto space-y-4">
   <div>
     <h1 class="text-xl font-black">Model accuracy</h1>
     <p class="text-sm text-muted mt-1">

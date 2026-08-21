@@ -67,6 +67,20 @@
     return d.trim()
   }
 
+
+  // A path of one point is `M x y`, which renders NOTHING: an SVG path needs a
+  // segment to paint. So a single-gameweek league — every league, the first
+  // time anyone looks — drew a blank chart, and so did any manager whose points
+  // sat between gaps. Points with no drawable neighbour get a dot instead.
+  function isolated(vals: (number | null)[]): number[] {
+    const out: number[] = []
+    vals.forEach((v, i) => {
+      if (v == null) return
+      if (vals[i - 1] == null && vals[i + 1] == null) out.push(i)
+    })
+    return out
+  }
+
   // ~4 horizontal gridlines at round-ish values
   const ticks = $derived.by(() => {
     const span = yMax - yMin || 1
@@ -182,6 +196,15 @@
           stroke-linejoin="round"
           opacity={dimmed(s) ? 0.15 : s.you ? 1 : 0.85}
         />
+        {#each isolated(s.values) as i}
+          <circle
+            cx={x(i)}
+            cy={y(s.values[i] as number)}
+            r={s.you ? 3.5 : 2.5}
+            fill={s.color}
+            opacity={dimmed(s) ? 0.15 : s.you ? 1 : 0.85}
+          />
+        {/each}
       {/each}
       <!-- hover dots -->
       {#if hover != null}
