@@ -38,6 +38,7 @@
 
   // Unknown / malformed hashes fall back to DEFAULT_ROUTE, and a route that has
   // been merged away is forwarded to whatever absorbed it (see REDIRECTS), rather
+  // than rendering an empty <main>
   // than rendering an empty <main>. Normalising (instead of rewriting
   // location.hash) keeps back/forward working and cannot loop.
   function parseRoute(): string {
@@ -111,9 +112,10 @@
 
     <main
       id="main"
-      class="flex-1 min-w-0 overflow-y-auto p-3 sm:p-5"
+      class="flex-1 min-w-0 overflow-y-auto"
       style="padding-bottom: calc(var(--gaffer-bottomnav) + env(safe-area-inset-bottom) + 1rem);"
     >
+      <div class="mx-auto w-full max-w-app p-3 sm:p-5">
       {#if error}
         <!-- This is read by whoever opened the published site, who cannot run
              anything. The old copy said "run the pipeline so data/*.json is
@@ -157,6 +159,7 @@
              if a route key is added to NAV_TABS without a branch above. -->
         <Home {bundle} onnav={nav} onpick={(id) => (selectedId = id)} {now} />
       {/if}
+          </div>
     </main>
   </div>
 </div>

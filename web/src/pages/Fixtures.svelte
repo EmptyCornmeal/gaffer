@@ -46,7 +46,7 @@
 {#if parsed.kind === 'unavailable'}
   <!-- Fail visibly. Silently rendering an empty grid — or leaving the previous
        route on screen — is how a broken artifact reads as "no fixtures". -->
-  <div class="rise max-w-xl mx-auto">
+  <div class="rise max-w-3xl mx-auto">
     <h2 class="font-bold text-lg mb-2">Fixture ticker</h2>
     <div class="card p-4 border border-red/40 bg-red/5">
       <div class="font-bold text-red">Fixtures unavailable</div>

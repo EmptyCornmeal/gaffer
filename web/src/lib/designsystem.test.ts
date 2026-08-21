@@ -22,8 +22,18 @@ import { join } from 'node:path'
 const SRC = join(process.cwd(), 'src')
 const DIST = join(process.cwd(), 'dist', 'assets')
 
-/** Utilities the design system promises. A missing one compiles to nothing. */
-const PROMISED = ['text-micro', 'text-mini']
+/**
+ * Utilities the design system promises, and the property each must emit.
+ *
+ * The property matters: asserting a class merely "appears" would pass on a
+ * comment or an unrelated selector, and asserting `font-size` for all of them
+ * fails on a width utility that compiles perfectly.
+ */
+const PROMISED: ReadonlyArray<readonly [string, string]> = [
+  ['text-micro', 'font-size:'],
+  ['text-mini', 'font-size:'],
+  ['max-w-app', 'max-width:'],
+]
 
 /**
  * Arbitrary font sizes still in the source, by size.
@@ -66,9 +76,9 @@ const builtCss = (() => {
 })()
 
 describe('design system', () => {
-  it.each(PROMISED)('%s compiles to real css, not silence', (cls) => {
+  it.each(PROMISED)('%s compiles to real css, not silence', (cls, prop) => {
     if (!builtCss) return // no dist in this run; perf.test.ts owns that warning
-    expect(builtCss).toContain(`.${cls}{font-size:`)
+    expect(builtCss).toContain(`.${cls}{${prop}`)
   })
 
   it('does not accumulate new arbitrary font sizes', () => {

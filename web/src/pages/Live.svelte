@@ -85,7 +85,7 @@
   }
 </script>
 
-<div class="rise flex flex-col gap-4 max-w-3xl mx-auto w-full">
+<div class="rise flex flex-col gap-4 w-full">
   <!-- Announced, never shown. It sits outside the branch chain below so the
        region exists before the first score does — a live region created in the
        same frame as its content is not reliably announced. `.sr-only` is this

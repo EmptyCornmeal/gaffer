@@ -59,6 +59,19 @@
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
+  /* The app's measure, set once and applied on the shell.
+
+     Before this, <main> constrained nothing and all eight pages picked their
+     own: max-w-xl on Fixtures through max-w-5xl on League, with Planner and
+     Players unconstrained. The result on a wide screen was a third of the
+     viewport in use with a void either side, and no two pages agreeing where
+     the content edge was.
+
+     90rem is wide enough for the dense pages (a fixture ticker, a player table
+     with a compare tray) without letting a line of prose run to 2000px. Pages
+     still constrain their own cards — that is a different question. */
+  --container-app: 90rem;   /* 1440px */
+
   --gaffer-topbar: 56px;
   --gaffer-sidebar: 270px;
   --gaffer-bottomnav: 56px;
