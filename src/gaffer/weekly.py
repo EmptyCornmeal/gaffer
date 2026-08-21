@@ -79,7 +79,9 @@ def hold_baseline(
     xi = optimize._pick_xi(players, owned)
     bench = sorted(
         (i for i in owned if i not in xi),
-        key=lambda i: (players[i].position != "GKP", -players[i].value))
+        # G-G -- this gameweek's xP, not the decayed horizon value: the bench
+        # order is an autosub queue for the match about to be played.
+        key=lambda i: (players[i].position != "GKP", -players[i].next_gw_points))
     ranked = sorted(xi, key=lambda i: -players[i].next_gw_points)
     captain = ranked[0] if ranked else None
     vice = ranked[1] if len(ranked) > 1 else captain
@@ -124,6 +126,36 @@ def build(
         )
 
     hold = hold_baseline(conn, held["squad"], from_gw, horizon)
+
+    # G2 -- the unknown-hold blowout. `hold_baseline` returns `legal: False`
+    # with an empty XI and `horizon_value: 0.0` when fewer than eleven of the
+    # owned players could be projected. Nothing checked the flag, so that 0.0
+    # went into `decision.compare` as if it were a real score, and *any* move
+    # beat it by the whole value of a squad. The output was not a wrong number,
+    # it was a confident recommendation to transfer, invented out of a missing
+    # projection -- and `decision.py` waives the probability gate once the delta
+    # is decisive enough, so the usual safety net let it through too.
+    #
+    # A hold we cannot price is not a hold worth zero. Say so.
+    if not hold.get("legal", True):
+        missing = 11 - len(hold.get("starting") or [])
+        return decision.Decision(
+            action=decision.ACTION_UNAVAILABLE,
+            headline="We cannot price holding your squad this week",
+            reason=(
+                f"{missing} of your eleven could not be projected, so there is "
+                "no legal XI to hold and nothing to measure a transfer against"
+            ),
+            captain=sol.captain or None, vice=sol.vice or None,
+            starting=list(sol.starting), bench=list(sol.bench),
+            confidence="unknown",
+            biggest_risk="Comparing a move against a squad we cannot price "
+                         "would make every move look decisive, whatever it is.",
+            assumptions=["The squad shown is Gaffer's recommended build. No "
+                         "transfer is being recommended, because holding could "
+                         "not be scored."],
+        )
+
     move_xi = list(sol.starting)
     hit_cost = int(sol.hits or 0) * params.hit_cost
 
