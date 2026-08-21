@@ -24,6 +24,7 @@ rather than the only way to be current.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from datetime import UTC, datetime
@@ -212,6 +213,23 @@ def run(
              f"available={live_state.get('available')} "
              f"({live_state.get('unavailable_reason') or 'scored'})")
 
+    # T-22b: settle the prediction ledger. `freeze` has always run; `score` never
+    # did — it existed only as a manual CLI nobody invoked, so every gameweek
+    # recorded what the candidates predicted and never what happened. A ledger
+    # that only ever holds forecasts cannot settle anything.
+    #
+    # Runs after the live stage because it uses the same payload, and only for a
+    # gameweek the API calls finished: scoring mid-match would freeze provisional
+    # bonus as though it were the result.
+    if not skip_strategy:
+        try:
+            with FplClient() as client:
+                log["ledger_scored"] = _score_finished_ledgers(client, now)
+        except Exception as exc:                              # noqa: BLE001
+            # A missing settlement is a gap in the evidence. A pipeline that
+            # stops publishing is a gap in the product.
+            log["ledger_scored"] = f"FAILED {type(exc).__name__}: {exc}"
+
     # T-23: review of the last finished gameweek, if one exists and a snapshot
     # was recorded for it. Never fabricated.
     review_state = None
@@ -304,6 +322,43 @@ def _team_and_positions(conn) -> tuple[dict[int, int], dict[int, str], dict[int,
         names[r["id"]] = r["web_name"]
     return team_of, positions, names
 
+
+
+def _score_finished_ledgers(client, now) -> str:
+    """Attach results to every frozen, unscored slate whose gameweek is done.
+
+    Idempotent by construction: a slate carrying `scored` is skipped, and
+    `ledger.score` appends rather than editing a prediction.
+    """
+    from gaffer import io, ledger
+
+    events = client.events()
+    finished = [
+        int(e["id"]) for e in events
+        if e.get("id") is not None and e.get("finished") and e.get("data_checked")
+    ]
+    if not finished:
+        return "no finished gameweek yet"
+
+    done: list[str] = []
+    for gw in sorted(finished):
+        path = ledger.ledger_path(gw)
+        if not path.exists():
+            continue
+        slate = json.loads(path.read_text(encoding="utf-8"))
+        if slate.get("scored"):
+            continue
+        payload = client.event_live(gw) or {}
+        elements = payload.get("elements") or []
+        if not elements:
+            continue
+        pts = {int(e["id"]): int((e.get("stats") or {}).get("total_points", 0))
+               for e in elements}
+        mins = {int(e["id"]): int((e.get("stats") or {}).get("minutes", 0))
+                for e in elements}
+        io.write_json_atomic(path, ledger.score(slate, pts, mins))
+        done.append(f"gw{gw:02d}")
+    return ", ".join(done) if done else "nothing new to settle"
 
 def _build_live(conn, client, settings, from_gw, now, generated_at):
     """Assemble the live view. Contained: a live-endpoint outage is a state."""
