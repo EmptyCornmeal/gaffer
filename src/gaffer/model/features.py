@@ -90,6 +90,49 @@ DEFCON_PRIOR = {"GKP": 0.0, "DEF": 7.7, "MID": 8.6, "FWD": 4.7}
 DEFCON_SHRINK_K = 300.0
 
 
+#: M9 — the chance a non-starter appears at all.
+#:
+#: The model carried a flat ``0.35``: an unnamed literal with no fit behind it
+#: and no comment beyond "inc. cameo chance". Measured over 37,032 non-start
+#: player-gameweeks in the fit seasons, the real figure is **0.152**, and it is
+#: not a constant. It rises from 0.06 for a player who never starts, peaks near
+#: 0.36 in the rotation band, and falls back toward 0.27 for the nailed — 0.35
+#: was calibrated for exactly one slice of the population and wrong everywhere
+#: else. That slice is not where the damage was: 53% of all rows sit below a
+#: 0.30 start rate, were told 0.35, and appear 6% of the time.
+#:
+#: Knots are on the model's own ``p_start``; values are P(appear | did not
+#: start), interpolated linearly between them.
+CAMEO_KNOTS = (0.0, 0.10, 0.22, 0.40, 0.62, 0.82, 0.95, 1.0)
+CAMEO_CURVE = (0.0601, 0.2620, 0.3095, 0.3420, 0.3570, 0.3212, 0.2618, 0.2793)
+
+#: Position matters more than anything else here and the flat term ignored it
+#: completely. A backup goalkeeper appears in **0.55%** of the games he does not
+#: start — he needs the first choice to be injured or sent off — while the model
+#: was giving him the same 35% as a rotating forward.
+CAMEO_POS_FACTOR = {"GKP": 0.0363, "DEF": 0.7258, "MID": 1.3458, "FWD": 1.3390}
+
+
+def cameo_probability(p_start: float, position: str) -> float:
+    """P(appears | does not start), from `p_start` and position.
+
+    Validated on 2025-26, which no part of this fit has seen: mean predicted
+    0.1487 against an actual 0.1448, where the flat 0.35 asserted 0.35. MAE over
+    the non-start population falls 0.3934 -> 0.2031 and Brier 0.1659 -> 0.0985.
+    """
+    lo, hi = CAMEO_KNOTS[0], CAMEO_KNOTS[-1]
+    x = min(max(float(p_start), lo), hi)
+    base = CAMEO_CURVE[-1]
+    for i in range(len(CAMEO_KNOTS) - 1):
+        a, b = CAMEO_KNOTS[i], CAMEO_KNOTS[i + 1]
+        if a <= x <= b:
+            span = b - a
+            t = 0.0 if span <= 0 else (x - a) / span
+            base = CAMEO_CURVE[i] + t * (CAMEO_CURVE[i + 1] - CAMEO_CURVE[i])
+            break
+    return min(1.0, max(0.0, base * CAMEO_POS_FACTOR.get(position, 1.0)))
+
+
 #: M10 — the chance a player who STARTS reaches the 60-minute mark, by position.
 #:
 #: `projection.py` set `p60 = p_start`, i.e. asserted that starting and lasting

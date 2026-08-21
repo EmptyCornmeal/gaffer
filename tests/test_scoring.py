@@ -187,12 +187,18 @@ def test_a_red_costs_three_times_a_yellow_at_equal_rates():
 
 
 def test_own_goals_and_penalty_misses_cost_two():
-    """0.005 is below the DEF own-goal prior (0.0097) and the FWD penalty-miss
-    prior (0.0067), so M11's shrinkage leaves both alone and the two -2 point
-    rules are compared at genuinely equal modelled rates. At the old 0.05 both
-    were shrunk, by different amounts, and the equality became a coincidence."""
-    og = project(player("DEF", og_per_90=0.005))["exp_misc_pts"]
-    miss = project(player("FWD", pen_miss_per_90=0.005))["exp_misc_pts"]
+    """Both rules cost two points, so at equal rates they cost the same.
+
+    Two things force the details here. M11 shrinks any rate above its positional
+    prior, so 0.001 is used -- below the MID own-goal prior (0.0018) and the MID
+    penalty-miss prior (0.0019) -- and neither is touched. And M9 gives each
+    position its own cameo probability, so a DEF and a FWD no longer share a
+    `p_play`; comparing across positions silently compared different exposures.
+    One position, rates inside both priors, and the invariant is the scoring
+    table rather than the minutes model.
+    """
+    og = project(player("MID", og_per_90=0.001))["exp_misc_pts"]
+    miss = project(player("MID", pen_miss_per_90=0.001))["exp_misc_pts"]
     assert og == pytest.approx(miss, rel=1e-9)
     assert og < 0
 
@@ -355,3 +361,36 @@ def test_shrinkage_is_one_sided():
     """
     clean = project(player("MID"))
     assert clean["exp_cards_pts"] == 0.0
+
+
+# --- M9: the cameo term is measured, not a constant -------------------------
+
+def test_a_backup_keeper_is_not_a_probable_appearance():
+    """The flat 0.35 gave a second-choice keeper the same chance of appearing as
+    a rotating forward. He appears in 0.55% of the games he does not start."""
+    from gaffer.model import features as F
+
+    assert F.cameo_probability(0.02, "GKP") < 0.01
+    assert F.cameo_probability(0.02, "MID") > 5 * F.cameo_probability(0.02, "GKP")
+
+
+def test_nobody_carries_a_floor_of_half_a_start():
+    """`p_start` floored at 0.25 plus a flat 0.35 put every player in the game
+    at >= 0.5125 chance of appearing, whatever was known about him."""
+    from gaffer.model import features as F
+
+    deep_bench = 0.0 + (1 - 0.0) * F.cameo_probability(0.0, "DEF")
+    assert deep_bench < 0.10, (
+        "a defender who has never started still reads as a likely appearance")
+
+
+def test_the_cameo_curve_peaks_in_the_rotation_band():
+    """It is not monotonic, and that is the finding: 0.35 was calibrated for
+    rotation players and wrong at both ends."""
+    from gaffer.model import features as F
+
+    never = F.cameo_probability(0.0, "MID")
+    rotating = F.cameo_probability(0.62, "MID")
+    nailed = F.cameo_probability(0.95, "MID")
+    assert rotating > never
+    assert rotating > nailed

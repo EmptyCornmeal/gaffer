@@ -437,7 +437,12 @@ def fixture_rates(
     else:
         base_start = _start_prior(pos, player["price"])
     p_start = clamp(base_start * avail, 0.0, 0.98)
-    p_play = clamp(p_start + (1 - p_start) * 0.35 * avail, 0.0, 0.99)  # inc. cameo chance
+    # M9 — the cameo term was a flat 0.35 for every player in the game, which
+    # handed a backup keeper the same chance of appearing as a rotating forward
+    # and put a floor of 0.5125 under everybody. It is now measured, and it
+    # depends on both how often the player starts and what he plays.
+    cameo = F.cameo_probability(p_start, pos)
+    p_play = clamp(p_start + (1 - p_start) * cameo * avail, 0.0, 0.99)
     exp_minutes = p_start * _START_MINUTES + (p_play - p_start) * _CAMEO_MINUTES
     # M10 — starting and lasting an hour are different events, and the gap is
     # positional. `p60` gates clean sheets and the long appearance point, so
