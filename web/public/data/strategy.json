@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-21T15:47:19+00:00",
+  "generated_at": "2026-08-21T16:22:48+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -203,12 +203,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.022,
-        "p_target": 0.022,
+        "p_first": 0.0245,
+        "p_target": 0.0245,
         "target_position": 1,
         "expected_position": 4.02,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0064,
+        "ci95_halfwidth": 0.0068,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
@@ -419,7 +419,15 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 64.904,
+      "expected_points": 64.671,
+      "p_target": {
+        "271619": 0.0245
+      }
+    },
+    {
+      "key": "captain:427",
+      "label": "Captain Mbeumo",
+      "expected_points": 63.152,
       "p_target": {
         "271619": 0.022
       }
@@ -427,54 +435,30 @@
     {
       "key": "captain:155",
       "label": "Captain Enzo",
-      "expected_points": 63.315,
+      "expected_points": 63.134,
       "p_target": {
-        "271619": 0.0225
-      }
-    },
-    {
-      "key": "captain:427",
-      "label": "Captain Mbeumo",
-      "expected_points": 63.223,
-      "p_target": {
-        "271619": 0.023
+        "271619": 0.0245
       }
     },
     {
       "key": "captain:55",
       "label": "Captain Watkins",
-      "expected_points": 62.659,
+      "expected_points": 62.493,
       "p_target": {
-        "271619": 0.02
+        "271619": 0.0195
       }
     }
   ],
   "resolution": {
-    "default": null,
-    "reason": "no league weights configured, and no option dominates. Set [leagues].weights to express which league matters most; until then this is a genuine choice, not a calculation.",
+    "default": "captain:426",
+    "reason": "one option dominates on every objective",
     "shortlist": [
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 64.904,
+        "expected_points": 64.671,
         "p_target": {
-          "271619": 0.022
-        }
-      },
-      {
-        "key": "captain:155",
-        "label": "Captain Enzo",
-        "expected_points": 63.315,
-        "p_target": {
-          "271619": 0.0225
-        }
-      },
-      {
-        "key": "captain:427",
-        "label": "Captain Mbeumo",
-        "expected_points": 63.223,
-        "p_target": {
-          "271619": 0.023
+          "271619": 0.0245
         }
       }
     ],
@@ -484,19 +468,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 14.33,
+    "expected_gain": 14.31,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "bboost",
         "gameweek": 1,
-        "expected_gain": 14.33,
+        "expected_gain": 14.31,
         "ci95": [
-          14.09,
-          14.57
+          14.07,
+          14.54
         ],
-        "baseline_points": 64.9,
-        "with_chip_points": 79.23,
+        "baseline_points": 64.67,
+        "with_chip_points": 78.98,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -505,13 +489,13 @@
       {
         "chip": "3xc",
         "gameweek": 1,
-        "expected_gain": 8.23,
+        "expected_gain": 8.17,
         "ci95": [
-          7.99,
-          8.47
+          7.92,
+          8.41
         ],
-        "baseline_points": 64.9,
-        "with_chip_points": 73.13,
+        "baseline_points": 64.67,
+        "with_chip_points": 72.84,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
