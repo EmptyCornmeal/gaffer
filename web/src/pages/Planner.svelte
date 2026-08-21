@@ -169,15 +169,26 @@
       importMsg = 'Add your Entry ID + a proxy in Settings first.'
       return
     }
+    // The importable squad is the last event whose deadline has PASSED, which
+    // the pipeline resolves and publishes as `squad_source_event`. It is not
+    // `current_gw` — that is the event being decided, and FPL serves no picks
+    // for it until its own deadline — and it is not `last_finished_gw`, which
+    // stays null all through a gameweek that is being played.
+    const gw = Number(bundle.meta.squad_source_event || bundle.meta.last_finished_gw || 0)
+    if (!gw) {
+      importMsg = 'No deadline has passed yet, so FPL is not publishing your picks.'
+      return
+    }
     importMsg = 'Importing…'
-    const gw = Number(bundle.meta.last_finished_gw || bundle.meta.current_gw || 1)
     try {
       const picks = await fpl.picks(entry, gw)
       plan = planFromPicks(picks.picks, 'My team')
       planName = 'My team'
       importMsg = `Imported your GW${gw} squad — now plan your transfers.`
     } catch {
-      importMsg = 'Picks unavailable yet — they appear once the GW1 deadline passes.'
+      // Do not name a cause that cannot be true: gw only exists here because a
+      // deadline passed, so this is FPL being unreachable, not too early.
+      importMsg = `Couldn't reach FPL for your GW${gw} squad. Try again in a moment.`
     }
   }
   // Clear throws away a squad that took minutes to assemble, and it used to sit
