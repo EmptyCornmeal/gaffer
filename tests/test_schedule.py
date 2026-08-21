@@ -624,3 +624,51 @@ def test_ci_refuses_a_committed_secret_or_binary():
 
 def test_ci_has_read_only_permissions():
     assert _ci()["permissions"] == {"contents": "read"}
+
+
+# --------------------------------------------------------------------------
+# A publish from before a passed deadline is superseded, not merely stale
+# --------------------------------------------------------------------------
+
+def _dl(h: int = 17, m: int = 30):
+    return datetime(2026, 8, 21, h, m, tzinfo=UTC)
+
+
+def test_a_publish_from_before_a_passed_deadline_refreshes():
+    """The GW1 hole: deadline gone, kick-off not yet, idle bar allows 6 hours.
+
+    The published build cannot know the squad, so age must not get a vote.
+    """
+    d = schedule.should_refresh(
+        _dl(18, 0),                       # half an hour after the deadline
+        deadline=_dl(),                   # the build's own target, now passed
+        last_generated_at=_dl(17, 0),     # published an hour before it
+        fixture_states=['scheduled'],
+        fixture_kickoffs=[_dl(19, 0)],    # nothing has kicked off
+    )
+    assert d.should_refresh is True
+    assert 'predates' in d.reason
+
+
+def test_the_rule_switches_itself_off_once_the_deadline_advances():
+    """A successful refresh retargets the next gameweek, so this cannot loop."""
+    d = schedule.should_refresh(
+        _dl(18, 0),
+        deadline=datetime(2026, 8, 28, 17, 30, tzinfo=UTC),  # next GW
+        last_generated_at=_dl(17, 55),
+        fixture_states=['scheduled'],
+        fixture_kickoffs=[_dl(19, 0)],
+    )
+    assert d.should_refresh is False
+
+
+def test_a_publish_after_the_deadline_is_judged_on_age_as_usual():
+    d = schedule.should_refresh(
+        _dl(18, 0),
+        deadline=_dl(),
+        last_generated_at=_dl(17, 45),    # published AFTER the deadline
+        fixture_states=['scheduled'],
+        fixture_kickoffs=[_dl(19, 0)],
+    )
+    assert d.should_refresh is False
+    assert 'predates' not in d.reason

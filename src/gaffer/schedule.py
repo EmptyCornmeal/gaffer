@@ -240,6 +240,21 @@ def should_refresh(
             f"published timestamp {last_generated_at.isoformat()} is "
             f"{ahead:.0f} min ahead of now, past the {grace:.0f} min clock-skew "
             "allowance — treating the artifact as corrupt and refreshing")
+    # A build made before a deadline that has since passed cannot know the squad:
+    # FPL exposes no picks until the deadline, so every artifact downstream of it
+    # says "we do not know your squad" about a squad that is now readable. This is
+    # not staleness — the published answer was correct when written and is void
+    # now — so it is decided before the age bar rather than by it.
+    #
+    # `deadline` is the published build's OWN target deadline, which is why this
+    # cannot loop: a successful refresh advances it to the next gameweek, putting
+    # it in the future and switching this branch off.
+    if deadline is not None and deadline <= now and last_generated_at < deadline:
+        return RefreshDecision(
+            True, window, (now - last_generated_at).total_seconds() / 60, limit_min,
+            f"published build predates the {deadline.isoformat()} deadline, which "
+            "has now passed — FPL is exposing picks it cannot have read")
+
     if age < timedelta(0):
         # Ordinary runner skew. Treat as current; it self-heals within minutes.
         age = timedelta(0)
