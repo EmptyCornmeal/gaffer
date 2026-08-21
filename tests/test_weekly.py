@@ -8,10 +8,6 @@ manufactured out of a missing projection.
 """
 from __future__ import annotations
 
-from types import SimpleNamespace
-
-import pytest
-
 from gaffer import config, decision, weekly
 
 
