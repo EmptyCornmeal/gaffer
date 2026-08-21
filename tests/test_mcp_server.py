@@ -439,6 +439,69 @@ def test_every_default_response_is_within_the_serialized_budget():
     assert over == [], f"over the {M.MAX_RESULT_BYTES:,}-byte budget: {over}"
 
 
+#: Smallest headroom any tool may keep before it counts as at risk. The budget
+#: test below only fails once a tool is *already* unusable; this one fails while
+#: there is still room to act. `get_model_evidence` reached 19,452 of 20,000 —
+#: 548 bytes — and nothing noticed, because being under the cap was the only
+#: thing asserted.
+MIN_HEADROOM_BYTES = 1_500
+
+
+def test_every_tool_keeps_usable_headroom_under_the_budget():
+    """Early warning. Being *just* under the cap is how the cap gets breached."""
+    tight = []
+    for name in sorted(M.TOOLS):
+        n = M.serialized_bytes(M.call(name, **DEFAULT_ARGS.get(name, {})))
+        head = M.MAX_RESULT_BYTES - n
+        if head < MIN_HEADROOM_BYTES:
+            tight.append(f"{name}: {n:,} bytes, only {head:,} spare")
+    assert tight == [], (
+        f"under {MIN_HEADROOM_BYTES:,} bytes of headroom: {tight}. "
+        "Project the payload rather than raising MAX_RESULT_BYTES.")
+
+
+def test_the_model_evidence_summary_keeps_every_decision_and_reason():
+    """The projection may drop duplicated numbers, never a decision."""
+    summary = M.call("get_model_evidence")
+    full = M.call("get_model_evidence", detail="full")
+    if summary["status"] != M.STATUS_OK:
+        pytest.skip("no backtest artifact")
+
+    s_c = {c["candidate"]: c for c in summary["model_candidates"]["candidates"]}
+    f_c = {c["candidate"]: c for c in full["model_candidates"]["candidates"]}
+    assert set(s_c) == set(f_c), "the projection lost a candidate"
+    for name, c in s_c.items():
+        assert c["decision"] == f_c[name]["decision"]
+        assert c.get("reason") == f_c[name].get("reason"), "a reason was trimmed"
+
+    assert M.serialized_bytes(summary) < M.serialized_bytes(full)
+    assert summary["detail"] == "summary"
+    assert "full" in summary["detail_available"]
+
+
+def test_the_model_evidence_summary_still_supports_its_own_prose():
+    """`reason` claims "worse at every horizon" and counts intervals; the summary
+    has to keep both checkable, or it is prose without evidence."""
+    r = M.call("get_model_evidence")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no backtest artifact")
+    for c in r["model_candidates"]["candidates"]:
+        ph = c.get("per_horizon_summary")
+        if ph is None:
+            continue
+        assert ph["horizons_measured"] >= 1
+        assert "intervals_excluding_zero" in ph
+        if c.get("worse_at_every_horizon") is True:
+            assert ph["best_diff"] is not None and ph["best_diff"] < 0, (
+                f"{c['candidate']} claims it loses everywhere but its best "
+                f"horizon is {ph['best_diff']}")
+
+
+def test_an_unknown_evidence_detail_is_refused():
+    r = M.call("get_model_evidence", detail="everything")
+    assert r["status"] == M.STATUS_INVALID
+
+
 def test_the_transfer_plan_summary_is_small_and_still_decision_shaped():
     r = M.call("get_transfer_plan")
     if r["status"] != M.STATUS_OK:

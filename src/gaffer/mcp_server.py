@@ -63,8 +63,12 @@ MAX_RESULT_BYTES = 20_000
 
 #: Detail levels for the transfer plan.
 DETAIL_SUMMARY = "summary"
+#: Detail level for `get_model_evidence`. Its full candidate block is evidence,
+#: not bloat, so it is projected rather than truncated — and reachable in full.
+DETAIL_FULL = "full"
 DETAIL_GAMEWEEK = "gameweek"
 ALL_DETAIL = frozenset({DETAIL_SUMMARY, DETAIL_GAMEWEEK})
+EVIDENCE_DETAIL = frozenset({DETAIL_SUMMARY, DETAIL_FULL})
 
 
 # ---------------------------------------------------------------------------
@@ -817,8 +821,80 @@ def get_decision_review() -> dict[str, Any]:
         ])
 
 
-def get_model_evidence() -> dict[str, Any]:
-    """What the model is actually measured to do, and what was withdrawn."""
+def _summarise_candidates(mc: Any) -> Any:
+    """Project `model_candidates` to what a decision needs, losslessly reachable.
+
+    `get_model_evidence` serialised to 19,452 of a 20,000-byte budget — 548 bytes
+    of headroom, so one more candidate or limitation string would have stopped the
+    tool answering at all. Two things are dropped here and **nothing else**:
+
+    * horizons 2-6 of each candidate's paired comparison, replaced by a summary
+      that still carries the two claims the `reason` prose makes — whether the
+      candidate loses at every horizon, and how many intervals exclude zero;
+    * `current_split_reference`'s `rank_corr` and `mae`, which are **the same
+      numbers** this envelope already ships in `honest_metrics`.
+
+    Everything remains available with `detail="full"`. Truncating evidence to fit
+    a budget would be the wrong trade; projecting a duplicate is not.
+    """
+    if not isinstance(mc, dict):
+        return mc
+    out = dict(mc)
+
+    cands = mc.get("candidates")
+    if isinstance(cands, list):
+        slim = []
+        for c in cands:
+            if not isinstance(c, dict):
+                slim.append(c)
+                continue
+            c2 = dict(c)
+            ph = c.get("per_horizon")
+            if isinstance(ph, dict) and ph:
+                diffs, excl = [], 0
+                for row in ph.values():
+                    if not isinstance(row, dict):
+                        continue
+                    d = row.get("diff")
+                    if isinstance(d, (int, float)):
+                        diffs.append(d)
+                    ci = row.get("ci95")
+                    if (isinstance(ci, (list, tuple)) and len(ci) == 2
+                            and all(isinstance(x, (int, float)) for x in ci)
+                            and not (ci[0] <= 0 <= ci[1])):
+                        excl += 1
+                c2["per_horizon"] = {"1": ph.get("1")} if "1" in ph else {}
+                c2["per_horizon_summary"] = {
+                    "horizons_measured": len(ph),
+                    "worst_diff": round(min(diffs), 3) if diffs else None,
+                    "best_diff": round(max(diffs), 3) if diffs else None,
+                    "intervals_excluding_zero": excl,
+                    "detail": "horizons 2-6 omitted; detail='full' returns them",
+                }
+            slim.append(c2)
+        out["candidates"] = slim
+
+    ref = mc.get("current_split_reference")
+    if isinstance(ref, dict):
+        r2 = {k: v for k, v in ref.items() if k not in ("rank_corr", "mae")}
+        if "rank_corr" in ref or "mae" in ref:
+            r2["rank_corr_and_mae"] = "see honest_metrics on this envelope"
+        out["current_split_reference"] = r2
+
+    return out
+
+
+def get_model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
+    """What the model is actually measured to do, and what was withdrawn.
+
+    Defaults to a projected candidate block that keeps every decision and its
+    stated reason. Ask for `detail="full"` for the complete paired comparison at
+    all six horizons.
+    """
+    detail = (detail or DETAIL_SUMMARY).strip().lower()
+    if detail not in EVIDENCE_DETAIL:
+        raise ToolError(STATUS_INVALID,
+                        f"detail must be one of {sorted(EVIDENCE_DETAIL)}")
     meta = _meta()
     bt = load_artifact("backtest.json", required=False)
     if bt is None:
@@ -837,7 +913,13 @@ def get_model_evidence() -> dict[str, Any]:
                         for h, b in (bt.get("per_horizon") or {}).items()},
         decisions=(bt.get("per_horizon") or {}).get("1", {}).get("decisions"),
         withdrawn_baselines=bt.get("withdrawn_baselines"),
-        model_candidates=bt.get("model_candidates"),
+        model_candidates=(bt.get("model_candidates") if detail == DETAIL_FULL
+                          else _summarise_candidates(bt.get("model_candidates"))),
+        detail=detail,
+        detail_available=("already the full candidate block"
+                          if detail == DETAIL_FULL else
+                          "call again with detail='full' for all six horizons "
+                          "of each candidate comparison"),
         shipped_projection=bt.get("shipped_projection"),
         ep_next_blend={"weight": config.EP_NEXT_BLEND_WEIGHT,
                        "fitted": config.EP_NEXT_BLEND_IS_FITTED},
@@ -1023,8 +1105,8 @@ def build_server() -> Any:
 
     @server.tool(name="get_model_evidence",
                  description=get_model_evidence.__doc__)
-    def model_evidence() -> dict[str, Any]:
-        return call("get_model_evidence")
+    def model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
+        return call("get_model_evidence", detail=detail)
 
     @server.tool(name="what_changed", description=what_changed.__doc__)
     def changed() -> dict[str, Any]:
