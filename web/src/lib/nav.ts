@@ -7,12 +7,10 @@ export type Tab = { key: string; label: string; icon: string }
 export const NAV_TABS: Tab[] = [
   { key: 'home', label: 'This Week', icon: 'zap' },
   { key: 'live', label: 'Live', icon: 'flame' },
-  { key: 'review', label: 'Review', icon: 'award' },
   { key: 'my-team', label: 'My Team', icon: 'shirt' },
   { key: 'planner', label: 'Planner', icon: 'compass' },
   { key: 'players', label: 'Players', icon: 'users' },
   { key: 'fixtures', label: 'Fixtures', icon: 'calendar' },
-  { key: 'chips', label: 'Chips', icon: 'layers' },
   { key: 'league', label: 'League', icon: 'trophy' },
   { key: 'news', label: 'News', icon: 'news' },
   { key: 'accuracy', label: 'Accuracy', icon: 'target' },
@@ -60,7 +58,7 @@ export const MORE_TABS: Tab[] = NAV_TABS.filter((t) =>
  * regression the performance budget exists to catch.
  */
 export const HEAVY_ROUTES: ReadonlySet<string> = new Set([
-  'planner', 'players', 'chips', 'live', 'review',
+  'planner', 'players', 'live',
   'league', 'news', 'accuracy',
 ])
 
@@ -90,6 +88,8 @@ export const REDIRECTS: Readonly<Record<string, string>> = {
   overview: 'planner',
   strategy: 'league',
   meta: 'league',
+  chips: 'my-team',
+  review: 'home',
 }
 
 export function normaliseRoute(hash: string | null | undefined): string {

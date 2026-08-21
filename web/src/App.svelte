@@ -19,9 +19,7 @@
   const LAZY: Record<string, () => Promise<{ default: unknown }>> = {
     planner: () => import('./pages/Planner.svelte'),
     players: () => import('./pages/Players.svelte'),
-    chips: () => import('./pages/Chips.svelte'),
     live: () => import('./pages/Live.svelte'),
-    review: () => import('./pages/Review.svelte'),
     league: () => import('./pages/MiniLeague.svelte'),
     news: () => import('./pages/News.svelte'),
     accuracy: () => import('./pages/Accuracy.svelte'),
@@ -154,10 +152,6 @@
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} onnav={nav} />
       {:else if route === 'live' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
-      {:else if route === 'review' && LazyPage}
-        <LazyPage {bundle} onnav={nav} />
-      {:else if route === 'chips' && LazyPage}
-        <LazyPage {bundle} onnav={nav} />
       {:else if route === 'league' && LazyPage}
         {#key reloadKey}<LazyPage ongoSettings={() => (sidebarOpen = true)} {bundle} onnav={nav} onpick={(id: number) => (selectedId = id)} {now} />{/key}
       {:else if route === 'news' && LazyPage}

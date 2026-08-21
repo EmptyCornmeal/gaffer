@@ -4,7 +4,7 @@
     parseReview, VERDICT_LABELS, VERDICT_TONE, ATTRIBUTION_LABELS,
     signed, pctOf,
   } from '../lib/weekly'
-  import Icon from '../components/Icon.svelte'
+  import Icon from './Icon.svelte'
 
   let { bundle, onnav }: { bundle: Bundle; onnav: (r: string) => void } = $props()
 

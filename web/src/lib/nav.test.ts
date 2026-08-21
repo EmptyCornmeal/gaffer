@@ -34,7 +34,7 @@ describe('normaliseRoute', () => {
 
   it('strips query strings and trailing fragments', () => {
     expect(normaliseRoute('#/players?sort=xp')).toBe('players')
-    expect(normaliseRoute('#/chips&x=1')).toBe('chips')
+    expect(normaliseRoute('#/live&x=1')).toBe('live')
   })
 
   it('is idempotent — normalising twice cannot loop', () => {

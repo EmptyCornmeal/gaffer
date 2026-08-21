@@ -3,7 +3,7 @@
   import type { Player } from '../lib/types'
   import { loadCurrent, lineupErrors } from '../lib/squad'
   import { parseStrategy, CHIP_LABELS } from '../lib/strategy'
-  import Icon from '../components/Icon.svelte'
+  import Icon from './Icon.svelte'
 
   let { bundle, onnav }: { bundle: Bundle; onnav: (r: string) => void } = $props()
 

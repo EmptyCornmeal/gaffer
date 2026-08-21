@@ -16,6 +16,13 @@
     now?: number
   } = $props()
 
+  // Last week's result is the context this week's decision is read in.
+  let tab = $state<'now' | 'last'>('now')
+  const TABS = [
+    { key: 'now', label: 'This week' },
+    { key: 'last', label: 'Last week' },
+  ] as const
+
   const parsed = $derived(parseDecision(bundle.decision))
   const d = $derived(parsed.kind === 'ok' ? parsed.data : null)
   const body = $derived(d?.decision ?? null)
@@ -75,6 +82,30 @@
     return { xi: sum, armband, total: sum + armband }
   })
 </script>
+
+<div class="flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5 w-fit mb-3">
+  {#each TABS as t}
+    <button
+      onclick={() => (tab = t.key)}
+      class="px-3 py-1 rounded-md text-xs font-bold transition {tab === t.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+    >{t.label}</button>
+  {/each}
+</div>
+
+{#if tab === 'last'}
+  <!-- Lazy: this page is eagerly imported, and ReviewView is not why anyone
+       opens it. Loading it with the tab keeps it out of the entry chunk. -->
+  {#await import('../components/ReviewView.svelte')}
+    <div class="flex justify-center py-16 text-muted" role="status" aria-live="polite">
+      <div class="w-6 h-6 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+    </div>
+  {:then M}
+    <M.default {bundle} {onnav} />
+  {:catch}
+    <p class="text-sm text-muted text-center py-16">That section failed to load. Reload the page.</p>
+  {/await}
+{:else}
+
 
 <!-- One column on a phone, which is the layout that matters. At `lg` the same
      cards split into two so the answer and its arithmetic stop running off the
@@ -397,3 +428,4 @@
     </div>
   {/if}
 </div>
+{/if}

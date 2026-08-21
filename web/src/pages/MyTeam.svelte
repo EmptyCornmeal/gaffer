@@ -9,6 +9,13 @@
 
   let { bundle, onpick, ongoSettings, onnav }: { bundle: Bundle; onpick: (id: number) => void; ongoSettings: () => void; onnav: (r: string) => void } = $props()
 
+  // A chip is something your squad has, not somewhere you go.
+  let tab = $state<'squad' | 'chips'>('squad')
+  const TABS = [
+    { key: 'squad', label: 'Squad' },
+    { key: 'chips', label: 'Chips' },
+  ] as const
+
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
   const entryId = getEntryId()
   let phase = $state<'idle' | 'loading' | 'ok' | 'error' | 'nosetup' | 'preseason'>('idle')
@@ -64,6 +71,30 @@
   const viceId = $derived(picks?.picks.find((p) => p.is_vice_captain)?.element ?? -1)
   const suggestedCaptain = $derived([...starters].sort((a, b) => b.next_gw_xp - a.next_gw_xp)[0])
 </script>
+
+<div class="flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5 w-fit mb-3">
+  {#each TABS as t}
+    <button
+      onclick={() => (tab = t.key)}
+      class="px-3 py-1 rounded-md text-xs font-bold transition {tab === t.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+    >{t.label}</button>
+  {/each}
+</div>
+
+{#if tab === 'chips'}
+  <!-- Lazy: this page is eagerly imported, and ChipsView is not why anyone
+       opens it. Loading it with the tab keeps it out of the entry chunk. -->
+  {#await import('../components/ChipsView.svelte')}
+    <div class="flex justify-center py-16 text-muted" role="status" aria-live="polite">
+      <div class="w-6 h-6 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+    </div>
+  {:then M}
+    <M.default {bundle} {onnav} />
+  {:catch}
+    <p class="text-sm text-muted text-center py-16">That section failed to load. Reload the page.</p>
+  {/await}
+{:else}
+
 
 {#if phase === 'nosetup'}
   <div class="card p-8 text-center rise max-w-lg mx-auto">
@@ -161,4 +192,5 @@
       </table>
     </div>
   </div>
+{/if}
 {/if}

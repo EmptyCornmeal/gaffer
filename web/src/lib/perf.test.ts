@@ -100,7 +100,7 @@ describe('routes', () => {
     expect(normaliseRoute('#/nope')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#//')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#/live/extra')).toBe('live')
-    expect(normaliseRoute('#/review?x=1')).toBe('review')
+    expect(normaliseRoute('#/players?x=1')).toBe('players')
   })
 
   it('hash routing is used, so GitHub Pages deep links cannot 404', () => {
@@ -112,7 +112,7 @@ describe('routes', () => {
   })
 
   it('the new weekly-loop screens exist', () => {
-    for (const r of ['home', 'live', 'review']) {
+    for (const r of ['home', 'live', 'my-team']) {
       expect(KNOWN_ROUTES.has(r)).toBe(true)
     }
   })
