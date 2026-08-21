@@ -72,7 +72,19 @@ CREATE TABLE IF NOT EXISTS players (
     -- current prior season and presented an old cameo as current evidence.
     base_season         TEXT DEFAULT '',
     news                TEXT,
-    set_piece_notes     TEXT
+    set_piece_notes     TEXT,
+    -- G11. `set_piece_notes` is a display string, so the orders behind it were
+    -- thrown away at ingest and the projection never saw them. Set-piece duty
+    -- is filed as the highest-EV model change on data already ingested -- and
+    -- it is not measurable, because the historical archive carries no set-piece
+    -- columns at all. It reaches us only from the live bootstrap.
+    --
+    -- These three exist so that stops being true. Storing them now means a
+    -- season from now there is a series to fit against; nothing reads them yet,
+    -- and nothing should until there is enough history to measure.
+    penalties_order     INTEGER,
+    freekicks_order     INTEGER,
+    corners_order       INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS fixtures (

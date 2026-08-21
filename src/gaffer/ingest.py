@@ -30,6 +30,20 @@ def _f(x: Any, default: float = 0.0) -> float:
         return default
 
 
+def _order(v: Any) -> int | None:
+    """A set-piece rank, or None when the player is not on the list.
+
+    The API uses both 0 and 99 for "not a taker" depending on the endpoint and
+    the season. Neither is a rank, and storing either as one would make a player
+    who takes nothing look like the first choice or the ninety-ninth.
+    """
+    try:
+        n = int(v)
+    except (TypeError, ValueError):
+        return None
+    return n if 1 <= n <= 10 else None
+
+
 def _set_piece_notes(e: dict[str, Any]) -> str:
     bits = []
     if (e.get("penalties_order") or 99) <= 2:
@@ -150,6 +164,15 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
                 **_scoring_rates(e),
                 "news": e.get("news") or "",
                 "set_piece_notes": _set_piece_notes(e),
+                # G11 -- the orders themselves, not just the string built from
+                # them. Nothing reads these yet: they are here so the duty
+                # signal becomes measurable once a season of history exists.
+                # 99 and 0 both mean "not on the list" in the API; store NULL,
+                # because a missing rank is not rank zero.
+                "penalties_order": _order(e.get("penalties_order")),
+                "freekicks_order": _order(e.get("direct_freekicks_order")),
+                "corners_order": _order(
+                    e.get("corners_and_indirect_freekicks_order")),
             }
         )
     return db.upsert(conn, "players", rows, ["id"])
