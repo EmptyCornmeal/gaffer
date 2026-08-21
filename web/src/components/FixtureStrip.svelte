@@ -9,7 +9,7 @@
       class="fdr-{f.difficulty} rounded px-1 py-0.5 text-center min-w-[34px]"
       title="GW{f.gw} · {f.home ? 'Home' : 'Away'} · difficulty {f.difficulty}"
     >
-      <div class="text-[10px] font-bold leading-none">{f.opp}</div>
+      <div class="text-micro font-bold leading-none">{f.opp}</div>
       <!-- Difficulty was hue-only, with the numeral parked in `title` — which a
            touch device never shows. The Fixtures grid prints it in the cell
            corner; at 34px wide there is no room for an overlay, so venue and

@@ -206,10 +206,10 @@
         class="pointer-events-none absolute top-1 z-10 rounded-lg border border-line bg-bg2/95 px-2.5 py-2 shadow-lg backdrop-blur-sm"
         style="left: {tipLeft}%; transform: translateX({tipFlip ? '-100%' : '0'}) translateX({tipFlip ? '-8px' : '8px'}); max-width: 260px"
       >
-        <div class="text-[10px] font-bold uppercase tracking-wide text-muted2 mb-1">{labels[hover]}</div>
+        <div class="text-micro font-bold uppercase tracking-wide text-muted2 mb-1">{labels[hover]}</div>
         <div class="flex flex-col gap-0.5">
           {#each readout.slice(0, 12) as r}
-            <div class="flex items-center gap-1.5 text-[11px] {r.s.you ? 'font-bold text-text' : 'text-muted'}">
+            <div class="flex items-center gap-1.5 text-mini {r.s.you ? 'font-bold text-text' : 'text-muted'}">
               <span class="w-2 h-2 rounded-sm shrink-0" style="background:{r.s.color}"></span>
               <span class="truncate">{r.s.name}</span>
               <span class="ml-auto tabular-nums pl-2">{format(r.v)}</span>
@@ -222,7 +222,7 @@
 </div>
 
 {#if series.length}
-  <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px]">
+  <div class="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-mini">
     {#each series as s}
       <button
         type="button"

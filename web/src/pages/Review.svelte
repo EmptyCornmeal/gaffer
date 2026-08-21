@@ -65,24 +65,24 @@
 
       <div class="grid grid-cols-3 gap-2 mt-3 text-center">
         <div class="rounded-lg bg-bg3 p-2">
-          <div class="text-[10px] uppercase text-muted2 font-bold">Expected</div>
+          <div class="text-micro uppercase text-muted2 font-bold">Expected</div>
           <div class="text-xl font-black tabular-nums">
             {q.expected_at_decision ?? '—'}
           </div>
         </div>
         <div class="rounded-lg bg-bg3 p-2">
-          <div class="text-[10px] uppercase text-muted2 font-bold">Scored</div>
+          <div class="text-micro uppercase text-muted2 font-bold">Scored</div>
           <div class="text-xl font-black tabular-nums">{q.realised ?? '—'}</div>
         </div>
         <div class="rounded-lg bg-bg3 p-2">
-          <div class="text-[10px] uppercase text-muted2 font-bold">Percentile</div>
+          <div class="text-micro uppercase text-muted2 font-bold">Percentile</div>
           <div class="text-xl font-black tabular-nums">
             {q.outcome_percentile == null ? '—' : pctOf(q.outcome_percentile)}
           </div>
         </div>
       </div>
       {#if !r.has_snapshot}
-        <p class="text-[11px] text-yellow mt-2">
+        <p class="text-mini text-yellow mt-2">
           No pre-deadline record exists for this gameweek, so only the result is
           shown — the decision itself cannot be judged.
         </p>
@@ -118,7 +118,7 @@
             {/if}
           </tbody>
         </table>
-        <p class="text-[11px] text-muted2 mt-2">{cmp.note}</p>
+        <p class="text-mini text-muted2 mt-2">{cmp.note}</p>
       </section>
     {/if}
 
@@ -129,7 +129,7 @@
         <div class="space-y-1.5">
           {#each lines as [key, value]}
             <div class="flex items-center gap-2">
-              <span class="text-[11px] w-28 shrink-0 text-muted">
+              <span class="text-mini w-28 shrink-0 text-muted">
                 {ATTRIBUTION_LABELS[key] ?? key}
               </span>
               <div class="flex-1 h-4 rounded bg-bg3 overflow-hidden">
@@ -151,7 +151,7 @@
         <h3 id="lesson" class="font-bold text-sm">This week's lesson</h3>
         <p class="text-sm mt-1">{r.lesson.text}</p>
         {#if r.lesson.key !== 'no_pattern_yet'}
-          <p class="text-[11px] text-muted2 mt-1">
+          <p class="text-mini text-muted2 mt-1">
             Based on {r.lesson.weeks} reviewed gameweek(s).
           </p>
         {/if}
@@ -167,7 +167,7 @@
           onclick={() => (showLimits = !showLimits)}
         >{showLimits ? '▾' : '▸'} How this was measured</button>
         {#if showLimits}
-          <ul class="text-[11px] text-muted2 mt-2 list-disc pl-4 space-y-0.5">
+          <ul class="text-mini text-muted2 mt-2 list-disc pl-4 space-y-0.5">
             {#each r.limitations as x}<li>{x}</li>{/each}
             {#if r.snapshot_as_of}
               <li>Scored against the pre-deadline snapshot taken at

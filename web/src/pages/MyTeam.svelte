@@ -92,7 +92,7 @@
         <div class="card p-3 text-left"><Icon name={f.i} size={16} class="text-brand-light" /><div class="text-xs text-muted mt-1.5">{f.t}</div></div>
       {/each}
     </div>
-    <div class="text-[11px] text-muted2 mt-6">In-season, this page becomes your live team, scored and explained.</div>
+    <div class="text-mini text-muted2 mt-6">In-season, this page becomes your live team, scored and explained.</div>
   </div>
 {:else if phase === 'error'}
   <div class="card p-6 text-center rise max-w-lg mx-auto">
@@ -148,7 +148,7 @@
                     <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
                     {#if p.id === captainId}<span class="badge badge-good">C</span>{/if}
                   </span>
-                  <span class="block text-[10px] text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span>
+                  <span class="block text-micro text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span>
                 </button>
               </td>
               <td><div class="flex justify-center"><FixtureStrip fixtures={p.fixtures} max={4} /></div></td>

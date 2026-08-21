@@ -141,9 +141,9 @@
       aria-current={route === 'my-team' ? 'page' : undefined}
       class="card card-hover w-full text-left p-3"
     >
-      <div class="text-[10px] uppercase font-bold text-muted2 tracking-wide">Built for</div>
+      <div class="text-micro uppercase font-bold text-muted2 tracking-wide">Built for</div>
       <div class="font-bold truncate">{meta.entry_name ?? 'No team linked'}</div>
-      <div class="text-[11px] text-muted truncate">
+      <div class="text-mini text-muted truncate">
         {meta.manager_name ?? 'unknown manager'} · {meta.season}
       </div>
     </button>
@@ -193,7 +193,7 @@
 
         <button class="btn w-full" onclick={save}>{saved ? 'Saved ✓' : 'Save'}</button>
 
-        <p class="mt-3 text-[11px] text-muted2 leading-relaxed">
+        <p class="mt-3 text-mini text-muted2 leading-relaxed">
           Your team &amp; league tables are fetched live from these IDs. They do not
           change the projections or the recommended squad.
         </p>
@@ -218,7 +218,7 @@
     {/if}
   </div>
 
-  <p class="mt-4 text-[11px] text-muted2 leading-relaxed">
+  <p class="mt-4 text-mini text-muted2 leading-relaxed">
     Projections are a snapshot from the last pipeline run — see the data-age chip
     in the header.
   </p>

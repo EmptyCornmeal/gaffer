@@ -51,7 +51,7 @@
     <div class="card p-4 border border-red/40 bg-red/5">
       <div class="font-bold text-red">Fixtures unavailable</div>
       <p class="text-sm text-muted mt-1">{parsed.reason}</p>
-      <p class="text-[11px] text-muted2 mt-2">
+      <p class="text-mini text-muted2 mt-2">
         This is a problem with the published <code>fixtures.json</code>, not with
         your team. Everything else on the site is unaffected.
       </p>
@@ -77,7 +77,7 @@
   </div>
 
   <!-- legend + hints up top, where they're needed (not buried under 20 rows) -->
-  <div class="flex items-center gap-x-4 gap-y-1.5 mb-3 text-[11px] text-muted flex-wrap">
+  <div class="flex items-center gap-x-4 gap-y-1.5 mb-3 text-mini text-muted flex-wrap">
     <span class="flex items-center gap-1">Difficulty {#each [1, 2, 3, 4, 5] as d}<span class="fdr-{d} w-5 h-5 rounded flex items-center justify-center font-bold">{d}</span>{/each}</span>
     <span class="text-muted2">×2 = double · – = blank</span>
     <span class="text-muted2">Rows sorted best fixture-run → worst · tap <span class="text-muted">+</span> to plan a rotation</span>
@@ -96,25 +96,25 @@
         <div class="grid" style="grid-template-columns: repeat({gws.length}, minmax(46px,1fr));">
           {#each rotation.cells as c, i}
             <div class="m-0.5">
-              <div class="text-[10px] text-muted text-center leading-none mb-0.5">GW{gws[i]}</div>
+              <div class="text-micro text-muted text-center leading-none mb-0.5">GW{gws[i]}</div>
               {#if c}
                 <div class="fdr-{diffOf(c.f)} rounded text-center py-1.5" title="Field {c.short}: {c.f.opp} {c.f.home ? 'Home' : 'Away'} · difficulty {diffOf(c.f)}">
-                  <div class="text-[10px] font-bold leading-none">{c.short}</div>
+                  <div class="text-micro font-bold leading-none">{c.short}</div>
                   <div class="text-[8px] opacity-80 leading-none mt-0.5">v {c.f.opp} · {diffOf(c.f)}</div>
                 </div>
               {:else}
-                <div class="rounded text-center py-1.5 bg-bg3/60 text-muted2" title="Both blank"><div class="text-[11px] font-bold leading-none">–</div></div>
+                <div class="rounded text-center py-1.5 bg-bg3/60 text-muted2" title="Both blank"><div class="text-mini font-bold leading-none">–</div></div>
               {/if}
             </div>
           {/each}
         </div>
       </div>
-      <div class="text-[11px] text-muted mt-1.5">Pin up to 3 teams (📌) to plan a rotation slot — each GW shows the easier fixture you'd field.</div>
+      <div class="text-mini text-muted mt-1.5">Pin up to 3 teams (📌) to plan a rotation slot — each GW shows the easier fixture you'd field.</div>
     </div>
   {/if}
 
   <div class="card overflow-x-auto">
-    <div class="grid text-[11px] text-muted bg-bg2 border-b border-line" style="grid-template-columns: 60px repeat({gws.length}, minmax(46px,1fr));">
+    <div class="grid text-mini text-muted bg-bg2 border-b border-line" style="grid-template-columns: 60px repeat({gws.length}, minmax(46px,1fr));">
       <div class="py-2 px-2 font-semibold">Team</div>
       {#each gws as gw}<div class="py-2 text-center font-semibold">GW{gw}</div>{/each}
     </div>
@@ -124,7 +124,7 @@
           <button
             onclick={() => togglePin(r.short)}
             title={pinned.includes(r.short) ? 'Remove from rotation' : 'Pin to rotation (max 3)'}
-            class="text-[10px] leading-none {pinned.includes(r.short) ? 'text-brand' : 'text-muted2 hover:text-muted'}"
+            class="text-micro leading-none {pinned.includes(r.short) ? 'text-brand' : 'text-muted2 hover:text-muted'}"
           >{pinned.includes(r.short) ? '📌' : '+'}</button>
           {r.short}
           {#if r.doubles}<span class="text-[8px] text-brand-light" title="Double gameweek">×2</span>{/if}
@@ -133,7 +133,7 @@
           {#if cell.length === 0}
             <!-- blank gameweek -->
             <div class="m-0.5 rounded text-center py-1.5 bg-bg3/60 text-muted2" title="Blank — no fixture">
-              <div class="text-[11px] font-bold leading-none">–</div>
+              <div class="text-mini font-bold leading-none">–</div>
             </div>
           {:else}
             <div class="m-0.5 flex flex-col gap-0.5">
@@ -141,7 +141,7 @@
                 <div class="fdr-{diffOf(f)} rounded relative text-center py-1.5" title="{f.opp} {f.home ? 'Home' : 'Away'} · difficulty {diffOf(f)}">
                   <!-- difficulty number in the corner so it's legible without relying on hue (colour-blind a11y) -->
                   <div class="absolute top-0.5 right-1 text-[9px] font-black leading-none opacity-90">{diffOf(f)}</div>
-                  <div class="text-[11px] font-bold leading-none">{f.opp}</div>
+                  <div class="text-mini font-bold leading-none">{f.opp}</div>
                   <div class="text-[8px] opacity-75 leading-none mt-0.5">{f.home ? 'Home' : 'Away'}</div>
                 </div>
               {/each}

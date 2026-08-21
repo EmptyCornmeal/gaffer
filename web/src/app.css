@@ -42,6 +42,21 @@
      the call sites onto `yellow`/`brand-light` is the real fix; this unblocks it. */
   --color-amber: #fab219;   /* = yellow */
   --color-green: #34d399;   /* = brand-light */
+
+  /* --- type scale -------------------------------------------------------
+     Tailwind's scale bottoms out at `text-xs` (12px), but a dense data UI
+     needs two steps below it — axis ticks, table meta, chip labels. Without
+     names for them the app accumulated 242 arbitrary `text-[Npx]` values
+     across SEVEN sizes, running in parallel with Tailwind's own six. Thirteen
+     font sizes is not a hierarchy, it is drift.
+
+     These two are the floor. Anything smaller than `micro` is not a design
+     decision, it is an accessibility problem. */
+  --text-micro: 0.625rem;              /* 10px — axis ticks, dense chips  */
+  --text-micro--line-height: 0.875rem; /* 14px */
+  --text-mini: 0.6875rem;              /* 11px — table meta, captions     */
+  --text-mini--line-height: 1rem;      /* 16px */
+
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --gaffer-topbar: 56px;

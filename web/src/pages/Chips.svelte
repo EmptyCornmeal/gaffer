@@ -109,7 +109,7 @@
           <span class="chip chip-bad">{CHIP_LABELS[u] ?? u} · played</span>
         {/each}
       </div>
-      <button class="text-[11px] text-accent-light hover:underline mt-3" onclick={() => onnav('strategy')}>
+      <button class="text-mini text-accent-light hover:underline mt-3" onclick={() => onnav('strategy')}>
         Full breakdown, assumptions and confidence intervals →
       </button>
     </div>
@@ -149,7 +149,7 @@
   <div class="card p-4">
     <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
       <h3 class="font-bold">Projected points, next {gws.length} GWs</h3>
-      <div class="flex items-center gap-3 text-[11px]">
+      <div class="flex items-center gap-3 text-mini">
         <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-brand/80 inline-block"></span>Starting XI</span>
         <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-accent/60 inline-block"></span>Bench</span>
       </div>
@@ -159,19 +159,19 @@
         {@const isBB = r.gw === bb?.gw}
         {@const isTC = r.gw === tc?.gw}
         <div class="flex items-center gap-2">
-          <span class="text-[11px] w-9 tabular-nums {isBB || isTC ? 'text-brand-light font-bold' : 'text-muted2'}">GW{r.gw}</span>
+          <span class="text-mini w-9 tabular-nums {isBB || isTC ? 'text-brand-light font-bold' : 'text-muted2'}">GW{r.gw}</span>
           <div class="flex-1 h-6 rounded bg-bg3 overflow-hidden flex {isBB ? 'ring-1 ring-accent/60' : ''}">
-            <div class="h-full bg-brand/80 flex items-center justify-end pr-1.5 text-[10px] font-bold text-[#05210f]" style="width:{(r.starters / axisMax) * 100}%">{r.starters.toFixed(0)}</div>
+            <div class="h-full bg-brand/80 flex items-center justify-end pr-1.5 text-micro font-bold text-[#05210f]" style="width:{(r.starters / axisMax) * 100}%">{r.starters.toFixed(0)}</div>
             <div class="h-full bg-accent/60 flex items-center justify-end pr-1.5 text-[9px] font-semibold text-white/90" style="width:{(r.bench / axisMax) * 100}%" title="bench {r.bench.toFixed(1)}">{r.bench >= 2 ? '+' + r.bench.toFixed(0) : ''}</div>
           </div>
           <span class="w-16 text-right shrink-0">
             {#if isBB}<span class="chip chip-info">BB</span>{:else if isTC}<span class="chip chip-good">TC</span>{/if}
           </span>
-          <span class="text-[11px] text-muted w-20 text-right truncate hidden sm:inline">C: {r.bestCap.name}</span>
+          <span class="text-mini text-muted w-20 text-right truncate hidden sm:inline">C: {r.bestCap.name}</span>
         </div>
       {/each}
     </div>
-    <p class="text-[11px] text-muted2 mt-3">
+    <p class="text-mini text-muted2 mt-3">
       Pre-season every team has one fixture, so weeks look flat; double/blank gameweeks —
       which supercharge Bench Boost &amp; Free Hit — are announced later and this chart
       updates automatically.

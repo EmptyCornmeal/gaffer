@@ -129,9 +129,9 @@
           </div>
           <div class="text-right shrink-0">
             <div class="text-4xl font-black text-brand-light tabular-nums leading-none">{total.toFixed(1)}</div>
-            <div class="text-[10px] uppercase tracking-wide text-muted2 mt-1">xP next GW</div>
+            <div class="text-micro uppercase tracking-wide text-muted2 mt-1">xP next GW</div>
             {#if dist && dist.ceiling > 0}
-              <div class="text-[11px] text-muted2 mt-1 tabular-nums">{dist.floor}–{dist.ceiling} range</div>
+              <div class="text-mini text-muted2 mt-1 tabular-nums">{dist.floor}–{dist.ceiling} range</div>
             {/if}
           </div>
         </div>
@@ -152,7 +152,7 @@
         <!-- ===== PROJECTION ===== -->
         <section class="rounded-xl bg-bg2 border border-line p-3.5">
           <div class="flex items-center justify-between mb-2.5">
-            <h3 class="text-[11px] font-bold uppercase tracking-wide text-muted2">Projection · next GW</h3>
+            <h3 class="text-mini font-bold uppercase tracking-wide text-muted2">Projection · next GW</h3>
             {#if dist && dist.boom >= 8}<span class="chip chip-good">🔥 {dist.boom}% haul</span>{/if}
           </div>
 
@@ -194,12 +194,12 @@
             {#if dist && dist.ceiling > 0}
               <!-- distribution, scaled from 0 -->
               <div class="mt-4">
-                <div class="text-[11px] text-muted2 mb-1.5">Likely range this week</div>
+                <div class="text-mini text-muted2 mb-1.5">Likely range this week</div>
                 <div class="relative h-7 rounded-lg bg-bg3 overflow-hidden">
                   <div class="absolute inset-y-1 rounded bg-brand/25 border-x border-brand/40" style="left:{pct(dist.floor)}; right:calc(100% - {pct(dist.ceiling)})"></div>
                   <div class="absolute inset-y-0 w-[3px] rounded bg-brand-light" style="left:{pct(total)}"></div>
                 </div>
-                <div class="flex justify-between text-[11px] mt-1.5 tabular-nums">
+                <div class="flex justify-between text-mini mt-1.5 tabular-nums">
                   <span class="text-muted2">Floor <b class="text-muted">{dist.floor}</b></span>
                   <span class="text-muted2">Expected <b class="text-brand-light">{total.toFixed(1)}</b></span>
                   <span class="text-muted2">Ceiling <b class="text-muted">{dist.ceiling}</b></span>
@@ -215,7 +215,7 @@
 
         <!-- ===== UNDERLYING ===== -->
         <section>
-          <h3 class="text-[11px] font-bold uppercase tracking-wide text-muted2 mb-2">Underlying</h3>
+          <h3 class="text-mini font-bold uppercase tracking-wide text-muted2 mb-2">Underlying</h3>
           <div class="grid grid-cols-4 gap-2 text-center">
             {#each [
               { k: 'Start', v: `${Math.round(player.p_start * 100)}%` },
@@ -224,18 +224,18 @@
               { k: 'Conf.', v: `${Math.round(player.confidence * 100)}%` },
             ] as s}
               <div class="rounded-lg bg-bg2 border border-line py-2">
-                <div class="text-[10px] uppercase tracking-wide text-muted2">{s.k}</div>
+                <div class="text-micro uppercase tracking-wide text-muted2">{s.k}</div>
                 <div class="font-black tabular-nums {s.accent ? 'text-accent-light' : 'text-text'}">{s.v}</div>
               </div>
             {/each}
           </div>
           <div class="grid grid-cols-2 gap-2 mt-2 text-center">
             <div class="rounded-lg bg-bg2 border border-line py-2">
-              <div class="text-[10px] uppercase tracking-wide text-muted2">xGI / 90</div>
+              <div class="text-micro uppercase tracking-wide text-muted2">xGI / 90</div>
               <div class="font-black tabular-nums text-text">{player.xgi90.toFixed(2)}</div>
             </div>
             <div class="rounded-lg bg-bg2 border border-line py-2">
-              <div class="text-[10px] uppercase tracking-wide text-muted2">DEFCON / 90</div>
+              <div class="text-micro uppercase tracking-wide text-muted2">DEFCON / 90</div>
               <div class="font-black tabular-nums text-text">{player.defcon90.toFixed(1)}</div>
             </div>
           </div>
@@ -245,7 +245,7 @@
             {@const dc = player.defcon}
             <div class="mt-2 rounded-lg bg-bg2 border border-line px-3 py-2.5">
               <div class="flex items-center justify-between">
-                <div class="text-[11px] font-bold uppercase tracking-wide text-muted2 flex items-center gap-1.5">
+                <div class="text-mini font-bold uppercase tracking-wide text-muted2 flex items-center gap-1.5">
                   DEFCON +2 chance
                   {#if dc.near_hit}<span class="chip chip-warn">near-hit</span>{/if}
                 </div>
@@ -254,7 +254,7 @@
               <div class="mt-1.5 h-1.5 rounded-full bg-bg3 overflow-hidden">
                 <div class="h-full {dc.p_hit >= 0.5 ? 'bg-brand' : 'bg-accent'}" style="width:{Math.round(dc.p_hit * 100)}%"></div>
               </div>
-              <div class="text-[11px] text-muted2 mt-1">{dc.per90} defensive actions/90 · needs {dc.threshold} for the +2</div>
+              <div class="text-mini text-muted2 mt-1">{dc.per90} defensive actions/90 · needs {dc.threshold} for the +2</div>
             </div>
           {/if}
         </section>
@@ -262,13 +262,13 @@
         <!-- ===== CONTEXT ===== -->
         <section>
           <div class="flex items-center justify-between mb-2">
-            <h3 class="text-[11px] font-bold uppercase tracking-wide text-muted2">Next fixtures</h3>
+            <h3 class="text-mini font-bold uppercase tracking-wide text-muted2">Next fixtures</h3>
             <FixtureStrip fixtures={player.fixtures} />
           </div>
 
           {#if player.last_season}
             <div class="rounded-lg bg-bg2 border border-line px-3 py-2.5">
-              <div class="text-[10px] uppercase tracking-wide mb-1.5
+              <div class="text-micro uppercase tracking-wide mb-1.5
                           {player.last_season.is_prior_season === false
                             ? 'text-amber' : 'text-muted2'}">
                 {#if player.last_season.is_prior_season === false}
@@ -280,20 +280,20 @@
                 {/if}
               </div>
               {#if player.last_season.is_prior_season === false}
-                <div class="text-[10px] text-amber/90 mb-1.5 leading-snug">
+                <div class="text-micro text-amber/90 mb-1.5 leading-snug">
                   His last Premier League season, not the one just gone — the
                   projection is leaning on old evidence.
                 </div>
               {/if}
               <div class="grid grid-cols-4 gap-2 text-center text-[13px]">
-                <div><div class="font-bold tabular-nums">{player.last_season.minutes.toLocaleString()}</div><div class="text-[10px] text-muted2">mins</div></div>
-                <div><div class="font-bold tabular-nums">{player.last_season.starts}</div><div class="text-[10px] text-muted2">starts</div></div>
-                <div><div class="font-bold tabular-nums text-brand-light">{player.last_season.xg90.toFixed(2)}</div><div class="text-[10px] text-muted2">xG/90</div></div>
-                <div><div class="font-bold tabular-nums text-accent-light">{player.last_season.xa90.toFixed(2)}</div><div class="text-[10px] text-muted2">xA/90</div></div>
+                <div><div class="font-bold tabular-nums">{player.last_season.minutes.toLocaleString()}</div><div class="text-micro text-muted2">mins</div></div>
+                <div><div class="font-bold tabular-nums">{player.last_season.starts}</div><div class="text-micro text-muted2">starts</div></div>
+                <div><div class="font-bold tabular-nums text-brand-light">{player.last_season.xg90.toFixed(2)}</div><div class="text-micro text-muted2">xG/90</div></div>
+                <div><div class="font-bold tabular-nums text-accent-light">{player.last_season.xa90.toFixed(2)}</div><div class="text-micro text-muted2">xA/90</div></div>
               </div>
             </div>
           {:else}
-            <div class="text-[12px] text-muted2">No Premier League history last season — the projection leans on a position/price prior.</div>
+            <div class="text-xs text-muted2">No Premier League history last season — the projection leans on a position/price prior.</div>
           {/if}
 
           {#if player.set_pieces || player.price_pred.dir !== 'stable' || (player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0)}
@@ -308,7 +308,7 @@
             {#if player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0}
               {@const up = player.price_pred.momentum > 0}
               <div class="mt-2">
-                <div class="flex items-center justify-between text-[11px] text-muted2 mb-1">
+                <div class="flex items-center justify-between text-mini text-muted2 mb-1">
                   <span>Est. progress to price {up ? 'rise' : 'fall'}</span>
                   <span class="tabular-nums text-muted">{Math.round(player.price_pred.progress * 100)}%</span>
                 </div>

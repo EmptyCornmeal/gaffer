@@ -110,7 +110,7 @@
            into "Updated never updated". Only a real timestamp takes the prefix.
            Deliberately NOT a live region: this text changes on a 15s cosmetic
            tick, so announcing it buries the score. See the status line above. -->
-      <div class="text-[11px] text-muted2">
+      <div class="text-mini text-muted2">
         {dataAt == null ? 'Not updated yet' : `Updated ${freshnessLabel(dataAt, tick)}`}
       </div>
       {#if source === 'artifact'}
@@ -186,7 +186,7 @@
         first match kicks off.
       </p>
       {#if s.fixture_summary?.total}
-        <p class="text-[11px] text-muted2 mt-2">
+        <p class="text-mini text-muted2 mt-2">
           {s.fixture_summary.total}
           fixture{s.fixture_summary.total === 1 ? '' : 's'} in GW{s.gameweek}.
         </p>
@@ -204,19 +204,19 @@
       </div>
       <div class="grid grid-cols-3 gap-2 mt-3 text-center">
         <div class="rounded-lg bg-bg3 p-2">
-          <div class="text-[10px] uppercase text-muted2 font-bold">Confirmed</div>
+          <div class="text-micro uppercase text-muted2 font-bold">Confirmed</div>
           <div class="text-lg font-black tabular-nums">{s.squad.confirmed}</div>
         </div>
         <div class="rounded-lg bg-bg3 p-2 ring-1 ring-yellow/40">
-          <div class="text-[10px] uppercase text-yellow font-bold">Provisional</div>
+          <div class="text-micro uppercase text-yellow font-bold">Provisional</div>
           <div class="text-lg font-black tabular-nums">+{s.squad.provisional_bonus}</div>
         </div>
         <div class="rounded-lg bg-bg3 p-2">
-          <div class="text-[10px] uppercase text-muted2 font-bold">Predicted</div>
+          <div class="text-micro uppercase text-muted2 font-bold">Predicted</div>
           <div class="text-lg font-black tabular-nums">+{s.squad.predicted_remaining}</div>
         </div>
       </div>
-      <p class="text-[11px] text-muted2 mt-2">{s.separation?.note}</p>
+      <p class="text-mini text-muted2 mt-2">{s.separation?.note}</p>
     </section>
 
     <!-- ── autosubs ───────────────────────────────────────────────── -->
@@ -240,7 +240,7 @@
             Captain and vice both blanked — nobody is multiplied.
           </p>
         {/if}
-        <ul class="text-[11px] text-muted2 mt-1 list-disc pl-4">
+        <ul class="text-mini text-muted2 mt-1 list-disc pl-4">
           {#each s.squad.autosubs.notes as n}<li>{n}</li>{/each}
         </ul>
       </section>
@@ -279,7 +279,7 @@
             {/each}
           </tbody>
         </table>
-        <p class="text-[11px] text-muted2 p-2">
+        <p class="text-mini text-muted2 p-2">
           Positions are provisional: they include bonus that is not yet confirmed.
         </p>
       </section>

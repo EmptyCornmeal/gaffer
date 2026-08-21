@@ -108,7 +108,7 @@
     <div class="grid gap-4 md:grid-cols-2">
       <div>
         <Radar axes={AXES.map((a) => a.label)} {series} />
-        <p class="text-[11px] text-muted2 text-center mt-1">Percentile vs same-position starters (outer = elite).</p>
+        <p class="text-mini text-muted2 text-center mt-1">Percentile vs same-position starters (outer = elite).</p>
       </div>
 
       <div class="overflow-x-auto">
@@ -141,7 +141,7 @@
         </table>
         <div class="flex flex-wrap gap-2 mt-3">
           {#each players as p}
-            <button onclick={() => onremove(p.id)} class="text-[11px] px-2 py-0.5 rounded-full border border-line text-muted hover:text-red hover:border-red/40">remove {p.name}</button>
+            <button onclick={() => onremove(p.id)} class="text-mini px-2 py-0.5 rounded-full border border-line text-muted hover:text-red hover:border-red/40">remove {p.name}</button>
           {/each}
         </div>
       </div>

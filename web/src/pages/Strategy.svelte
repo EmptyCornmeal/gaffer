@@ -67,13 +67,13 @@
       <p class="text-sm text-muted mt-2">
         The core recommendation is unaffected — this step is deliberately contained.
       </p>
-      <pre class="text-[11px] text-muted2 mt-2 whitespace-pre-wrap">{parsed.detail}</pre>
+      <pre class="text-mini text-muted2 mt-2 whitespace-pre-wrap">{parsed.detail}</pre>
     </div>
   {:else if parsed.kind === 'unsupported' || parsed.kind === 'malformed'}
     <div class="card p-6">
       <h3 class="font-bold text-red">This build can't render that strategy artifact</h3>
       <p class="text-sm text-muted mt-2">{parsed.detail}</p>
-      <p class="text-[11px] text-muted2 mt-2">
+      <p class="text-mini text-muted2 mt-2">
         Showing nothing is deliberate: a probability from a simulator this build no longer
         contains would be a number with no meaning behind it.
       </p>
@@ -90,7 +90,7 @@
     <div class="card p-4">
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <h3 class="font-bold text-sm">Neutral recommendation</h3>
-        <span class="text-[11px] text-muted2">maximises expected points</span>
+        <span class="text-mini text-muted2">maximises expected points</span>
       </div>
       <div class="flex items-center gap-2 mt-2 flex-wrap">
         {#if s.squad.captain}
@@ -136,7 +136,7 @@
             <span class="chip chip-bad">{CHIP_LABELS[u] ?? u} · played</span>
           {/each}
           {#if !chip.available.length && !chip.used.length}
-            <span class="text-[11px] text-muted2">No chip windows are open in GW{s.gameweek}.</span>
+            <span class="text-mini text-muted2">No chip windows are open in GW{s.gameweek}.</span>
           {/if}
         </div>
 
@@ -154,8 +154,8 @@
             </tbody>
           </table>
           <details class="mt-2">
-            <summary class="text-[11px] text-muted2 cursor-pointer">What each number assumes</summary>
-            <ul class="text-[11px] text-muted2 mt-1 list-disc pl-4 space-y-0.5">
+            <summary class="text-mini text-muted2 cursor-pointer">What each number assumes</summary>
+            <ul class="text-mini text-muted2 mt-1 list-disc pl-4 space-y-0.5">
               {#each chip.alternatives as a}
                 {#each a.assumptions as x}<li>{CHIP_LABELS[a.chip] ?? a.chip}: {x}</li>{/each}
               {/each}
@@ -180,7 +180,7 @@
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <div>
               <h3 class="font-bold text-sm">{l.name}</h3>
-              <p class="text-[11px] text-muted2">{CLASS_LABELS[l.classification] ?? l.classification}</p>
+              <p class="text-mini text-muted2">{CLASS_LABELS[l.classification] ?? l.classification}</p>
             </div>
             <span class="chip {stanceClass(l.posture.stance)}">{STANCE_LABELS[l.posture.stance] ?? l.posture.stance}</span>
           </div>
@@ -188,17 +188,17 @@
 
         <div class="grid {separateTarget ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-3 text-center">
           <div class="rounded-lg bg-bg3 p-2">
-            <div class="text-[10px] uppercase text-muted2 font-bold">Win it</div>
+            <div class="text-micro uppercase text-muted2 font-bold">Win it</div>
             <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_first) : '—'}</div>
           </div>
           {#if separateTarget}
             <div class="rounded-lg bg-bg3 p-2">
-              <div class="text-[10px] uppercase text-muted2 font-bold">Top {l.target_position}</div>
+              <div class="text-micro uppercase text-muted2 font-bold">Top {l.target_position}</div>
               <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_target) : '—'}</div>
             </div>
           {/if}
           <div class="rounded-lg bg-bg3 p-2">
-            <div class="text-[10px] uppercase text-muted2 font-bold">Exp. place</div>
+            <div class="text-micro uppercase text-muted2 font-bold">Exp. place</div>
             <div class="text-xl font-black tabular-nums">
               {l.placing.available ? l.placing.expected_position.toFixed(1) : '—'}
             </div>
@@ -206,16 +206,16 @@
         </div>
 
         {#if l.placing.available}
-          <p class="text-[11px] text-muted2 mt-2">
+          <p class="text-mini text-muted2 mt-2">
             ±{(l.placing.ci95_halfwidth * 100).toFixed(1)}pp from {l.placing.simulations.toLocaleString()} shared scenarios
           </p>
         {:else}
-          <p class="text-[11px] text-muted2 mt-2">
+          <p class="text-mini text-muted2 mt-2">
             No placing probability yet — {l.placing.caveats[0] ?? 'nothing to place against'}.
           </p>
         {/if}
 
-        <p class="text-[11px] mt-1">
+        <p class="text-mini mt-1">
           <span class="font-semibold {coverageClass(cov)}">{cov.summary}</span>
           {#if cov.meaning}<span class="text-muted2"> — {cov.meaning}</span>{/if}
           {#if cov.notes.length}<span class="text-muted2"> · {cov.notes.join(' · ')}</span>{/if}
@@ -237,12 +237,12 @@
                     <li class="flex items-center gap-2 text-sm">
                       <Crest code={row.player?.team_code} short={row.player?.team ?? ''} size={14} />
                       <span class="flex-1 truncate">{row.player?.name ?? row.player_id}</span>
-                      <span class="tabular-nums text-muted2 text-[11px]">EO {row.effective_ownership_pct}%</span>
+                      <span class="tabular-nums text-muted2 text-mini">EO {row.effective_ownership_pct}%</span>
                     </li>
                   {/each}
                 </ul>
               {:else}
-                <p class="text-[11px] text-muted2">Nothing you own is majority-owned here.</p>
+                <p class="text-mini text-muted2">Nothing you own is majority-owned here.</p>
               {/if}
             </div>
             <div>
@@ -255,23 +255,23 @@
                     <li class="flex items-center gap-2 text-sm">
                       <Crest code={row.player?.team_code} short={row.player?.team ?? ''} size={14} />
                       <span class="flex-1 truncate">{row.player?.name ?? row.player_id}</span>
-                      <span class="tabular-nums text-muted2 text-[11px]">0 rivals</span>
+                      <span class="tabular-nums text-muted2 text-mini">0 rivals</span>
                     </li>
                   {/each}
                 </ul>
               {:else}
-                <p class="text-[11px] text-muted2">No player of yours is unowned in this league.</p>
+                <p class="text-mini text-muted2">No player of yours is unowned in this league.</p>
               {/if}
             </div>
           </div>
-          <p class="text-[11px] text-muted2 mt-2">{l.posture.reason}.</p>
+          <p class="text-mini text-muted2 mt-2">{l.posture.reason}.</p>
           {#if l.placing.caveats.length}
-            <ul class="text-[11px] text-muted2 mt-1 list-disc pl-4 space-y-0.5">
+            <ul class="text-mini text-muted2 mt-1 list-disc pl-4 space-y-0.5">
               {#each l.placing.caveats as c}<li>{c}</li>{/each}
             </ul>
           {/if}
         {:else}
-          <button class="text-[11px] text-accent-light hover:underline mt-2" onclick={() => (openLeague = l.league_id)}>
+          <button class="text-mini text-accent-light hover:underline mt-2" onclick={() => (openLeague = l.league_id)}>
             Show shields &amp; differentials →
           </button>
         {/if}
@@ -281,7 +281,7 @@
     {#if s.league_errors.length}
       <div class="card p-3">
         <h3 class="font-bold text-sm text-yellow">Some leagues couldn't be read</h3>
-        <ul class="text-[11px] text-muted2 mt-1 list-disc pl-4">
+        <ul class="text-mini text-muted2 mt-1 list-disc pl-4">
           {#each s.league_errors as e}
             <li>{e.league_id ? `League ${e.league_id}: ` : ''}{e.error}</li>
           {/each}
@@ -293,7 +293,7 @@
     {#if s.options.length}
       <div class="card p-4">
         <h3 class="font-bold text-sm">Captain, scored in every league at once</h3>
-        <p class="text-[11px] text-muted2 mb-2">
+        <p class="text-mini text-muted2 mb-2">
           The armband is the week's biggest lever and the one place league ownership really
           changes the answer. The cost column is what you give up in expected points.
         </p>
@@ -327,7 +327,7 @@
         {#if conflicts.length}
           <div class="mt-2 space-y-1">
             {#each conflicts as c}
-              <div class="text-[11px] chip-warn rounded-lg px-3 py-2">
+              <div class="text-mini chip-warn rounded-lg px-3 py-2">
                 <b>{c.option_a}</b> vs <b>{c.option_b}</b>:
                 {#each c.per_league as d, i}{i > 0 ? ' · ' : ' '}{d.league} prefers {d.prefers}{/each}
               </div>
@@ -343,7 +343,7 @@
         {showDetail ? '▾' : '▸'} How these numbers were produced
       </button>
       {#if showDetail}
-        <ul class="text-[11px] text-muted2 mt-2 list-disc pl-4 space-y-0.5">
+        <ul class="text-mini text-muted2 mt-2 list-disc pl-4 space-y-0.5">
           <li>
             {s.simulation.n_sims.toLocaleString()} shared fixture scenarios
             (<code>{s.simulation.sim_version}</code>, seed {s.simulation.seed},

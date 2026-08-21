@@ -186,7 +186,7 @@
       <div class="tile flex flex-col justify-center">
         <div class="tile-label">Season held out</div>
         <div class="tile-value text-xl mt-1">{bt.season}</div>
-        <div class="text-[11px] text-muted2">{bt.decision_gameweeks}</div>
+        <div class="text-mini text-muted2">{bt.decision_gameweeks}</div>
       </div>
       <div class="tile flex flex-col justify-center">
         <div class="tile-label">Model version</div>
@@ -205,7 +205,7 @@
     <!-- The one rule, stated. An unstated colour convention is how green came to
          mean "good", "big", "ours" and "the number I felt like emphasising" all
          at once. -->
-    <p class="text-[11px] text-muted2 leading-relaxed">
+    <p class="text-mini text-muted2 leading-relaxed">
       <b class="text-muted">Colour here marks the result of a comparison, and nothing else.</b>
       <span class="text-accent-light font-bold">Blue</span> — the better of two things
       measured against each other.
@@ -223,7 +223,7 @@
           <button
             type="button"
             class="w-full min-h-11 flex items-center gap-2 text-left rounded-lg border border-line2
-                   px-3 py-2 text-[12px] leading-tight cursor-pointer hover:bg-card2"
+                   px-3 py-2 text-xs leading-tight cursor-pointer hover:bg-card2"
             onclick={() => jump(s.id)}
           >
             <span class="tabular-nums text-muted2 shrink-0">{i + 1}</span>
@@ -243,13 +243,13 @@
         before it picked a team, which is what the previous harness did.
       </p>
       {#if bt.coverage.excluded}
-        <ul class="text-[12px] text-muted2 mt-2 space-y-0.5">
+        <ul class="text-xs text-muted2 mt-2 space-y-0.5">
           {#each Object.entries(bt.coverage.excluded) as [k, v]}
             <li>· <span class="text-muted">{k.replace(/_/g, ' ')}:</span> {v}</li>
           {/each}
         </ul>
       {/if}
-      <p class="text-[11px] text-muted2 mt-2">
+      <p class="text-mini text-muted2 mt-2">
         Leakage policy: {bt.leakage_check.policy}.
         {#if !leakageClean(bt)}
           <span class="text-red">
@@ -264,7 +264,7 @@
     {#if pre}
       <section id="acc-gw1" tabindex="-1" class="card p-3 scroll-mt-3">
         <h2 class="font-bold">{num('acc-gw1')} · GW{pre.decision_gw} — the pre-season decision</h2>
-        <p class="text-[12px] text-muted2 mb-2">
+        <p class="text-xs text-muted2 mb-2">
           The one evening a whole squad is picked from scratch, measured on its
           own. {pre.regime}. Averaged into the {bt.coverage.decision_gws ?? 38}
           gameweeks below it is invisible, and before schema 6 it was not
@@ -292,11 +292,11 @@
             <div class="tile-value text-xl mt-1">{pre.zero_minute_share_pct ?? '—'}%</div>
           </div>
         </div>
-        <p class="text-[12px] text-muted mt-2">
+        <p class="text-xs text-muted mt-2">
           <b>No baseline to beat.</b> {pre.naive_baseline}
         </p>
         {#if pre.decisions_caveat}
-          <p class="text-[11px] text-muted2 mt-2">{pre.decisions_caveat}</p>
+          <p class="text-mini text-muted2 mt-2">{pre.decisions_caveat}</p>
         {/if}
       </section>
     {/if}
@@ -304,7 +304,7 @@
     <!-- Player-level accuracy, per horizon -->
     <section id="acc-horizon" tabindex="-1" class="card p-3 scroll-mt-3">
       <h2 class="font-bold">{num('acc-horizon')} · Player-level accuracy by horizon</h2>
-      <p class="text-[12px] text-muted2 mb-2">
+      <p class="text-xs text-muted2 mb-2">
         h=1 is the imminent gameweek; h=6 is six weeks out from the same decision
         point, using the same information. Rank correlation is ordering quality
         (higher better); MAE is points error (lower better).
@@ -324,7 +324,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="text-[11px] text-muted2"><td colspan={2 + methods.length}>Rank correlation ↑</td></tr>
+            <tr class="text-mini text-muted2"><td colspan={2 + methods.length}>Rank correlation ↑</td></tr>
             {#each hs as h}
               {@const b = bt.per_horizon[h]}
               {@const win = best(b.rank_corr)}
@@ -338,7 +338,7 @@
                 {/each}
               </tr>
             {/each}
-            <tr class="text-[11px] text-muted2"><td colspan={2 + methods.length}>MAE ↓</td></tr>
+            <tr class="text-mini text-muted2"><td colspan={2 + methods.length}>MAE ↓</td></tr>
             {#each hs as h}
               {@const b = bt.per_horizon[h]}
               {@const win = best(b.mae, true)}
@@ -355,7 +355,7 @@
           </tbody>
         </table>
       </div>
-      <p class="text-[11px] text-muted2 mt-2">
+      <p class="text-mini text-muted2 mt-2">
         Columns: {#each methods as m, i}{i > 0 ? ' · ' : ''}<b>{short(m)}</b> — {label(m)}{/each}.
         The baseline is cumulative season-to-date points per game.
       </p>
@@ -367,8 +367,8 @@
            above, unhedged, and the change that would erase it is exactly the
            leakage this harness exists to prevent. -->
       <div class="mt-3 rounded-xl bg-bg3 p-3">
-        <h3 class="text-[12px] font-bold">Why the baseline wins, and what that does and does not mean</h3>
-        <p class="text-[12px] text-muted mt-1 leading-relaxed">
+        <h3 class="text-xs font-bold">Why the baseline wins, and what that does and does not mean</h3>
+        <p class="text-xs text-muted mt-1 leading-relaxed">
           {bt.coverage.zero_minute_share_pct}% of the scored rows are players who
           did not appear, and they are kept on purpose. Ordering that set is
           mostly the question of who plays at all — and a season-to-date average
@@ -376,7 +376,7 @@
           average. Gaffer projects points and then gates them on a start
           probability, and the gate is the weak part.
         </p>
-        <p class="text-[12px] text-muted2 mt-2 leading-relaxed">
+        <p class="text-xs text-muted2 mt-2 leading-relaxed">
           So the honest reading is <b>worse at predicting who appears</b>, not
           <b>worse at predicting football</b>. The trained-model section below
           measures that appearance error directly and points the same way — but
@@ -388,7 +388,7 @@
       </div>
 
       {#if shipped?.next_gameweek}
-        <p class="text-[11px] text-muted2 mt-2">
+        <p class="text-mini text-muted2 mt-2">
           These columns are the standalone component model. What ships for the
           <b>next</b> gameweek is {shipped.next_gameweek}.
           {#if shipped.next_gameweek_status}<b class="text-amber">{shipped.next_gameweek_status}</b>{/if}
@@ -410,17 +410,17 @@
             <div>
               <div class="text-sm font-bold">
                 {w.label}
-                <span class="text-[11px] font-normal text-muted2">
+                <span class="text-mini font-normal text-muted2">
                   — previously
                   {#each Object.entries(w.entry.previously_reported) as [k, v], i}{i > 0 ? ', ' : ''}{k.replace(/_/g, ' ')} {v}{/each}
                 </span>
               </div>
-              <p class="text-[12px] text-muted mt-1">{w.entry.reason}</p>
+              <p class="text-xs text-muted mt-1">{w.entry.reason}</p>
             </div>
           {/each}
         </div>
         {#if consequence}
-          <p class="text-[12px] text-muted2 mt-3 pt-3 border-t border-line">{consequence}</p>
+          <p class="text-xs text-muted2 mt-3 pt-3 border-t border-line">{consequence}</p>
         {/if}
       </section>
     {/if}
@@ -432,10 +432,10 @@
       <details id="acc-decisions" tabindex="-1" class="card scroll-mt-3">
         <summary class="p-3 cursor-pointer">
           <span class="font-bold">{num('acc-decisions')} · Decision-level results (h = 1)</span>
-          <span class="block text-[11px] text-muted2 mt-0.5">{decVerdict}</span>
+          <span class="block text-mini text-muted2 mt-0.5">{decVerdict}</span>
         </summary>
         <div class="px-3 pb-3">
-          <p class="text-[12px] text-muted2 mb-2">
+          <p class="text-xs text-muted2 mb-2">
             A legal 15 under budget, quota and the three-per-club limit, then the best
             XI from it. Every figure is per gameweek. Regret is the gap to a
             perfect-hindsight legal team — it is large for everyone, and only the
@@ -471,7 +471,7 @@
             </table>
           </div>
           {#if h1.transfers}
-            <p class="text-[11px] text-muted2 mt-2">
+            <p class="text-mini text-muted2 mt-2">
               One free transfer per week vs holding the opening squad:
               {#each Object.entries(h1.transfers) as [m, t], i}
                 {#if t && 'gain' in t}{i > 0 ? ' · ' : ' '}<b>{short(m)}</b> {t.gain > 0 ? '+' : ''}{t.gain} pts{/if}
@@ -487,10 +487,10 @@
       <section id="acc-models" tabindex="-1" class="card p-3 scroll-mt-3">
         <h2 class="font-bold">{num('acc-models')} · Trained models: tested, none shipped</h2>
         {#if evidence?.outcome}
-          <p class="text-[12px] text-muted mt-1">Outcome: <b>{evidence.outcome}</b>.</p>
+          <p class="text-xs text-muted mt-1">Outcome: <b>{evidence.outcome}</b>.</p>
         {/if}
         {#if evidence?.protocol}
-          <p class="text-[11px] text-muted2 mt-1">{evidence.protocol}</p>
+          <p class="text-mini text-muted2 mt-1">{evidence.protocol}</p>
         {/if}
 
         <!-- One <details> per candidate. The verdict word is the finding and
@@ -502,16 +502,16 @@
             <details class="rounded-xl bg-bg3">
               <summary class="p-3 cursor-pointer">
                 <span class="font-bold">{c.label ?? c.candidate}</span>
-                <span class="text-[11px] font-bold uppercase ml-2 {decisionClass(c.decision)}">
+                <span class="text-mini font-bold uppercase ml-2 {decisionClass(c.decision)}">
                   {DECISION_LABELS[c.decision] ?? c.decision}
                 </span>
-                {#if c.detail}<span class="block text-[11px] text-muted2 mt-0.5">{c.detail}</span>{/if}
+                {#if c.detail}<span class="block text-mini text-muted2 mt-0.5">{c.detail}</span>{/if}
               </summary>
               <div class="px-3 pb-3">
-                <p class="text-[12px] text-muted">{c.reason}</p>
+                <p class="text-xs text-muted">{c.reason}</p>
 
                 {#if c.per_horizon && Object.keys(c.per_horizon).length}
-                  <p class="text-[11px] text-muted2 mt-2">Legal-XI points per gameweek.</p>
+                  <p class="text-mini text-muted2 mt-2">Legal-XI points per gameweek.</p>
                   <div class="overflow-x-auto mt-1">
                     <table class="data w-full text-sm">
                       <thead>
@@ -545,7 +545,7 @@
                 {/if}
 
                 {#if c.captain_accuracy_pct_h1 != null}
-                  <p class="text-[11px] text-muted2 mt-2">
+                  <p class="text-mini text-muted2 mt-2">
                     Captaincy at h=1: {fmt(c.captain_accuracy_pct_h1, 1)}% accurate
                     {#if evidence?.heuristic_reference?.captain_accuracy_pct_h1}
                       (heuristic {fmt(evidence.heuristic_reference.captain_accuracy_pct_h1, 1)}%)
@@ -557,7 +557,7 @@
                 {/if}
 
                 {#if c.limitations?.length}
-                  <ul class="text-[11px] text-muted2 mt-2 list-disc pl-4 space-y-1">
+                  <ul class="text-mini text-muted2 mt-2 list-disc pl-4 space-y-1">
                     {#each c.limitations as l}<li>{l}</li>{/each}
                   </ul>
                 {/if}
@@ -567,7 +567,7 @@
         </div>
 
         {#if evidence?.not_ruled_out}
-          <p class="text-[11px] text-muted2 mt-3 pt-3 border-t border-line">
+          <p class="text-mini text-muted2 mt-3 pt-3 border-t border-line">
             Not ruled out: {evidence.not_ruled_out}
           </p>
         {/if}
@@ -579,7 +579,7 @@
       <details id="acc-baselines" tabindex="-1" class="card scroll-mt-3">
         <summary class="p-3 cursor-pointer">
           <span class="font-bold">{num('acc-baselines')} · Against frozen baselines</span>
-          <span class="block text-[11px] text-muted2 mt-0.5">
+          <span class="block text-mini text-muted2 mt-0.5">
             Reference numbers pinned in the artifact so a later run can be compared
             against this one.
           </span>
@@ -587,7 +587,7 @@
         {#if calPlayed.length}
           <!-- G20. Without this the middle of the Actual column dips and the
                panel reads as the model being anti-correlated with itself. -->
-          <p class="px-3 pb-2 text-[11px] text-muted leading-relaxed">
+          <p class="px-3 pb-2 text-mini text-muted leading-relaxed">
             <b>Actual</b> counts every player-gameweek, including the majority
             where the player did not feature — a player correctly projected at
             1.3 who is then left out scores 0. So the middle of that column
@@ -628,7 +628,7 @@
       <details id="acc-calibration" tabindex="-1" class="card scroll-mt-3">
         <summary class="p-3 cursor-pointer">
           <span class="font-bold">{num('acc-calibration')} · Calibration (h = 1)</span>
-          <span class="block text-[11px] text-muted2 mt-0.5">
+          <span class="block text-mini text-muted2 mt-0.5">
             Players binned by prediction, {cal.length} bins. A calibrated model sits
             on the diagonal.
           </span>
@@ -678,7 +678,7 @@
     </section>
 
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <p class="text-[11px] text-muted2">
+      <p class="text-mini text-muted2">
         {bt.dataset} · generated {bt.generated_at} · schema v{bt.schema_version}
       </p>
       <button

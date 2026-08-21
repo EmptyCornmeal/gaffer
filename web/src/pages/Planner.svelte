@@ -233,17 +233,17 @@
           <h2 class="font-bold flex items-center gap-2">{planIsBuild ? "Model blueprint" : 'Your transfer plan'}
             <span class="text-xs text-muted font-normal">next {modelPlan.steps.length} GWs · {modelPlan.total_expected} pts</span>
           </h2>
-          <span class="text-[10px] chip {planIsBuild ? 'chip-info' : 'chip-good'}">{planIsBuild ? 'not your team' : 'from your team'}</span>
+          <span class="text-micro chip {planIsBuild ? 'chip-info' : 'chip-good'}">{planIsBuild ? 'not your team' : 'from your team'}</span>
         </div>
         {#if planIsBuild}
-          <p class="text-[11px] text-accent-light bg-accent/8 border border-accent/25 rounded-lg px-2.5 py-1.5 mb-2">
+          <p class="text-mini text-accent-light bg-accent/8 border border-accent/25 rounded-lg px-2.5 py-1.5 mb-2">
             How the model would <b>build a squad from scratch and evolve it</b> — a reference, <b>not</b> based on your imported team below. It shows off your real picks once your FPL squad locks at the GW1 deadline.
           </p>
         {/if}
         <div class="space-y-1">
           {#each modelPlan.steps as s, si}
             <div class="flex items-start gap-2 py-0.5">
-              <span class="text-[11px] font-bold text-muted2 w-9 shrink-0 pt-1">GW{s.gw}</span>
+              <span class="text-mini font-bold text-muted2 w-9 shrink-0 pt-1">GW{s.gw}</span>
               <div class="flex-1 min-w-0">
                 {#if si === 0 && planIsBuild}
                   <button onclick={() => (showBlueprint = !showBlueprint)} class="text-xs text-text hover:text-brand-light flex items-center gap-1">
@@ -253,14 +253,14 @@
                   {#if showBlueprint}
                     <div class="mt-1 flex flex-wrap gap-1">
                       {#each [...s.starting, ...s.bench] as p}
-                        <button onclick={() => onpick(p.id)} class="text-[11px] px-1.5 py-0.5 rounded bg-bg3 text-muted hover:text-text">{p.name}</button>
+                        <button onclick={() => onpick(p.id)} class="text-mini px-1.5 py-0.5 rounded bg-bg3 text-muted hover:text-text">{p.name}</button>
                       {/each}
                     </div>
                   {/if}
                 {:else if s.transfers_in.length}
                   <div class="flex flex-wrap items-center gap-x-1 gap-y-1">
                     {#each swapsOf(s) as sw}
-                      <span class="inline-flex items-center gap-1 rounded-md bg-bg3 px-1.5 py-0.5 text-[11px]">
+                      <span class="inline-flex items-center gap-1 rounded-md bg-bg3 px-1.5 py-0.5 text-mini">
                         {#if sw.out}<button onclick={() => onpick(sw.out.id)} class="text-red hover:opacity-80">{sw.out.name}</button>{/if}
                         <span class="text-muted2">→</span>
                         {#if sw.inp}<button onclick={() => onpick(sw.inp.id)} class="text-brand-light hover:opacity-80">{sw.inp.name}</button>{/if}
@@ -272,16 +272,16 @@
                   <span class="text-xs text-muted2">Roll — bank the free transfer <span class="text-muted">(now {s.free_transfers})</span></span>
                 {/if}
               </div>
-              <span class="text-[11px] tabular-nums text-brand-light shrink-0 pt-0.5" title="Captain + projected XI points">(C) {s.captain.name} · {s.xi_expected}</span>
+              <span class="text-mini tabular-nums text-brand-light shrink-0 pt-0.5" title="Captain + projected XI points">(C) {s.captain.name} · {s.xi_expected}</span>
             </div>
           {/each}
         </div>
-        <p class="text-[10px] text-muted2 mt-2 pt-2 border-t border-line/60">The optimal <b>sequence</b> — when to swap, bank a free transfer, or take a −4 — maximising points over the window (a banked transfer is worth ~1.5 pts, so a swap must beat that).</p>
+        <p class="text-micro text-muted2 mt-2 pt-2 border-t border-line/60">The optimal <b>sequence</b> — when to swap, bank a free transfer, or take a −4 — maximising points over the window (a banked transfer is worth ~1.5 pts, so a swap must beat that).</p>
       </div>
     {/if}
     <div class="card p-3">
       <h2 class="font-bold">Squad Planner</h2>
-      <p class="text-[11px] text-muted mb-2">Import your real squad, plan transfers for the next GW, then compare its projection to the model.</p>
+      <p class="text-mini text-muted mb-2">Import your real squad, plan transfers for the next GW, then compare its projection to the model.</p>
 
       <!-- Eight controls used to share one row of lookalike pills, so a filter, a
            mode and a verb were indistinguishable. Three treatments now: a sunken
@@ -291,13 +291,13 @@
            red and asks twice. -->
       <div class="rounded-xl border border-line2 bg-bg/50 p-2">
         <div class="flex items-center gap-x-2 gap-y-1 flex-wrap mb-1.5">
-          <span class="text-[10px] uppercase tracking-wider font-bold text-muted">Start from</span>
-          <span class="text-[10px] text-muted2">— replaces all 15</span>
+          <span class="text-micro uppercase tracking-wider font-bold text-muted">Start from</span>
+          <span class="text-micro text-muted2">— replaces all 15</span>
           <button class="btn text-xs ml-auto" onclick={importTeam}>Import my team</button>
         </div>
         <div class="grid gap-2 sm:grid-cols-2">
           <div>
-            <div class="text-[10px] uppercase tracking-wide font-bold text-muted2 mb-1">Model optimal · window</div>
+            <div class="text-micro uppercase tracking-wide font-bold text-muted2 mb-1">Model optimal · window</div>
             <div class="flex gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Load the model's optimal squad for a planning window">
               {#each HORIZONS as o}
                 <button
@@ -309,7 +309,7 @@
             </div>
           </div>
           <div>
-            <div class="text-[10px] uppercase tracking-wide font-bold text-muted2 mb-1">Risk stance</div>
+            <div class="text-micro uppercase tracking-wide font-bold text-muted2 mb-1">Risk stance</div>
             <div class="flex gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
               {#each RISKS as o}
                 <button
@@ -320,7 +320,7 @@
               {/each}
             </div>
             {#if riskNote}
-              <p class="text-[10px] leading-snug text-muted2 mt-1">{riskNote}</p>
+              <p class="text-micro leading-snug text-muted2 mt-1">{riskNote}</p>
             {/if}
           </div>
         </div>
@@ -418,8 +418,8 @@
           <Crest code={p.team_code} short={p.team} size={20} />
           <button onclick={() => onpick(p.id)} class="flex-1 text-left text-sm hover:opacity-80 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · £{p.price.toFixed(1)}</span></button>
           <span class="text-brand-light font-bold tabular-nums text-sm w-8 text-right">{p.next_gw_xp.toFixed(1)}</span>
-          <button onclick={() => setCaptain(p.id)} title="captain" class="w-6 h-6 rounded-full text-[10px] font-black {plan.captainId === p.id ? 'bg-brand text-[#05210f]' : 'bg-bg3 text-muted'}">C</button>
-          <button onclick={() => setVice(p.id)} title="vice" class="w-6 h-6 rounded-full text-[10px] font-black {plan.viceId === p.id ? 'bg-accent text-white' : 'bg-bg3 text-muted'}">V</button>
+          <button onclick={() => setCaptain(p.id)} title="captain" class="w-6 h-6 rounded-full text-micro font-black {plan.captainId === p.id ? 'bg-brand text-[#05210f]' : 'bg-bg3 text-muted'}">C</button>
+          <button onclick={() => setVice(p.id)} title="vice" class="w-6 h-6 rounded-full text-micro font-black {plan.viceId === p.id ? 'bg-accent text-white' : 'bg-bg3 text-muted'}">V</button>
           <button onclick={() => toggleStart(p.id)} title="move to bench" class="text-xs text-muted hover:text-text px-1">▼</button>
           <button onclick={() => remove(p.id)} class="text-red text-lg leading-none px-1" aria-label="remove">×</button>
         </div>
@@ -461,7 +461,7 @@
           <Crest code={p.team_code} short={p.team} size={22} />
           <button onclick={() => onpick(p.id)} class="flex-1 min-w-0 text-left hover:opacity-80">
             <div class="text-sm font-semibold truncate">{p.full_name || p.name}</div>
-            <div class="text-[10px] text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)} · {p.owned_by}%</div>
+            <div class="text-micro text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)} · {p.owned_by}%</div>
           </button>
           <span class="text-brand-light font-bold tabular-nums text-sm w-8 text-right">{p.next_gw_xp.toFixed(1)}</span>
           <button onclick={() => add(p)} disabled={!!blocker} title={blocker ?? 'add'} class="btn text-xs py-1 px-2 disabled:opacity-30 disabled:cursor-not-allowed">+</button>

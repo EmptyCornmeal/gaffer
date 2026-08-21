@@ -63,21 +63,21 @@
                     onerror={() => (failed = { ...failed, [p.id]: true })}
                   />
                 {:else}
-                  <span class="text-[11px] font-bold text-accent-light">{p.team}</span>
+                  <span class="text-mini font-bold text-accent-light">{p.team}</span>
                 {/if}
               </div>
               <span class="absolute -bottom-1 -left-1"><Crest code={p.team_code} short={p.team} size={16} /></span>
               {#if isCap}
-                <span class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand text-[10px] font-black text-[#05210f] flex items-center justify-center shadow ring-2 ring-bg2">C</span>
+                <span class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand text-micro font-black text-[#05210f] flex items-center justify-center shadow ring-2 ring-bg2">C</span>
               {:else if isVice}
                 <span class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-accent text-[9px] font-black text-white flex items-center justify-center shadow ring-2 ring-bg2">VC</span>
               {/if}
             </div>
             <!-- name plate -->
             <div class="mt-1.5 w-full rounded-md bg-bg2/80 backdrop-blur-sm px-1 py-0.5 text-center">
-              <div class="text-[10px] leading-tight font-semibold truncate text-white/90">{p.name}</div>
+              <div class="text-micro leading-tight font-semibold truncate text-white/90">{p.name}</div>
             </div>
-            <div class="mt-0.5 rounded-full bg-brand/15 px-1.5 text-[10px] font-bold text-brand-light tabular-nums leading-4">
+            <div class="mt-0.5 rounded-full bg-brand/15 px-1.5 text-micro font-bold text-brand-light tabular-nums leading-4">
               {p.next_gw_xp.toFixed(1)}
             </div>
             <!-- What this slot is actually worth, under what it is projected to

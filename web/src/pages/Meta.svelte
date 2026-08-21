@@ -100,9 +100,9 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-1">
         <h3 class="font-bold">Ownership vs projected points</h3>
-        <span class="text-[10px] text-muted">6-GW xP · likely starters</span>
+        <span class="text-micro text-muted">6-GW xP · likely starters</span>
       </div>
-      <p class="text-[11px] text-muted2 mb-2">
+      <p class="text-mini text-muted2 mb-2">
         Top-left = high projection, low ownership (differentials you gain rank with).
         Top-right = the template you own for safety. Bottom-right = popular traps the
         model rates below their ownership. Click a dot to open the player.
@@ -115,9 +115,9 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-1">
         <h3 class="font-bold">Model XI vs the Template</h3>
-        <span class="text-[10px] text-muted">{overlap}/11 shared</span>
+        <span class="text-micro text-muted">{overlap}/11 shared</span>
       </div>
-      <p class="text-[11px] text-muted2 mb-3">
+      <p class="text-mini text-muted2 mb-3">
         Gaffer's balanced optimal XI beside the most-owned legal XI. Players
         <span class="text-brand-light font-semibold">highlighted</span> are unique to that side —
         the model's differentials on the left, the crowd picks it fades on the right (a rank risk if they haul).
@@ -129,7 +129,7 @@
             <button onclick={() => onpick(p.id)} class="w-full flex items-center gap-2 py-1 text-left hover:bg-card2 rounded px-1 {templateIds.has(p.id) ? '' : 'bg-brand/8'}">
               <Crest code={p.team_code} short={p.team} size={16} />
               <span class="text-[13px] font-semibold truncate flex-1 {templateIds.has(p.id) ? '' : 'text-brand-light'}">{p.name}</span>
-              <span class="text-[10px] text-muted tabular-nums">{p.owned_by}%</span>
+              <span class="text-micro text-muted tabular-nums">{p.owned_by}%</span>
             </button>
           {/each}
         </div>
@@ -139,7 +139,7 @@
             <button onclick={() => onpick(p.id)} class="w-full flex items-center gap-2 py-1 text-left hover:bg-card2 rounded px-1 {modelXIids.has(p.id) ? '' : 'bg-yellow/10'}">
               <Crest code={p.team_code} short={p.team} size={16} />
               <span class="text-[13px] font-semibold truncate flex-1 {modelXIids.has(p.id) ? '' : 'text-yellow'}">{p.name}</span>
-              <span class="text-[10px] text-muted tabular-nums">{p.owned_by}%</span>
+              <span class="text-micro text-muted tabular-nums">{p.owned_by}%</span>
             </button>
           {/each}
         </div>
@@ -152,9 +152,9 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-2">
         <h3 class="font-bold text-brand-light">Differentials</h3>
-        <span class="text-[10px] text-muted">&lt;{DIFF_MAX_OWN}% owned · by 6-GW xP</span>
+        <span class="text-micro text-muted">&lt;{DIFF_MAX_OWN}% owned · by 6-GW xP</span>
       </div>
-      <p class="text-[11px] text-muted2 mb-2">Low-owned, high-projected — where you gain rank on the crowd.</p>
+      <p class="text-mini text-muted2 mb-2">Low-owned, high-projected — where you gain rank on the crowd.</p>
       {#each differentials as p}
         {@render row(p, `${p.owned_by.toFixed(1)}%`, p.xp_window, ' xP')}
       {:else}
@@ -166,9 +166,9 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-2">
         <h3 class="font-bold text-accent-light">Template</h3>
-        <span class="text-[10px] text-muted">≥{TEMPLATE_MIN_OWN}% owned · next-GW xP</span>
+        <span class="text-micro text-muted">≥{TEMPLATE_MIN_OWN}% owned · next-GW xP</span>
       </div>
-      <p class="text-[11px] text-muted2 mb-2">The essential core — not owning these is itself a punt.</p>
+      <p class="text-mini text-muted2 mb-2">The essential core — not owning these is itself a punt.</p>
       {#each template as p}
         {@render row(p, `${p.owned_by.toFixed(1)}%`, p.next_gw_xp, ' xP')}
       {:else}
@@ -180,9 +180,9 @@
     <section class="card p-3">
       <div class="flex items-baseline justify-between mb-2">
         <h3 class="font-bold text-yellow">Best value</h3>
-        <span class="text-[10px] text-muted">6-GW xP per £m</span>
+        <span class="text-micro text-muted">6-GW xP per £m</span>
       </div>
-      <p class="text-[11px] text-muted2 mb-2">Most projected points per million — squad-builder fuel.</p>
+      <p class="text-mini text-muted2 mb-2">Most projected points per million — squad-builder fuel.</p>
       {#each value as { p, v }}
         {@render row(p, formatPrice(p.price), v, ' /£m')}
       {/each}
@@ -198,7 +198,7 @@
     <Crest code={p.team_code} short={p.team} size={18} />
     <div class="min-w-0 flex-1">
       <div class="text-sm font-semibold truncate">{p.name}</div>
-      <div class="text-[10px] text-muted">{p.pos} · {p.team} · {sub}</div>
+      <div class="text-micro text-muted">{p.pos} · {p.team} · {sub}</div>
     </div>
     <div class="text-right shrink-0">
       <div class="text-sm font-bold text-brand-light tabular-nums">{metric.toFixed(metric < 10 ? 1 : 0)}{suffix}</div>

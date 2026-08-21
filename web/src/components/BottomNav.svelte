@@ -25,7 +25,7 @@
     <button
       onclick={() => onnav(t.key)}
       aria-current={route === t.key ? 'page' : undefined}
-      class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition
+      class="flex-1 flex flex-col items-center justify-center gap-0.5 text-micro font-semibold transition
         {route === t.key ? 'text-brand-light' : 'text-muted'}"
     >
       <Icon name={t.icon} size={18} />
@@ -34,7 +34,7 @@
   {/each}
   <button
     onclick={onmore}
-    class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold text-muted"
+    class="flex-1 flex flex-col items-center justify-center gap-0.5 text-micro font-semibold text-muted"
     aria-label="More pages and settings"
   >
     <Icon name="menu" size={18} />

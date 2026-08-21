@@ -195,7 +195,7 @@
                     <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
                     {#if f}<span class="badge badge-{f.kind}" title={p.news || f.label}>{f.short}<span class="sr-only"> — {f.label}{p.news ? `: ${p.news}` : ''}</span></span>{/if}
                   </span>
-                  <span class="block text-[10px] text-muted">{p.pos} · {p.team}</span>
+                  <span class="block text-micro text-muted">{p.pos} · {p.team}</span>
                 </span>
               </button>
             </td>

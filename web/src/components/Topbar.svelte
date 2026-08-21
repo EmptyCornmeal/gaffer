@@ -162,7 +162,7 @@
 {#snippet searchResults()}
   {#if q.length >= 2}
     <div class="absolute left-0 right-0 sm:left-auto sm:w-64 mt-1 card shadow-xl z-50 overflow-hidden">
-      <div class="px-3 py-1.5 text-[10px] uppercase font-bold text-muted2 border-b border-line">
+      <div class="px-3 py-1.5 text-micro uppercase font-bold text-muted2 border-b border-line">
         Opens the player's card
       </div>
       {#each results as p}
@@ -213,7 +213,7 @@
     </div>
 
     <span
-      class="shrink-0 flex items-center gap-1 text-[10px] font-semibold rounded-full border px-2 py-0.5 {freshTone}"
+      class="shrink-0 flex items-center gap-1 text-micro font-semibold rounded-full border px-2 py-0.5 {freshTone}"
       title={freshness.title}
       aria-label={freshness.title}
     >

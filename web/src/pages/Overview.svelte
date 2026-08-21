@@ -198,7 +198,7 @@
         <span class="flex items-center gap-1.5"><Icon name="zap" size={14} /> The Gaffer's Verdict</span>
         <span class="chip {subject === 'plan' ? 'chip-good' : 'chip-info'}">{subject === 'plan' ? 'your team' : 'model'}</span>
       </div>
-      <span class="text-[10px] text-muted2">{provenance}</span>
+      <span class="text-micro text-muted2">{provenance}</span>
     </div>
 
     <!-- Above the briefing, never below it: by the time you have read "no hit
@@ -218,7 +218,7 @@
         </p>
         <p class="mt-1 text-[13px] text-muted leading-snug">{caveat.body}</p>
         {#if caveat.reason}
-          <p class="mt-1 text-[11px] text-muted2">Why: {caveat.reason}.</p>
+          <p class="mt-1 text-mini text-muted2">Why: {caveat.reason}.</p>
         {/if}
       </div>
     {/if}
@@ -231,7 +231,7 @@
       <!-- No briefing was generated this run. The optimiser's own line is not a
            lesser answer — it is the sentence the briefing quotes — so it fills
            the same slot rather than returning as a second card. -->
-      <p class="text-[11px] font-bold uppercase tracking-wider text-muted2">
+      <p class="text-mini font-bold uppercase tracking-wider text-muted2">
         {rec.mode === 'build' ? 'Model squad this week' : 'This week'}
       </p>
       <p class="mt-1 text-[15px] leading-relaxed text-text">{rec.summary}</p>
@@ -292,28 +292,28 @@
       <div class="card p-3">
         <div class="flex items-baseline justify-between mb-1 gap-2">
           <h2 class="font-bold">How much each pick matters</h2>
-          <span class="text-[10px] text-muted2">pts given up</span>
+          <span class="text-micro text-muted2">pts given up</span>
         </div>
-        <p class="text-[11px] text-muted mb-2">{marginHeadline(rec)}</p>
+        <p class="text-mini text-muted mb-2">{marginHeadline(rec)}</p>
         <div class="divide-y divide-line/60">
           {#each picks as { player, margin, band }}
             <button onclick={() => onpick(player.id)} class="w-full flex items-center justify-between gap-2 py-1.5 text-left hover:opacity-80">
               <span class="text-sm min-w-0 truncate"><b>{player.name}</b> <span class="text-muted">{player.team} · {player.pos}</span></span>
               <span class="flex items-center gap-2 shrink-0">
                 {#if band}
-                  <span class="rounded px-1.5 text-[10px] font-bold leading-4 {band.tone}" title={band.hint}>{band.label}</span>
+                  <span class="rounded px-1.5 text-micro font-bold leading-4 {band.tone}" title={band.hint}>{band.label}</span>
                 {/if}
                 <span class="font-bold tabular-nums w-11 text-right {band?.name === 'free' ? 'text-muted' : 'text-white/90'}">{formatMargin(margin)}</span>
               </span>
             </button>
           {/each}
         </div>
-        <p class="mt-2 text-[10px] text-muted2 leading-snug">
+        <p class="mt-2 text-micro text-muted2 leading-snug">
           Each number is what the squad loses over {rec.margins?.horizon ?? '?'} GWs if that one pick is
           forced out and the optimiser rebuilds around it — a full re-solve per player, not an estimate.
         </p>
         {#if rec.margins && !rec.margins.baseline_matches_solution}
-          <p class="mt-1 text-[10px] chip-warn rounded px-2 py-1">
+          <p class="mt-1 text-micro chip-warn rounded px-2 py-1">
             The margin re-solve did not reproduce this exact squad, so read these as indicative.
           </p>
         {/if}
@@ -324,14 +324,14 @@
     <div class="card p-3">
       <div class="flex items-baseline justify-between mb-2">
         <h2 class="font-bold">Top captain picks</h2>
-        <span class="text-[10px] text-muted2">ceiling · xP</span>
+        <span class="text-micro text-muted2">ceiling · xP</span>
       </div>
       <div class="divide-y divide-line/60">
         {#each topCaptains as p}
           <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between py-2 text-left hover:opacity-80">
             <span class="text-sm min-w-0"><b>{p.name}</b> <span class="text-muted">{p.team}</span></span>
             <span class="flex items-center gap-2 tabular-nums shrink-0">
-              {#if p.dist}<span class="text-[11px] text-muted">ceil {p.dist.ceiling}</span>{/if}
+              {#if p.dist}<span class="text-mini text-muted">ceil {p.dist.ceiling}</span>{/if}
               <span class="font-bold text-brand-light w-8 text-right">{p.next_gw_xp.toFixed(1)}</span>
             </span>
           </button>
@@ -346,7 +346,7 @@
   {#snippet head(icon: string, tint: string, title: string, note: string, top: string)}
     <Icon name={icon} size={15} class="shrink-0 {tint}" />
     <span class="font-bold text-sm shrink-0">{title}</span>
-    <span class="hidden sm:block truncate text-[11px] text-muted font-normal">({note})</span>
+    <span class="hidden sm:block truncate text-mini text-muted font-normal">({note})</span>
     <span class="ml-auto flex items-center gap-2 min-w-0">
       <span class="truncate text-xs text-muted2 tabular-nums">{top}</span>
       <Icon name="chevron-down" size={15} class="chev shrink-0 text-muted2" />
@@ -393,7 +393,7 @@
             <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
               <span class="text-sm min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span></span>
               <span class="flex items-center gap-2 shrink-0 tabular-nums">
-                <span class="text-[11px] text-muted2">{p.dist?.boom}% haul</span>
+                <span class="text-mini text-muted2">{p.dist?.boom}% haul</span>
                 <span class="font-bold text-brand-light w-8 text-right">{p.dist?.ceiling}</span>
               </span>
             </button>
@@ -409,7 +409,7 @@
               <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
                 <span class="text-sm min-w-0 flex items-center gap-1.5"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team}</span>{#if p.defcon?.near_hit}<span class="chip chip-warn">near-hit</span>{/if}</span>
                 <span class="flex items-center gap-2 shrink-0 tabular-nums">
-                  <span class="text-[11px] text-muted2">{p.defcon?.per90}/{p.defcon?.threshold}</span>
+                  <span class="text-mini text-muted2">{p.defcon?.per90}/{p.defcon?.threshold}</span>
                   <span class="font-bold text-brand-light w-9 text-right">{Math.round((p.defcon?.p_hit ?? 0) * 100)}%</span>
                 </span>
               </button>
@@ -437,8 +437,8 @@
                 <button onclick={() => onpick(p.id)} class="w-full flex items-center justify-between gap-2 py-2 text-left hover:opacity-80">
                   <span class="text-sm min-w-0 truncate"><b>{p.name}</b> <span class="text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span></span>
                   <span class="flex items-center gap-3 shrink-0 tabular-nums">
-                    {#if p.dist}<span class="text-[11px] text-muted2">ceil {p.dist.ceiling}</span>{/if}
-                    <span class="text-[11px] text-muted">{p.next_gw_xp.toFixed(1)} xP</span>
+                    {#if p.dist}<span class="text-mini text-muted2">ceil {p.dist.ceiling}</span>{/if}
+                    <span class="text-mini text-muted">{p.next_gw_xp.toFixed(1)} xP</span>
                     <span class="font-bold text-yellow w-12 text-right">{p.owned_by}%</span>
                   </span>
                 </button>

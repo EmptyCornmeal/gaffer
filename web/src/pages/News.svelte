@@ -102,7 +102,7 @@
             <li>
               <div class="flex flex-wrap items-baseline gap-2">
                 <span class="text-[15px] leading-relaxed">{c.text}</span>
-                <span class="chip {CERTAINTY[c.certainty] ?? 'chip-info'} text-[10px]">
+                <span class="chip {CERTAINTY[c.certainty] ?? 'chip-info'} text-micro">
                   {c.certainty}
                 </span>
               </div>
@@ -112,7 +112,7 @@
                     href={src.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-[11px] text-muted2 underline decoration-dotted hover:text-brand-light"
+                    class="text-mini text-muted2 underline decoration-dotted hover:text-brand-light"
                     title={src.title}
                   >{src.source} ↗</a>
                 {/each}
@@ -121,7 +121,7 @@
           {/each}
         </ul>
         {#if news.source === 'ai'}
-          <p class="text-[10px] text-muted2 mt-3">
+          <p class="text-micro text-muted2 mt-3">
             Generated from the headlines below. Every line names its sources, and
             any claim that could not be traced to one was dropped.
           </p>
@@ -131,7 +131,7 @@
       <!-- Every claim just restated a headline, so there is no card to show. The
            part the feed did not already carry — which stories were judged
            FPL-relevant — becomes this legend plus the marker on each story. -->
-      <p class="text-[11px] text-muted2 -mb-1">
+      <p class="text-mini text-muted2 -mb-1">
         <span class="font-bold text-brand-light">{angle.size} of {news.items.length}</span>
         stories carry an FPL angle, marked below. This digest restated each one
         word for word, so the headline is printed once with how firm it is.
@@ -156,7 +156,7 @@
           <div class="flex items-center gap-2 mb-0.5 flex-wrap">
             <span class="chip chip-info">{it.source}</span>
             {#if cert}<span class="chip {CERTAINTY[cert] ?? 'chip-info'}">FPL angle · {cert}</span>{/if}
-            {#if it.published}<span class="text-[10px] text-muted2" title={it.published.replace(/ \+\d{4}$/, '')}>{relTime(it.published) || it.published.replace(/ \+\d{4}$/, '')}</span>{/if}
+            {#if it.published}<span class="text-micro text-muted2" title={it.published.replace(/ \+\d{4}$/, '')}>{relTime(it.published) || it.published.replace(/ \+\d{4}$/, '')}</span>{/if}
           </div>
           <div class="font-semibold text-sm flex items-start gap-1 group-hover:text-brand-light transition-colors">
             <span class="min-w-0">{it.title}</span>
@@ -168,7 +168,7 @@
     </div>
 
     {#if news.quarantined?.length}
-      <p class="text-[10px] text-muted2">
+      <p class="text-micro text-muted2">
         {news.quarantined.length} feed item{news.quarantined.length === 1 ? '' : 's'}
         withheld: the text was shaped like an instruction rather than a headline.
       </p>

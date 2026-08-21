@@ -37,7 +37,7 @@
       {@const [ex, ey] = pt(i, R)}
       {@const [lx, ly] = pt(i, R + 18)}
       <line x1={C} y1={C} x2={ex} y2={ey} class="stroke-line/50" stroke-width="1" />
-      <text x={lx} y={ly} text-anchor="middle" dominant-baseline="middle" class="fill-muted text-[10px] font-semibold">{ax}</text>
+      <text x={lx} y={ly} text-anchor="middle" dominant-baseline="middle" class="fill-muted text-micro font-semibold">{ax}</text>
     {/each}
     <!-- series -->
     {#each series as s}
@@ -48,7 +48,7 @@
       {/each}
     {/each}
   </svg>
-  <div class="flex flex-wrap items-center gap-3 justify-center mt-1 text-[11px]">
+  <div class="flex flex-wrap items-center gap-3 justify-center mt-1 text-mini">
     {#each series as s}
       <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:{s.color}"></span>{s.label}</span>
     {/each}

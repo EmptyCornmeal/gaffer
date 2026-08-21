@@ -146,21 +146,21 @@
     <!-- grid + axis ticks -->
     {#each xTicks as t}
       <line x1={sx(t)} y1={M.t} x2={sx(t)} y2={M.t + ih} class="stroke-line/40" stroke-width="1" />
-      <text x={sx(t)} y={H - 22} text-anchor="middle" class="fill-muted2 text-[10px]">{t}</text>
+      <text x={sx(t)} y={H - 22} text-anchor="middle" class="fill-muted2 text-micro">{t}</text>
     {/each}
     {#each yTicks as t}
       <line x1={M.l} y1={sy(t)} x2={M.l + iw} y2={sy(t)} class="stroke-line/40" stroke-width="1" />
-      <text x={M.l - 6} y={sy(t) + 3} text-anchor="end" class="fill-muted2 text-[10px]">{t}</text>
+      <text x={M.l - 6} y={sy(t) + 3} text-anchor="end" class="fill-muted2 text-micro">{t}</text>
     {/each}
 
     <!-- quadrant dividers + labels (muted so they don't clash with dot colours) -->
     {#if quadrants}
       <line x1={sx(xThr)} y1={M.t} x2={sx(xThr)} y2={M.t + ih} class="stroke-line2" stroke-width="1" stroke-dasharray="4 4" />
       <line x1={M.l} y1={sy(yThr)} x2={M.l + iw} y2={sy(yThr)} class="stroke-line2" stroke-width="1" stroke-dasharray="4 4" />
-      <text x={M.l + 6} y={M.t + 13} class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Differentials</text>
-      <text x={M.l + iw - 6} y={M.t + 13} text-anchor="end" class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Template</text>
-      <text x={M.l + iw - 6} y={M.t + ih - 6} text-anchor="end" class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Traps</text>
-      <text x={M.l + 6} y={M.t + ih - 6} class="fill-muted2 text-[10px] font-bold uppercase tracking-wide">Fringe</text>
+      <text x={M.l + 6} y={M.t + 13} class="fill-muted2 text-micro font-bold uppercase tracking-wide">Differentials</text>
+      <text x={M.l + iw - 6} y={M.t + 13} text-anchor="end" class="fill-muted2 text-micro font-bold uppercase tracking-wide">Template</text>
+      <text x={M.l + iw - 6} y={M.t + ih - 6} text-anchor="end" class="fill-muted2 text-micro font-bold uppercase tracking-wide">Traps</text>
+      <text x={M.l + 6} y={M.t + ih - 6} class="fill-muted2 text-micro font-bold uppercase tracking-wide">Fringe</text>
     {/if}
 
     <!-- points -->
@@ -198,18 +198,18 @@
         x={Math.min(W - M.r - 30, Math.max(M.l + 30, sx(hover.x)))}
         y={sy(hover.y) - 10}
         text-anchor="middle"
-        class="fill-text text-[11px] font-bold"
+        class="fill-text text-mini font-bold"
         style="paint-order:stroke;stroke:#0b1220;stroke-width:3.5px"
       >{hover.label} · {hover.x.toFixed(1)}% · {hover.y.toFixed(0)}xP</text>
     {/if}
 
     <!-- axis titles -->
-    <text x={M.l + iw / 2} y={H - 4} text-anchor="middle" class="fill-muted text-[11px] font-semibold">{xLabel}</text>
-    <text x={12} y={M.t + ih / 2} text-anchor="middle" transform="rotate(-90 12 {M.t + ih / 2})" class="fill-muted text-[11px] font-semibold">{yLabel}</text>
+    <text x={M.l + iw / 2} y={H - 4} text-anchor="middle" class="fill-muted text-mini font-semibold">{xLabel}</text>
+    <text x={12} y={M.t + ih / 2} text-anchor="middle" transform="rotate(-90 12 {M.t + ih / 2})" class="fill-muted text-mini font-semibold">{yLabel}</text>
   </svg>
 
   <!-- position legend -->
-  <div class="flex items-center gap-3 justify-center mt-1 text-[11px] text-muted">
+  <div class="flex items-center gap-3 justify-center mt-1 text-mini text-muted">
     {#each Object.entries(POS_COLOR) as [pos, color]}
       <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:{color}"></span>{pos}</span>
     {/each}

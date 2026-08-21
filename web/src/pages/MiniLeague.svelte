@@ -289,14 +289,14 @@
             </div>
           </div>
           {#if focusEntry != null}
-            <div class="mb-2 flex items-center gap-2 text-[11px]">
+            <div class="mb-2 flex items-center gap-2 text-mini">
               <span class="chip chip-good">Isolated: {stats.find((s) => s.entry === focusEntry)?.name ?? '—'}</span>
               <button class="text-accent-light hover:underline" onclick={() => (focusEntry = null)}>show everyone</button>
             </div>
           {/if}
           <LineChart series={chartSeries} labels={gwLabels} height={260} yLabel={chartMode} format={chartFormat} focusKey={focusEntry} />
-          <p class="text-[11px] text-muted2 mt-1">Hover or arrow-key the chart for a gameweek read-out · click a name below to mute it · click a row in the table to isolate a manager.</p>
-          {#if chartMode === 'rank'}<p class="text-[11px] text-muted2 mt-1">Higher = better overall rank (millions, inverted).</p>{/if}
+          <p class="text-mini text-muted2 mt-1">Hover or arrow-key the chart for a gameweek read-out · click a name below to mute it · click a row in the table to isolate a manager.</p>
+          {#if chartMode === 'rank'}<p class="text-mini text-muted2 mt-1">Higher = better overall rank (millions, inverted).</p>{/if}
         </div>
 
         <!-- GW winners strip -->

@@ -118,7 +118,7 @@
     <div class="card p-6">
       <h2 class="font-bold text-red">This build can't render that decision</h2>
       <p class="text-sm text-muted mt-2">{parsed.detail}</p>
-      <p class="text-[11px] text-muted2 mt-2">
+      <p class="text-mini text-muted2 mt-2">
         Refusing is deliberate — advice from a version this build no longer contains
         would look identical to advice it does.
       </p>
@@ -144,22 +144,22 @@
           {#if body.transfers_out.length || body.transfers_in.length}
             <div class="grid grid-cols-2 gap-2 mt-3">
               <div class="rounded-lg bg-bg3 p-2">
-                <div class="text-[10px] uppercase font-bold text-muted2 mb-1">Out</div>
+                <div class="text-micro uppercase font-bold text-muted2 mb-1">Out</div>
                 {#each body.transfers_out as p (p.id)}
                   <button class="flex items-center gap-2 w-full min-h-11 text-left" onclick={() => onpick(p.id)}>
                     <Crest code={p.team_code} short={p.team ?? ''} size={16} />
                     <span class="truncate">{label(p)}</span>
-                    <span class="ml-auto shrink-0 text-[11px] font-semibold text-muted tabular-nums">{xpText(p)}</span>
+                    <span class="ml-auto shrink-0 text-mini font-semibold text-muted tabular-nums">{xpText(p)}</span>
                   </button>
                 {/each}
               </div>
               <div class="rounded-lg bg-bg3 p-2">
-                <div class="text-[10px] uppercase font-bold text-muted2 mb-1">In</div>
+                <div class="text-micro uppercase font-bold text-muted2 mb-1">In</div>
                 {#each body.transfers_in as p (p.id)}
                   <button class="flex items-center gap-2 w-full min-h-11 text-left" onclick={() => onpick(p.id)}>
                     <Crest code={p.team_code} short={p.team ?? ''} size={16} />
                     <span class="truncate">{label(p)}</span>
-                    <span class="ml-auto shrink-0 text-[11px] font-semibold text-brand-light tabular-nums">{xpText(p)}</span>
+                    <span class="ml-auto shrink-0 text-mini font-semibold text-brand-light tabular-nums">{xpText(p)}</span>
                   </button>
                 {/each}
               </div>
@@ -204,7 +204,7 @@
           <!-- the biggest reason this could be wrong -->
           {#if body.biggest_risk}
             <div class="mt-3 rounded-lg border border-yellow/40 bg-yellow/10 p-3">
-              <div class="text-[10px] uppercase font-bold text-yellow mb-1">
+              <div class="text-micro uppercase font-bold text-yellow mb-1">
                 Biggest reason this could be wrong
               </div>
               <p class="text-sm">{body.biggest_risk}</p>
@@ -218,19 +218,19 @@
             <h3 id="vs-hold" class="font-bold text-sm">Versus doing nothing</h3>
             <div class="grid grid-cols-3 gap-2 mt-2 text-center">
               <div class="rounded-lg bg-bg3 p-2">
-                <div class="text-[10px] uppercase text-muted2 font-bold">Gain</div>
+                <div class="text-micro uppercase text-muted2 font-bold">Gain</div>
                 <div class="text-xl font-black tabular-nums">{signed(cmp.delta)}</div>
               </div>
               <div class="rounded-lg bg-bg3 p-2">
-                <div class="text-[10px] uppercase text-muted2 font-bold">Beats hold</div>
+                <div class="text-micro uppercase text-muted2 font-bold">Beats hold</div>
                 <div class="text-xl font-black tabular-nums">{pctOf(cmp.p_move_beats_hold)}</div>
               </div>
               <div class="rounded-lg bg-bg3 p-2">
-                <div class="text-[10px] uppercase text-muted2 font-bold">Hit</div>
+                <div class="text-micro uppercase text-muted2 font-bold">Hit</div>
                 <div class="text-xl font-black tabular-nums">{cmp.hit_cost ? `−${cmp.hit_cost}` : '0'}</div>
               </div>
             </div>
-            <p class="text-[11px] text-muted2 mt-2">
+            <p class="text-mini text-muted2 mt-2">
               95% CI {cmp.delta_ci95[0].toFixed(1)} to {cmp.delta_ci95[1].toFixed(1)} over
               {cmp.simulations.toLocaleString()} shared scenarios ·
               this GW {signed(cmp.short_term_delta)}{#if cmp.horizon_delta != null}, over the
@@ -271,7 +271,7 @@
               </tbody>
             </table>
             {#if exe.reason}
-              <p class="text-[11px] text-yellow mt-2">{exe.reason}</p>
+              <p class="text-mini text-yellow mt-2">{exe.reason}</p>
             {/if}
           </section>
         {/if}
@@ -292,7 +292,7 @@
               </h3>
               {#if xiTotal}
                 <span
-                  class="shrink-0 text-[11px] text-muted2 tabular-nums"
+                  class="shrink-0 text-mini text-muted2 tabular-nums"
                   title="The eleven projections below add up to {xiTotal.xi.toFixed(1)}, plus {xiTotal.armband.toFixed(1)} for counting the armband a second time. Autosubs, bonus and price changes are not in it."
                 ><b class="text-sm text-brand-light">{xiTotal.total.toFixed(1)}</b> xP</span>
               {/if}
@@ -323,7 +323,7 @@
                          save, and a single column header cannot align across a
                          2/3/2 grid. So the unit rides on the title instead. -->
                     <span
-                      class="ml-auto shrink-0 text-[11px] font-semibold text-muted tabular-nums"
+                      class="ml-auto shrink-0 text-mini font-semibold text-muted tabular-nums"
                       title="{xpText(p)} projected points (xP) this gameweek"
                       >{xpText(p)}</span>
                   </button>
@@ -331,7 +331,7 @@
               {/each}
             </ul>
             {#if body.bench.length}
-              <h4 class="text-[10px] uppercase font-bold text-muted2 mt-3 mb-1">
+              <h4 class="text-micro uppercase font-bold text-muted2 mt-3 mb-1">
                 Bench, in order
               </h4>
               <ol class="flex flex-wrap gap-1">
@@ -342,11 +342,11 @@
                       onclick={() => onpick(p.id)}
                       aria-label="Bench {i + 1}, {label(p)}, {xpText(p)} projected points — open player detail"
                     >
-                      <span class="text-muted2 text-[11px]">{i + 1}</span>
+                      <span class="text-muted2 text-mini">{i + 1}</span>
                       <Crest code={p.team_code} short={p.team ?? ''} size={14} />
                       <span class="truncate">{label(p)}</span>
                       <span
-                        class="text-[11px] font-semibold text-muted2 tabular-nums"
+                        class="text-mini font-semibold text-muted2 tabular-nums"
                         title="{xpText(p)} projected points (xP) this gameweek"
                         >{xpText(p)}</span>
                     </button>
@@ -362,7 +362,7 @@
           <section class="card p-3">
             <h3 class="font-bold text-sm mb-1">League implication</h3>
             <p class="text-sm text-muted">{body.league_note}</p>
-            <button class="text-[11px] text-accent-light hover:underline mt-1"
+            <button class="text-mini text-accent-light hover:underline mt-1"
                     onclick={() => onnav('strategy')}>Full league strategy →</button>
           </section>
         {/if}
@@ -375,7 +375,7 @@
             onclick={() => (showEvidence = !showEvidence)}
           >{showEvidence ? '▾' : '▸'} What this rests on</button>
           {#if showEvidence}
-            <ul class="text-[11px] text-muted2 mt-2 list-disc pl-4 space-y-0.5">
+            <ul class="text-mini text-muted2 mt-2 list-disc pl-4 space-y-0.5">
               {#each body.assumptions as a}<li>{a}</li>{/each}
               <li>
                 Model <code>{d.versions.model_version}</code>, objective
