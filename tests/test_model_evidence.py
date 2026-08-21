@@ -176,8 +176,17 @@ def test_every_prose_file_that_discusses_the_experiment_names_ridge():
 
 def test_the_accuracy_page_renders_every_candidate():
     """Showing only the rejected one is how the wrong summary happened."""
-    page = (config.REPO_ROOT / "web" / "src" / "pages"
-            / "Accuracy.svelte").read_text(encoding="utf-8")
+    # Renamed Accuracy.svelte -> Model.svelte on 2026-08-21 when the page
+    # absorbed Help. This path crosses a language boundary, so neither
+    # svelte-check nor mypy can catch it moving again — say so out loud rather
+    # than dying on a bare FileNotFoundError inside a scheduled refresh.
+    page_file = config.REPO_ROOT / "web" / "src" / "pages" / "Model.svelte"
+    assert page_file.exists(), (
+        f"{page_file.name} is missing — if the model page was renamed again, "
+        "update this path. The front-end suite cannot catch this: it never "
+        "reads Svelte files by name."
+    )
+    page = page_file.read_text(encoding="utf-8")
     assert "modelCandidates" in page, "the page must read the candidate list"
     assert "{#each candidates as c}" in page, "it must loop, not pick one"
     for token in ("c.decision", "c.reason", "c.per_horizon"):
