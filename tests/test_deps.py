@@ -7,6 +7,7 @@ are the thing that would have noticed.
 
 from __future__ import annotations
 
+import sys
 import tomllib
 
 import pytest
@@ -148,11 +149,18 @@ def test_every_windows_only_pin_carries_a_marker():
 
 
 def test_a_marker_that_does_not_apply_is_not_reported_as_drift():
-    """Otherwise every Linux run fails on a package correctly absent."""
+    """Otherwise every Linux run fails on a package correctly absent.
+
+    Derive both markers from the running interpreter. The earlier version
+    hardcoded a win32/linux pair and asserted they differed, which is only true
+    when the runner is one of those two — on macOS both evaluate False and the
+    test failed for a reason that had nothing to do with the code under test.
+    """
     assert deps.applies_here(None) is True
-    win = 'sys_platform == "win32"'
-    linux = 'sys_platform == "linux"'
-    assert deps.applies_here(win) != deps.applies_here(linux)
+    here = f'sys_platform == "{sys.platform}"'
+    elsewhere = 'sys_platform == "gaffer-not-a-real-platform"'
+    assert deps.applies_here(here) is True
+    assert deps.applies_here(elsewhere) is False
 
 
 def test_a_malformed_marker_does_not_silently_skip_a_package():
