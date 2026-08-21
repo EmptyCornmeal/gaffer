@@ -133,6 +133,8 @@ def build_meta(
         # Which scoring table this run was checked against, and whether it
         # matched what the model encodes.
         "rule_scoring_source", "rule_scoring_status", "rule_scoring_drift",
+        # G21 — and *which* rules went unchecked, not merely how many.
+        "rule_scoring_unchecked",
         # Which h=1 number was published: Gaffer's component model alone, or a
         # blend with FPL's ep_next. The difference is large enough to reorder a
         # squad, so it travels with the artifact like a model version does.

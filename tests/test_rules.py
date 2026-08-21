@@ -7,6 +7,8 @@ nothing could see the difference. These tests are the thing that now can.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from gaffer import config, rules
@@ -196,3 +198,46 @@ def test_an_unrecognised_override_says_it_was_ignored(monkeypatch):
     message = str(exc.value)
     assert "yess" in message
     assert "not" in message.lower() and "consent" in message.lower()
+
+
+# --- G21: computed, persisted, and actually published ------------------------
+
+def test_verify_always_reports_which_rules_went_unchecked():
+    """Its docstring promises the record carries them, in every branch."""
+    from gaffer import rules
+
+    for bootstrap in (None,
+                      {},
+                      {"game_config": {"scoring": {}}}):
+        rec = rules.verify(bootstrap)
+        assert "unchecked" in rec, f"{bootstrap!r} returned no `unchecked` key"
+        assert isinstance(rec["unchecked"], list)
+
+    # A payload covering nothing must name gaps rather than report none.
+    rec = rules.verify({"game_config": {"scoring": {}}})
+    assert rec["unchecked"], "an empty scoring table left nothing unchecked?"
+
+
+def test_every_rule_scoring_meta_key_reaches_the_artifact():
+    """G21 was a whole class of bug, not one missing line.
+
+    `rules.verify` computed `unchecked`, `ingest` did not persist it, and
+    `artifacts` did not export it — so the count of unverified scoring rules
+    shipped while the list of *which* ones never did. This asserts the three
+    stay in step: anything ingest writes as `rule_scoring_*` must be exported.
+    """
+    from pathlib import Path
+
+    import gaffer
+
+    root = Path(gaffer.__file__).parent
+    ingest_src = (root / "ingest.py").read_text(encoding="utf-8")
+    artifact_src = (root / "export" / "artifacts.py").read_text(encoding="utf-8")
+
+    written = set(re.findall(r'set_meta\(\s*conn\s*,\s*"(rule_scoring_[a-z_]+)"',
+                             ingest_src))
+    assert written, "no rule_scoring_* meta writes found — did ingest move?"
+
+    missing = sorted(k for k in written if f'"{k}"' not in artifact_src)
+    assert missing == [], (
+        f"ingest persists {missing} but the artifact never exports them")

@@ -624,6 +624,12 @@ def run(
         db.set_meta(conn, "rule_scoring_source", scoring["source"])
         db.set_meta(conn, "rule_scoring_status", scoring["status"])
         db.set_meta(conn, "rule_scoring_drift", "; ".join(scoring["drift"]))
+        # G21 — `verify` already returns which rules the payload never covered,
+        # and its own docstring promises the record carries them. Only this line
+        # was missing, so we published *how many* rules went unverified and never
+        # *which*. "Unverified" is only actionable if you can see what it covers.
+        db.set_meta(conn, "rule_scoring_unchecked",
+                    "; ".join(scoring.get("unchecked") or []))
         summary["scoring_rules"] = scoring["status"]
 
         summary["teams"] = ingest_teams(conn, bootstrap)
