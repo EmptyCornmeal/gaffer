@@ -171,14 +171,28 @@ def test_yellow_and_red_cards_cost_points():
 
 
 def test_a_red_costs_three_times_a_yellow_at_equal_rates():
-    y = project(player("MID", yellow_per_90=0.1))["exp_cards_pts"]
-    r = project(player("MID", red_per_90=0.1))["exp_cards_pts"]
+    """Rates sit inside both positional priors on purpose (M11).
+
+    This asserts a fact about the scoring table -- RED_POINTS is three times
+    YELLOW_POINTS -- through the projection. Since M11 the projection shrinks a
+    rate that exceeds its positional prior, and a MID's red prior is 0.0067
+    against a yellow prior of 0.216, so 0.1 is *ordinary* for a yellow and
+    *implausible* for a red. Feeding both 0.1 stopped comparing like with like:
+    one side was shrunk and the other was not. 0.005 is below both priors, so
+    neither is touched and the invariant is tested rather than the shrinkage.
+    """
+    y = project(player("MID", yellow_per_90=0.005))["exp_cards_pts"]
+    r = project(player("MID", red_per_90=0.005))["exp_cards_pts"]
     assert r == pytest.approx(3 * y, rel=1e-9)
 
 
 def test_own_goals_and_penalty_misses_cost_two():
-    og = project(player("DEF", og_per_90=0.05))["exp_misc_pts"]
-    miss = project(player("FWD", pen_miss_per_90=0.05))["exp_misc_pts"]
+    """0.005 is below the DEF own-goal prior (0.0097) and the FWD penalty-miss
+    prior (0.0067), so M11's shrinkage leaves both alone and the two -2 point
+    rules are compared at genuinely equal modelled rates. At the old 0.05 both
+    were shrunk, by different amounts, and the equality became a coincidence."""
+    og = project(player("DEF", og_per_90=0.005))["exp_misc_pts"]
+    miss = project(player("FWD", pen_miss_per_90=0.005))["exp_misc_pts"]
     assert og == pytest.approx(miss, rel=1e-9)
     assert og < 0
 
@@ -309,3 +323,35 @@ def test_weak_club_defender_is_now_penalised():
     strong = project(player("DEF"), conceded=0.7)["exp_points"]
     weak = project(player("DEF"), conceded=2.6)["exp_points"]
     assert weak < strong
+
+
+# --- M11: a cameo cannot manufacture a rate ---------------------------------
+
+def test_a_cameo_red_card_does_not_ship_a_sending_off_rate():
+    """D.Essugo shipped `other = -2.25` off one red card in ~13 minutes.
+
+    Raw, that is a `red_per_90` of 6.9 against a league rate of 0.0067 -- a
+    thousand times the prior, from a single event.
+    """
+    cameo = project(player("MID", minutes=13, red_per_90=90.0 / 13.0))
+    assert cameo["exp_cards_pts"] > -0.25, (
+        "one red card in a cameo is still being read as a sending-off habit")
+
+
+def test_real_evidence_outranks_a_cameo():
+    """The shrinkage must not simply flatten everything to the prior: a player
+    sent off twice across a full season has to end up *above* a one-cameo
+    player, which is the ordering the raw rate got backwards."""
+    cameo = project(player("MID", minutes=13, red_per_90=90.0 / 13.0))
+    repeat = project(player("MID", minutes=3000, red_per_90=2 * 90.0 / 3000))
+    assert repeat["exp_cards_pts"] < cameo["exp_cards_pts"]
+
+
+def test_shrinkage_is_one_sided():
+    """A player with no cards keeps zero, rather than inheriting the prior.
+
+    Pulling zero rates up is the purer estimator and a different change; this
+    pins the scope so it cannot arrive unnoticed.
+    """
+    clean = project(player("MID"))
+    assert clean["exp_cards_pts"] == 0.0

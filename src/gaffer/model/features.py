@@ -89,6 +89,59 @@ DEFCON_PRIOR = {"GKP": 0.0, "DEF": 7.7, "MID": 8.6, "FWD": 4.7}
 #: significant figure would be false precision.
 DEFCON_SHRINK_K = 300.0
 
+
+#: M11 — positional priors for the six per-90 rates that `projection._rate`
+#: previously read **raw**, with no shrinkage of any kind. D.Essugo shipped
+#: `other = -2.25` off one red card in about thirteen minutes, a `red_per_90` of
+#: roughly 6.9 against a league rate of 0.008 — the identical defect that made
+#: two players carry `defcon90 = 90.0`.
+#:
+#: Minutes-weighted league rates, pooled over the fit seasons only (train +
+#: select; 2025-26 is never touched). Held-out against 2025-26 they track well:
+#: GKP `pen_save` 0.0145 predicted against 0.0145 actual, and every `yellow`
+#: cell inside 15%.
+#:
+#: Two kinds of zero live in this table and they are not the same thing. A
+#: *structural* zero is a fact about football — an outfielder cannot save a
+#: penalty — and stays 0.0. A *sample* zero is an accident of two seasons, and
+#: gets a quarter of the league rate instead, because a hard 0.0 would assert
+#: that a goalkeeper can never be sent off. That is the mistake DEFCON_PRIOR
+#: already records for its own GKP cell.
+RATE_PRIORS: dict[str, dict[str, float]] = {
+    "yellow_per_90":   {"GKP": 0.08027, "DEF": 0.18821, "MID": 0.21614, "FWD": 0.17088},
+    "red_per_90":      {"GKP": 0.00066, "DEF": 0.00806, "MID": 0.00675, "FWD": 0.00606},
+    "og_per_90":       {"GKP": 0.00658, "DEF": 0.00968, "MID": 0.00179, "FWD": 0.00061},
+    "pen_save_per_90": {"GKP": 0.01447, "DEF": 0.0, "MID": 0.0, "FWD": 0.0},
+    "pen_miss_per_90": {"GKP": 0.00038, "DEF": 0.00038, "MID": 0.00193, "FWD": 0.00667},
+    "bonus_per_90":    {"GKP": 0.24344, "DEF": 0.20128, "MID": 0.29654, "FWD": 0.64291},
+}
+
+
+def rate_shrink_k(prior: float) -> float:
+    """Minutes at which a player's own rate is half-trusted against `prior`.
+
+    **The prior is worth one expected event.** At a prior rate of `r` per 90,
+    one event is expected every ``90 / r`` minutes, and that is the half-trust
+    point. It needs no fitting and it scales itself to how rare the event is,
+    which is the whole problem here:
+
+    * `red_per_90` at 0.008 gives k ~= 11,250 minutes, so thirteen minutes of
+      football moves the estimate almost not at all -- which is correct, because
+      one red card in thirteen minutes is evidence about luck, not about a
+      player;
+    * `bonus_per_90` for a forward at 0.643 gives k ~= 140 minutes, so two
+      matches of real bonus scoring is already trusted.
+
+    A single shared constant cannot do both, and the failure mode of getting it
+    wrong is asymmetric: too little shrinkage ships -2.25 points off one card.
+    """
+    if prior <= 0:
+        # A structural zero. Nothing to shrink toward and nothing to trust: the
+        # caller keeps the observed value, which for these cells is also zero.
+        return 0.0
+    return 90.0 / prior
+
+
 #: Negative-binomial dispersion (size r) for defensive-action counts. CBIT/CBIRT
 #: are over-dispersed (game-to-game variance > mean), so a NegBin threshold model
 #: fits the "does he hit 10/12?" question better than Poisson. Smaller r = fatter

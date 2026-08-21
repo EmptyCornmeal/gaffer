@@ -68,10 +68,10 @@
         },
         "naive": {
           "gameweeks_scored": 38,
-          "xi_points_per_gw": 44.6,
-          "xi_regret_per_gw": 93.0,
+          "xi_points_per_gw": 44.8,
+          "xi_regret_per_gw": 92.9,
           "captain_points_per_gw": 5.97,
-          "captain_regret_per_gw": 5.68,
+          "captain_regret_per_gw": 5.74,
           "captain_accuracy_pct": 26.3
         }
       },
@@ -83,9 +83,9 @@
           "gameweeks": 37
         },
         "naive": {
-          "with_transfers": 1513.0,
-          "hold_squad": 537.0,
-          "gain": 976.0,
+          "with_transfers": 1568.0,
+          "hold_squad": 899.0,
+          "gain": 669.0,
           "gameweeks": 37
         }
       }
@@ -706,5 +706,5 @@
     "This artifact reports 2025-26; the one before it reported 2024-25. They are not two readings of one instrument. 2025-26 has a DEFCON column and 2024-25 has none, zero-minute share is 61.4% against 58.0%, and the results invert: the model WINS legal-XI points here (49.3 to 44.6, leading at all six horizons) while LOSING captaincy (5.87 to 5.97), where on 2024-25 it lost the XI (50.6 to 51.7) and won the captaincy (8.76 to 8.00). The naive baseline beats it on MAE and rank correlation in both. Only the season changed.",
     "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-08-17T18:36:47+00:00"
+  "generated_at": "2026-08-21T07:54:16+00:00"
 }

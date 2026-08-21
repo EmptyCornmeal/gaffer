@@ -319,6 +319,47 @@ def shrunk_defcon90(player: Any) -> float:
                     F.DEFCON_SHRINK_K)
 
 
+def _shrunk_rate(player: Any, key: str) -> float:
+    """A per-90 rate shrunk toward its positional prior by minutes played.
+
+    M11. These six rates went through `_rate` raw, so a single event in a cameo
+    produced a rate one to three orders of magnitude above the league's --
+    D.Essugo shipped `other = -2.25` off one red card in about thirteen minutes.
+    The DEFCON fix (G-L) is the same shape and is already proven in production.
+
+    Whichever season produced the rate is the season that sized it, so minutes
+    fall back to `base_minutes` when the current season has none -- identical to
+    `defcon90` above, and the reason a pre-season projection is not handed a
+    full-season rate against zero minutes.
+    """
+    observed = _rate(player, key)
+    priors = F.RATE_PRIORS.get(key)
+    if not priors:
+        return observed
+    prior = priors.get(player["position"], 0.0)
+    if prior <= 0:
+        # A structural zero for this position -- an outfielder cannot save a
+        # penalty. There is no prior to pull toward, and the scoring layer
+        # already refuses to pay for it. Leave the value exactly as found.
+        return observed
+    if observed <= prior:
+        # **Deliberately one-sided.** The defect is a rate that is impossibly
+        # HIGH because one event landed in a cameo. Pulling low and zero rates
+        # *up* to the prior is the statistically purer estimator, but it is a
+        # different change: it moves every one of 599 players, adds a card cost
+        # to players who have never been booked, and would need the whole model
+        # re-measured. G-L scoped this explicitly -- "shrink the other six for
+        # robustness, not urgency... do not let this grow into a rewrite of
+        # `fixture_rates`" -- and two "obviously right" model changes this week
+        # measured worse. Two-sided shrinkage is worth doing with a backtest
+        # behind it; it is not worth smuggling in behind a defect fix.
+        return observed
+    cur_min = player["minutes"] or 0
+    base_min = player["base_minutes"] or 0
+    minutes = cur_min if cur_min > 0 else base_min
+    return F.shrink(observed, minutes, prior, F.rate_shrink_k(prior))
+
+
 def fixture_rates(
     player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float,
     fixtures_played: int = 0,
@@ -516,12 +557,13 @@ def fixture_rates(
         "lam_conceded": lam_conceded,
         "conceded_units": conceded_units,
         "save_units": save_units,
-        "yellow_rate": _rate(player, "yellow_per_90"),
-        "red_rate": _rate(player, "red_per_90"),
-        "og_rate": _rate(player, "og_per_90"),
-        "pen_save_rate": _rate(player, "pen_save_per_90"),
-        "pen_miss_rate": _rate(player, "pen_miss_per_90"),
-        "bonus_rate": _rate(player, "bonus_per_90"),
+        # M11 — shrunk, not raw. See `_shrunk_rate`.
+        "yellow_rate": _shrunk_rate(player, "yellow_per_90"),
+        "red_rate": _shrunk_rate(player, "red_per_90"),
+        "og_rate": _shrunk_rate(player, "og_per_90"),
+        "pen_save_rate": _shrunk_rate(player, "pen_save_per_90"),
+        "pen_miss_rate": _shrunk_rate(player, "pen_miss_per_90"),
+        "bonus_rate": _shrunk_rate(player, "bonus_per_90"),
     }
 
 
