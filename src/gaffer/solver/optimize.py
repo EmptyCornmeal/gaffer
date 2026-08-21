@@ -349,7 +349,10 @@ def optimise(
     captain = next((i for i in ids if cap[i].value() and cap[i].value() > 0.5), starting[0])
     bench = sorted(
         (i for i in chosen if i not in starting),
-        key=lambda i: (players[i].position != "GKP", -players[i].value),
+        # G-G -- the bench is played THIS gameweek, so order it on this
+        # gameweek's expected points. `value` is the decayed horizon figure,
+        # which ranked the autosub queue on fixtures that have not happened yet.
+        key=lambda i: (players[i].position != "GKP", -players[i].next_gw_points),
     )
     # The vice is the next-best armband, so it is chosen on the same quantity as
     # the armband: next-gameweek expected points. Ranking it by decayed horizon
@@ -718,7 +721,10 @@ def _degraded(
     )
     bench = sorted(
         (i for i in chosen if i not in starting),
-        key=lambda i: (players[i].position != "GKP", -players[i].value),
+        # G-G -- the bench is played THIS gameweek, so order it on this
+        # gameweek's expected points. `value` is the decayed horizon figure,
+        # which ranked the autosub queue on fixtures that have not happened yet.
+        key=lambda i: (players[i].position != "GKP", -players[i].next_gw_points),
     )
     counts = {pos: sum(1 for i in starting if players[i].position == pos)
               for pos in config.POSITIONS}
