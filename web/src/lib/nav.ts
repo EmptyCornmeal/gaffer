@@ -12,9 +12,7 @@ export const NAV_TABS: Tab[] = [
   { key: 'players', label: 'Players', icon: 'users' },
   { key: 'fixtures', label: 'Fixtures', icon: 'calendar' },
   { key: 'league', label: 'League', icon: 'trophy' },
-  { key: 'news', label: 'News', icon: 'news' },
-  { key: 'accuracy', label: 'Accuracy', icon: 'target' },
-  { key: 'help', label: 'Help', icon: 'help' },
+  { key: 'model', label: 'Model', icon: 'target' },
 ]
 
 // The primary destinations shown directly on the phone bottom bar; the rest live
@@ -58,8 +56,7 @@ export const MORE_TABS: Tab[] = NAV_TABS.filter((t) =>
  * regression the performance budget exists to catch.
  */
 export const HEAVY_ROUTES: ReadonlySet<string> = new Set([
-  'planner', 'players', 'live',
-  'league', 'news', 'accuracy',
+  'planner', 'players', 'live', 'league', 'model',
 ])
 
 export const KNOWN_ROUTES: ReadonlySet<string> = new Set(NAV_TABS.map((t) => t.key))
@@ -90,6 +87,9 @@ export const REDIRECTS: Readonly<Record<string, string>> = {
   meta: 'league',
   chips: 'my-team',
   review: 'home',
+  news: 'players',
+  help: 'model',
+  accuracy: 'model',
 }
 
 export function normaliseRoute(hash: string | null | undefined): string {

@@ -2,7 +2,7 @@
   import type { Bundle } from '../lib/data'
   import type { NewsItem } from '../lib/types'
   import { mdLite } from '../lib/mdlite'
-  import Icon from '../components/Icon.svelte'
+  import Icon from './Icon.svelte'
 
   let { bundle }: { bundle: Bundle } = $props()
   const news = $derived(bundle.news)

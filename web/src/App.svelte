@@ -12,7 +12,6 @@
   import Home from './pages/Home.svelte'
   import MyTeam from './pages/MyTeam.svelte'
   import Fixtures from './pages/Fixtures.svelte'
-  import Help from './pages/Help.svelte'
 
   // Lazily loaded: heavy screens most sessions never open. Each is its own
   // chunk, fetched on first navigation and then cached by the browser.
@@ -21,8 +20,7 @@
     players: () => import('./pages/Players.svelte'),
     live: () => import('./pages/Live.svelte'),
     league: () => import('./pages/MiniLeague.svelte'),
-    news: () => import('./pages/News.svelte'),
-    accuracy: () => import('./pages/Accuracy.svelte'),
+    model: () => import('./pages/Model.svelte'),
   }
 
   let shell = $state<Shell | null>(null)
@@ -144,19 +142,15 @@
         {#key reloadKey}<MyTeam {bundle} onpick={(id) => (selectedId = id)} ongoSettings={() => (sidebarOpen = true)} onnav={nav} />{/key}
       {:else if route === 'fixtures'}
         <Fixtures fixtures={bundle.fixtures} />
-      {:else if route === 'help'}
-        <Help />
       {:else if route === 'players' && LazyPage}
-        <LazyPage players={bundle.players} onpick={(id: number) => (selectedId = id)} />
+        <LazyPage players={bundle.players} onpick={(id: number) => (selectedId = id)} {bundle} />
       {:else if route === 'planner' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} onnav={nav} />
       {:else if route === 'live' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'league' && LazyPage}
         {#key reloadKey}<LazyPage ongoSettings={() => (sidebarOpen = true)} {bundle} onnav={nav} onpick={(id: number) => (selectedId = id)} {now} />{/key}
-      {:else if route === 'news' && LazyPage}
-        <LazyPage {bundle} />
-      {:else if route === 'accuracy' && LazyPage}
+      {:else if route === 'model' && LazyPage}
         <LazyPage {bundle} />
       {:else}
         <!-- Belt-and-braces: parseRoute() already normalises, so this only fires

@@ -105,8 +105,8 @@ describe('the header partition', () => {
     }
   })
 
-  it('puts Help behind More rather than off the right-hand edge', () => {
-    expect(MORE_TABS.map((t) => t.key)).toContain('help')
+  it('puts the reference pages behind More rather than off the right-hand edge', () => {
+    expect(MORE_TABS.map((t) => t.key)).toContain('model')
   })
 })
 
@@ -134,7 +134,7 @@ describe('unknown hashes after the partition', () => {
   })
 
   it('still resolves a More-menu route from a deep link', () => {
-    expect(normaliseRoute('#/Help/')).toBe('help')
+    expect(normaliseRoute('#/Fixtures/')).toBe('fixtures')
     expect(normaliseRoute('#/players')).toBe('players')
   })
 

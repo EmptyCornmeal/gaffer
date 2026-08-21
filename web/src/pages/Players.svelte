@@ -1,11 +1,24 @@
 <script lang="ts">
+  import type { Bundle } from '../lib/data'
   import type { Player, Pos } from '../lib/types'
   import FixtureStrip from '../components/FixtureStrip.svelte'
   import Crest from '../components/Crest.svelte'
   import Compare from '../components/Compare.svelte'
   import { matches } from '../lib/search'
 
-  let { players, onpick }: { players: Player[]; onpick: (id: number) => void } = $props()
+  let { players, onpick, bundle }: {
+    players: Player[]
+    onpick: (id: number) => void
+    bundle: Bundle
+  } = $props()
+
+  // News is player data. On its own page it had no search, no filter and no
+  // way to narrow to your squad; here it inherits all three.
+  let tab = $state<'players' | 'news'>('players')
+  const TABS = [
+    { key: 'players', label: 'Players' },
+    { key: 'news', label: 'News' },
+  ] as const
 
   // Compare tray: pick up to 3 players (checkbox per row) → radar + percentile
   // comparison overlay. Stops the row-click (which opens the single-player modal).
@@ -101,6 +114,28 @@
   )
   const rows = $derived(filtered.slice(0, 200))
 </script>
+
+<div class="flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5 w-fit mb-3">
+  {#each TABS as t}
+    <button
+      onclick={() => (tab = t.key)}
+      class="px-3 py-1 rounded-md text-xs font-bold transition {tab === t.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+    >{t.label}</button>
+  {/each}
+</div>
+
+{#if tab === 'news'}
+  {#await import('../components/NewsView.svelte')}
+    <div class="flex justify-center py-16 text-muted" role="status" aria-live="polite">
+      <div class="w-6 h-6 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+    </div>
+  {:then M}
+    <M.default {bundle} />
+  {:catch}
+    <p class="text-sm text-muted text-center py-16">That section failed to load. Reload the page.</p>
+  {/await}
+{:else}
+
 
 <div class="flex flex-col gap-3 rise">
   <div class="flex flex-wrap items-center gap-2">
@@ -243,4 +278,5 @@
     onremove={(id) => { compareIds = compareIds.filter((x) => x !== id); if (compareIds.length < 2) showCompare = false }}
     onpick={(id) => { showCompare = false; onpick(id) }}
   />
+{/if}
 {/if}

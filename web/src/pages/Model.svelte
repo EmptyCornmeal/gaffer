@@ -7,8 +7,15 @@
 
   let { bundle }: { bundle: Bundle } = $props()
 
-  const state = $derived(parseBacktest(bundle.backtest as unknown))
-  const bt = $derived(state.kind === 'ok' ? state.data : null)
+  // How well it works, and how it works. Two halves of one question.
+  let tab = $state<'accuracy' | 'how'>('accuracy')
+  const TABS = [
+    { key: 'accuracy', label: 'Accuracy' },
+    { key: 'how', label: 'How it works' },
+  ] as const
+
+  const parsed = $derived(parseBacktest(bundle.backtest as unknown))
+  const bt = $derived(parsed.kind === 'ok' ? parsed.data : null)
   const hs = $derived(bt ? horizonKeys(bt) : [])
   const methods = $derived(bt ? methodsIn(bt) : [])
   const h1 = $derived(bt ? bt.per_horizon['1'] : null)
@@ -138,6 +145,28 @@
   }
 </script>
 
+<div class="flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5 w-fit mb-3">
+  {#each TABS as t}
+    <button
+      onclick={() => (tab = t.key)}
+      class="px-3 py-1 rounded-md text-xs font-bold transition {tab === t.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+    >{t.label}</button>
+  {/each}
+</div>
+
+{#if tab === 'how'}
+  {#await import('../components/HelpView.svelte')}
+    <div class="flex justify-center py-16 text-muted" role="status" aria-live="polite">
+      <div class="w-6 h-6 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+    </div>
+  {:then M}
+    <M.default  />
+  {:catch}
+    <p class="text-sm text-muted text-center py-16">That section failed to load. Reload the page.</p>
+  {/await}
+{:else}
+
+
 <div class="max-w-4xl mx-auto space-y-4">
   <div>
     <h1 class="text-xl font-black">Model accuracy</h1>
@@ -147,7 +176,7 @@
     </p>
   </div>
 
-  {#if state.kind === 'missing'}
+  {#if parsed.kind === 'missing'}
     <div class="card p-4">
       <h2 class="font-bold">No backtest published</h2>
       <p class="text-sm text-muted mt-1">
@@ -155,20 +184,20 @@
       </p>
     </div>
 
-  {:else if state.kind === 'unsupported'}
+  {:else if parsed.kind === 'unsupported'}
     <div class="card p-4 border border-red/40 bg-red/5">
       <h2 class="font-bold text-red">Backtest not shown</h2>
-      <p class="text-sm mt-1">{state.detail}</p>
+      <p class="text-sm mt-1">{parsed.detail}</p>
       <p class="text-xs text-muted2 mt-2">
         Rather than display numbers that may describe a different model, this page
         shows nothing. Regenerate with <code>python -m gaffer.backtest --write</code>.
       </p>
     </div>
 
-  {:else if state.kind === 'malformed'}
+  {:else if parsed.kind === 'malformed'}
     <div class="card p-4 border border-red/40 bg-red/5">
       <h2 class="font-bold text-red">Backtest artifact is malformed</h2>
-      <p class="text-sm mt-1">{state.detail}</p>
+      <p class="text-sm mt-1">{parsed.detail}</p>
     </div>
 
   {:else if bt}
@@ -689,3 +718,4 @@
     </div>
   {/if}
 </div>
+{/if}
