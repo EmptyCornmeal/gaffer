@@ -1,8 +1,25 @@
 {
-  "schema_version": 6,
-  "model_version": "heuristic-0.4",
+  "schema_version": 7,
+  "model_version": "heuristic-0.5",
   "dataset": "vaastav/Fantasy-Premier-League merged_gw",
-  "season": "2024-25",
+  "season": "2025-26",
+  "season_split": {
+    "train": [
+      "2023-24"
+    ],
+    "select": "2024-25",
+    "test": "2025-26",
+    "measured_at_model_version": "heuristic-0.5",
+    "excluded": {
+      "2021-22": "Predates FPL's `expected_goals` / `expected_assists` / `starts` columns entirely. On disk only as 2022-23's prior source, which since G-Q has exactly one caller — `xp_leakage_diagnostic`.",
+      "2022-23": "G-Q. Its `expected_goals` and `expected_assists` are identically ZERO for GW1-15: the first gameweek carrying any xG at all is 16, and the covered window holds 64.2% of the season's minutes. The season-wide goals/xG of 1.419 is entirely that gap — over GW16-38 alone it is 0.913, i.e. ordinary, and assists behave the same way (A/xA 2.111 season-wide, 1.357 over the covered window, against ~1.37 in every other season). So the column is not mis-scaled, it is 40% absent. Compounding it, the 2021-22 prior cannot report xG either, so `base_xg90 > 0` holds for 0.0% of 2022-23 players against 35-39% elsewhere. Measured end-to-end, the model scores h=1 rank correlation -0.050 on that season, a legal XI of 26.8 pts/gw against the naive baseline's 48.2, and 8.1% captain accuracy. That is not a weak season. It is the model running on inputs that are not there."
+    },
+    "rejected_fixes": {
+      "rescale 2022-23's xG": "The only rescaling the data supports is to recompute the rate over the window the archive actually covers (GW16-38) rather than over 38 gameweeks — a flat multiplier cannot work, because zero times anything is still zero. It does fix the level: 2023-24's mean `base_xg90` moves 0.1074 -> 0.1609, into line with 2024-25's 0.1674. It does not pay for itself. On 2023-24: rank correlation 0.4267 -> 0.4316 and captain points 5.45 -> 5.63, but MAE 1.5010 -> 1.5179 and the legal XI 46.9 -> 46.1. The decision metric — the one that decides things — got WORSE. Rejected on the measurement, and it would additionally have needed a per-season special case wired into `histdata._prior_season_baseline`.",
+      "keep it with a caveat": "A caveat describes a limitation. A rank correlation of -0.050 is not a limitation of a season, it is a model reading a column that does not exist. Training on it teaches the shape of the gap."
+    },
+    "residual": "2023-24's attacking priors still come from the degraded 2022-23 file. Correcting them was measured and made the decision metric worse; see rejected_fixes."
+  },
   "decision_gameweeks": "GW1-GW38",
   "horizons": [
     1,
@@ -14,11 +31,11 @@
   ],
   "coverage": {
     "decision_gws": 38,
-    "rows": 149769,
+    "rows": 161700,
     "skipped_no_fixture": 0,
-    "rows_evaluated": 149769,
-    "zero_minute_rows_retained": 86927,
-    "zero_minute_share_pct": 58.0,
+    "rows_evaluated": 161700,
+    "zero_minute_rows_retained": 99235,
+    "zero_minute_share_pct": 61.4,
     "excluded": {
       "missing_position_price_or_fixture": 0,
       "note": "no row is excluded on post-match data"
@@ -31,312 +48,312 @@
   },
   "per_horizon": {
     "1": {
-      "n": 27231,
+      "n": 29338,
       "mae": {
-        "gaffer": 1.565,
-        "naive": 1.115
+        "gaffer": 1.592,
+        "naive": 1.075
       },
       "rank_corr": {
-        "gaffer": 0.44,
-        "naive": 0.666
+        "gaffer": 0.447,
+        "naive": 0.692
       },
       "decisions": {
         "gaffer": {
           "gameweeks_scored": 38,
-          "xi_points_per_gw": 50.7,
-          "xi_regret_per_gw": 86.8,
-          "captain_points_per_gw": 8.76,
-          "captain_regret_per_gw": 5.0,
-          "captain_accuracy_pct": 34.2
+          "xi_points_per_gw": 49.3,
+          "xi_regret_per_gw": 88.4,
+          "captain_points_per_gw": 5.87,
+          "captain_regret_per_gw": 6.03,
+          "captain_accuracy_pct": 21.1
         },
         "naive": {
           "gameweeks_scored": 38,
-          "xi_points_per_gw": 51.7,
-          "xi_regret_per_gw": 85.8,
-          "captain_points_per_gw": 8.0,
-          "captain_regret_per_gw": 5.42,
-          "captain_accuracy_pct": 21.1
+          "xi_points_per_gw": 44.6,
+          "xi_regret_per_gw": 93.0,
+          "captain_points_per_gw": 5.97,
+          "captain_regret_per_gw": 5.68,
+          "captain_accuracy_pct": 26.3
         }
       },
       "transfers": {
         "gaffer": {
-          "with_transfers": 1494.0,
-          "hold_squad": 1518.0,
-          "gain": -24.0,
+          "with_transfers": 1468.0,
+          "hold_squad": 741.0,
+          "gain": 727.0,
           "gameweeks": 37
         },
         "naive": {
-          "with_transfers": 1624.0,
-          "hold_squad": 891.0,
-          "gain": 733.0,
+          "with_transfers": 1513.0,
+          "hold_squad": 537.0,
+          "gain": 976.0,
           "gameweeks": 37
         }
       }
     },
     "2": {
-      "n": 26059,
+      "n": 28088,
       "mae": {
-        "gaffer": 1.576,
-        "naive": 1.131
+        "gaffer": 1.606,
+        "naive": 1.091
       },
       "rank_corr": {
-        "gaffer": 0.425,
-        "naive": 0.646
+        "gaffer": 0.433,
+        "naive": 0.677
       }
     },
     "3": {
-      "n": 25260,
+      "n": 27249,
       "mae": {
-        "gaffer": 1.583,
-        "naive": 1.143
+        "gaffer": 1.613,
+        "naive": 1.104
       },
       "rank_corr": {
-        "gaffer": 0.413,
-        "naive": 0.632
+        "gaffer": 0.42,
+        "naive": 0.663
       }
     },
     "4": {
-      "n": 24461,
+      "n": 26449,
       "mae": {
-        "gaffer": 1.586,
-        "naive": 1.149
+        "gaffer": 1.628,
+        "naive": 1.126
       },
       "rank_corr": {
-        "gaffer": 0.407,
-        "naive": 0.623
+        "gaffer": 0.413,
+        "naive": 0.653
       }
     },
     "5": {
-      "n": 23660,
+      "n": 25579,
       "mae": {
-        "gaffer": 1.598,
-        "naive": 1.166
+        "gaffer": 1.633,
+        "naive": 1.133
       },
       "rank_corr": {
-        "gaffer": 0.401,
-        "naive": 0.614
+        "gaffer": 0.406,
+        "naive": 0.647
       }
     },
     "6": {
-      "n": 23098,
+      "n": 24997,
       "mae": {
-        "gaffer": 1.606,
-        "naive": 1.172
+        "gaffer": 1.637,
+        "naive": 1.138
       },
       "rank_corr": {
-        "gaffer": 0.398,
-        "naive": 0.606
+        "gaffer": 0.402,
+        "naive": 0.64
       }
     }
   },
   "pre_season": {
     "decision_gw": 1,
-    "n": 616,
+    "n": 690,
     "regime": "prior-season rates and the price prior only — no season-to-date history exists yet",
     "mae": {
-      "gaffer": 1.542
+      "gaffer": 1.709
     },
     "rank_corr": {
-      "gaffer": 0.439
+      "gaffer": 0.432
     },
     "decisions": {
       "gaffer": {
         "gameweeks_scored": 1,
-        "xi_points_per_gw": 49.0,
-        "xi_regret_per_gw": 68.0,
-        "captain_points_per_gw": 12.0,
-        "captain_regret_per_gw": 0.0,
-        "captain_accuracy_pct": 100.0
+        "xi_points_per_gw": 47.0,
+        "xi_regret_per_gw": 88.0,
+        "captain_points_per_gw": 8.0,
+        "captain_regret_per_gw": 5.0,
+        "captain_accuracy_pct": 0.0
       }
     },
     "decisions_caveat": "ONE gameweek, not an average. captain_accuracy_pct here can only be 0 or 100 and is not a rate; xi_points_per_gw is a single score. Read these as what happened on one evening, never as performance.",
-    "zero_minute_share_pct": 50.2,
+    "zero_minute_share_pct": 56.7,
     "naive_baseline": "The naive baseline here is cumulative season-to-date points-per-game, which does not exist before a ball is kicked: it predicts 0 for every player. Its rank correlation is undefined against that zero variance, and its MAE would measure only how many players failed to appear, so neither is reported. That absence is itself the finding."
   },
   "calibration": {
     "overall": [
       {
-        "pred": 0.45,
-        "actual": 0.4,
-        "haul_rate": 0.2,
-        "n": 3404
+        "pred": 0.49,
+        "actual": 0.47,
+        "haul_rate": 0.3,
+        "n": 3668
       },
       {
-        "pred": 0.78,
-        "actual": 0.59,
-        "haul_rate": 0.4,
-        "n": 3404
+        "pred": 0.93,
+        "actual": 0.6,
+        "haul_rate": 0.9,
+        "n": 3667
       },
       {
-        "pred": 1.07,
-        "actual": 0.66,
-        "haul_rate": 1.4,
-        "n": 3405
+        "pred": 1.14,
+        "actual": 0.29,
+        "haul_rate": 0.1,
+        "n": 3667
       },
       {
-        "pred": 1.24,
-        "actual": 0.46,
-        "haul_rate": 0.8,
-        "n": 3403
+        "pred": 1.28,
+        "actual": 0.3,
+        "haul_rate": 0.3,
+        "n": 3667
       },
       {
-        "pred": 1.43,
+        "pred": 1.44,
         "actual": 0.57,
-        "haul_rate": 0.7,
-        "n": 3403
+        "haul_rate": 0.6,
+        "n": 3667
       },
       {
-        "pred": 1.88,
-        "actual": 1.36,
-        "haul_rate": 1.5,
-        "n": 3404
+        "pred": 1.86,
+        "actual": 1.47,
+        "haul_rate": 1.7,
+        "n": 3667
       },
       {
-        "pred": 2.66,
-        "actual": 2.25,
-        "haul_rate": 3.0,
-        "n": 3404
+        "pred": 2.7,
+        "actual": 2.23,
+        "haul_rate": 3.4,
+        "n": 3667
       },
       {
-        "pred": 4.01,
-        "actual": 3.44,
-        "haul_rate": 7.3,
-        "n": 3404
+        "pred": 4.02,
+        "actual": 3.45,
+        "haul_rate": 7.2,
+        "n": 3668
       }
     ],
     "by_position": {
       "DEF": [
         {
-          "pred": 0.53,
+          "pred": 0.63,
+          "actual": 0.52,
+          "haul_rate": 0.7,
+          "n": 1923
+        },
+        {
+          "pred": 1.09,
           "actual": 0.4,
-          "haul_rate": 0.1,
-          "n": 1805
+          "haul_rate": 0.5,
+          "n": 1918
         },
         {
-          "pred": 0.98,
-          "actual": 0.36,
-          "haul_rate": 0.2,
-          "n": 1805
+          "pred": 1.38,
+          "actual": 0.59,
+          "haul_rate": 0.5,
+          "n": 1920
         },
         {
-          "pred": 1.31,
-          "actual": 0.46,
-          "haul_rate": 0.3,
-          "n": 1804
+          "pred": 2.1,
+          "actual": 1.64,
+          "haul_rate": 1.7,
+          "n": 1920
         },
         {
-          "pred": 1.97,
-          "actual": 1.21,
-          "haul_rate": 0.8,
-          "n": 1805
-        },
-        {
-          "pred": 3.5,
-          "actual": 2.68,
-          "haul_rate": 3.0,
-          "n": 1805
+          "pred": 3.85,
+          "actual": 3.12,
+          "haul_rate": 5.4,
+          "n": 1920
         }
       ],
       "FWD": [
         {
-          "pred": 0.52,
-          "actual": 0.53,
-          "haul_rate": 0.2,
-          "n": 597
-        },
-        {
-          "pred": 1.09,
-          "actual": 0.64,
+          "pred": 0.55,
+          "actual": 0.66,
           "haul_rate": 0.5,
-          "n": 597
+          "n": 647
         },
         {
-          "pred": 1.47,
-          "actual": 0.4,
-          "haul_rate": 0.7,
-          "n": 596
+          "pred": 1.1,
+          "actual": 0.72,
+          "haul_rate": 0.8,
+          "n": 647
         },
         {
-          "pred": 2.16,
-          "actual": 1.47,
-          "haul_rate": 1.3,
-          "n": 597
+          "pred": 1.38,
+          "actual": 0.38,
+          "haul_rate": 0.3,
+          "n": 647
         },
         {
-          "pred": 4.06,
-          "actual": 3.8,
-          "haul_rate": 9.5,
-          "n": 597
+          "pred": 1.85,
+          "actual": 1.58,
+          "haul_rate": 1.9,
+          "n": 647
+        },
+        {
+          "pred": 3.59,
+          "actual": 3.21,
+          "haul_rate": 7.3,
+          "n": 647
         }
       ],
       "GKP": [
         {
-          "pred": 0.68,
-          "actual": 0.3,
-          "haul_rate": 0.0,
-          "n": 566
+          "pred": 0.86,
+          "actual": 0.2,
+          "haul_rate": 0.3,
+          "n": 681
         },
         {
-          "pred": 1.03,
-          "actual": 0.11,
-          "haul_rate": 0.0,
-          "n": 565
-        },
-        {
-          "pred": 1.21,
+          "pred": 1.08,
           "actual": 0.1,
-          "haul_rate": 0.2,
-          "n": 565
+          "haul_rate": 0.1,
+          "n": 672
         },
         {
-          "pred": 1.79,
-          "actual": 1.01,
-          "haul_rate": 1.4,
-          "n": 565
+          "pred": 1.2,
+          "actual": 0.1,
+          "haul_rate": 0.0,
+          "n": 678
         },
         {
-          "pred": 3.3,
-          "actual": 2.97,
-          "haul_rate": 3.9,
-          "n": 566
+          "pred": 1.62,
+          "actual": 0.68,
+          "haul_rate": 0.7,
+          "n": 675
+        },
+        {
+          "pred": 3.34,
+          "actual": 2.71,
+          "haul_rate": 3.4,
+          "n": 677
         }
       ],
       "MID": [
         {
-          "pred": 0.53,
-          "actual": 0.54,
-          "haul_rate": 0.4,
-          "n": 2480
+          "pred": 0.6,
+          "actual": 0.6,
+          "haul_rate": 0.5,
+          "n": 2624
         },
         {
-          "pred": 1.08,
-          "actual": 1.03,
-          "haul_rate": 2.5,
-          "n": 2481
+          "pred": 1.17,
+          "actual": 0.31,
+          "haul_rate": 0.2,
+          "n": 2624
         },
         {
-          "pred": 1.33,
-          "actual": 0.54,
-          "haul_rate": 0.9,
-          "n": 2477
+          "pred": 1.38,
+          "actual": 0.44,
+          "haul_rate": 0.6,
+          "n": 2623
         },
         {
-          "pred": 1.95,
-          "actual": 1.71,
-          "haul_rate": 2.5,
-          "n": 2479
+          "pred": 1.96,
+          "actual": 1.53,
+          "haul_rate": 2.2,
+          "n": 2624
         },
         {
-          "pred": 3.56,
-          "actual": 3.17,
-          "haul_rate": 7.1,
-          "n": 2479
+          "pred": 3.45,
+          "actual": 3.06,
+          "haul_rate": 6.6,
+          "n": 2624
         }
       ]
     }
   },
   "shipped_projection": {
-    "model_version": "heuristic-0.4",
+    "model_version": "heuristic-0.5",
     "next_gameweek": "blend of Gaffer and FPL ep_next at w=0.7, scaled by availability",
     "later_gameweeks": "Gaffer only — ep_next does not exist beyond h=1",
     "next_gameweek_status": "POLICY, NOT MEASURED. The blend weight cannot be fitted on this dataset because the archive has no faithful copy of the live ep_next."
@@ -365,10 +382,14 @@
     "consequence": "EP_NEXT_BLEND_WEIGHT (0.7) was chosen against these numbers. The weight is UNCHANGED — moving it on withdrawn evidence would be as unfounded as setting it was — but it is now labelled a policy choice, not a fitted one. It becomes fittable once projection_snapshots and player_gw accumulate live ep_next values against real outcomes."
   },
   "model_candidates": {
-    "evaluation_version": "candidates-1.0",
+    "evaluation_version": "candidates-1.1",
     "outcome": "no trained points model ships",
-    "protocol": "Features from the same leakage-checked adapter; trained on 2022-23 + 2023-24 (2021-22 supplies 2022-23's priors); selected on 2023-24; reported once on 2024-25, untouched until selection closed. Decision metric = legal 15 under budget, quota and the three-per-club limit, best legal XI from it, scored on what actually happened; paired by gameweek against the shipped heuristic with a 4000-sample bootstrap.",
+    "measured_on_season": "2024-25",
+    "status": "FROZEN at 2024-25, on the pre-G-N split, against a removed code path (`src/gaffer/ml.py`). Not re-runnable. Nothing here describes what ships today.",
+    "protocol": "Features from the same leakage-checked adapter; trained on 2022-23 + 2023-24 (2021-22 supplies 2022-23's priors); selected on 2023-24; reported once on 2024-25, untouched until selection closed. Decision metric = legal 15 under budget, quota and the three-per-club limit, best legal XI from it, scored on what actually happened; paired by gameweek against the shipped heuristic with a 4000-sample bootstrap. NO LONGER THE PROJECT'S SPLIT — see `season_split`. Two things in it are wrong rather than merely superseded: selection ran on 2023-24, which was also in the training set; and 2022-23 has no `expected_goals` or `expected_assists` at all before GW16 (G-Q).",
     "heuristic_reference": {
+      "measured_on_season": "2024-25",
+      "why_not_restated": "The candidate rows are paired against these by gameweek. Restating them on 2025-26 would pair a 2024-25 model with a 2025-26 baseline.",
       "xi_points_per_gw": {
         "1": 50.86,
         "2": 52.58,
@@ -388,6 +409,84 @@
         "1": 1.566,
         "3": 1.585,
         "6": 1.605
+      }
+    },
+    "current_split_reference": {
+      "measured_on_season": "2025-26",
+      "measured_at_model_version": "heuristic-0.5",
+      "note": "Re-measured for G-N. No trained candidate was ever run on this season, so nothing here is paired, and none of it may be differenced against the candidate rows.",
+      "xi_points_per_gw": {
+        "1": 49.3,
+        "2": 47.8,
+        "3": 46.6,
+        "4": 47.1,
+        "5": 45.6,
+        "6": 44.3
+      },
+      "captain_points_per_gw_h1": 5.87,
+      "captain_accuracy_pct_h1": 21.1,
+      "captain_regret_per_gw_h1": 6.03,
+      "rank_corr": {
+        "1": 0.447,
+        "2": 0.433,
+        "3": 0.42,
+        "4": 0.413,
+        "5": 0.406,
+        "6": 0.402
+      },
+      "mae": {
+        "1": 1.592,
+        "2": 1.606,
+        "3": 1.613,
+        "4": 1.628,
+        "5": 1.633,
+        "6": 1.637
+      },
+      "naive_baseline": {
+        "xi_points_per_gw": {
+          "1": 44.6,
+          "2": 45.3,
+          "3": 41.5,
+          "4": 40.2,
+          "5": 42.6,
+          "6": 43.5
+        },
+        "rank_corr": {
+          "1": 0.692,
+          "2": 0.677,
+          "3": 0.664,
+          "4": 0.653,
+          "5": 0.647,
+          "6": 0.64
+        },
+        "mae": {
+          "1": 1.075,
+          "2": 1.091,
+          "3": 1.104,
+          "4": 1.126,
+          "5": 1.133,
+          "6": 1.138
+        },
+        "captain_points_per_gw_h1": 5.97,
+        "reading": "The model leads legal-XI points at every horizon (+4.7, +2.5, +5.1, +6.9, +3.0, +0.8) — a first. It still loses captaincy (5.87 to 5.97), and loses MAE and rank correlation heavily: 61.4% of rows are zero-minute and a rolling points average predicts non-appearance far better. On 2024-25 it ran the other way: 50.6 to 51.7 on the XI, 8.76 to 8.00 on the captain."
+      },
+      "defcon_ablation_h1": {
+        "method": "DEFCON_THRESHOLD neutralised to 999 everywhere. Zeroing `defcon_per_90` is no longer an ablation: since heuristic-0.5 the rate shrinks toward `F.DEFCON_PRIOR`, so zero still yields a contribution.",
+        "with": {
+          "xi_points_per_gw": 49.3,
+          "rank_corr": 0.447,
+          "mae": 1.592,
+          "captain_points_per_gw": 5.87,
+          "captain_accuracy_pct": 21.1
+        },
+        "without": {
+          "xi_points_per_gw": 45.9,
+          "rank_corr": 0.442,
+          "mae": 1.578,
+          "captain_points_per_gw": 4.97,
+          "captain_accuracy_pct": 18.4
+        },
+        "reading": "+3.4 legal-XI points per gameweek: about 72% of the model's whole 4.7-point margin over the naive baseline, from the one component measurable for exactly one season. It also makes MAE 0.014 worse. On 2024-25 it moves the XI 0.1 the WRONG way (50.6 with, 50.7 without) — that season has no `defensive_contribution` column, so the term's contribution there is fabricated from a positional prior."
       }
     },
     "candidates": [
@@ -598,13 +697,14 @@
   "limitations": [
     "Team strength ratings are rebuilt each gameweek from matches already played (T-12). They are NOT the same construction the live pipeline uses, which reads FPL's published strength fields — so fixture-driven numbers here are indicative rather than exactly reproducible live.",
     "The dataset carries no status/chance-of-playing column, so every player resolves to the model's available branch; the availability path is exercised but never varied.",
-    "DEFCON did not score in 2024-25, so its contribution here is structural only.",
+    "DEFCON is measured here for the first time, and it carries most of the headline. 2025-26 is the only season in the archive with a `defensive_contribution` column, so every backtest before this one ran with `defcon90_td` identically zero. Ablated here (thresholds neutralised) it is worth +3.4 legal-XI points per gameweek (49.3 with, 45.9 without) and +0.90 captain points, while making MAE 0.014 WORSE — so ~72% of the model's 4.7-point margin over the naive baseline comes from the one component measurable for exactly one season. One season is one season; read the margin accordingly.",
     "Transfer regret is a one-free-transfer greedy sequence, not the shipped multi-period solver.",
     "Squad selection maximises projected points under budget, quota and the club limit. It is close to, but not identical to, the shipped optimiser, which also carries a ceiling term and a goalkeeper spend penalty.",
     "The 'gaffer' column is the standalone component model. What ships for the NEXT gameweek is a blend of it with FPL's live ep_next, and that blend is unmeasurable here — see `withdrawn_baselines`. Beyond h=1 the shipped projection is exactly this column.",
-    "An in-sample gain is never evidence. Parameters were selected on 2023-24 and reported here on 2024-25, which selection never saw.",
-    "`p_start` from a prior season is `starts / 38`, which cannot separate rotation from injury absence — the denominator assumes the player was available for all 38. Two price-prior corrections were measured and both were rejected: a symmetric blend degraded nailed cheap players, and an upward-only floor left XI points flat while worsening rank correlation and MAE at every weight on both seasons. Absence appears to predict absence, so the conflation is crude rather than simply wrong. A real fix needs per-fixture history, not a constant.",
+    "An in-sample gain is never evidence. T-12's clamp sweep was fitted on 2023-24, and the two p_start corrections below were rejected on 2023-24 AND 2024-25 — now the train and select seasons. Nothing has ever been fitted, swept or rejected against 2025-26. That is a stronger claim than this line used to make: while 2024-25 was the reporting season, a rejection had already looked at it.",
+    "`p_start` from a prior season is `starts / 38`, which cannot separate rotation from injury absence — the denominator assumes the player was available for all 38. Two price-prior corrections were measured and both were rejected: a symmetric blend degraded nailed cheap players, and an upward-only floor left XI points flat while worsening rank correlation and MAE at every weight on both 2023-24 and 2024-25 — which are now the train and select seasons, not this one. Absence appears to predict absence, so the conflation is crude rather than simply wrong. A real fix needs per-fixture history, not a constant.",
+    "This artifact reports 2025-26; the one before it reported 2024-25. They are not two readings of one instrument. 2025-26 has a DEFCON column and 2024-25 has none, zero-minute share is 61.4% against 58.0%, and the results invert: the model WINS legal-XI points here (49.3 to 44.6, leading at all six horizons) while LOSING captaincy (5.87 to 5.97), where on 2024-25 it lost the XI (50.6 to 51.7) and won the captaincy (8.76 to 8.00). The naive baseline beats it on MAE and rank correlation in both. Only the season changed.",
     "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-08-16T09:16:58+00:00"
+  "generated_at": "2026-08-17T18:36:47+00:00"
 }
