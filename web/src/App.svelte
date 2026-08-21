@@ -20,8 +20,6 @@
     planner: () => import('./pages/Planner.svelte'),
     players: () => import('./pages/Players.svelte'),
     chips: () => import('./pages/Chips.svelte'),
-    meta: () => import('./pages/Meta.svelte'),
-    strategy: () => import('./pages/Strategy.svelte'),
     live: () => import('./pages/Live.svelte'),
     review: () => import('./pages/Review.svelte'),
     league: () => import('./pages/MiniLeague.svelte'),
@@ -154,18 +152,14 @@
         <LazyPage players={bundle.players} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'planner' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} onnav={nav} />
-      {:else if route === 'meta' && LazyPage}
-        <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'live' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'review' && LazyPage}
         <LazyPage {bundle} onnav={nav} />
-      {:else if route === 'strategy' && LazyPage}
-        <LazyPage {bundle} onnav={nav} {now} />
       {:else if route === 'chips' && LazyPage}
         <LazyPage {bundle} onnav={nav} />
       {:else if route === 'league' && LazyPage}
-        {#key reloadKey}<LazyPage ongoSettings={() => (sidebarOpen = true)} />{/key}
+        {#key reloadKey}<LazyPage ongoSettings={() => (sidebarOpen = true)} {bundle} onnav={nav} onpick={(id: number) => (selectedId = id)} {now} />{/key}
       {:else if route === 'news' && LazyPage}
         <LazyPage {bundle} />
       {:else if route === 'accuracy' && LazyPage}

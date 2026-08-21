@@ -13,8 +13,6 @@ export const NAV_TABS: Tab[] = [
   { key: 'players', label: 'Players', icon: 'users' },
   { key: 'fixtures', label: 'Fixtures', icon: 'calendar' },
   { key: 'chips', label: 'Chips', icon: 'layers' },
-  { key: 'meta', label: 'Meta', icon: 'chart' },
-  { key: 'strategy', label: 'Strategy', icon: 'shield' },
   { key: 'league', label: 'League', icon: 'trophy' },
   { key: 'news', label: 'News', icon: 'news' },
   { key: 'accuracy', label: 'Accuracy', icon: 'target' },
@@ -43,7 +41,7 @@ export const BOTTOM_TABS: Tab[] = NAV_TABS.filter((t) =>
  * NAV_TABS by key, so a route added there appears in exactly one of them and
  * neither can drift.
  */
-const PRIMARY_KEYS = ['home', 'live', 'my-team', 'players', 'fixtures', 'strategy'] as const
+const PRIMARY_KEYS = ['home', 'live', 'my-team', 'players', 'fixtures', 'league'] as const
 
 export const PRIMARY_TABS: Tab[] = NAV_TABS.filter((t) =>
   (PRIMARY_KEYS as readonly string[]).includes(t.key),
@@ -62,7 +60,7 @@ export const MORE_TABS: Tab[] = NAV_TABS.filter((t) =>
  * regression the performance budget exists to catch.
  */
 export const HEAVY_ROUTES: ReadonlySet<string> = new Set([
-  'planner', 'players', 'chips', 'meta', 'strategy', 'live', 'review',
+  'planner', 'players', 'chips', 'live', 'review',
   'league', 'news', 'accuracy',
 ])
 
@@ -90,6 +88,8 @@ export const DEFAULT_ROUTE = 'home'
  */
 export const REDIRECTS: Readonly<Record<string, string>> = {
   overview: 'planner',
+  strategy: 'league',
+  meta: 'league',
 }
 
 export function normaliseRoute(hash: string | null | undefined): string {

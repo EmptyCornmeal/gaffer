@@ -2,8 +2,8 @@
   import type { Bundle } from '../lib/data'
   import type { Player, Pos } from '../lib/types'
   import { formatPrice, valuePerMillion } from '../lib/format'
-  import Crest from '../components/Crest.svelte'
-  import Scatter from '../components/Scatter.svelte'
+  import Crest from './Crest.svelte'
+  import Scatter from './Scatter.svelte'
 
   let { bundle, onpick }: { bundle: Bundle; onpick: (id: number) => void } = $props()
 

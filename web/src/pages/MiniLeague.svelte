@@ -3,8 +3,27 @@
   import { getLeagueIds, getEntryId } from '../lib/config'
   import Icon from '../components/Icon.svelte'
   import LineChart from '../components/LineChart.svelte'
+  import LeagueStrategy from '../components/LeagueStrategy.svelte'
+  import LeagueMeta from '../components/LeagueMeta.svelte'
+  import type { Bundle } from '../lib/data'
 
-  let { ongoSettings }: { ongoSettings: () => void } = $props()
+  let { ongoSettings, bundle, onnav, onpick, now = Date.now() }: {
+    ongoSettings: () => void
+    bundle: Bundle
+    onnav: (r: string) => void
+    onpick: (id: number) => void
+    now?: number
+  } = $props()
+
+  // Three views of one question: what is everyone else doing. Standings is
+  // your own league; Strategy scores your decisions against it; Meta is the
+  // same question asked of the whole game.
+  let tab = $state<'standings' | 'strategy' | 'meta'>('standings')
+  const TABS = [
+    { key: 'standings', label: 'Standings' },
+    { key: 'strategy', label: 'Strategy' },
+    { key: 'meta', label: 'Meta' },
+  ] as const
 
   let leagueIds = $state(getLeagueIds())
   let active = $state(0)
@@ -235,7 +254,22 @@
   ]
 </script>
 
-{#if phase === 'nosetup'}
+<div class="max-w-5xl mx-auto w-full">
+  <div class="flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5 w-fit mb-3">
+    {#each TABS as t}
+      <button
+        onclick={() => (tab = t.key)}
+        class="px-3 py-1 rounded-md text-xs font-bold transition {tab === t.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+      >{t.label}</button>
+    {/each}
+  </div>
+</div>
+
+{#if tab === 'strategy'}
+  <LeagueStrategy {bundle} {onnav} {now} />
+{:else if tab === 'meta'}
+  <LeagueMeta {bundle} {onpick} />
+{:else if phase === 'nosetup'}
   <div class="card p-8 text-center rise max-w-lg mx-auto">
     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand/12 text-brand-light mb-3"><Icon name="trophy" size={22} /></div>
     <h2 class="font-bold text-lg">Track your mini-leagues</h2>

@@ -11,7 +11,7 @@ describe('normaliseRoute', () => {
     }
   })
 
-  it('falls back to Overview for an empty hash', () => {
+  it('falls back to This Week for an empty hash', () => {
     expect(normaliseRoute('')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#/')).toBe(DEFAULT_ROUTE)
@@ -19,7 +19,7 @@ describe('normaliseRoute', () => {
     expect(normaliseRoute(undefined)).toBe(DEFAULT_ROUTE)
   })
 
-  it('falls back to Overview for unknown routes', () => {
+  it('falls back to This Week for unknown routes', () => {
     // Previously these rendered chrome around a completely empty <main>.
     expect(normaliseRoute('#/nope')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#/old-bookmark')).toBe(DEFAULT_ROUTE)
@@ -33,7 +33,7 @@ describe('normaliseRoute', () => {
   })
 
   it('strips query strings and trailing fragments', () => {
-    expect(normaliseRoute('#/meta?sort=xp')).toBe('meta')
+    expect(normaliseRoute('#/players?sort=xp')).toBe('players')
     expect(normaliseRoute('#/chips&x=1')).toBe('chips')
   })
 
@@ -68,7 +68,7 @@ describe('the header partition', () => {
     for (const t of MORE_TABS) expect(primary.has(t.key)).toBe(false)
   })
 
-  it('accounts for all fifteen routes', () => {
+  it('accounts for every route', () => {
     expect(PRIMARY_TABS.length + MORE_TABS.length).toBe(NAV_TABS.length)
     expect(KNOWN_ROUTES.size).toBe(PRIMARY_TABS.length + MORE_TABS.length)
   })
@@ -81,7 +81,7 @@ describe('the header partition', () => {
 
   it('leads with the weekly questions, in NAV_TABS order', () => {
     expect(PRIMARY_TABS.map((t) => t.key)).toEqual(
-      ['home', 'live', 'my-team', 'players', 'fixtures', 'strategy'],
+      ['home', 'live', 'my-team', 'players', 'fixtures', 'league'],
     )
   })
 

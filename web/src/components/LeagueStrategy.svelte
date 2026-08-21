@@ -6,8 +6,8 @@
     type Coverage, type LeagueView,
   } from '../lib/strategy'
   import { classifyFreshness } from '../lib/freshness'
-  import Icon from '../components/Icon.svelte'
-  import Crest from '../components/Crest.svelte'
+  import Icon from './Icon.svelte'
+  import Crest from './Crest.svelte'
 
   let { bundle, onnav, now = Date.now() }: { bundle: Bundle; onnav: (r: string) => void; now?: number } =
     $props()
