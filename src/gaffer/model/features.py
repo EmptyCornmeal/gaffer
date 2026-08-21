@@ -90,6 +90,28 @@ DEFCON_PRIOR = {"GKP": 0.0, "DEF": 7.7, "MID": 8.6, "FWD": 4.7}
 DEFCON_SHRINK_K = 300.0
 
 
+#: M10 — the chance a player who STARTS reaches the 60-minute mark, by position.
+#:
+#: `projection.py` set `p60 = p_start`, i.e. asserted that starting and lasting
+#: an hour are the same event. They are not, and the gap is positional: a keeper
+#: is almost never withdrawn, a midfielder often is.
+#:
+#: Measured on the fit seasons only (2023-24 + 2024-25), conditioned on actually
+#: having started. Held out against 2025-26 the drift is under 0.007 everywhere,
+#: which is as stable as anything in this model.
+#:
+#: **This is not the whole of the calibration gap.** M10 was filed off a figure
+#: of 0.844 for the `p_start >= 0.90` band against a claimed 0.963. That number
+#: conditions on the *model's estimate*, so it folds in `p_start` being wrong
+#: about who starts at all — which is M9, a different defect with a different
+#: fix. What is corrected here is only the part that is genuinely about the hour.
+P60_GIVEN_START = {"GKP": 0.9888, "DEF": 0.9464, "MID": 0.9119, "FWD": 0.9214}
+
+#: And the other arm: a substitute who appears almost never reaches 60 minutes,
+#: but "almost never" is not "never" and the term is free to carry.
+P60_GIVEN_SUB = {"GKP": 0.0769, "DEF": 0.0258, "MID": 0.0086, "FWD": 0.0065}
+
+
 #: M11 — positional priors for the six per-90 rates that `projection._rate`
 #: previously read **raw**, with no shrinkage of any kind. D.Essugo shipped
 #: `other = -2.25` off one red card in about thirteen minutes, a `red_per_90` of

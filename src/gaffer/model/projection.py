@@ -439,7 +439,13 @@ def fixture_rates(
     p_start = clamp(base_start * avail, 0.0, 0.98)
     p_play = clamp(p_start + (1 - p_start) * 0.35 * avail, 0.0, 0.99)  # inc. cameo chance
     exp_minutes = p_start * _START_MINUTES + (p_play - p_start) * _CAMEO_MINUTES
-    p60 = p_start  # starters are the ones who reach 60'
+    # M10 — starting and lasting an hour are different events, and the gap is
+    # positional. `p60` gates clean sheets and the long appearance point, so
+    # asserting every starter reaches 60' concentrates the error on keepers and
+    # defenders. A substitute reaching 60' is rare rather than impossible, so
+    # that arm is carried too.
+    p60 = (p_start * F.P60_GIVEN_START.get(pos, 1.0)
+           + max(p_play - p_start, 0.0) * F.P60_GIVEN_SUB.get(pos, 0.0))
     mins_frac = exp_minutes / 90.0
 
     # --- attacking ------------------------------------------------------
