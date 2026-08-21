@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-21T13:39:15+00:00",
+  "generated_at": "2026-08-21T15:47:19+00:00",
   "gameweek": 1,
   "gameweeks_remaining": 38,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.5",
     "gameweek": 1,
     "fixtures": 20,
-    "players": 505,
+    "players": 502,
     "assumptions": [
       "One goal draw per attacking side, shared by every player in the match; clean sheets and goals conceded read the same draw.",
       "Goals are allocated multinomially in proportion to each player's deterministic expected goals, so teammates compete for the same goals and marginals are preserved.",
@@ -32,7 +32,7 @@
         "price": 5.5,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 4.12
+        "next_gw_xp": 4.04
       },
       {
         "id": 55,
@@ -147,6 +147,16 @@
         "next_gw_xp": 2.97
       },
       {
+        "id": 31,
+        "name": "Konsa",
+        "team": "ARS",
+        "pos": "DEF",
+        "price": 4.5,
+        "code": 199798,
+        "team_code": 3,
+        "next_gw_xp": 4.74
+      },
+      {
         "id": 542,
         "name": "E.Le Fée",
         "team": "SUN",
@@ -155,16 +165,6 @@
         "code": 484420,
         "team_code": 56,
         "next_gw_xp": 4.58
-      },
-      {
-        "id": 423,
-        "name": "Shaw",
-        "team": "MUN",
-        "pos": "DEF",
-        "price": 4.5,
-        "code": 106760,
-        "team_code": 1,
-        "next_gw_xp": 4.25
       },
       {
         "id": 304,
@@ -195,7 +195,7 @@
       "name": "Crouch Potatoes",
       "league_type": "x",
       "classification": "tiny_private",
-      "size": 6,
+      "size": 7,
       "target_position": 1,
       "posture": {
         "stance": "neutral",
@@ -203,17 +203,17 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.043,
-        "p_target": 0.043,
+        "p_first": 0.022,
+        "p_target": 0.022,
         "target_position": 1,
-        "expected_position": 3.53,
+        "expected_position": 4.02,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0089,
+        "ci95_halfwidth": 0.0064,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 0.0,
         "caveats": [
-          "5 of 5 rival squads are unknown and were modelled as a distribution, not a team",
+          "6 of 6 rival squads are unknown and were modelled as a distribution, not a team",
           "Gaffer's multi-week mean projections are materially weaker than its one-week ones, so probabilities beyond the next gameweek are directional only"
         ]
       },
@@ -234,7 +234,7 @@
             "price": 5.5,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 4.12
+            "next_gw_xp": 4.04
           }
         },
         {
@@ -401,7 +401,7 @@
         }
       ],
       "data_quality": {
-        "rivals": 5,
+        "rivals": 6,
         "with_picks": 0,
         "coverage_pct": 0.0,
         "cohort_truncated": false,
@@ -419,33 +419,33 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 64.842,
+      "expected_points": 64.904,
       "p_target": {
-        "271619": 0.043
+        "271619": 0.022
       }
     },
     {
       "key": "captain:155",
       "label": "Captain Enzo",
-      "expected_points": 63.424,
+      "expected_points": 63.315,
       "p_target": {
-        "271619": 0.044
+        "271619": 0.0225
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 63.406,
+      "expected_points": 63.223,
       "p_target": {
-        "271619": 0.045
+        "271619": 0.023
       }
     },
     {
       "key": "captain:55",
       "label": "Captain Watkins",
-      "expected_points": 62.807,
+      "expected_points": 62.659,
       "p_target": {
-        "271619": 0.0405
+        "271619": 0.02
       }
     }
   ],
@@ -456,25 +456,25 @@
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 64.842,
+        "expected_points": 64.904,
         "p_target": {
-          "271619": 0.043
+          "271619": 0.022
         }
       },
       {
         "key": "captain:155",
         "label": "Captain Enzo",
-        "expected_points": 63.424,
+        "expected_points": 63.315,
         "p_target": {
-          "271619": 0.044
+          "271619": 0.0225
         }
       },
       {
         "key": "captain:427",
         "label": "Captain Mbeumo",
-        "expected_points": 63.406,
+        "expected_points": 63.223,
         "p_target": {
-          "271619": 0.045
+          "271619": 0.023
         }
       }
     ],
@@ -484,19 +484,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 14.73,
+    "expected_gain": 14.33,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "bboost",
         "gameweek": 1,
-        "expected_gain": 14.73,
+        "expected_gain": 14.33,
         "ci95": [
-          14.49,
-          14.97
+          14.09,
+          14.57
         ],
-        "baseline_points": 64.84,
-        "with_chip_points": 79.57,
+        "baseline_points": 64.9,
+        "with_chip_points": 79.23,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -505,13 +505,13 @@
       {
         "chip": "3xc",
         "gameweek": 1,
-        "expected_gain": 8.08,
+        "expected_gain": 8.23,
         "ci95": [
-          7.84,
-          8.31
+          7.99,
+          8.47
         ],
-        "baseline_points": 64.84,
-        "with_chip_points": 72.92,
+        "baseline_points": 64.9,
+        "with_chip_points": 73.13,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
