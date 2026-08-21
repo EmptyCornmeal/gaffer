@@ -315,8 +315,17 @@
                     {#if p.id === body.captain?.id}<span class="badge badge-good shrink-0">C</span>{/if}
                     {#if p.id === body.vice?.id}<span class="badge shrink-0 bg-accent/20 text-accent-light">V</span>{/if}
                     <!-- The number the whole product exists to produce, pitched
-                         below the name: this list is scanned, not read. -->
-                    <span class="ml-auto shrink-0 text-[11px] font-semibold text-muted tabular-nums">{xpText(p)}</span>
+                         below the name: this list is scanned, not read.
+                         U18 asked for xP "on Home's XI". It was already here —
+                         and in the aria-label — but sighted readers saw a bare
+                         figure with no unit. A per-row "xP" would cost the ~20px
+                         a row that the armband chip was demoted to a badge to
+                         save, and a single column header cannot align across a
+                         2/3/2 grid. So the unit rides on the title instead. -->
+                    <span
+                      class="ml-auto shrink-0 text-[11px] font-semibold text-muted tabular-nums"
+                      title="{xpText(p)} projected points (xP) this gameweek"
+                      >{xpText(p)}</span>
                   </button>
                 </li>
               {/each}
@@ -336,7 +345,10 @@
                       <span class="text-muted2 text-[11px]">{i + 1}</span>
                       <Crest code={p.team_code} short={p.team ?? ''} size={14} />
                       <span class="truncate">{label(p)}</span>
-                      <span class="text-[11px] font-semibold text-muted2 tabular-nums">{xpText(p)}</span>
+                      <span
+                        class="text-[11px] font-semibold text-muted2 tabular-nums"
+                        title="{xpText(p)} projected points (xP) this gameweek"
+                        >{xpText(p)}</span>
                     </button>
                   </li>
                 {/each}
