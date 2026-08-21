@@ -10,9 +10,23 @@
   import { fpl } from '../lib/fpl'
   import { getEntryId } from '../lib/config'
   import Pitch from '../components/Pitch.svelte'
+  import ModelView from '../components/ModelView.svelte'
   import Crest from '../components/Crest.svelte'
 
-  let { bundle, onpick }: { bundle: Bundle; onpick: (id: number) => void } = $props()
+  let { bundle, onpick, onnav }: {
+    bundle: Bundle
+    onpick: (id: number) => void
+    onnav: (r: string) => void
+  } = $props()
+
+  // Two views of one question. `plan` is your squad evolved forward; `model`
+  // is the same optimiser let off the leash from a blank sheet, which is the
+  // only way to see what your squad costs you.
+  let view = $state<'plan' | 'model'>('plan')
+  const VIEWS = [
+    { key: 'plan', label: 'Your plan' },
+    { key: 'model', label: "Model's ideal" },
+  ] as const
 
   const byId = $derived(new Map(bundle.players.map((p) => [p.id, p])))
   const modelPlan = $derived(bundle.plan) // the model's optimal multi-GW transfer path
@@ -224,6 +238,18 @@
   const sortedStart = $derived([...starters].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]))
 </script>
 
+<div class="flex items-center gap-0.5 rounded-lg border border-line bg-bg2 p-0.5 w-fit mb-3">
+  {#each VIEWS as v}
+    <button
+      onclick={() => (view = v.key)}
+      class="px-3 py-1 rounded-md text-xs font-bold transition {view === v.key ? 'bg-brand text-[#05210f]' : 'text-muted hover:text-text'}"
+    >{v.label}</button>
+  {/each}
+</div>
+
+{#if view === 'model'}
+  <ModelView {bundle} {onpick} {onnav} />
+{:else}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 rise">
   <!-- LEFT: your squad -->
   <div class="flex flex-col gap-3 min-w-0">
@@ -470,3 +496,4 @@
     </div>
   </div>
 </div>
+{/if}

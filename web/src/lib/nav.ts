@@ -17,7 +17,6 @@ export const NAV_TABS: Tab[] = [
   { key: 'strategy', label: 'Strategy', icon: 'shield' },
   { key: 'league', label: 'League', icon: 'trophy' },
   { key: 'news', label: 'News', icon: 'news' },
-  { key: 'overview', label: 'Overview', icon: 'search' },
   { key: 'accuracy', label: 'Accuracy', icon: 'target' },
   { key: 'help', label: 'Help', icon: 'help' },
 ]
@@ -80,11 +79,25 @@ export const DEFAULT_ROUTE = 'home'
  * Hash routing (not history routing) is deliberate: GitHub Pages serves no
  * rewrite rules, so a deep link to /review would 404. `#/review` cannot.
  */
+/**
+ * Routes that used to exist, and the page that absorbed them.
+ *
+ * A merged page's URL is in someone's history and possibly on their home
+ * screen. Falling through to DEFAULT_ROUTE would silently drop them on This
+ * Week with no explanation; mapping them forward lands them where the thing
+ * they asked for actually lives now. Entries are permanent — the cost of
+ * keeping one is a line, and the cost of dropping one is a dead bookmark.
+ */
+export const REDIRECTS: Readonly<Record<string, string>> = {
+  overview: 'planner',
+}
+
 export function normaliseRoute(hash: string | null | undefined): string {
   const key = (hash ?? '')
     .replace(/^#\/?/, '')
     .split(/[?&#/]/)[0]
     .trim()
     .toLowerCase()
+  if (key in REDIRECTS) return REDIRECTS[key]
   return KNOWN_ROUTES.has(key) ? key : DEFAULT_ROUTE
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  BOTTOM_TABS, DEFAULT_ROUTE, KNOWN_ROUTES, MORE_TABS, NAV_TABS, PRIMARY_TABS,
+  BOTTOM_TABS, DEFAULT_ROUTE, KNOWN_ROUTES, MORE_TABS, NAV_TABS, PRIMARY_TABS, REDIRECTS,
   normaliseRoute,
 } from './nav'
 
@@ -135,7 +135,22 @@ describe('unknown hashes after the partition', () => {
 
   it('still resolves a More-menu route from a deep link', () => {
     expect(normaliseRoute('#/Help/')).toBe('help')
-    expect(normaliseRoute('#/overview')).toBe('overview')
+    expect(normaliseRoute('#/players')).toBe('players')
+  })
+
+  it('forwards a merged-away route to the page that absorbed it', () => {
+    // Overview became Planner's "Model's ideal" tab. Someone's bookmark and
+    // someone's home-screen icon still say #/overview, and dropping them on
+    // This Week would look like the link had simply broken.
+    expect(normaliseRoute('#/overview')).toBe('planner')
+    expect(normaliseRoute('#/Overview/')).toBe('planner')
+  })
+
+  it('every redirect points at a route that exists', () => {
+    for (const [from, to] of Object.entries(REDIRECTS)) {
+      expect(KNOWN_ROUTES.has(to), `${from} -> ${to}`).toBe(true)
+      expect(KNOWN_ROUTES.has(from), `${from} still routes`).toBe(false)
+    }
   })
 
   it('does not accidentally route the More button label', () => {

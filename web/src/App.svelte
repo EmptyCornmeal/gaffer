@@ -10,7 +10,6 @@
   // Eagerly bundled: the routes a phone opens first, and the small ones where a
   // second network round-trip would cost more than the code it saves.
   import Home from './pages/Home.svelte'
-  import Overview from './pages/Overview.svelte'
   import MyTeam from './pages/MyTeam.svelte'
   import Fixtures from './pages/Fixtures.svelte'
   import Help from './pages/Help.svelte'
@@ -43,7 +42,8 @@
   let loaded = $state<Record<string, any>>({})
   let chunkError = $state<string | null>(null)
 
-  // Unknown / malformed / stale-bookmark hashes fall back to Overview rather
+  // Unknown / malformed hashes fall back to DEFAULT_ROUTE, and a route that has
+  // been merged away is forwarded to whatever absorbed it (see REDIRECTS), rather
   // than rendering an empty <main>. Normalising (instead of rewriting
   // location.hash) keeps back/forward working and cannot loop.
   function parseRoute(): string {
@@ -135,7 +135,7 @@
         <div class="card p-4 text-red text-sm max-w-lg mx-auto">
           Couldn't load that page.
           <div class="mt-1 text-muted2">{chunkError}</div>
-          <button class="btn mt-3" onclick={() => nav('overview')}>Back to Overview</button>
+          <button class="btn mt-3" onclick={() => nav('planner')}>Back to Planner</button>
         </div>
       {:else if needsChunk}
         <div class="flex flex-col items-center justify-center py-32 text-muted gap-3" role="status" aria-live="polite">
@@ -144,8 +144,6 @@
         </div>
       {:else if route === 'home'}
         <Home {bundle} onnav={nav} onpick={(id) => (selectedId = id)} {now} />
-      {:else if route === 'overview'}
-        <Overview {bundle} onpick={(id) => (selectedId = id)} onnav={nav} />
       {:else if route === 'my-team'}
         {#key reloadKey}<MyTeam {bundle} onpick={(id) => (selectedId = id)} ongoSettings={() => (sidebarOpen = true)} onnav={nav} />{/key}
       {:else if route === 'fixtures'}
@@ -155,7 +153,7 @@
       {:else if route === 'players' && LazyPage}
         <LazyPage players={bundle.players} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'planner' && LazyPage}
-        <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
+        <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} onnav={nav} />
       {:else if route === 'meta' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} />
       {:else if route === 'live' && LazyPage}

@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Bundle } from '../lib/data'
   import type { Player, RecPlayer } from '../lib/types'
-  import Pitch from '../components/Pitch.svelte'
-  import FixtureStrip from '../components/FixtureStrip.svelte'
-  import Icon from '../components/Icon.svelte'
+  import Pitch from './Pitch.svelte'
+  import FixtureStrip from './FixtureStrip.svelte'
+  import Icon from './Icon.svelte'
   import { mdLite } from '../lib/mdlite'
   import { loadCurrent, lineupErrors, formationOf, planPoints, captainScore } from '../lib/squad'
   import { generateTeamBrief } from '../lib/teamBrief'
