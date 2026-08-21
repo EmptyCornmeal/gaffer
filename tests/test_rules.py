@@ -241,3 +241,40 @@ def test_every_rule_scoring_meta_key_reaches_the_artifact():
     missing = sorted(k for k in written if f'"{k}"' not in artifact_src)
     assert missing == [], (
         f"ingest persists {missing} but the artifact never exports them")
+
+
+# --- G22: a flag is not a point value ---------------------------------------
+
+def test_a_boolean_is_not_a_score():
+    """`bool` subclasses `int`, so `float(True) == 1.0`.
+
+    Left alone, a JSON `true` for a scoring rule compares *equal* to a rule
+    Gaffer models as 1 point — a false agreement produced by the one component
+    whose entire purpose is to detect disagreement.
+    """
+    from gaffer import rules
+
+    assert rules._flat(True) is None
+    assert rules._flat(False) is None
+    assert rules._pos_map({"GKP": True}) is None
+
+    # and the ordinary cases still coerce
+    assert rules._flat(1) == 1.0
+    assert rules._flat(1.5) == 1.5
+    assert rules._flat("2") == 2.0
+    assert rules._flat(None) is None
+
+
+def test_a_boolean_rule_is_reported_as_unchecked_not_as_agreement():
+    """The honest outcome is "we did not verify this", not "it matches"."""
+    from gaffer import rules
+
+    checklist = rules._checklist()
+    assert checklist, "no checklist to test against"
+    api_key = checklist[0][0]
+
+    rec = rules.verify({"game_config": {"scoring": {api_key: True}}})
+    assert rec["status"] != rules.STATUS_VERIFIED, (
+        "a boolean scoring value earned a `verified` status")
+    assert any(api_key in str(u) for u in rec["unchecked"]), (
+        f"{api_key} was given as a boolean and never reported as unchecked")

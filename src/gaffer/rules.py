@@ -122,20 +122,41 @@ def parse_rules(bootstrap: dict[str, Any] | None) -> dict[str, Any]:
     return out
 
 
-def _pos_map(raw: Any) -> dict[str, float] | None:
-    if not isinstance(raw, dict):
+#: G22 — `bool` is a subclass of `int`, so `float(True) == 1.0`. A JSON `true`
+#: for a scoring rule would therefore coerce to "1 point" and compare *equal* to
+#: a rule Gaffer models as 1 — a silent false agreement, in the one place whose
+#: whole job is to notice disagreement. Refusing it sends the rule to
+#: `unchecked_rules` instead, which is the honest answer: a boolean is not a
+#: score, and we did not verify anything.
+#:
+#: Measured against the live table on 2026-08-21: 0 booleans across its 35
+#: scoring keys (25 int, 10 dict), so this changes nothing today. It is here so
+#: that a future rule expressed as a flag cannot be read as a point value.
+def _numeric(raw: Any) -> float | None:
+    if isinstance(raw, bool):
         return None
-    try:
-        return {p: float(raw[p]) for p in config.POSITIONS if p in raw}
-    except (TypeError, ValueError):
-        return None
-
-
-def _flat(raw: Any) -> float | None:
     try:
         return float(raw)
     except (TypeError, ValueError):
         return None
+
+
+def _pos_map(raw: Any) -> dict[str, float] | None:
+    if not isinstance(raw, dict):
+        return None
+    out: dict[str, float] = {}
+    for p in config.POSITIONS:
+        if p not in raw:
+            continue
+        v = _numeric(raw[p])
+        if v is None:
+            return None
+        out[p] = v
+    return out
+
+
+def _flat(raw: Any) -> float | None:
+    return _numeric(raw)
 
 
 def _checklist() -> list[tuple[str, str, Any]]:
