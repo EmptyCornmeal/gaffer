@@ -113,6 +113,25 @@ the single highest-stakes decision of the season, and the one you're about to ma
 
 ## 1.3 The shipped model is the worst of the four in Gaffer's own backtest
 
+> [!WARNING] **Superseded — corrected 2026-08-21. Kept as a record of the 2026-08-14 audit.**
+> Two of the four columns below are no longer admissible or comparable, so the
+> heading's claim does not describe any current measurement.
+>
+> - **`FPL ep_next` has been withdrawn as a baseline** — `withdrawn_baselines.fpl_xp`
+>   in `data/backtest.json`, withdrawn in schema 4. It was computed from the archive's
+>   `xP` column, which the upstream data dictionary states is FPL's `ep_this` **scraped
+>   after each gameweek has ended**. It is inadmissible as a pre-deadline forecast, so
+>   the column it "wins" here is not a win.
+> - **`naive` is cumulative season-to-date points per game**, not "a rolling average of
+>   recent points" as the reading below calls it.
+>
+> **Current measurement** — 2025-26, h=1, `heuristic-0.5`, 29,338 predictions:
+> gaffer's legal XI **49.3 pts/gw vs naive 44.6** (gaffer *ahead*, the first season it
+> has been), while rank correlation is **0.447 vs 0.692** and MAE **1.592 vs 1.075**
+> (gaffer behind). The direction of the original finding — the model is weak at
+> *ordering* — still holds. The table itself does not.
+
+
 From `data/backtest.json` — 10,011 predictions, 2024-25, out-of-sample:
 
 | Metric | **gaffer (shipped)** | ml (trained, unused) | **FPL `ep_next`** | naive |

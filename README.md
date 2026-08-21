@@ -263,10 +263,19 @@ integrity-checked before it writes, idempotent, refuses a downgrade, and
 ## Is the model any good?
 
 **Honestly: it is the weakest part of the system, and the app says so.** On the
-untouched 2024-25 season the standalone component model scores rank correlation
-0.440 and fields a legal XI worth 50.9 points a gameweek — barely ahead of a
-rolling average of recent points (0.666 / 52.5). The Accuracy page publishes
-that, not a flattering subset.
+held-out 2025-26 season the component model fields a legal XI worth **49.3 points
+a gameweek against the naive baseline's 44.6** — the first season it has won that
+comparison. It loses every other one: rank correlation **0.447 vs 0.692**, MAE
+**1.592 vs 1.075**, and captaincy **5.87 vs 5.97** points a gameweek. The
+Accuracy page publishes all of that, not a flattering subset.
+
+Two things about the baseline, because the earlier wording here got both wrong.
+It is **cumulative season-to-date points per game**, not a rolling average of
+recent form — a stronger and lower-variance comparator than "rolling average"
+suggests. And Gaffer is **behind** it on ordering, not "barely ahead": ranking
+players is the one thing a picker needs, and that is exactly where the naive
+baseline wins. Figures are h=1 from `data/backtest.json` (schema 7,
+`heuristic-0.5`, 29,338 predictions).
 
 Two things are deliberately *not* claimed:
 
