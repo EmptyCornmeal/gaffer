@@ -200,7 +200,13 @@
       const you = r.entry === myEntry
       const values: (number | null)[] = Array.from({ length: gwCount }, () => null)
       h.forEach((g, gi) => {
-        if (gi < gwCount) values[gi] = invert ? -pick(g) : pick(g)
+        if (gi >= gwCount) return
+        // A missing value must stay missing. `overall_rank` is null until the
+        // gameweek is scored, and `-null` is -0 — which drew every manager on a
+        // flat line at "rank 0", a number FPL never published.
+        const v = pick(g)
+        if (v == null || Number.isNaN(v)) return
+        values[gi] = invert ? -v : v
       })
       if (live && liveSlot >= 0) {
         const pts = liveByEntry.get(r.entry)
@@ -287,7 +293,11 @@
           entry: r.entry,
           name: r.player_name,
           team: r.entry_name,
-          total: h.length ? h[h.length - 1].total_points : r.total,
+          // `standings.total` is FPL's own and updates DURING the gameweek;
+          // `history.total_points` stays 0 until it is scored. Preferring
+          // history meant a manager with a history row showed 0 while one
+          // without showed the real number, in the same column.
+          total: r.total ?? (h.length ? h[h.length - 1].total_points : 0),
           gw: h.length ? h[h.length - 1].points : 0,
           best: pts.length ? Math.max(...pts) : 0,
           form: pts.slice(-3).reduce((s, p) => s + p, 0),
@@ -421,7 +431,18 @@
           {/if}
           <LineChart series={chartSeries} labels={gwLabels} height={260} yLabel={chartMode} format={chartFormat} focusKey={focusEntry} />
           <p class="text-mini text-muted2 mt-1">Hover or arrow-key the chart for a gameweek read-out · click a name below to mute it · click a row in the table to isolate a manager.</p>
-          {#if chartMode === 'rank'}<p class="text-mini text-muted2 mt-1">Higher = better overall rank (millions, inverted).</p>{/if}
+          {#if chartMode === 'rank'}
+            {#if chartSeries.every((s) => s.values.every((v) => v == null))}
+              <p class="text-mini text-muted2 mt-1">
+                No overall rank yet. FPL does not publish one until a gameweek is
+                scored — mid-gameweek it returns nothing at all, so there is
+                nothing honest to draw here. Live league position is the table
+                order below.
+              </p>
+            {:else}
+              <p class="text-mini text-muted2 mt-1">Higher = better overall rank (millions, inverted).</p>
+            {/if}
+          {/if}
         </div>
 
         <!-- GW winners strip -->
@@ -439,9 +460,9 @@
 
       {#if hasLive}
         <p class="text-mini text-muted2">
-          <b class="text-brand-light">GW</b> is live and provisional — bonus points move until each
-          match is final. <b>Total</b> is FPL's own and only updates once the gameweek is scored,
-          so it will lag the GW column until then.
+          <b class="text-brand-light">GW</b> and <b>Total</b> are both live: FPL's league standings
+          update during the gameweek. They are <b>provisional</b> — bonus points move until each
+          match is finalised, so positions can still change without anyone scoring again.
         </p>
       {/if}
 

@@ -78,4 +78,18 @@ describe('LineChart', () => {
     }).body
     expect(out).toContain('<circle')
   })
+
+  it('never invents a point for a series that has none', () => {
+    // overall_rank is null until a gameweek is scored. Turning that into 0 drew
+    // every manager on a flat line at rank 0, a number FPL never published.
+    const out = render(LineChart as any, {
+      props: {
+        series: [{ key: 1, name: 'You', color: '#34d399', values: [null, null] }],
+        labels: ['GW1', 'GW2'],
+      },
+    }).body
+    expect(out).not.toContain('<circle')
+    // a path with no drawable point must be empty, not 'M NaN NaN'
+    expect(out).not.toContain('NaN')
+  })
 })
