@@ -1,15 +1,15 @@
 {
   "live_version": "live-1.0",
   "gameweek": 1,
-  "as_of": "2026-08-21T20:18:50+00:00",
+  "as_of": "2026-08-21T21:41:05+00:00",
   "fixtures": [
     {
       "id": 1,
       "event": 1,
       "team_h": 1,
       "team_a": 7,
-      "state": "live",
-      "minutes": 58,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-08-21T19:00:00+00:00",
       "bonus_final": false
     },
@@ -107,7 +107,7 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "live": 1,
+      "awaiting_bonus": 1,
       "scheduled": 9
     },
     "all_finished": false,
@@ -125,7 +125,7 @@
     "projected": 21.0,
     "bench_points": 1,
     "players_played": 4,
-    "players_yet_to_play": 11,
+    "players_yet_to_play": 10,
     "hits": 0,
     "season_total_before": 0,
     "season_total_projected": 21.0,
@@ -161,16 +161,16 @@
   "players": [
     {
       "id": 1,
-      "minutes": 61,
+      "minutes": 90,
       "confirmed": 6,
       "provisional": 0,
       "predicted": 0.0,
       "total": 6.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Raya",
       "pos": "GKP",
@@ -179,16 +179,16 @@
     },
     {
       "id": 8,
-      "minutes": 61,
+      "minutes": 80,
       "confirmed": 9,
       "provisional": 0,
       "predicted": 0.0,
       "total": 9.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Calafiori",
       "pos": "DEF",
@@ -341,16 +341,16 @@
     },
     {
       "id": 557,
-      "minutes": 61,
+      "minutes": 75,
       "confirmed": 6,
       "provisional": 0,
       "predicted": 0.0,
       "total": 6.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Tzolis",
       "pos": "MID",
@@ -365,10 +365,10 @@
       "predicted": 0.0,
       "total": 0.0,
       "played": false,
-      "finished": false,
-      "yet_to_play": true,
+      "finished": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Konsa",
       "pos": "DEF",
@@ -377,16 +377,16 @@
     },
     {
       "id": 175,
-      "minutes": 61,
+      "minutes": 90,
       "confirmed": 1,
       "provisional": 0,
       "predicted": 0.0,
       "total": 1.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "van Ewijk",
       "pos": "DEF",
@@ -438,7 +438,7 @@
       "current": 21,
       "projected": 21.0,
       "gw_points": 21,
-      "yet_to_play": 11,
+      "yet_to_play": 10,
       "provisional_position": 1
     },
     {
@@ -448,7 +448,7 @@
       "current": 21,
       "projected": 21.0,
       "gw_points": 21,
-      "yet_to_play": 11,
+      "yet_to_play": 10,
       "provisional_position": 2
     },
     {
@@ -492,18 +492,18 @@
       "provisional_position": 6
     },
     {
-      "entry_id": 3557534,
-      "name": "Jarek Ettl",
+      "entry_id": 8346723,
+      "name": "Nat Stubbs",
       "you": false,
       "current": 0,
       "projected": 0.0,
       "gw_points": 0,
-      "yet_to_play": 15,
+      "yet_to_play": 14,
       "provisional_position": 7
     },
     {
-      "entry_id": 8346723,
-      "name": "Nat Stubbs",
+      "entry_id": 3557534,
+      "name": "Jarek Ettl",
       "you": false,
       "current": 0,
       "projected": 0.0,
@@ -521,6 +521,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-21T20:18:50+00:00",
+  "generated_at": "2026-08-21T21:41:05+00:00",
   "season": "2026-27"
 }
