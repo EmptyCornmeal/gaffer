@@ -22,12 +22,23 @@
   let msg = $state('')
   let picks = $state<PicksResponse | null>(null)
 
-  const gw = $derived(Number(bundle.meta.current_gw || 1))
+  // The squad FPL will actually serve: the last event whose deadline has
+  // passed. `current_gw` is the event being decided, and its picks 404 until
+  // its own deadline — which is what sent this page into its pre-season
+  // branch ninety minutes into GW1.
+  const gw = $derived(Number(bundle.meta.squad_source_event || 0))
 
   $effect(() => {
     const entry = getEntryId()
     if (!entry || !fpl.configured()) {
       phase = 'nosetup'
+      return
+    }
+    // No deadline has passed at all: genuinely pre-season, and there is no
+    // gameweek to ask about. Asking anyway is what produced a 404 that then got
+    // reported as a mystery.
+    if (!gw) {
+      phase = 'preseason'
       return
     }
     phase = 'loading'
@@ -38,21 +49,19 @@
         phase = 'ok'
       })
       .catch((e) => {
-        // Pre-season the picks endpoint 404s (FPL keeps squads private until the
-        // GW1 deadline). That's expected, not a setup error — don't blame the ID.
-        if (!Number(bundle.meta.last_finished_gw)) {
-          phase = 'preseason'
-        } else {
-          phase = 'error'
-          msg = String(e?.message ?? e)
-        }
+        // `gw` only has a value because a deadline passed, so a failure here
+        // is FPL being unreachable — not "too early". The old test used
+        // `last_finished_gw`, which stays null all through a gameweek that is
+        // being played, so a live GW1 was reported as pre-season.
+        phase = 'error'
+        msg = String(e?.message ?? e)
       })
   })
 
   const deadlineStr = $derived(
     bundle.meta.deadline
       ? new Date(bundle.meta.deadline).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })
-      : 'the GW1 deadline',
+      : 'the first deadline',
   )
 
   function toRec(p: Player): RecPlayer {
@@ -113,7 +122,7 @@
     <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/12 text-accent-light mb-4"><Icon name="hourglass" size={26} /></div>
     <h2 class="font-black text-xl">Your squad isn't public yet</h2>
     <p class="text-sm text-muted mt-2 max-w-md">
-      FPL keeps everyone's team private until the <b>GW1 deadline ({deadlineStr})</b> — your
+      FPL keeps every squad private until the season's <b>first deadline ({deadlineStr})</b> — your
       live XI, per-player xP, badges and fixtures load here automatically once it passes.
     </p>
     <button class="btn mt-5" onclick={() => onnav('planner')}>Build a team in the Planner →</button>

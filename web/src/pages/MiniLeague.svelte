@@ -5,7 +5,7 @@
   import LineChart from '../components/LineChart.svelte'
   import LeagueStrategy from '../components/LeagueStrategy.svelte'
   import LeagueMeta from '../components/LeagueMeta.svelte'
-  import type { Bundle } from '../lib/data'
+  import { loadLiveSnapshot, type Bundle } from '../lib/data'
 
   let { ongoSettings, bundle, onnav, onpick, now = Date.now() }: {
     ongoSettings: () => void
@@ -43,6 +43,37 @@
   let sortKey = $state<keyof Stat>('total')
   let sortDir = $state<1 | -1>(-1)
   const myEntry = getEntryId()
+
+  // Live gameweek points, straight from the published snapshot. The pipeline
+  // already scores every rival for the Live page; this table just never read it,
+  // so a gameweek in progress showed 0 for everyone.
+  type LiveRival = { entry_id: number; current?: number; gw_points?: number }
+  let liveRivals = $state<LiveRival[]>([])
+  let liveGw = $state<number | null>(null)
+  let liveOn = $state(false)
+
+  $effect(() => {
+    let cancelled = false
+    loadLiveSnapshot().then((raw) => {
+      if (cancelled || !raw || typeof raw !== 'object') return
+      const d = raw as Record<string, unknown>
+      liveOn = d.available === true
+      liveGw = typeof d.gameweek === 'number' ? d.gameweek : null
+      liveRivals = Array.isArray(d.rivals) ? (d.rivals as LiveRival[]) : []
+    })
+    return () => { cancelled = true }
+  })
+
+  const liveByEntry = $derived.by(() => {
+    const m = new Map<number, number>()
+    if (!liveOn) return m
+    for (const r of liveRivals) {
+      const pts = r.gw_points ?? r.current
+      if (typeof r.entry_id === 'number' && typeof pts === 'number') m.set(r.entry_id, pts)
+    }
+    return m
+  })
+  const hasLive = $derived(liveByEntry.size > 0)
 
   type GwRow = {
     event: number
@@ -307,6 +338,9 @@
       <div class="flex items-center gap-2 flex-wrap">
         <h2 class="font-bold text-lg">{name}</h2>
         <span class="text-xs text-muted">{rows.length} member{rows.length === 1 ? '' : 's'}{hasHistory ? ` · ${gwCount} GW${gwCount === 1 ? '' : 's'}` : ''}</span>
+        {#if hasLive}
+          <span class="chip chip-good text-micro">GW{liveGw} live</span>
+        {/if}
       </div>
 
       {#if preseason || !hasHistory}
@@ -350,6 +384,14 @@
         {/if}
       {/if}
 
+      {#if hasLive}
+        <p class="text-mini text-muted2">
+          <b class="text-brand-light">GW</b> is live and provisional — bonus points move until each
+          match is final. <b>Total</b> is FPL's own and only updates once the gameweek is scored,
+          so it will lag the GW column until then.
+        </p>
+      {/if}
+
       <!-- standings / stats table -->
       <div class="card overflow-x-auto">
         <table class="data">
@@ -385,7 +427,9 @@
                       <span class="font-bold tabular-nums">{s.total}</span>
                     </div>
                   </td>
-                  <td class="text-muted">{s.gw}</td>
+                  <td class={liveByEntry.has(s.entry) ? 'text-brand-light font-bold' : 'text-muted'}>
+                    {liveByEntry.get(s.entry) ?? s.gw}
+                  </td>
                   <td class="text-brand-light font-semibold">{s.best}</td>
                   <td class="text-muted">{s.form}</td>
                   <td class="{s.hits ? 'text-red' : 'text-muted2'}">{s.hits ? `-${s.hits}` : '0'}</td>

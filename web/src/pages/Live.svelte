@@ -48,7 +48,14 @@
       // Read `bundle` at call time, not setup time, so arriving data does not
       // tear down and rebuild the poller.
       () => fetchLive(
-        Number(bundle?.meta?.current_gw ?? 0) || 0,
+        // The gameweek being PLAYED, which is not `current_gw`. The instant a
+        // deadline passes those diverge: decisions move to the next event while
+        // this one's matches are still to be played. Polling `current_gw` asked
+        // FPL for a gameweek that had not happened, got nothing back, and left
+        // this page spinning on "Reading the live scores..." through a live match.
+        Number(bundle?.meta?.squad_source_event ?? 0)
+          || Number(bundle?.meta?.current_gw ?? 0)
+          || 0,
         bundle?.players ?? [],
       ).then((r) => {
         source = r.source
