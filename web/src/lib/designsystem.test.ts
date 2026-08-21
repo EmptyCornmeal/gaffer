@@ -49,10 +49,20 @@ function sourceFiles(dir: string): string[] {
 const files = sourceFiles(SRC)
 const source = files.map((f) => readFileSync(f, 'utf8')).join('\n')
 
+/**
+ * EVERY built stylesheet, concatenated.
+ *
+ * Not the first one. Vite emits a separate css chunk per lazy route that has
+ * scoped styles, so `.find()` returned whichever component chunk happened to
+ * sort first and this assertion failed against a file it was never about. That
+ * is a property of the bundle layout, which changes whenever a page moves, so
+ * the test must not depend on it.
+ */
 const builtCss = (() => {
   if (!existsSync(DIST)) return null
-  const css = readdirSync(DIST).find((f) => f.endsWith('.css'))
-  return css ? readFileSync(join(DIST, css), 'utf8') : null
+  const sheets = readdirSync(DIST).filter((f) => f.endsWith('.css'))
+  if (!sheets.length) return null
+  return sheets.map((f) => readFileSync(join(DIST, f), 'utf8')).join('\n')
 })()
 
 describe('design system', () => {
