@@ -246,8 +246,11 @@ export interface LiveState {
     players_played: number
     players_yet_to_play: number
     hits: number
-    season_total_before: number
-    season_total_projected: number
+    // Both are null until the entry history is readable — `pipeline.py:449-450`
+    // and `live/source.ts:320-321` set them so, and `source.test.ts:346` asserts
+    // it. Typing them as `number` told every caller a null could not arrive.
+    season_total_before: number | null
+    season_total_projected: number | null
     autosubs: {
       xi: number[]
       bench: number[]
