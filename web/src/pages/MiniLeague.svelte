@@ -18,6 +18,11 @@
   let preseason = $state(false)
   let histories = $state<Map<number, GwRow[]>>(new Map())
   let chartMode = $state<'cumulative' | 'gw' | 'rank'>('cumulative')
+  // Clicking a manager in the table isolates them in the chart, and clicking
+  // again clears it — one piece of state drives both.
+  let focusEntry = $state<number | null>(null)
+  let sortKey = $state<keyof Stat>('total')
+  let sortDir = $state<1 | -1>(-1)
   const myEntry = getEntryId()
 
   type GwRow = {
@@ -118,6 +123,7 @@
       const h = histories.get(r.entry) ?? []
       const you = r.entry === myEntry
       return {
+        key: r.entry,
         name: r.player_name,
         color: you ? YOU : PALETTE[i % PALETTE.length],
         you,
@@ -133,9 +139,23 @@
   const chartSeries = $derived(
     chartMode === 'cumulative' ? cumSeries : chartMode === 'gw' ? gwSeries : rankSeries,
   )
+  // The rank series is stored negated so that "up" means "better". Undo that for
+  // the hover read-out, or the tooltip reports a negative overall rank.
+  // Overall rank runs to seven digits, which fits neither the axis gutter nor a
+  // tooltip row, so it is abbreviated rather than truncated.
+  function compactRank(v: number): string {
+    const r = -v
+    if (!Number.isFinite(r)) return '—'
+    if (r >= 1_000_000) return (r / 1_000_000).toFixed(r >= 10_000_000 ? 0 : 1) + 'm'
+    if (r >= 1_000) return Math.round(r / 1_000) + 'k'
+    return String(Math.round(r))
+  }
+  const chartFormat = $derived(
+    chartMode === 'rank' ? compactRank : (v: number) => String(Math.round(v)),
+  )
 
   // per-manager season stats
-  type Stat = { entry: number; name: string; team: string; total: number; best: number; form: number; hits: number; bench: number; wins: number }
+  type Stat = { entry: number; name: string; team: string; total: number; gw: number; best: number; form: number; hits: number; bench: number; wins: number }
   const stats = $derived.by<Stat[]>(() => {
     if (!hasHistory) return []
     // GW winners: highest points each GW
@@ -161,6 +181,7 @@
           name: r.player_name,
           team: r.entry_name,
           total: h.length ? h[h.length - 1].total_points : r.total,
+          gw: h.length ? h[h.length - 1].points : 0,
           best: pts.length ? Math.max(...pts) : 0,
           form: pts.slice(-3).reduce((s, p) => s + p, 0),
           hits: h.reduce((s, g) => s + (g.event_transfers_cost ?? 0), 0),
@@ -170,6 +191,41 @@
       })
       .sort((a, b) => b.total - a.total)
   })
+
+  const sortedStats = $derived.by<Stat[]>(() => {
+    const out = [...stats]
+    out.sort((a, b) => {
+      const av = a[sortKey]
+      const bv = b[sortKey]
+      const d =
+        typeof av === 'number' && typeof bv === 'number'
+          ? av - bv
+          : String(av).localeCompare(String(bv))
+      return d * sortDir
+    })
+    return out
+  })
+  function sortBy(k: keyof Stat) {
+    if (sortKey === k) sortDir = sortDir === 1 ? -1 : 1
+    else {
+      sortKey = k
+      // Names read best A-Z; every number reads best biggest-first.
+      sortDir = k === 'name' || k === 'team' ? 1 : -1
+    }
+  }
+  const COLS: { key: keyof Stat; label: string; left?: boolean }[] = [
+    { key: 'name', label: 'Manager', left: true },
+    { key: 'team', label: 'Team', left: true },
+    { key: 'total', label: 'Total', left: true },
+    { key: 'gw', label: 'GW' },
+    { key: 'best', label: 'Best' },
+    { key: 'form', label: 'Form' },
+    { key: 'hits', label: 'Hits' },
+    { key: 'bench', label: 'Bench' },
+  ]
+  // The bar is a share of the leader, so it must track the highest total — not
+  // whatever happens to be sorted into the first row.
+  const topTotal = $derived(stats.length ? Math.max(...stats.map((s) => s.total)) : 1)
 
   const maxTotal = $derived(rows.length ? Math.max(...rows.map((r) => r.total)) : 1)
   const CHART_TABS: { key: 'cumulative' | 'gw' | 'rank'; label: string }[] = [
@@ -232,7 +288,14 @@
               {/each}
             </div>
           </div>
-          <LineChart series={chartSeries} labels={gwLabels} height={260} yLabel={chartMode} />
+          {#if focusEntry != null}
+            <div class="mb-2 flex items-center gap-2 text-[11px]">
+              <span class="chip chip-good">Isolated: {stats.find((s) => s.entry === focusEntry)?.name ?? '—'}</span>
+              <button class="text-accent-light hover:underline" onclick={() => (focusEntry = null)}>show everyone</button>
+            </div>
+          {/if}
+          <LineChart series={chartSeries} labels={gwLabels} height={260} yLabel={chartMode} format={chartFormat} focusKey={focusEntry} />
+          <p class="text-[11px] text-muted2 mt-1">Hover or arrow-key the chart for a gameweek read-out · click a name below to mute it · click a row in the table to isolate a manager.</p>
           {#if chartMode === 'rank'}<p class="text-[11px] text-muted2 mt-1">Higher = better overall rank (millions, inverted).</p>{/if}
         </div>
 
@@ -254,25 +317,37 @@
         <table class="data">
           <thead>
             {#if hasHistory}
-              <tr><th>#</th><th>Manager</th><th>Team</th><th class="!text-left">Total</th><th>GW</th><th>Best</th><th>Form</th><th>Hits</th><th>Bench</th></tr>
+              <tr>
+                <th>#</th>
+                {#each COLS as c}
+                  <th class={c.left ? '!text-left' : ''}>
+                    <button type="button" onclick={() => sortBy(c.key)} class="inline-flex items-center gap-1 transition hover:text-text {sortKey === c.key ? 'text-text' : ''}" title="Sort by {c.label}">
+                      {c.label}{#if sortKey === c.key}<span class="text-[9px]">{sortDir === 1 ? '▲' : '▼'}</span>{/if}
+                    </button>
+                  </th>
+                {/each}
+              </tr>
             {:else}
               <tr><th>#</th><th>Manager</th><th>Team</th><th class="!text-left">Total</th><th>GW</th></tr>
             {/if}
           </thead>
           <tbody>
             {#if hasHistory}
-              {#each stats as s, i}
-                <tr class="{s.entry === myEntry ? 'bg-brand/10' : ''}">
+              {#each sortedStats as s, i}
+                <tr
+                  onclick={() => (focusEntry = focusEntry === s.entry ? null : s.entry)}
+                  title="Click to isolate {s.name} in the chart"
+                  class="cursor-pointer transition hover:bg-line/20 {s.entry === myEntry ? 'bg-brand/10' : ''} {focusEntry === s.entry ? 'ring-1 ring-inset ring-brand/60' : ''}">
                   <td class="!text-left">{i + 1}</td>
                   <td class="!text-left">{s.name}{#if s.entry === myEntry}<span class="chip chip-good ml-1">you</span>{/if}</td>
                   <td class="!text-left text-muted">{s.team}</td>
                   <td class="!text-left">
                     <div class="flex items-center gap-2">
-                      <div class="h-2 rounded-full bg-brand/70" style="width: {(s.total / (stats[0]?.total || 1)) * 110}px"></div>
+                      <div class="h-2 rounded-full bg-brand/70" style="width: {(s.total / (topTotal || 1)) * 110}px"></div>
                       <span class="font-bold tabular-nums">{s.total}</span>
                     </div>
                   </td>
-                  <td class="text-muted">{histories.get(s.entry)?.slice(-1)[0]?.points ?? '—'}</td>
+                  <td class="text-muted">{s.gw}</td>
                   <td class="text-brand-light font-semibold">{s.best}</td>
                   <td class="text-muted">{s.form}</td>
                   <td class="{s.hits ? 'text-red' : 'text-muted2'}">{s.hits ? `-${s.hits}` : '0'}</td>
