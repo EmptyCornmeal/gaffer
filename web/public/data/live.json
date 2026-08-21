@@ -1,15 +1,15 @@
 {
   "live_version": "live-1.0",
   "gameweek": 1,
-  "as_of": "2026-08-21T18:19:43+00:00",
+  "as_of": "2026-08-21T19:49:07+00:00",
   "fixtures": [
     {
       "id": 1,
       "event": 1,
       "team_h": 1,
       "team_a": 7,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "half_time",
+      "minutes": 45,
       "kickoff": "2026-08-21T19:00:00+00:00",
       "bonus_final": false
     },
@@ -107,16 +107,420 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "scheduled": 10
+      "half_time": 1,
+      "scheduled": 9
     },
     "all_finished": false,
-    "bonus_final": true
+    "bonus_final": false
   },
-  "available": false,
-  "unavailable_reason": "not_started",
-  "note": "no match in this gameweek has kicked off yet",
+  "available": true,
+  "unavailable_reason": null,
+  "active_chip": null,
+  "squad": {
+    "entry_id": 1066421,
+    "confirmed": 10,
+    "provisional_bonus": 1,
+    "predicted_remaining": 0.0,
+    "current": 11,
+    "projected": 11.0,
+    "bench_points": 0,
+    "players_played": 4,
+    "players_yet_to_play": 11,
+    "hits": 0,
+    "season_total_before": 0,
+    "season_total_projected": 11.0,
+    "autosubs": {
+      "xi": [
+        1,
+        8,
+        165,
+        346,
+        411,
+        418,
+        426,
+        427,
+        504,
+        542,
+        557
+      ],
+      "bench": [
+        31,
+        175,
+        212,
+        497
+      ],
+      "subs_in": [],
+      "subs_out": [],
+      "captain": 411,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "provisional": true,
+      "notes": []
+    }
+  },
+  "players": [
+    {
+      "id": 1,
+      "minutes": 45,
+      "confirmed": 1,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 1.0,
+      "played": true,
+      "finished": false,
+      "yet_to_play": false,
+      "fixture_states": [
+        "half_time"
+      ],
+      "name": "Raya",
+      "pos": "GKP",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 8,
+      "minutes": 45,
+      "confirmed": 4,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 4.0,
+      "played": true,
+      "finished": false,
+      "yet_to_play": false,
+      "fixture_states": [
+        "half_time"
+      ],
+      "name": "Calafiori",
+      "pos": "DEF",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 165,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "João Pedro",
+      "pos": "FWD",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 346,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Calvert-Lewin",
+      "pos": "FWD",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 411,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Haaland",
+      "pos": "FWD",
+      "in_xi": true,
+      "is_captain": true
+    },
+    {
+      "id": 418,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Maguire",
+      "pos": "DEF",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 426,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "B.Fernandes",
+      "pos": "MID",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 427,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Mbeumo",
+      "pos": "MID",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 504,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Vuskovic",
+      "pos": "DEF",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 542,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "E.Le Fée",
+      "pos": "MID",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 557,
+      "minutes": 45,
+      "confirmed": 5,
+      "provisional": 1,
+      "predicted": 0.0,
+      "total": 6.0,
+      "played": true,
+      "finished": false,
+      "yet_to_play": false,
+      "fixture_states": [
+        "half_time"
+      ],
+      "name": "Tzolis",
+      "pos": "MID",
+      "in_xi": true,
+      "is_captain": false
+    },
+    {
+      "id": 31,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "half_time"
+      ],
+      "name": "Konsa",
+      "pos": "DEF",
+      "in_xi": false,
+      "is_captain": false
+    },
+    {
+      "id": 175,
+      "minutes": 45,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": true,
+      "finished": false,
+      "yet_to_play": false,
+      "fixture_states": [
+        "half_time"
+      ],
+      "name": "van Ewijk",
+      "pos": "DEF",
+      "in_xi": false,
+      "is_captain": false
+    },
+    {
+      "id": 212,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Hughes",
+      "pos": "MID",
+      "in_xi": false,
+      "is_captain": false
+    },
+    {
+      "id": 497,
+      "minutes": 0,
+      "confirmed": 0,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 0.0,
+      "played": false,
+      "finished": false,
+      "yet_to_play": true,
+      "fixture_states": [
+        "scheduled"
+      ],
+      "name": "Dubravka",
+      "pos": "GKP",
+      "in_xi": false,
+      "is_captain": false
+    }
+  ],
+  "rivals": [
+    {
+      "entry_id": 1066421,
+      "name": "You",
+      "you": true,
+      "current": 11,
+      "projected": 11.0,
+      "gw_points": 11,
+      "yet_to_play": 11,
+      "provisional_position": 1
+    },
+    {
+      "entry_id": 1066421,
+      "name": "Myles Colling",
+      "you": false,
+      "current": 11,
+      "projected": 11.0,
+      "gw_points": 11,
+      "yet_to_play": 11,
+      "provisional_position": 2
+    },
+    {
+      "entry_id": 7419334,
+      "name": "Dylan Llyr Morgan",
+      "you": false,
+      "current": 11,
+      "projected": 11.0,
+      "gw_points": 11,
+      "yet_to_play": 11,
+      "provisional_position": 3
+    },
+    {
+      "entry_id": 408467,
+      "name": "Nat Uttley",
+      "you": false,
+      "current": 10,
+      "projected": 10.0,
+      "gw_points": 10,
+      "yet_to_play": 13,
+      "provisional_position": 4
+    },
+    {
+      "entry_id": 1711764,
+      "name": "Hakan Duzel",
+      "you": false,
+      "current": 7,
+      "projected": 7.0,
+      "gw_points": 7,
+      "yet_to_play": 12,
+      "provisional_position": 5
+    },
+    {
+      "entry_id": 1094262,
+      "name": "Kevin Colling",
+      "you": false,
+      "current": 5,
+      "projected": 5.0,
+      "gw_points": 5,
+      "yet_to_play": 12,
+      "provisional_position": 6
+    },
+    {
+      "entry_id": 3557534,
+      "name": "Jarek Ettl",
+      "you": false,
+      "current": 0,
+      "projected": 0.0,
+      "gw_points": 0,
+      "yet_to_play": 15,
+      "provisional_position": 7
+    },
+    {
+      "entry_id": 8346723,
+      "name": "Nat Stubbs",
+      "you": false,
+      "current": 0,
+      "projected": 0.0,
+      "gw_points": 0,
+      "yet_to_play": 14,
+      "provisional_position": 8
+    }
+  ],
+  "largest_swing": null,
+  "separation": {
+    "confirmed": 10,
+    "provisional_bonus": 1,
+    "predicted_remaining": 0.0,
+    "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
+  },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-21T18:19:43+00:00",
+  "generated_at": "2026-08-21T19:49:07+00:00",
   "season": "2026-27"
 }
