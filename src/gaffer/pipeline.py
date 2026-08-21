@@ -6,9 +6,19 @@ Run with::
     python -m gaffer.pipeline --fast     # skip per-player DEFCON enrichment
 
 Runs on a schedule in GitHub Actions (``.github/workflows/refresh.yml``), which
-commits ``data/*.json`` and dispatches the Pages deploy. Note the scheduler
-drifts — the 17:00 UTC slot has a median delay near an hour — so a run that must
-land before a deadline should be dispatched manually rather than waited for.
+commits ``data/*.json`` and dispatches the Pages deploy.
+
+The scheduling model changed and this docstring described the old one. It is no
+longer a small number of fixed slots waiting to be punctual: the workflow fires
+``*/15`` and ``gaffer.schedule --should-refresh`` decides whether each tick does
+any work, with 02:00, 11:00 and 17:00 UTC kept only as belt and braces. That is
+the answer to GitHub's drift, which is real and measured — over 61 runs of this
+repo the 17:00 slot started a **median of 53 minutes late**, and once landed 16
+minutes *after* where a GW1 deadline would have been.
+
+Firing often does not make any single tick punctual, so before a hard deadline a
+manual ``gh workflow run refresh.yml`` is still the only way to be certain,
+rather than the only way to be current.
 """
 
 from __future__ import annotations
