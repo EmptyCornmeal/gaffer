@@ -13,6 +13,8 @@
   const methods = $derived(bt ? methodsIn(bt) : [])
   const h1 = $derived(bt ? bt.per_horizon['1'] : null)
   const cal = $derived(bt?.calibration?.overall ?? [])
+  // G20 — the same bins restricted to players who actually featured.
+  const calPlayed = $derived(bt?.calibration?.appeared ?? [])
   const retracted = $derived(bt ? withdrawn(bt) : [])
   const consequence = $derived(bt ? withdrawalConsequence(bt) : null)
   // EVERY candidate, not just the losing one.
@@ -582,6 +584,20 @@
             against this one.
           </span>
         </summary>
+        {#if calPlayed.length}
+          <!-- G20. Without this the middle of the Actual column dips and the
+               panel reads as the model being anti-correlated with itself. -->
+          <p class="px-3 pb-2 text-[11px] text-muted leading-relaxed">
+            <b>Actual</b> counts every player-gameweek, including the majority
+            where the player did not feature — a player correctly projected at
+            1.3 who is then left out scores 0. So the middle of that column
+            measures whether we knew <i>who would play</i>, not what they would
+            score, which is why it sags rather than climbing.
+            <b class="text-brand-light">Actual, if played</b> restricts the same
+            bins to players who got on the pitch, and is the like-for-like read
+            of the points model.
+          </p>
+        {/if}
         <div class="px-3 pb-3 overflow-x-auto">
           <table class="data w-full text-sm">
             <thead>
@@ -623,15 +639,22 @@
               <tr>
                 <th class="text-right">Predicted</th>
                 <th class="text-right">Actual</th>
+                {#if calPlayed.length}
+                  <th class="text-right">Actual, if played</th>
+                {/if}
                 <th class="text-right">Haul rate</th>
                 <th class="text-right">n</th>
               </tr>
             </thead>
             <tbody>
-              {#each cal as b}
+              {#each cal as b, i}
                 <tr>
                   <td class="text-right tabular-nums">{fmt(b.pred, 2)}</td>
                   <td class="text-right tabular-nums">{fmt(b.actual, 2)}</td>
+                  {#if calPlayed.length}
+                    <td class="text-right tabular-nums text-brand-light"
+                      >{calPlayed[i] ? fmt(calPlayed[i].actual, 2) : '—'}</td>
+                  {/if}
                   <td class="text-right tabular-nums text-muted">{fmt(b.haul_rate, 1)}%</td>
                   <td class="text-right tabular-nums text-muted2">{b.n}</td>
                 </tr>

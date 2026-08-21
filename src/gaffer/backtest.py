@@ -1039,9 +1039,28 @@ def run(
         },
         "per_horizon": per_horizon,
         "pre_season": pre_season,
+        # G20 — two curves, because the single one was a picture of the wrong
+        # thing. `overall` runs over every player-gameweek including the ~61%
+        # where nobody played, so its middle octiles go non-monotonic and the
+        # page reads as though the model is anti-correlated with itself. That
+        # dip is the minutes model (M9), rendered under a heading that says
+        # points model. `appeared` restricts to players who actually featured
+        # and isolates what the points model does once someone is on the pitch.
+        # Publishing both is the honest answer: the first is what a manager
+        # experiences, the second is what this panel claims to be about.
         "calibration": {
             "overall": _calibration(h1, "pred"),
+            "appeared": _calibration(h1[h1["minutes"] > 0], "pred"),
             "by_position": _calibration_by_position(h1, "pred"),
+            "note": (
+                "`overall` includes player-gameweeks with zero minutes, which "
+                "are the majority of the population. A player correctly "
+                "projected at 1.3 who is then left out scores 0, so the middle "
+                "of the curve measures whether we knew who would play, not "
+                "whether we knew what they would score. `appeared` conditions "
+                "on having played and is the like-for-like read of the points "
+                "model."
+            ),
         },
         "shipped_projection": {
             "model_version": projection.MODEL_VERSION,

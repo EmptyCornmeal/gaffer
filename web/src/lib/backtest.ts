@@ -122,7 +122,13 @@ export interface BacktestV6 {
   per_horizon: Record<string, HorizonBlock>
   /** Absent on an artifact whose season had no evaluable GW1. */
   pre_season?: PreSeasonBlock | Record<string, never>
-  calibration: { overall: CalBin[]; by_position?: Record<string, CalBin[]> }
+  calibration: {
+    overall: CalBin[]
+    /** G20 — restricted to player-gameweeks where the player featured. */
+    appeared?: CalBin[]
+    by_position?: Record<string, CalBin[]>
+    note?: string
+  }
   limitations: string[]
   generated_at: string
   baselines?: Record<string, Record<string, number | string>>
