@@ -1,10 +1,9 @@
 """Chronological fitting and evaluation for fixture-strength parameters (T-12).
 
-Selection never touches the reporting period:
-
-  train      2022-23   parameter sweep
-  validation 2023-24   selection
-  test       2024-25   reported once, untouched by selection
+Selection never touches the reporting period. The three seasons are **derived
+from** ``backtest.SEASON_SPLIT`` rather than restated here — a second copy is
+exactly how this module and the backtest drifted apart (G19), and how it came to
+name 2022-23 as its training season while also excluding it.
 
 ``STRENGTH_GAMMA`` / ``STRENGTH_CLAMP`` are module globals read at call time, so
 a sweep patches them for the duration of one evaluation and restores them. This
@@ -29,9 +28,12 @@ import numpy as np
 from gaffer import backtest, histdata
 from gaffer.model import features as F
 
-TRAIN_SEASON = "2022-23"
-VALIDATION_SEASON = "2023-24"
-TEST_SEASON = "2024-25"
+#: G19 — derived, never restated. `backtest.SEASON_SPLIT` is the single source
+#: of truth for which season plays which role; these three names exist only so
+#: the sweep reads legibly.
+TRAIN_SEASON = backtest.SEASON_SPLIT["train"][0]
+VALIDATION_SEASON = backtest.SEASON_SPLIT["select"]
+TEST_SEASON = backtest.SEASON_SPLIT["test"]
 
 #: The audit's diagnostic target for multiplier dispersion. A guide, not a goal
 #: to optimise directly — the selection criterion is out-of-sample rank corr.
@@ -116,12 +118,16 @@ def bootstrap_ci(season: str, col: str = "pred", n_boot: int = 200,
 
 CLAMP_GRID = ((0.5, 1.85), (0.55, 1.60), (0.60, 1.50), (0.45, 2.20), (0.40, 2.50))
 
-#: 2022-23 is excluded from fitting. The dataset has no 2021-22 file, so every
-#: prior-season ``base_*`` input is zero for that season and the model runs in a
-#: regime it never occupies live (production always has a previous season). Its
-#: early-gameweek rank correlations are strongly negative as a result; using it
-#: to select parameters would fit that artefact.
-EXCLUDED_SEASONS = {TRAIN_SEASON: "no prior-season baseline available in the dataset"}
+#: G19 — taken from `backtest.SEASON_SPLIT["excluded"]`, reasons included.
+#:
+#: The previous value here was wrong twice over. It justified excluding 2022-23
+#: with *"the dataset has no 2021-22 file"* — `data/history/merged_gw_2021-22.csv`
+#: has been on disk since 2026-08-15, so that was simply false; the real reason is
+#: G-Q, that 2022-23's `expected_goals` and `expected_assists` are identically
+#: zero for GW1-15. And because it was keyed on `TRAIN_SEASON`, it excluded
+#: whichever season this module was training on — a contradiction that survived
+#: only because nothing imports this module at runtime.
+EXCLUDED_SEASONS = dict(backtest.SEASON_SPLIT.get("excluded") or {})
 
 
 def split_evaluate(season: str, first_gw: int, last_gw: int) -> dict[str, Any]:

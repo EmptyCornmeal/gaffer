@@ -551,3 +551,42 @@ def test_new_rows_are_stamped_with_the_databases_season_not_the_constant(
     # helper — so the two sides of the loop cannot end up in different seasons.
     assert review.load(conn, entry_id=1, event=1) is None
     assert snap is not None
+
+
+# --- G19: one source of truth for which season plays which role -------------
+
+def test_fitting_derives_its_split_from_the_backtest():
+    """`gaffer.fitting` restated the split and the two drifted apart.
+
+    It named 2022-23/2023-24/2024-25 while `backtest.SEASON_SPLIT` had moved to
+    2023-24/2024-25/2025-26, and `docs/TRACEABILITY.md` recorded the
+    disagreement rather than resolving it. Deriving is the fix; this is what
+    stops a future edit restating it.
+    """
+    from gaffer import backtest, fitting
+
+    assert fitting.TRAIN_SEASON == backtest.SEASON_SPLIT["train"][0]
+    assert fitting.VALIDATION_SEASON == backtest.SEASON_SPLIT["select"]
+    assert fitting.TEST_SEASON == backtest.SEASON_SPLIT["test"]
+
+
+def test_fitting_does_not_exclude_the_season_it_trains_on():
+    """`EXCLUDED_SEASONS` was keyed on `TRAIN_SEASON`, so the module excluded
+    whichever season it was training on. It survived because nothing imports
+    this module at runtime."""
+    from gaffer import fitting
+
+    assert fitting.TRAIN_SEASON not in fitting.EXCLUDED_SEASONS
+    assert fitting.VALIDATION_SEASON not in fitting.EXCLUDED_SEASONS
+    assert fitting.TEST_SEASON not in fitting.EXCLUDED_SEASONS
+
+
+def test_the_excluded_seasons_give_their_real_reason():
+    """The old reason — "the dataset has no 2021-22 file" — was false: the file
+    has been on disk since 2026-08-15. The real reason for 2022-23 is G-Q."""
+    from gaffer import fitting
+
+    assert "2022-23" in fitting.EXCLUDED_SEASONS
+    why = fitting.EXCLUDED_SEASONS["2022-23"]
+    assert "no 2021-22 file" not in why
+    assert "G-Q" in why or "expected_goals" in why
