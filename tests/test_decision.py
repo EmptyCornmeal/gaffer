@@ -286,3 +286,54 @@ def test_every_action_is_in_the_declared_vocabulary():
     for a in (decision.ACTION_TRANSFER, decision.ACTION_ROLL,
               decision.ACTION_TOO_CLOSE, decision.ACTION_UNAVAILABLE):
         assert a in decision.ALL_ACTIONS
+
+
+# --------------------------------------------------------------------------
+# The GW2 2026-27 regression: a big mean from a rare tail bought a -20 hit
+# --------------------------------------------------------------------------
+
+def test_a_horizon_mean_cannot_buy_a_hit_that_loses_this_gameweek():
+    """The exact numbers Gaffer published on 2026-08-21, which were indefensible.
+
+    It said "Make this transfer (-20)" at high confidence for a move worth -12.4
+    points in the only week it projects well, ahead in 13% of 2000 scenarios,
+    justified entirely by a horizon mean the same artifact calls "materially
+    weaker" than its one-week numbers.
+    """
+    c = decision.Comparison(
+        move_expected=40.99, hold_expected=53.4, delta=-12.41,
+        delta_ci95=(-12.94, -11.89), p_move_beats_hold=0.133, n_sims=2000,
+        short_term_delta=-12.41, horizon_delta=15.52, hit_cost=20)
+    action, reason = decision.classify(c)
+    assert action != decision.ACTION_TRANSFER, (
+        "a move losing 12.4 points now, winning 13% of the time, must never be "
+        "published as an action"
+    )
+    assert "13%" in reason
+
+
+def test_the_waiver_still_needs_the_edge_to_be_present_not_promised():
+    """A decisive HORIZON mean with a poor this-week delta is not decisive."""
+    c = decision.Comparison(
+        move_expected=50.0, hold_expected=50.0, delta=0.1,
+        delta_ci95=(-0.4, 0.6), p_move_beats_hold=0.20, n_sims=4000,
+        short_term_delta=0.1, horizon_delta=12.0, hit_cost=0)
+    assert decision.classify(c)[0] != decision.ACTION_TRANSFER
+
+
+def test_the_waiver_survives_for_the_case_it_was_written_for():
+    """Wide distribution, large PRESENT gain, no hit — still an action."""
+    c = decision.Comparison(
+        move_expected=60.0, hold_expected=50.0, delta=10.0,
+        delta_ci95=(-2.0, 22.0), p_move_beats_hold=0.52, n_sims=4000,
+        short_term_delta=10.0, horizon_delta=10.0, hit_cost=0)
+    assert decision.classify(c)[0] == decision.ACTION_TRANSFER
+
+
+def test_nothing_is_waived_below_a_coin_flip():
+    """Same large present edge, but it loses more often than it wins."""
+    c = decision.Comparison(
+        move_expected=60.0, hold_expected=50.0, delta=10.0,
+        delta_ci95=(-2.0, 22.0), p_move_beats_hold=0.49, n_sims=4000,
+        short_term_delta=10.0, horizon_delta=10.0, hit_cost=0)
+    assert decision.classify(c)[0] != decision.ACTION_TRANSFER

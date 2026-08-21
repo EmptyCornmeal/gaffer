@@ -91,6 +91,12 @@ THRESHOLD_STATUS = {
 #: distribution.
 DECISIVE_POINTS = 6.0
 
+# Below this, nothing is waived. The decisive shortcut exists to tolerate a WIDE
+# distribution around a large mean, not to green-light a move that loses more
+# often than it wins: at 0.50 the two are the same coin, and under it the move is
+# simply worse than holding most of the time, however fat its tail.
+WAIVER_MIN_PROBABILITY = 0.50
+
 
 @dataclass
 class Comparison:
@@ -246,16 +252,33 @@ def classify(
     Uses the *horizon* delta as the decision quantity when a move is worth more
     later than now — a transfer bought for a fixture swing three weeks out is a
     real move — but the probability gate is always the next gameweek, which is
-    the only horizon Gaffer projects well.
+    the only horizon Gaffer projects well, and it applies to every path through
+    this function. Nothing clears the bar on mean alone.
     """
     # The best case for the move across the timescales we can actually measure.
     # An absent horizon contributes nothing rather than a zero floor.
     best = cmp_.delta if cmp_.horizon_delta is None else max(
         cmp_.delta, cmp_.horizon_delta)
-    if best >= decisive:
+
+    # The decisive waiver exists so a genuinely large edge is not blocked by a
+    # wide distribution around it. It is deliberate — but as written it tested
+    # `best`, i.e. max(this gameweek, horizon), and skipped the probability gate
+    # entirely.
+    #
+    # At GW2 2026-27 that combination published "(-20) — make this transfer" at
+    # high confidence for a move worth -12.4 points in the only week Gaffer
+    # projects well, ahead in 13% of 2000 scenarios, on the strength of a
+    # horizon mean the same artifact calls "materially weaker".
+    #
+    # So the waiver now requires the edge to be decisive THIS gameweek, and
+    # refuses to waive a losing bet. A wide distribution is what it was for; a
+    # move that loses more often than it wins is not "wide", it is bad.
+    decisive_now = cmp_.delta >= decisive
+    if decisive_now and cmp_.p_move_beats_hold >= WAIVER_MIN_PROBABILITY:
         return ACTION_TRANSFER, (
-            f"the move projects +{best:.1f} points over holding — far past the "
-            f"{min_points:.0f}-point bar, so the distribution is not the question")
+            f"the move projects {cmp_.delta:+.1f} points this gameweek — far "
+            f"past the {min_points:.0f}-point bar, and ahead in "
+            f"{100 * cmp_.p_move_beats_hold:.0f}% of scenarios")
     if best < min_points:
         if best <= -min_points:
             return ACTION_ROLL, (
