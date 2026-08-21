@@ -157,13 +157,35 @@
   }
 
   // ---- derived analytics ------------------------------------------------
-  const gwCount = $derived(Math.max(0, ...[...histories.values()].map((h) => h.length)))
+  // The gameweek in progress owns a column even when FPL's history has no row
+  // for it yet, which is the normal state right up until it is scored.
+  const liveSlot = $derived(hasLive && liveGw ? liveGw - 1 : -1)
+  const gwCount = $derived(Math.max(
+    0,
+    ...[...histories.values()].map((h) => h.length),
+    liveSlot >= 0 ? liveSlot + 1 : 0,
+  ))
   const gwLabels = $derived(Array.from({ length: gwCount }, (_, i) => `GW${i + 1}`))
   const hasHistory = $derived(gwCount > 0)
 
-  function seriesFor(pick: (g: GwRow) => number, invert = false) {
-    // top 10 by total + always include you, coloured consistently
-    const ranked = [...rows].filter((r) => (histories.get(r.entry)?.length ?? 0) > 0)
+  /**
+   * @param pick   what to read from a scored gameweek row
+   * @param invert store the value negated, so "up" means "better" (rank)
+   * @param live   how the in-progress gameweek contributes: 'gw' is this
+   *               week's points on their own, 'cumulative' adds them to the
+   *               running total, and null means the series has no live form
+   *               (there is no such thing as a live overall rank).
+   */
+  function seriesFor(
+    pick: (g: GwRow) => number,
+    invert = false,
+    live: 'gw' | 'cumulative' | null = null,
+  ) {
+    // Anyone with history OR a live score — mid-gameweek the second is the only
+    // one anybody has, and filtering on history alone empties the chart.
+    const ranked = [...rows].filter(
+      (r) => (histories.get(r.entry)?.length ?? 0) > 0 || liveByEntry.has(r.entry),
+    )
     const shown = ranked.slice(0, 10)
     if (myEntry && !shown.some((r) => r.entry === myEntry)) {
       // Look in `rows`, not `ranked`. `ranked` has already dropped anyone whose
@@ -176,19 +198,37 @@
     return shown.map((r, i) => {
       const h = histories.get(r.entry) ?? []
       const you = r.entry === myEntry
+      const values: (number | null)[] = Array.from({ length: gwCount }, () => null)
+      h.forEach((g, gi) => {
+        if (gi < gwCount) values[gi] = invert ? -pick(g) : pick(g)
+      })
+      if (live && liveSlot >= 0) {
+        const pts = liveByEntry.get(r.entry)
+        if (pts != null) {
+          // Cumulative means "everything before this week, plus this week". The
+          // history row for the live gameweek is absent or zero, so the running
+          // total comes from the last SCORED week rather than from it.
+          const prior = live === 'cumulative'
+            ? (h[liveSlot - 1]?.total_points ?? 0)
+            : 0
+          values[liveSlot] = prior + pts
+        }
+      }
       return {
         key: r.entry,
         name: r.player_name,
         color: you ? YOU : PALETTE[i % PALETTE.length],
         you,
-        values: h.map((g) => (invert ? -pick(g) : pick(g))),
+        values,
       }
     })
   }
-  const cumSeries = $derived(seriesFor((g) => g.total_points))
-  const gwSeries = $derived(seriesFor((g) => g.points))
-  // overall rank (invert so "up" on the chart = better rank)
-  const rankSeries = $derived(seriesFor((g) => g.overall_rank, true))
+  const cumSeries = $derived(seriesFor((g) => g.total_points, false, 'cumulative'))
+  const gwSeries = $derived(seriesFor((g) => g.points, false, 'gw'))
+  // Overall rank (inverted so "up" on the chart = better rank). No live form:
+  // FPL publishes no rank until the gameweek is scored, and inventing one from
+  // league position would be a different number wearing the same name.
+  const rankSeries = $derived(seriesFor((g) => g.overall_rank, true, null))
 
   const chartSeries = $derived(
     chartMode === 'cumulative' ? cumSeries : chartMode === 'gw' ? gwSeries : rankSeries,
@@ -212,19 +252,32 @@
   type Stat = { entry: number; name: string; team: string; total: number; gw: number; best: number; form: number; hits: number; bench: number; wins: number }
   const stats = $derived.by<Stat[]>(() => {
     if (!hasHistory) return []
-    // GW winners: highest points each GW
+    // GW winners: highest points each GW.
+    //
+    // `bestPts` starts at 0, not -1, and a gameweek is only awarded if someone
+    // actually outscored that. At -1 the first row in `rows` won every gameweek
+    // in which everybody sat on zero — which is every gameweek until FPL scores
+    // it — so a live gameweek showed a winner picked by list order.
     const wins = new Map<number, number>()
     for (let gw = 0; gw < gwCount; gw++) {
       let bestEntry = -1
-      let bestPts = -1
+      let bestPts = 0
+      let tied = false
       for (const r of rows) {
         const g = histories.get(r.entry)?.[gw]
-        if (g && g.points > bestPts) {
+        if (!g) continue
+        if (g.points > bestPts) {
           bestPts = g.points
           bestEntry = r.entry
+          tied = false
+        } else if (g.points === bestPts && bestEntry >= 0) {
+          tied = true
         }
       }
-      if (bestEntry >= 0) wins.set(bestEntry, (wins.get(bestEntry) ?? 0) + 1)
+      // A tie at the top is not a win for the one who sorted first.
+      if (bestEntry >= 0 && bestPts > 0 && !tied) {
+        wins.set(bestEntry, (wins.get(bestEntry) ?? 0) + 1)
+      }
     }
     return rows
       .map((r) => {
