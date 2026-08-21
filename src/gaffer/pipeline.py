@@ -196,15 +196,20 @@ def run(
     except Exception as exc:                                  # noqa: BLE001
         log["ledger"] = f"FAILED {type(exc).__name__}: {exc}"
 
-    # T-22: live gameweek. Between deadlines this is an honest "not started".
+    # T-22: live gameweek. This follows the football, not the decision: once a
+    # deadline passes, from_gw is already the NEXT event while the current one
+    # is still being played. Pre-season nothing is in flight, so fall back to
+    # the projection event and let the artifact say "not started" out loud.
     live_state = None
     if not skip_strategy:
         with FplClient() as client:
-            live_state = _build_live(conn, client, settings, from_gw, now,
+            live_gw = client.live_event(now) or from_gw
+            live_state = _build_live(conn, client, settings, live_gw, now,
                                      generated_at)
     log["live"] = (
         "skipped" if live_state is None
-        else f"available={live_state.get('available')} "
+        else f"gw{live_state.get('gameweek')} "
+             f"available={live_state.get('available')} "
              f"({live_state.get('unavailable_reason') or 'scored'})")
 
     # T-23: review of the last finished gameweek, if one exists and a snapshot

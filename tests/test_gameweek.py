@@ -161,3 +161,37 @@ def test_status_vocabulary_is_partitioned():
     assert G.ALL_STATUSES == G.STATUSES_WITH_SQUAD | G.STATUSES_WITHOUT_SQUAD
     assert G.STATUS_LOADED in G.STATUSES_WITH_SQUAD
     assert G.STATUS_NO_PUBLIC_SQUAD_YET in G.STATUSES_WITHOUT_SQUAD
+
+
+# --------------------------------------------------------------------------
+# live_event - follows the football, not the decision
+# --------------------------------------------------------------------------
+
+def test_no_live_event_before_the_first_deadline():
+    """A live view before GW1 locks would be a fiction, not an empty score."""
+    assert G.live_event(SEASON, GW1_DL - timedelta(minutes=1)) is None
+
+
+def test_live_event_is_the_locked_gameweek_not_the_next_one():
+    """The regression: at GW1 kickoff the decision is GW2, the football is GW1."""
+    now = GW1_DL + timedelta(minutes=30)
+    assert G.projection_event(SEASON, now) == 2
+    assert G.live_event(SEASON, now) == 1
+
+
+def test_live_event_holds_through_the_whole_gameweek():
+    """Still GW1 three days later: GW1 unfinished, GW2 not yet locked."""
+    assert G.live_event(SEASON, GW1_DL + timedelta(days=3)) == 1
+
+
+def test_live_event_advances_once_the_next_deadline_passes():
+    assert G.live_event(played(1), GW2_DL + timedelta(minutes=1)) == 2
+
+
+def test_finished_gameweek_still_reports_its_own_scores():
+    """After GW1 finishes and before GW2 locks, live still means GW1."""
+    assert G.live_event(played(1), GW1_DL + timedelta(days=4)) == 1
+
+
+def test_describe_includes_the_live_event():
+    assert G.describe(SEASON, GW1_DL + timedelta(minutes=30))["live_event"] == 1

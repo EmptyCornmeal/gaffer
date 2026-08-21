@@ -120,6 +120,14 @@ class FplClient:
         """
         return gameweek.readable_squad_event(self.events(), now)
 
+    def live_event(self, now: datetime | None = None) -> int | None:
+        """The event being played right now, or None before the first deadline.
+
+        NOT :meth:`projection_event` - once a deadline passes those two diverge
+        for the whole gameweek, and the live view must follow the football.
+        """
+        return gameweek.live_event(self.events(), now)
+
     def current_gw(self) -> int:
         """Deprecated alias for :meth:`projection_event`.
 

@@ -85,6 +85,42 @@ def projection_event(events: Iterable[dict[str, Any]], now: datetime | None = No
     return int(evs[-1]["id"])
 
 
+def live_event(
+    events: Iterable[dict[str, Any]], now: datetime | None = None
+) -> int | None:
+    """The event whose football is actually being played - the one to track live.
+
+    The highest event whose deadline has passed and which the API has not yet
+    flagged ``finished``. This is deliberately NOT :func:`projection_event`: the
+    instant GW1's deadline passes, decisions move to GW2 while GW1's ten matches
+    are still to be played. Tracking the projection event would blank the live
+    view for the entire gameweek.
+
+    Returns ``None`` before the season's first deadline, when no event has been
+    played and a live view would be a fiction.
+    """
+    evs = _sorted_events(events)
+    if not evs:
+        return None
+    now = now or datetime.now(UTC)
+    passed = [
+        ev for ev in evs
+        if (dl := parse_deadline(ev.get("deadline_time"))) is not None and dl <= now
+    ]
+    if not passed:
+        # No usable deadlines: fall back to the API's own notion of in-flight.
+        for ev in evs:
+            if ev.get("is_current"):
+                return int(ev["id"])
+        return None
+    for ev in reversed(passed):
+        if not ev.get("finished"):
+            return int(ev["id"])
+    # Everything played out: the most recent finished event is still the one
+    # whose scores a reader means by "live".
+    return int(passed[-1]["id"])
+
+
 def readable_squad_event(
     events: Iterable[dict[str, Any]], now: datetime | None = None
 ) -> int | None:
@@ -119,11 +155,12 @@ def last_finished_event(events: Iterable[dict[str, Any]]) -> int | None:
 
 
 def describe(events: Iterable[dict[str, Any]], now: datetime | None = None) -> dict[str, Any]:
-    """All three resolutions at once, for logging and metadata."""
+    """Every resolution at once, for logging and metadata."""
     now = now or datetime.now(UTC)
     return {
         "projection_event": projection_event(events, now),
         "squad_source_event": readable_squad_event(events, now),
+        "live_event": live_event(events, now),
         "last_finished_event": last_finished_event(events),
         "resolved_at": now.isoformat(timespec="seconds"),
     }

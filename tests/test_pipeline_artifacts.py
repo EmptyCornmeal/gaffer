@@ -116,6 +116,9 @@ class StubClient:
     def projection_event(self, now=None):
         return 1
 
+    def live_event(self, now=None):
+        return 1
+
     def entry_history(self, entry_id):
         return {"chips": [], "current": []}
 

@@ -136,6 +136,9 @@ class ScenarioClient:
     def projection_event(self, now=None):
         return gameweek.projection_event(_events(self.finished_upto), now)
 
+    def live_event(self, now=None):
+        return gameweek.live_event(_events(self.finished_upto), now)
+
     def entry_transfers(self, entry_id):
         if isinstance(self.transfers, Exception):
             raise self.transfers
