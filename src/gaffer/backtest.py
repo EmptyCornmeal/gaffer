@@ -489,11 +489,36 @@ def _decision_metrics(df: pd.DataFrame, col: str) -> dict[str, Any]:
 
 
 def _transfer_regret(df: pd.DataFrame, col: str) -> dict[str, Any]:
-    """One free transfer per week, chosen on projection, vs holding the squad.
+    """One free transfer per week, chosen on projection, versus holding.
 
-    A deliberately simple sequence: it measures whether the projection's transfer
-    advice beats doing nothing, which is the cheapest honest test of squad
-    continuity that this dataset supports.
+    G18 -- this had three faults and each one inflated it.
+
+    **The swap enforced nothing.** It took the worst projected player out and
+    the best projected same-position player in, checking neither budget nor club
+    limit nor whether the money existed. Measured, the active arm finished the
+    season at £107.7m against a £100.0m budget: a squad nobody could field, so
+    its points were not a score anybody could have had.
+
+    **The arms scored different numbers of gameweeks.** Each one independently
+    skipped a week it could not field eleven from (``continue``), and the totals
+    were then differenced anyway while ``gameweeks`` reported ``len(gws) - 1``
+    regardless. The arms actually scored 35 and 36 weeks and the artifact
+    published 37.
+
+    **And the passive arm rotted.** Never replacing anyone, it decayed to 20.6
+    points a gameweek -- a figure no real FPL XI produces -- so most of the
+    "gain" was one arm falling apart rather than the other improving.
+
+    What made it undeniable: the *same code* reported ``gaffer.gain: -24.0`` on
+    2024-25 and ``+727.0`` on 2025-26. A metric that swings from "a transfer a
+    week costs you 24 points a season" to "it gains you 727" between adjacent
+    seasons is not measuring transfer value.
+
+    Now: transfers respect budget, club limit and the money in the bank; both
+    arms are scored only on gameweeks where **both** can field a legal eleven;
+    and that count is what gets published. The sell price is the player's
+    current value -- this harness does not track purchase prices, which is a
+    simplification and is recorded in ``limitations`` rather than hidden.
     """
     gws = sorted(df["target_gw"].unique())
     if len(gws) < 3:
@@ -502,40 +527,80 @@ def _transfer_regret(df: pd.DataFrame, col: str) -> dict[str, Any]:
     squad = _select_squad(first, col)
     if squad is None:
         return {}
-    held = {first.loc[i, "element"] for i in squad}
+
+    held = {int(first.loc[i, "element"]) for i in squad}
+    spent = float(first.loc[squad, "value"].sum())
+    bank = float(BUDGET) - spent
+
     active, passive = set(held), set(held)
-    active_pts, passive_pts = 0.0, 0.0
+    active_pts = passive_pts = 0.0
+    scored = 0
+    swaps = 0
+    blocked = {"budget": 0, "club": 0}
 
     for gw in gws[1:]:
         g = df[df["target_gw"] == gw].dropna(subset=["value", "team_id"])
         by_el = g.set_index("element")
-        for name, holding in (("a", active), ("p", passive)):
-            avail = [e for e in holding if e in by_el.index]
-            if len(avail) < 11:
-                continue
-            sub = by_el.loc[avail]
-            xi = _best_xi(sub.reset_index().set_index("element"), avail, col)
-            pts = float(by_el.loc[xi, "actual"].sum())
-            if name == "a":
-                active_pts += pts
-            else:
-                passive_pts += pts
-        # One transfer for the active squad: best projected in for worst out.
+
+        a_avail = [e for e in active if e in by_el.index]
+        p_avail = [e for e in passive if e in by_el.index]
+        # Both arms or neither. Differencing totals built from different
+        # gameweeks is what published a 37 that neither arm ever played.
+        if len(a_avail) >= 11 and len(p_avail) >= 11:
+            indexed = by_el.reset_index().set_index("element")
+            a_xi = _best_xi(indexed, a_avail, col)
+            p_xi = _best_xi(indexed, p_avail, col)
+            active_pts += float(by_el.loc[a_xi, "actual"].sum())
+            passive_pts += float(by_el.loc[p_xi, "actual"].sum())
+            scored += 1
+
+        # One free transfer for the active squad, and it has to be legal.
         cand = by_el[~by_el.index.isin(active)]
         mine = by_el[by_el.index.isin(active)]
-        if not cand.empty and not mine.empty:
-            out_el = mine[col].idxmin()
-            same_pos = cand[cand["pos"] == mine.loc[out_el, "pos"]]
-            if not same_pos.empty:
-                in_el = same_pos[col].idxmax()
-                if same_pos.loc[in_el, col] > mine.loc[out_el, col]:
-                    active.discard(out_el)
-                    active.add(in_el)
+        if cand.empty or mine.empty:
+            continue
+        out_el = mine[col].idxmin()
+        out_pos = mine.loc[out_el, "pos"]
+        out_price = float(mine.loc[out_el, "value"])
+        same_pos = cand[cand["pos"] == out_pos].sort_values(col, ascending=False)
+        if same_pos.empty:
+            continue
+
+        clubs: dict[Any, int] = {}
+        for e in active:
+            if e in by_el.index and e != out_el:
+                c = by_el.loc[e, "team_id"]
+                clubs[c] = clubs.get(c, 0) + 1
+
+        for in_el, row in same_pos.iterrows():
+            if float(row[col]) <= float(mine.loc[out_el, col]):
+                break  # sorted, so nothing further is an improvement either
+            in_price = float(row["value"])
+            if bank + out_price < in_price:
+                blocked["budget"] += 1
+                continue
+            if clubs.get(row["team_id"], 0) + 1 > CLUB_LIMIT:
+                blocked["club"] += 1
+                continue
+            active.discard(out_el)
+            active.add(int(in_el))
+            bank += out_price - in_price
+            swaps += 1
+            break
+
+    if scored < 2:
+        return {}
     return {
         "with_transfers": round(active_pts, 1),
         "hold_squad": round(passive_pts, 1),
         "gain": round(active_pts - passive_pts, 1),
-        "gameweeks": len(gws) - 1,
+        "gameweeks": scored,
+        "transfers_made": swaps,
+        "transfers_blocked": blocked,
+        "bank_remaining_tenths": round(bank, 1),
+        "basis": ("one free transfer per gameweek, budget/club-limit/bank "
+                  "enforced, both arms scored only on gameweeks where both "
+                  "could field a legal XI; sell price is current value"),
     }
 
 
