@@ -121,7 +121,11 @@
       style="padding-bottom: calc(var(--gaffer-bottomnav) + env(safe-area-inset-bottom) + 1rem);"
     >
       {#if error}
-        <div class="card p-4 text-red text-sm max-w-lg mx-auto">Couldn't load data — run the pipeline so <code>data/*.json</code> is served.<div class="mt-1 text-muted2">{error}</div></div>
+        <!-- This is read by whoever opened the published site, who cannot run
+             anything. The old copy said "run the pipeline so data/*.json is
+             served", which is an instruction to the one person who does not
+             need it. -->
+        <div class="card p-4 text-red text-sm max-w-lg mx-auto">Couldn't load the latest data. The published files did not come back — usually a passing problem, so try reloading in a moment.<div class="mt-1 text-muted2">{error}</div></div>
       {:else if !bundle}
         <div class="flex flex-col items-center justify-center py-32 text-muted gap-3" role="status" aria-live="polite">
           <div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
