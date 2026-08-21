@@ -165,14 +165,43 @@ export interface ModelCandidate {
 export interface ModelCandidates {
   evaluation_version?: string
   outcome?: string
+  /** U38 — present in every artifact and previously undeclared, so a consumer
+   *  reading them got `any` and no help from the compiler. */
+  status?: string
+  measured_on_season?: string
   protocol?: string
   heuristic_reference?: {
     xi_points_per_gw?: Record<string, number>
     captain_accuracy_pct_h1?: number
     captain_regret_per_gw_h1?: number
   }
+  /** What the shipped model scores on the season the candidates were NOT run
+   *  on. Deliberately unpaired — see the artifact's own `note`. */
+  current_split_reference?: {
+    measured_on_season?: string
+    measured_at_model_version?: string
+    note?: string
+    xi_points_per_gw?: Record<string, number>
+    captain_points_per_gw_h1?: number
+    captain_accuracy_pct_h1?: number
+    captain_regret_per_gw_h1?: number
+    rank_corr?: Record<string, number>
+    mae?: Record<string, number>
+    rank_corr_and_mae?: string
+  }
   candidates: ModelCandidate[]
   not_ruled_out?: string
+  /** What running the rejected candidate actually cost. */
+  cost?: {
+    fit_seconds?: number
+    predict_seconds?: number
+    train_rows?: number
+    predict_rows?: number
+    [k: string]: unknown
+  }
+  /** Paths deleted when the ML line was closed, kept so the decision is
+   *  auditable rather than merely asserted. */
+  removed?: string[]
 }
 
 export type BacktestState =
