@@ -479,6 +479,18 @@ def enrich_history(conn: sqlite3.Connection, client: FplClient) -> int:
     # DEFCON evidence" and answers with a positional average, for exactly the
     # ball-winners the column exists to protect. NULL is "never read" and 0.0 is
     # "read, and none", so each player is selected once and then stops matching.
+    # G28 — the `price>=45 OR selected_by_pct>=0.5` gate is deliberate, and its
+    # consequence is asymmetric in a way worth stating rather than rediscovering.
+    # It exists because `element_summary` is one HTTP call *per player* and the
+    # cheap-and-unowned tail is most of the league. Those players therefore never
+    # receive a `base_defcon90` and fall through to the positional prior.
+    #
+    # That is the right answer for them — a 4.0 defender nobody owns has no
+    # prior-season signal worth a round trip, and the prior is what he would
+    # regress to anyway. The asymmetry is only a problem if someone reads a
+    # missing `base_defcon90` as "measured and found to be zero". It is not: it
+    # means "never looked". `base_defcon90 IS NULL` and `0.0` are distinct
+    # states for exactly this reason, per the note above.
     targets = conn.execute(
         "SELECT id FROM players WHERE (price>=45 OR selected_by_pct>=0.5) "
         "AND (base_minutes=0 OR base_defcon90 IS NULL)"
