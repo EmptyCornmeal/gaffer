@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 1,
-  "as_of": "2026-08-22T13:51:20+00:00",
+  "as_of": "2026-08-22T14:58:11+00:00",
   "fixtures": [
     {
       "id": 1,
@@ -28,8 +28,8 @@
       "event": 1,
       "team_h": 9,
       "team_a": 8,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "half_time",
+      "minutes": 45,
       "kickoff": "2026-08-22T14:00:00+00:00",
       "bonus_final": false
     },
@@ -48,8 +48,8 @@
       "event": 1,
       "team_h": 12,
       "team_a": 20,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "half_time",
+      "minutes": 45,
       "kickoff": "2026-08-22T14:00:00+00:00",
       "bonus_final": false
     },
@@ -58,8 +58,8 @@
       "event": 1,
       "team_h": 18,
       "team_a": 13,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "half_time",
+      "minutes": 45,
       "kickoff": "2026-08-22T14:00:00+00:00",
       "bonus_final": false
     },
@@ -108,7 +108,8 @@
     "total": 10,
     "by_state": {
       "awaiting_bonus": 2,
-      "scheduled": 8
+      "half_time": 3,
+      "scheduled": 5
     },
     "all_finished": false,
     "bonus_final": false
@@ -118,17 +119,17 @@
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 26,
+    "confirmed": 27,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
-    "current": 26,
-    "projected": 26.0,
+    "current": 27,
+    "projected": 27.0,
     "bench_points": 1,
-    "players_played": 7,
-    "players_yet_to_play": 7,
+    "players_played": 9,
+    "players_yet_to_play": 5,
     "hits": 0,
     "season_total_before": 0,
-    "season_total_projected": 26.0,
+    "season_total_projected": 27.0,
     "autosubs": {
       "xi": [
         1,
@@ -215,16 +216,16 @@
     },
     {
       "id": 346,
-      "minutes": 0,
+      "minutes": 45,
       "confirmed": 0,
       "provisional": 0,
       "predicted": 0.0,
       "total": 0.0,
-      "played": false,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "half_time"
       ],
       "name": "Calvert-Lewin",
       "pos": "FWD",
@@ -323,16 +324,16 @@
     },
     {
       "id": 542,
-      "minutes": 0,
-      "confirmed": 0,
+      "minutes": 45,
+      "confirmed": 1,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
+      "total": 1.0,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "half_time"
       ],
       "name": "E.Le Fée",
       "pos": "MID",
@@ -404,7 +405,7 @@
       "finished": false,
       "yet_to_play": true,
       "fixture_states": [
-        "scheduled"
+        "half_time"
       ],
       "name": "Hughes",
       "pos": "MID",
@@ -435,92 +436,92 @@
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 26,
-      "projected": 26.0,
-      "gw_points": 26,
-      "yet_to_play": 7,
+      "current": 27,
+      "projected": 27.0,
+      "gw_points": 27,
+      "yet_to_play": 5,
       "provisional_position": 1
     },
     {
       "entry_id": 1066421,
       "name": "Myles Colling",
       "you": false,
-      "current": 26,
-      "projected": 26.0,
-      "gw_points": 26,
-      "yet_to_play": 7,
+      "current": 27,
+      "projected": 27.0,
+      "gw_points": 27,
+      "yet_to_play": 5,
       "provisional_position": 2
-    },
-    {
-      "entry_id": 7419334,
-      "name": "Dylan Llyr Morgan",
-      "you": false,
-      "current": 24,
-      "projected": 24.0,
-      "gw_points": 24,
-      "yet_to_play": 9,
-      "provisional_position": 3
     },
     {
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "you": false,
-      "current": 24,
-      "projected": 24.0,
-      "gw_points": 24,
-      "yet_to_play": 10,
-      "provisional_position": 4
+      "current": 27,
+      "projected": 27.0,
+      "gw_points": 27,
+      "yet_to_play": 7,
+      "provisional_position": 3
     },
     {
-      "entry_id": 1711764,
-      "name": "Hakan Duzel",
+      "entry_id": 7419334,
+      "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 20,
-      "projected": 20.0,
-      "gw_points": 20,
-      "yet_to_play": 9,
-      "provisional_position": 5
+      "current": 26,
+      "projected": 26.0,
+      "gw_points": 26,
+      "yet_to_play": 7,
+      "provisional_position": 4
     },
     {
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 20,
-      "projected": 20.0,
-      "gw_points": 20,
-      "yet_to_play": 12,
+      "current": 23,
+      "projected": 23.0,
+      "gw_points": 23,
+      "yet_to_play": 10,
+      "provisional_position": 5
+    },
+    {
+      "entry_id": 1711764,
+      "name": "Hakan Duzel",
+      "you": false,
+      "current": 21,
+      "projected": 21.0,
+      "gw_points": 21,
+      "yet_to_play": 8,
       "provisional_position": 6
     },
     {
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 18,
-      "projected": 18.0,
-      "gw_points": 18,
-      "yet_to_play": 11,
+      "current": 21,
+      "projected": 21.0,
+      "gw_points": 21,
+      "yet_to_play": 7,
       "provisional_position": 7
     },
     {
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "you": false,
-      "current": 4,
-      "projected": 4.0,
-      "gw_points": 4,
-      "yet_to_play": 11,
+      "current": 5,
+      "projected": 5.0,
+      "gw_points": 5,
+      "yet_to_play": 10,
       "provisional_position": 8
     }
   ],
   "largest_swing": null,
   "separation": {
-    "confirmed": 26,
+    "confirmed": 27,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-22T13:51:20+00:00",
+  "generated_at": "2026-08-22T14:58:11+00:00",
   "season": "2026-27"
 }
