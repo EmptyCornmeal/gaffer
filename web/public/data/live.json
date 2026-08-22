@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 1,
-  "as_of": "2026-08-22T16:14:30+00:00",
+  "as_of": "2026-08-22T17:20:30+00:00",
   "fixtures": [
     {
       "id": 1,
@@ -18,8 +18,8 @@
       "event": 1,
       "team_h": 4,
       "team_a": 19,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "half_time",
+      "minutes": 45,
       "kickoff": "2026-08-22T16:30:00+00:00",
       "bonus_final": false
     },
@@ -108,7 +108,8 @@
     "total": 10,
     "by_state": {
       "awaiting_bonus": 5,
-      "scheduled": 5
+      "half_time": 1,
+      "scheduled": 4
     },
     "all_finished": false,
     "bonus_final": false
@@ -422,7 +423,7 @@
       "finished": false,
       "yet_to_play": true,
       "fixture_states": [
-        "scheduled"
+        "half_time"
       ],
       "name": "Dubravka",
       "pos": "GKP",
@@ -432,24 +433,34 @@
   ],
   "rivals": [
     {
+      "entry_id": 3557534,
+      "name": "Jarek Ettl",
+      "you": false,
+      "current": 39,
+      "projected": 39.0,
+      "gw_points": 39,
+      "yet_to_play": 5,
+      "provisional_position": 1
+    },
+    {
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
       "current": 37,
       "projected": 37.0,
       "gw_points": 37,
-      "yet_to_play": 7,
-      "provisional_position": 1
+      "yet_to_play": 6,
+      "provisional_position": 2
     },
     {
-      "entry_id": 3557534,
-      "name": "Jarek Ettl",
+      "entry_id": 7419334,
+      "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 37,
-      "projected": 37.0,
-      "gw_points": 37,
-      "yet_to_play": 7,
-      "provisional_position": 2
+      "current": 30,
+      "projected": 30.0,
+      "gw_points": 30,
+      "yet_to_play": 4,
+      "provisional_position": 3
     },
     {
       "entry_id": 1066421,
@@ -459,16 +470,6 @@
       "projected": 29.0,
       "gw_points": 29,
       "yet_to_play": 4,
-      "provisional_position": 3
-    },
-    {
-      "entry_id": 7419334,
-      "name": "Dylan Llyr Morgan",
-      "you": false,
-      "current": 29,
-      "projected": 29.0,
-      "gw_points": 29,
-      "yet_to_play": 7,
       "provisional_position": 4
     },
     {
@@ -485,10 +486,10 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 26,
-      "projected": 26.0,
-      "gw_points": 26,
-      "yet_to_play": 9,
+      "current": 28,
+      "projected": 28.0,
+      "gw_points": 28,
+      "yet_to_play": 7,
       "provisional_position": 6
     },
     {
@@ -508,18 +509,11 @@
       "current": 13,
       "projected": 13.0,
       "gw_points": 13,
-      "yet_to_play": 9,
+      "yet_to_play": 8,
       "provisional_position": 8
     }
   ],
-  "largest_swing": {
-    "player_id": 260,
-    "name": "Wilson",
-    "swing": -3,
-    "in_your_xi": false,
-    "against": 7419334,
-    "note": "a differential your closest rival owns"
-  },
+  "largest_swing": null,
   "separation": {
     "confirmed": 29,
     "provisional_bonus": 0,
@@ -528,6 +522,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-22T16:14:30+00:00",
+  "generated_at": "2026-08-22T17:20:30+00:00",
   "season": "2026-27"
 }
