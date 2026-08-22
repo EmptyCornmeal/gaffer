@@ -3,8 +3,6 @@
   import { getLeagueIds, getEntryId } from '../lib/config'
   import Icon from '../components/Icon.svelte'
   import LineChart from '../components/LineChart.svelte'
-  import LeagueStrategy from '../components/LeagueStrategy.svelte'
-  import LeagueMeta from '../components/LeagueMeta.svelte'
   import { loadLiveSnapshot, type Bundle } from '../lib/data'
 
   let { ongoSettings, bundle, onnav, onpick, now = Date.now() }: {
@@ -18,12 +16,38 @@
   // Three views of one question: what is everyone else doing. Standings is
   // your own league; Strategy scores your decisions against it; Meta is the
   // same question asked of the whole game.
-  let tab = $state<'standings' | 'strategy' | 'meta'>('standings')
+  type Tab = 'standings' | 'rivals' | 'strategy' | 'meta'
+  let tab = $state<Tab>('standings')
   const TABS = [
     { key: 'standings', label: 'Standings' },
+    { key: 'rivals', label: 'Rivals' },
     { key: 'strategy', label: 'Strategy' },
     { key: 'meta', label: 'Meta' },
   ] as const
+
+  // Three of the four tabs are only ever on screen when you have asked for them,
+  // and together they were most of this route's weight — enough that Standings
+  // alone was approaching the 60 kB budget `lib/perf.test.ts` enforces. Loaded on
+  // first open and cached after, with the same two failure states App.svelte
+  // gives a route chunk: a tab that silently does nothing is worse than one that
+  // says why it could not.
+  const TAB_LAZY: Record<string, () => Promise<{ default: unknown }>> = {
+    rivals: () => import('../components/LeagueRivals.svelte'),
+    strategy: () => import('../components/LeagueStrategy.svelte'),
+    meta: () => import('../components/LeagueMeta.svelte'),
+  }
+  let loadedTabs = $state<Record<string, any>>({})
+  let tabError = $state<string | null>(null)
+  const LazyTab = $derived(loadedTabs[tab] ?? null)
+  const needsTabChunk = $derived(tab in TAB_LAZY && !loadedTabs[tab])
+  $effect(() => {
+    const t = tab
+    if (!(t in TAB_LAZY) || loadedTabs[t]) return
+    tabError = null
+    TAB_LAZY[t]()
+      .then((m) => (loadedTabs = { ...loadedTabs, [t]: m.default }))
+      .catch((e) => (tabError = String(e)))
+  })
 
   let leagueIds = $state(getLeagueIds())
   let active = $state(0)
@@ -75,6 +99,10 @@
   })
   const hasLive = $derived(liveByEntry.size > 0)
 
+  // A chip FPL says was actually played. Never inferred: an unreadable history
+  // gives `null`, which the board renders as "unknown" rather than "none".
+  type ChipPlay = { name: string; event: number }
+  let chipsPlayed = $state<Map<number, ChipPlay[] | null>>(new Map())
   type GwRow = {
     event: number
     points: number
@@ -107,15 +135,24 @@
         if (!pre && results.length) {
           // fetch each member's season history (cap so a huge league can't hammer)
           const top = results.slice(0, 30)
+          // One read per manager answers two questions: the gameweek history the
+          // charts draw, and the chips he has burned. The chip board is free —
+          // `chips` rides on a response this page was already paying for.
+          type Row = [number, GwRow[], ChipPlay[] | null]
           const pairs = await Promise.all(
             top.map((r) =>
               fpl
                 .entryHistory(r.entry)
-                .then((h): [number, GwRow[]] => [r.entry, (h?.current ?? []) as GwRow[]])
-                .catch((): [number, GwRow[]] => [r.entry, []]),
+                .then((h): Row => [
+                  r.entry,
+                  (h?.current ?? []) as GwRow[],
+                  Array.isArray(h?.chips) ? (h.chips as ChipPlay[]) : null,
+                ])
+                .catch((): Row => [r.entry, [], null]),
             ),
           )
-          histories = new Map(pairs)
+          histories = new Map(pairs.map(([e, h]) => [e, h]))
+          chipsPlayed = new Map(pairs.map(([e, , c]) => [e, c]))
         }
         phase = 'ok'
       })
@@ -255,7 +292,7 @@
   )
 
   // per-manager season stats
-  type Stat = { entry: number; name: string; team: string; total: number; gw: number; best: number; form: number; hits: number; bench: number; wins: number }
+  type Stat = { entry: number; name: string; team: string; total: number; gw: number; best: number; form: number; hits: number; bench: number; wins: number; move: number | null; ceiling: number }
   const stats = $derived.by<Stat[]>(() => {
     if (!hasHistory) return []
     // GW winners: highest points each GW.
@@ -304,6 +341,14 @@
           hits: h.reduce((s, g) => s + (g.event_transfers_cost ?? 0), 0),
           bench: h.reduce((s, g) => s + (g.points_on_bench ?? 0), 0),
           wins: wins.get(r.entry) ?? 0,
+          // FPL's own rank movement, not this table's. `last_rank` is 0 before a
+          // manager has ever been ranked, which is not a rise of one place — it
+          // is no previous position at all, and stays null.
+          move: r.last_rank ? r.last_rank - r.rank : null,
+          // `total` is already net of hits, so putting them back is addition.
+          ceiling: (r.total ?? 0)
+            + h.reduce((s, g) => s + (g.points_on_bench ?? 0), 0)
+            + h.reduce((s, g) => s + (g.event_transfers_cost ?? 0), 0),
         }
       })
       .sort((a, b) => b.total - a.total)
@@ -314,6 +359,13 @@
     out.sort((a, b) => {
       const av = a[sortKey]
       const bv = b[sortKey]
+      // A manager with no previous rank has no movement to compare. Sorting him
+      // as the string "null" put him between the numbers; he belongs at the end
+      // of either direction, because the column has nothing to say about him.
+      if (av == null || bv == null) {
+        if (av == null && bv == null) return 0
+        return av == null ? 1 : -1
+      }
       const d =
         typeof av === 'number' && typeof bv === 'number'
           ? av - bv
@@ -334,6 +386,7 @@
     { key: 'name', label: 'Manager', left: true },
     { key: 'team', label: 'Team', left: true },
     { key: 'total', label: 'Total', left: true },
+    { key: 'move', label: 'Move' },
     { key: 'gw', label: 'GW' },
     { key: 'best', label: 'Best' },
     { key: 'form', label: 'Form' },
@@ -345,6 +398,43 @@
   const topTotal = $derived(stats.length ? Math.max(...stats.map((s) => s.total)) : 1)
 
   const maxTotal = $derived(rows.length ? Math.max(...rows.map((r) => r.total)) : 1)
+  // FPL issues every chip twice - once across GW1-19 and once across GW20-38;
+  // the windows are published in bootstrap's `chips` list. This board asserts
+  // only what was PLAYED, and never what is left, so it needs neither that 1 MB
+  // payload nor a guess about the split: the worst a changed calendar could do
+  // is caption a half wrongly, not invent a chip somebody still holds.
+  const CHIP_COLS = [
+    { key: 'wildcard', label: 'WC' },
+    { key: 'freehit', label: 'FH' },
+    { key: 'bboost', label: 'BB' },
+    { key: '3xc', label: 'TC' },
+  ] as const
+  const chipRows = $derived.by(() =>
+    stats.map((s) => ({
+      entry: s.entry,
+      name: s.name,
+      // An unreadable history is not an empty one. `null` means we do not know
+      // what this manager has played, which the board says out loud.
+      known: chipsPlayed.get(s.entry) != null,
+      played: CHIP_COLS.map((c) =>
+        (chipsPlayed.get(s.entry) ?? [])
+          .filter((p) => p.name === c.key)
+          .map((p) => p.event)
+          .sort((a, b) => a - b)),
+    })))
+  const anyChipsKnown = $derived(chipRows.some((r) => r.known))
+  const anyChipsPlayed = $derived(
+    chipRows.some((r) => r.played.some((gws) => gws.length > 0)))
+
+  // The counterfactual table: every bench point counted, no transfer paid for.
+  // `stats` is already ordered by the real total, so comparing the two orders
+  // position by position answers the only interesting question - whether any of
+  // it actually cost anyone a place.
+  const anyWaste = $derived(stats.some((s) => s.ceiling > s.total))
+  const ceilingOrder = $derived([...stats].sort((a, b) => b.ceiling - a.ceiling))
+  const ceilingMoves = $derived(
+    ceilingOrder.some((s, i) => s.entry !== stats[i]?.entry))
+
   const CHART_TABS: { key: 'cumulative' | 'gw' | 'rank'; label: string }[] = [
     { key: 'cumulative', label: 'Points race' },
     { key: 'gw', label: 'Per GW' },
@@ -363,10 +453,25 @@
   </div>
 </div>
 
-{#if tab === 'strategy'}
-  <LeagueStrategy {bundle} {onnav} {now} />
-{:else if tab === 'meta'}
-  <LeagueMeta {bundle} {onpick} />
+{#if tab in TAB_LAZY}
+  {#if tabError}
+    <div class="card p-4 text-red text-sm max-w-lg mx-auto">
+      Couldn't load that tab.
+      <div class="mt-1 text-muted2">{tabError}</div>
+      <button class="btn mt-3" onclick={() => (tab = 'standings')}>Back to Standings</button>
+    </div>
+  {:else if needsTabChunk}
+    <div class="flex flex-col items-center justify-center py-24 text-muted gap-3" role="status" aria-live="polite">
+      <div class="w-8 h-8 rounded-full border-2 border-line border-t-brand animate-spin motion-reduce:animate-none"></div>
+      Loading&hellip;
+    </div>
+  {:else if tab === 'rivals'}
+    <LazyTab {bundle} {rows} {myEntry} {onpick} {now} />
+  {:else if tab === 'meta'}
+    <LazyTab {bundle} {onpick} />
+  {:else}
+    <LazyTab {bundle} {onnav} {now} />
+  {/if}
 {:else if phase === 'nosetup'}
   <div class="card p-8 text-center rise max-w-lg mx-auto">
     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand/12 text-brand-light mb-3"><Icon name="trophy" size={22} /></div>
@@ -445,6 +550,94 @@
           {/if}
         </div>
 
+        <!-- chip board -->
+        {#if anyChipsKnown}
+          <div class="card p-3">
+            <h3 class="font-bold text-sm">Chips</h3>
+            <p class="text-mini text-muted2 mt-0.5 mb-2">
+              What each manager has already burned. Everyone gets all four twice
+              &mdash; once across GW1&ndash;19 and once across GW20&ndash;38 &mdash;
+              so a spent chip is not a spent season.
+            </p>
+            {#if !anyChipsPlayed}
+              <p class="text-sm text-muted">Nobody has played a chip yet. Everyone is fully loaded.</p>
+            {:else}
+              <div class="overflow-x-auto">
+                <table class="data">
+                  <thead>
+                    <tr>
+                      <th class="!text-left">Manager</th>
+                      {#each CHIP_COLS as c}<th>{c.label}</th>{/each}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {#each chipRows as r}
+                      <tr class={r.entry === myEntry ? 'bg-brand/10' : ''}>
+                        <td class="!text-left">{r.name}{#if r.entry === myEntry}<span class="chip chip-good ml-1">you</span>{/if}</td>
+                        {#each r.played as gws}
+                          <td>
+                            {#if !r.known}
+                              <span class="text-muted2" title="This manager's history could not be read">?</span>
+                            {:else if gws.length}
+                              <span class="text-yellow font-semibold tabular-nums">{gws.map((g) => 'GW' + g).join(', ')}</span>
+                            {:else}
+                              <span class="text-muted2">&ndash;</span>
+                            {/if}
+                          </td>
+                        {/each}
+                      </tr>
+                    {/each}
+                  </tbody>
+                </table>
+              </div>
+            {/if}
+          </div>
+        {/if}
+
+        <!-- what it cost -->
+        {#if anyWaste}
+          <div class="card p-3">
+            <h3 class="font-bold text-sm">What it cost</h3>
+            <p class="text-mini text-muted2 mt-0.5 mb-2">
+              None of this happened. It is what the table would say if every bench
+              point had counted and nobody had paid for a transfer &mdash; a
+              ceiling, not a result.
+            </p>
+            <div class="overflow-x-auto">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th class="!text-left">Manager</th>
+                    <th class="!text-left">Total</th>
+                    <th>Bench</th>
+                    <th>Hits</th>
+                    <th>Ceiling</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each ceilingOrder as s}
+                    <tr class={s.entry === myEntry ? 'bg-brand/10' : ''}>
+                      <td class="!text-left">{s.name}{#if s.entry === myEntry}<span class="chip chip-good ml-1">you</span>{/if}</td>
+                      <td class="!text-left font-bold tabular-nums">{s.total}</td>
+                      <td class="text-muted2 tabular-nums">{s.bench ? '+' + s.bench : '0'}</td>
+                      <td class="{s.hits ? 'text-red' : 'text-muted2'} tabular-nums">{s.hits ? '+' + s.hits : '0'}</td>
+                      <td class="text-brand-light font-semibold tabular-nums">{s.ceiling}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+            <p class="text-mini {ceilingMoves ? 'text-yellow' : 'text-muted2'} mt-2">
+              {#if ceilingMoves}
+                It changes the order: <b>{ceilingOrder[0].name}</b> would lead instead of
+                <b>{stats[0].name}</b>.
+              {:else}
+                It changes nothing. The order is the same either way.
+              {/if}
+            </p>
+          </div>
+        {/if}
+
         <!-- GW winners strip -->
         {#if stats.some((s) => s.wins > 0)}
           <div class="card p-3">
@@ -500,6 +693,9 @@
                       <div class="h-2 rounded-full bg-brand/70" style="width: {(s.total / (topTotal || 1)) * 110}px"></div>
                       <span class="font-bold tabular-nums">{s.total}</span>
                     </div>
+                  </td>
+                  <td class="tabular-nums {s.move == null ? 'text-muted2' : s.move > 0 ? 'text-brand-light' : s.move < 0 ? 'text-red' : 'text-muted2'}">
+                    {#if s.move == null}new{:else if s.move > 0}&#9650;{s.move}{:else if s.move < 0}&#9660;{-s.move}{:else}&ndash;{/if}
                   </td>
                   <td class={liveByEntry.has(s.entry) ? 'text-brand-light font-bold' : 'text-muted'}>
                     {liveByEntry.get(s.entry) ?? s.gw}
