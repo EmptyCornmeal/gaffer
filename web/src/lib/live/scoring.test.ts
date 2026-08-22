@@ -176,6 +176,36 @@ describe('the largest swing', () => {
     expect(largestSwing(mine, [theirs], st)).toBeNull()
   })
 
+  // C21. A rival's Bench Boost bench used to be invisible here: the candidates
+  // were `autosubs.xi`, which is eleven names however many are scoring.
+  it("sees a rival's bench when he has bench-boosted and you have not", () => {
+    const st = plive({ 15: [12, 0] })
+    // 15 is on both benches. Only his is scoring.
+    const mine = scoreSquad(XI, BENCH, POS, st, { captain: 1, entryId: 1 })
+    const theirs = scoreSquad(XI, BENCH, POS, st, {
+      captain: 1, entryId: 2, benchBoost: true,
+    })
+    const swing = largestSwing(mine, [theirs], st, new Map([[15, 'Mateta']]))
+    expect(swing?.player_id).toBe(15)
+    expect(swing?.swing).toBe(-12)
+    expect(swing?.in_your_xi).toBe(false)
+    expect(swing?.note).toBe('a differential your closest rival owns')
+  })
+  it('sees your own bench when you are the one who bench-boosted', () => {
+    const st = plive({ 15: [12, 0] })
+    const mine = scoreSquad(XI, BENCH, POS, st, {
+      captain: 1, entryId: 1, benchBoost: true,
+    })
+    const theirs = scoreSquad(XI, BENCH, POS, st, { captain: 1, entryId: 2 })
+    expect(largestSwing(mine, [theirs], st)?.swing).toBe(12)
+  })
+  it('reports nothing when both of you bench-boosted the same bench', () => {
+    const st = plive({ 15: [12, 0] })
+    const opts = { captain: 1, benchBoost: true }
+    const mine = scoreSquad(XI, BENCH, POS, st, { ...opts, entryId: 1 })
+    const theirs = scoreSquad(XI, BENCH, POS, st, { ...opts, entryId: 2 })
+    expect(largestSwing(mine, [theirs], st)).toBeNull()
+  })
   it('resolves an exact tie to the lowest player id, as Python now does', () => {
     const st = new Map<number, PlayerLive>([9, 40].map((p) => [p, {
       id: p, minutes: 90, confirmed: 5, provisional: 0, predicted: 0,

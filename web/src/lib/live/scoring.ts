@@ -318,6 +318,14 @@ export interface SquadLive {
   autosubs: Autosubs
   baseline: number
   hits: number
+  /**
+   * Every player whose points actually land in this total. Under Bench Boost
+   * that is all fifteen, which is exactly why it exists: `autosubs.xi` is
+   * eleven names whatever the chip says, so anything reading it to answer
+   * "who is scoring for this manager" is wrong in the one week a bench is the
+   * whole point. Recorded once, by the scorer that already knows.
+   */
+  scoring: number[]
 }
 
 export function squadCurrent(s: SquadLive): number {
@@ -387,6 +395,7 @@ export function scoreSquad(
     autosubs: subs,
     baseline,
     hits,
+    scoring,
   }
 }
 
@@ -402,6 +411,12 @@ export function scoreSquad(
  *
  * Measured against the closest rival, so it answers "what is deciding my week",
  * not "who scored the most points".
+ *
+ * C21. The candidates are each manager's SCORING set, not his XI. Under Bench
+ * Boost all fifteen score, so reading `autosubs.xi` here — eleven names
+ * whatever the chip says — made a rival's bench invisible to this function in
+ * the one week his bench decides the league. The two managers are read
+ * independently: only one of them may have played the chip.
  */
 export function largestSwing(
   mine: SquadLive,
@@ -419,8 +434,8 @@ export function largestSwing(
       closest = r
     }
   }
-  const mineIds = new Set(mine.autosubs.xi)
-  const theirIds = new Set(closest.autosubs.xi)
+  const mineIds = new Set(mine.scoring)
+  const theirIds = new Set(closest.scoring)
 
   /** How many copies of this player's points land in `squad`'s total. */
   const weight = (pid: number, squad: SquadLive, ids: Set<number>): number => {
@@ -453,6 +468,9 @@ export function largestSwing(
     player_id: bestPid,
     name: names?.get(bestPid) ?? String(bestPid),
     swing: round2(bestDelta),
+    // Named for the ordinary case, and it keeps that name because it is in the
+    // published artifact. It means "he is scoring for you", which under Bench
+    // Boost includes your bench.
     in_your_xi: mineIds.has(bestPid),
     against: closest.entry_id,
     note: shared

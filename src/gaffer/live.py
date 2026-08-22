@@ -570,6 +570,12 @@ class SquadLive:
     autosubs: Autosubs
     baseline: int = 0            # points carried from earlier gameweeks
     hits: int = 0
+    #: Every player whose points actually land in this total. Under Bench Boost
+    #: that is all fifteen, which is exactly why it exists: ``autosubs.xi`` is
+    #: eleven names whatever the chip says, so anything reading it to answer
+    #: "who is scoring for this manager" is wrong in the one week a bench is
+    #: the whole point. Recorded once, by the scorer that already knows.
+    scoring: tuple[int, ...] = ()
 
     @property
     def current(self) -> float:
@@ -640,7 +646,7 @@ def score_squad(
         predicted=predicted, bench_points=bench_pts,
         players_played=sum(1 for s in relevant if s and s.played),
         players_yet_to_play=sum(1 for s in relevant if s and s.yet_to_play),
-        autosubs=subs, baseline=baseline, hits=hits,
+        autosubs=subs, baseline=baseline, hits=hits, scoring=tuple(scoring),
     )
 
 
@@ -663,6 +669,12 @@ def largest_swing(
 
     Measured against the closest rival, so it answers "what is deciding my week",
     not "who scored the most points".
+
+    C21. The candidates are each manager's *scoring* set, not his XI. Under
+    Bench Boost all fifteen score, so reading ``autosubs.xi`` here — eleven
+    names whatever the chip says — made a rival's bench invisible to this
+    function in the one week his bench decides the league. The two managers are
+    read independently: only one of them may have played the chip.
     """
     names = names or {}
     if not rivals:
@@ -670,8 +682,8 @@ def largest_swing(
     closest = min(
         rivals,
         key=lambda r: abs((r.baseline + r.current) - (mine.baseline + mine.current)))
-    my_ids = set(mine.autosubs.xi)
-    their_ids = set(closest.autosubs.xi)
+    my_ids = set(mine.scoring)
+    their_ids = set(closest.scoring)
 
     def weight(pid: int, squad: SquadLive, ids: set[int]) -> int:
         """How many copies of this player's points land in ``squad``'s total."""
@@ -701,6 +713,9 @@ def largest_swing(
         "player_id": best_pid,
         "name": names.get(best_pid, str(best_pid)),
         "swing": round(best_delta, 2),
+        # Named for the ordinary case, and it keeps that name because it is in
+        # the published artifact. It means "he is scoring for you", which under
+        # Bench Boost includes your bench.
         "in_your_xi": best_pid in my_ids,
         "against": closest.entry_id,
         "note": ("a player you both own but captain differently" if shared

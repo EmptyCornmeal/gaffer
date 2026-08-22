@@ -691,6 +691,52 @@ def test_a_rivals_differential_swings_against_you():
     assert swing["swing"] < 0 and swing["in_your_xi"] is False
 
 
+def test_a_rivals_bench_boost_bench_can_decide_the_week():
+    """C21. The candidates used to be ``autosubs.xi`` — eleven names however many
+    are actually scoring — so a rival who played Bench Boost had four players
+    contributing to his total that this function could not see. It reported the
+    week as decided by whatever was second-biggest, in the one week a bench is
+    the whole point."""
+    st = plive(p15=(12, 0))            # on both benches; only his is scoring
+    mine = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=1)
+    theirs = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=2,
+                              bench_boost=True)
+    swing = live.largest_swing(mine, [theirs], st, names={15: "Mateta"})
+    assert swing is not None, "his bench is scoring and yours is not"
+    assert swing["player_id"] == 15 and swing["name"] == "Mateta"
+    assert swing["swing"] == pytest.approx(-12)
+    assert swing["in_your_xi"] is False
+    assert swing["note"] == "a differential your closest rival owns"
+
+
+def test_your_own_bench_boost_bench_can_decide_the_week():
+    st = plive(p15=(12, 0))
+    mine = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=1,
+                            bench_boost=True)
+    theirs = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=2)
+    swing = live.largest_swing(mine, [theirs], st)
+    assert swing["player_id"] == 15 and swing["swing"] == pytest.approx(12)
+    assert swing["in_your_xi"] is True
+
+
+def test_two_identical_bench_boosts_cancel_out():
+    st = plive(p15=(12, 0))
+    mine = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=1,
+                            bench_boost=True)
+    theirs = live.score_squad(XI, BENCH, POS, st, captain=1, entry_id=2,
+                              bench_boost=True)
+    assert live.largest_swing(mine, [theirs], st) is None, \
+        "the same fifteen scoring the same way for both of you is not a swing"
+
+
+def test_the_scoring_set_is_the_bench_boost_fifteen():
+    st = plive()
+    normal = live.score_squad(XI, BENCH, POS, st, captain=1)
+    boosted = live.score_squad(XI, BENCH, POS, st, captain=1, bench_boost=True)
+    assert list(normal.scoring) == XI
+    assert list(boosted.scoring) == XI + BENCH
+
+
 def test_no_rivals_means_no_swing():
     st = plive()
     mine = live.score_squad(XI, BENCH, POS, st, captain=9, entry_id=1)
