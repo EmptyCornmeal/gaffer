@@ -9,6 +9,10 @@ phone-first UI. Everything runs on **free** data (the official FPL API — which
 already carries Opta xG/xA/xGC and defensive-contribution) — cost only enters at
 the optional AI layer.
 
+> **Fresh session? Read [`docs/STATE.md`](docs/STATE.md) first** — current
+> state, what today's crossover programme proved about the models, and what
+> must not be reopened. Gaffer is live mid-season.
+
 ## How it works
 
 ```
