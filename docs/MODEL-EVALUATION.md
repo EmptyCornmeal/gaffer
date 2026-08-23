@@ -512,3 +512,174 @@ every conclusion above survived the bump, the third decimal did not.
 
 `data/backtest.json` is schema **7**. A 6 and a 7 describe different seasons with
 different available columns and must not be differenced.
+
+
+---
+
+# The Ledger crossover, 2026-08-23
+
+Three questions this document had left open were answered using data from
+Ledger, passed as immutable files through `~/Projects/Football Exchange`. **No
+runtime dependency was created and nothing was promoted into the pipeline.**
+Full record: the exchange's `CROSSOVER-EVIDENCE.md`.
+
+## M6 is closed: the `starts / 38` denominator should stay
+
+`backtest.py` states the defect and the fix:
+
+> `p_start` from a prior season is `starts / 38` … A real fix needs per-fixture
+> history, not a constant.
+
+Ledger's API-Football corpus supplies exactly that: **1,167 player-seasons**
+over 2022-23 to 2024-25, per fixture, separating `Missing Fixture` from
+`Questionable`, joined at 96.8%. Because this corrects a **prior-season** rate,
+2025-26 decisions use 2024-25 absences — **the test season is not compromised.**
+
+Scored on the 5,271 rows where the two denominators actually differ:
+
+| | Brier |
+|---|---|
+| `base_starts / 38` | **0.17870** |
+| `base_starts / fixtures_available` | 0.22381 |
+
+Paired **+0.04511**, 95% CI [+0.04141, +0.04881], **t = +23.90 — the correction
+is WORSE.** Replicated independently in every season: 2023-24 t=+9.07, 2024-25
+t=+15.40, 2025-26 t=+19.78.
+
+**This confirms the conjecture already written in `backtest.py`** — *absence
+predicts absence* — which was offered after two failed price-prior corrections
+with no data to test it. Removing the injury signal from the denominator makes
+the forecast worse because that signal was doing useful work. `starts / 38` is
+not a defect awaiting data; it is carrying two signals, and separating them
+throws one away.
+
+**M6 should be closed as measured and rejected, not left on the roadmap.**
+
+## `p_start` loses to "he started last week"
+
+On 113,592 archive rows, ESTABLISHED regime (88% of the population):
+
+| | Brier | log loss | XI hit rate |
+|---|---|---|---|
+| started-last-match | **0.09653** | **0.33897** | **74.0%** |
+| Ledger's XI model | 0.12787 | 0.40825 | 64.1% |
+| **Gaffer `p_start`** | 0.14030 | 0.52073 | 60.2% |
+
+`p_start` is the best **calibrated** of the three (gap 0.160 against 0.409) and
+the least **sharp**. It scores a rate and carries no recency term, and managers
+change two or three of eleven per fixture.
+
+Gaffer wins COLD_START decisively (Brier 0.163 v 0.273, XI hit 46.8% v 24.2%),
+so the prior-season machinery is doing real work where it matters most.
+
+**The `not_ruled_out` note in `MODEL_CANDIDATES` — "a minutes-only classifier
+feeding the existing `p_start` gate is the version worth testing next" — is
+supported, and the first thing that classifier should be given is the previous
+fixture's start.**
+
+## Expected minutes is worse than a running average
+
+| | MAE |
+|---|---|
+| `exp_minutes` (with the real fitted cameo curve) | **25.080** |
+| naive: the player's own minutes per fixture to date | **16.212** |
+
+113,592 rows. Deriving minutes from a start probability forces a bimodal
+prediction — about 78 minutes or about 3 — and a player who reliably plays an
+hour is in neither mode.
+
+**Caution before anyone acts on this.** MAE on minutes is not the objective;
+minutes reach points through appearance points and per-90 scaling. And E2 below
+demonstrated in this same system that a better input need not become a better
+decision. The follow-up is a points-level test, not a rewrite.
+
+## Market-derived team strength: REJECT
+
+Opening-price-implied goal expectations (1,900 fixtures, exact Poisson
+inversion) were substituted for `team_form_ratings` with everything else held
+identical.
+
+| season | control | market | diff | t |
+|---|---|---|---|---|
+| 2023-24 **train** | 46.60 | 50.30 | +3.74 | **+2.34** |
+| 2024-25 select | 51.80 | 52.20 | +0.39 | +0.21 |
+| 2025-26 **test** | 49.70 | 48.20 | **−1.50** | −0.82 |
+| pooled, 114 gw | | | +0.88 | 0.84 |
+
+**The only significant season is the training season and it does not replicate.**
+Resolving the pooled effect needs ~16 seasons.
+
+Two secondary results matter more:
+
+**MAE improved in all three seasons** (1.4261 v 1.4397, 1.4814 v 1.5087, 1.5065
+v 1.5389) and rank correlation likewise, over ~155,000 rows per season — and
+none of it reached the fifteen players a squad is built from. **A better
+projection did not become a better decision.** That dissociation, which this
+document already records in the other direction for the naive baseline, is now
+measured in both.
+
+**The forward-looking mechanism is dead.** Including the upcoming round's own
+prices (G1) and excluding them (G2) are indistinguishable. Whatever value prices
+carry here, they carry as a better summary of the past.
+
+`src/gaffer/market/` is a research module with **no pipeline caller** and should
+stay one. The producer dataset carries an unresolved `provenance_risk`:
+football-data supplies no timestamp for its opening quote, so "this preceded the
+deadline" is a strong prior and not a per-row verifiable fact — which alone would
+have barred promotion even had the result succeeded.
+
+---
+
+## The crossover programme: verdicts, and where the record lives
+
+**2026-08-23.** Five experiments between Ledger and Gaffer. **Four were refuted.
+Nothing was promoted into either product.**
+
+| | question | verdict |
+|---|---|---|
+| **E1** | availability importance weighting | **UNDERPOWERED / CLOSED** |
+| **E2** | market-derived team strength for Gaffer | **REJECTED** |
+| **E3** | Ledger and Gaffer expected-XI models | **BOTH REJECTED** against a started-last-match baseline |
+| **E4** | availability-corrected `p_start` denominator | **REJECTED** |
+| **E5** | player cards | **RESEARCHABLE / MODELLED_ONLY** — not executable under the current Ledger bookmaker setup |
+
+**The player-card registry correction is a factual correction about market
+availability. It is not evidence of a betting edge**, and forecastability has
+never been tested.
+
+### Conclusions that govern any future work here
+
+1. **No shared Football Intelligence service.**
+2. **No monorepo.**
+3. **No shared runtime package.**
+4. **No canonical shared expected-XI model was appointed.**
+5. **No crossover feature earned production promotion.**
+6. **Immutable datasets remain the preferred crossover mechanism.**
+
+### Where the evidence lives
+
+The full experiment record is **not in either repository**. It is a standalone,
+immutable project artifact:
+
+```
+/Users/mylescolling/Projects/Football Exchange/
+    CROSSOVER-EVIDENCE.md          the full record of E1-E5
+    README.md                      the data contract and its rules
+    gaffer/player_history/2026-08-23/            139,039 rows, 5 seasons
+    ledger/player_crosswalk/2026-08-23/          1,206 players, 96.8% matched
+    ledger/absences/2026-08-23/                  1,167 player-seasons
+    ledger/market_team_expectations/2026-08-23/  1,900 fixtures
+```
+
+Every dataset carries a `manifest.json` with its producer, producer commit,
+schema version, `as_of`, coverage, per-field `post_match` flags and its
+forbidden uses. **Versions are pinned by date and are never overwritten**, so a
+result can be re-read against the exact bytes it ran on.
+
+The directory is deliberately outside both repositories and outside both
+packages. Neither project imports it, neither depends on it at runtime, and
+either will run correctly with it deleted.
+
+Experiment code: `scripts/`, deliberately **not** `src/`. `pyproject.toml`
+packages `src/` only, so no part of the shipped product can reach a Ledger
+artifact even by accident.
