@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 1,
-  "as_of": "2026-08-23T14:38:07+00:00",
+  "as_of": "2026-08-23T15:45:25+00:00",
   "fixtures": [
     {
       "id": 1,
@@ -68,8 +68,8 @@
       "event": 1,
       "team_h": 5,
       "team_a": 2,
-      "state": "live",
-      "minutes": 74,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-08-23T13:00:00+00:00",
       "bonus_final": false
     },
@@ -78,8 +78,8 @@
       "event": 1,
       "team_h": 15,
       "team_a": 3,
-      "state": "live",
-      "minutes": 73,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-08-23T13:00:00+00:00",
       "bonus_final": false
     },
@@ -88,8 +88,8 @@
       "event": 1,
       "team_h": 17,
       "team_a": 14,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "live",
+      "minutes": 8,
       "kickoff": "2026-08-23T15:30:00+00:00",
       "bonus_final": false
     },
@@ -107,9 +107,9 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 6,
-      "live": 2,
-      "scheduled": 2
+      "awaiting_bonus": 8,
+      "live": 1,
+      "scheduled": 1
     },
     "all_finished": false,
     "bonus_final": false
@@ -234,16 +234,16 @@
     },
     {
       "id": 411,
-      "minutes": 75,
+      "minutes": 90,
       "confirmed": 2,
       "provisional": 0,
       "predicted": 0.0,
       "total": 2.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Haaland",
       "pos": "FWD",
@@ -306,16 +306,16 @@
     },
     {
       "id": 504,
-      "minutes": 75,
+      "minutes": 90,
       "confirmed": 6,
       "provisional": 0,
       "predicted": 0.0,
       "total": 6.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Vuskovic",
       "pos": "DEF",
@@ -433,24 +433,34 @@
   ],
   "rivals": [
     {
+      "entry_id": 408467,
+      "name": "Nat Uttley",
+      "you": false,
+      "current": 51,
+      "projected": 51.0,
+      "gw_points": 51,
+      "yet_to_play": 2,
+      "provisional_position": 1
+    },
+    {
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "you": false,
       "current": 50,
       "projected": 50.0,
       "gw_points": 50,
-      "yet_to_play": 3,
-      "provisional_position": 1
+      "yet_to_play": 2,
+      "provisional_position": 2
     },
     {
-      "entry_id": 408467,
-      "name": "Nat Uttley",
+      "entry_id": 1711764,
+      "name": "Hakan Duzel",
       "you": false,
-      "current": 49,
-      "projected": 49.0,
-      "gw_points": 49,
-      "yet_to_play": 4,
-      "provisional_position": 2
+      "current": 41,
+      "projected": 41.0,
+      "gw_points": 41,
+      "yet_to_play": 2,
+      "provisional_position": 3
     },
     {
       "entry_id": 1066421,
@@ -460,7 +470,7 @@
       "projected": 39.0,
       "gw_points": 39,
       "yet_to_play": 1,
-      "provisional_position": 3
+      "provisional_position": 4
     },
     {
       "entry_id": 1066421,
@@ -470,46 +480,36 @@
       "projected": 39.0,
       "gw_points": 39,
       "yet_to_play": 1,
-      "provisional_position": 4
+      "provisional_position": 5
     },
     {
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 37,
-      "projected": 37.0,
-      "gw_points": 37,
-      "yet_to_play": 2,
-      "provisional_position": 5
-    },
-    {
-      "entry_id": 8346723,
-      "name": "Nat Stubbs",
-      "you": false,
-      "current": 31,
-      "projected": 31.0,
-      "gw_points": 31,
-      "yet_to_play": 4,
+      "current": 38,
+      "projected": 38.0,
+      "gw_points": 38,
+      "yet_to_play": 1,
       "provisional_position": 6
-    },
-    {
-      "entry_id": 1711764,
-      "name": "Hakan Duzel",
-      "you": false,
-      "current": 30,
-      "projected": 30.0,
-      "gw_points": 30,
-      "yet_to_play": 3,
-      "provisional_position": 7
     },
     {
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 29,
-      "projected": 29.0,
-      "gw_points": 29,
-      "yet_to_play": 5,
+      "current": 32,
+      "projected": 32.0,
+      "gw_points": 32,
+      "yet_to_play": 2,
+      "provisional_position": 7
+    },
+    {
+      "entry_id": 8346723,
+      "name": "Nat Stubbs",
+      "you": false,
+      "current": 32,
+      "projected": 32.0,
+      "gw_points": 32,
+      "yet_to_play": 2,
       "provisional_position": 8
     }
   ],
@@ -522,6 +522,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-23T14:38:07+00:00",
+  "generated_at": "2026-08-23T15:45:25+00:00",
   "season": "2026-27"
 }
