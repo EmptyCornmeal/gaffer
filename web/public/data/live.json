@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 1,
-  "as_of": "2026-08-24T18:31:09+00:00",
+  "as_of": "2026-08-24T19:43:32+00:00",
   "fixtures": [
     {
       "id": 1,
@@ -98,8 +98,8 @@
       "event": 1,
       "team_h": 10,
       "team_a": 6,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "live",
+      "minutes": 40,
       "kickoff": "2026-08-24T19:00:00+00:00",
       "bonus_final": false
     }
@@ -108,7 +108,7 @@
     "total": 10,
     "by_state": {
       "awaiting_bonus": 9,
-      "scheduled": 1
+      "live": 1
     },
     "all_finished": false,
     "bonus_final": false
@@ -118,17 +118,17 @@
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 39,
-    "provisional_bonus": 0,
+    "confirmed": 47,
+    "provisional_bonus": 3,
     "predicted_remaining": 0.0,
-    "current": 39,
-    "projected": 39.0,
+    "current": 50,
+    "projected": 50.0,
     "bench_points": 1,
-    "players_played": 11,
-    "players_yet_to_play": 1,
+    "players_played": 12,
+    "players_yet_to_play": 0,
     "hits": 0,
     "season_total_before": 0,
-    "season_total_projected": 39.0,
+    "season_total_projected": 50.0,
     "autosubs": {
       "xi": [
         1,
@@ -197,16 +197,16 @@
     },
     {
       "id": 165,
-      "minutes": 0,
-      "confirmed": 0,
-      "provisional": 0,
+      "minutes": 40,
+      "confirmed": 8,
+      "provisional": 3,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
+      "total": 11.0,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "live"
       ],
       "name": "João Pedro",
       "pos": "FWD",
@@ -435,61 +435,71 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 60,
-      "projected": 60.0,
-      "gw_points": 60,
-      "yet_to_play": 2,
+      "current": 72,
+      "projected": 72.0,
+      "gw_points": 72,
+      "yet_to_play": 0,
       "provisional_position": 1
     },
     {
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "you": false,
-      "current": 50,
-      "projected": 50.0,
-      "gw_points": 50,
-      "yet_to_play": 2,
+      "current": 58,
+      "projected": 58.0,
+      "gw_points": 58,
+      "yet_to_play": 0,
       "provisional_position": 2
-    },
-    {
-      "entry_id": 1711764,
-      "name": "Hakan Duzel",
-      "you": false,
-      "current": 49,
-      "projected": 49.0,
-      "gw_points": 49,
-      "yet_to_play": 2,
-      "provisional_position": 3
-    },
-    {
-      "entry_id": 1094262,
-      "name": "Kevin Colling",
-      "you": false,
-      "current": 40,
-      "projected": 40.0,
-      "gw_points": 40,
-      "yet_to_play": 2,
-      "provisional_position": 4
     },
     {
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 39,
-      "projected": 39.0,
-      "gw_points": 39,
-      "yet_to_play": 1,
-      "provisional_position": 5
+      "current": 50,
+      "projected": 50.0,
+      "gw_points": 50,
+      "yet_to_play": 0,
+      "provisional_position": 3
     },
     {
       "entry_id": 1066421,
       "name": "Myles Colling",
       "you": false,
-      "current": 39,
-      "projected": 39.0,
-      "gw_points": 39,
+      "current": 50,
+      "projected": 50.0,
+      "gw_points": 50,
+      "yet_to_play": 0,
+      "provisional_position": 4
+    },
+    {
+      "entry_id": 1711764,
+      "name": "Hakan Duzel",
+      "you": false,
+      "current": 50,
+      "projected": 50.0,
+      "gw_points": 50,
+      "yet_to_play": 1,
+      "provisional_position": 5
+    },
+    {
+      "entry_id": 8346723,
+      "name": "Nat Stubbs",
+      "you": false,
+      "current": 45,
+      "projected": 45.0,
+      "gw_points": 45,
       "yet_to_play": 1,
       "provisional_position": 6
+    },
+    {
+      "entry_id": 1094262,
+      "name": "Kevin Colling",
+      "you": false,
+      "current": 41,
+      "projected": 41.0,
+      "gw_points": 41,
+      "yet_to_play": 0,
+      "provisional_position": 7
     },
     {
       "entry_id": 7419334,
@@ -499,28 +509,18 @@
       "projected": 37.0,
       "gw_points": 37,
       "yet_to_play": 1,
-      "provisional_position": 7
-    },
-    {
-      "entry_id": 8346723,
-      "name": "Nat Stubbs",
-      "you": false,
-      "current": 34,
-      "projected": 34.0,
-      "gw_points": 34,
-      "yet_to_play": 2,
       "provisional_position": 8
     }
   ],
   "largest_swing": null,
   "separation": {
-    "confirmed": 39,
-    "provisional_bonus": 0,
+    "confirmed": 47,
+    "provisional_bonus": 3,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-24T18:31:09+00:00",
+  "generated_at": "2026-08-24T19:43:32+00:00",
   "season": "2026-27"
 }
