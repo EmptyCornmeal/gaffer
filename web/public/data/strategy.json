@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-25T09:33:35+00:00",
+  "generated_at": "2026-08-25T15:59:54+00:00",
   "gameweek": 2,
   "gameweeks_remaining": 37,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.5",
     "gameweek": 2,
     "fixtures": 20,
-    "players": 516,
+    "players": 515,
     "assumptions": [
       "One goal draw per attacking side, shared by every player in the match; clean sheets and goals conceded read the same draw.",
       "Goals are allocated multinomially in proportion to each player's deterministic expected goals, so teammates compete for the same goals and marginals are preserved.",
@@ -32,7 +32,7 @@
         "price": 6.0,
         "code": 154561,
         "team_code": 3,
-        "next_gw_xp": 5.34
+        "next_gw_xp": 4.4
       },
       {
         "id": 8,
@@ -42,7 +42,7 @@
         "price": 5.5,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 3.81
+        "next_gw_xp": 2.89
       },
       {
         "id": 165,
@@ -52,7 +52,7 @@
         "price": 7.5,
         "code": 475168,
         "team_code": 8,
-        "next_gw_xp": 4.16
+        "next_gw_xp": 2.93
       },
       {
         "id": 346,
@@ -62,7 +62,7 @@
         "price": 6.0,
         "code": 177815,
         "team_code": 2,
-        "next_gw_xp": 3.22
+        "next_gw_xp": 2.37
       },
       {
         "id": 411,
@@ -72,7 +72,7 @@
         "price": 15.5,
         "code": 223094,
         "team_code": 43,
-        "next_gw_xp": 4.77
+        "next_gw_xp": 4.23
       },
       {
         "id": 418,
@@ -82,7 +82,7 @@
         "price": 5.0,
         "code": 95658,
         "team_code": 1,
-        "next_gw_xp": 3.03
+        "next_gw_xp": 2.45
       },
       {
         "id": 426,
@@ -92,7 +92,7 @@
         "price": 12.0,
         "code": 141746,
         "team_code": 1,
-        "next_gw_xp": 6.97
+        "next_gw_xp": 4.89
       },
       {
         "id": 427,
@@ -102,7 +102,7 @@
         "price": 8.0,
         "code": 446008,
         "team_code": 1,
-        "next_gw_xp": 6.33
+        "next_gw_xp": 3.86
       },
       {
         "id": 504,
@@ -112,7 +112,7 @@
         "price": 5.0,
         "code": 610799,
         "team_code": 36,
-        "next_gw_xp": 1.77
+        "next_gw_xp": 2.07
       },
       {
         "id": 542,
@@ -122,7 +122,7 @@
         "price": 6.0,
         "code": 484420,
         "team_code": 56,
-        "next_gw_xp": 3.44
+        "next_gw_xp": 2.57
       },
       {
         "id": 557,
@@ -132,7 +132,7 @@
         "price": 6.5,
         "code": 439509,
         "team_code": 3,
-        "next_gw_xp": 2.01
+        "next_gw_xp": 2.21
       }
     ],
     "bench": [
@@ -144,7 +144,7 @@
         "price": 4.5,
         "code": 199798,
         "team_code": 3,
-        "next_gw_xp": 5.05
+        "next_gw_xp": 2.7
       },
       {
         "id": 175,
@@ -154,7 +154,7 @@
         "price": 4.0,
         "code": 451284,
         "team_code": 9,
-        "next_gw_xp": 1.28
+        "next_gw_xp": 1.08
       },
       {
         "id": 212,
@@ -164,7 +164,7 @@
         "price": 4.5,
         "code": 108413,
         "team_code": 31,
-        "next_gw_xp": 1.44
+        "next_gw_xp": 1.13
       },
       {
         "id": 497,
@@ -174,7 +174,7 @@
         "price": 4.0,
         "code": 67089,
         "team_code": 6,
-        "next_gw_xp": 2.55
+        "next_gw_xp": 1.47
       }
     ],
     "captain": {
@@ -185,7 +185,7 @@
       "price": 15.5,
       "code": 223094,
       "team_code": 43,
-      "next_gw_xp": 4.77
+      "next_gw_xp": 4.23
     },
     "source_event": 1
   },
@@ -203,12 +203,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.0105,
-        "p_target": 0.0105,
+        "p_first": 0.0085,
+        "p_target": 0.0085,
         "target_position": 1,
-        "expected_position": 3.25,
+        "expected_position": 3.69,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0045,
+        "ci95_halfwidth": 0.004,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -232,7 +232,7 @@
             "price": 15.5,
             "code": 223094,
             "team_code": 43,
-            "next_gw_xp": 4.77
+            "next_gw_xp": 4.23
           }
         },
         {
@@ -250,25 +250,7 @@
             "price": 5.5,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 3.81
-          }
-        },
-        {
-          "player_id": 1,
-          "owners": 3,
-          "n_rivals": 6,
-          "ownership_pct": 50.0,
-          "effective_ownership_pct": 50.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 1,
-            "name": "Raya",
-            "team": "ARS",
-            "pos": "GKP",
-            "price": 6.0,
-            "code": 154561,
-            "team_code": 3,
-            "next_gw_xp": 5.34
+            "next_gw_xp": 2.89
           }
         },
         {
@@ -286,7 +268,25 @@
             "price": 12.0,
             "code": 141746,
             "team_code": 1,
-            "next_gw_xp": 6.97
+            "next_gw_xp": 4.89
+          }
+        },
+        {
+          "player_id": 1,
+          "owners": 3,
+          "n_rivals": 6,
+          "ownership_pct": 50.0,
+          "effective_ownership_pct": 50.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 1,
+            "name": "Raya",
+            "team": "ARS",
+            "pos": "GKP",
+            "price": 6.0,
+            "code": 154561,
+            "team_code": 3,
+            "next_gw_xp": 4.4
           }
         }
       ],
@@ -306,7 +306,7 @@
             "price": 6.0,
             "code": 177815,
             "team_code": 2,
-            "next_gw_xp": 3.22
+            "next_gw_xp": 2.37
           }
         },
         {
@@ -324,7 +324,7 @@
             "price": 5.0,
             "code": 610799,
             "team_code": 36,
-            "next_gw_xp": 1.77
+            "next_gw_xp": 2.07
           }
         }
       ],
@@ -347,33 +347,33 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 49.178,
+      "expected_points": 49.298,
       "p_target": {
-        "271619": 0.0635
+        "271619": 0.052
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 48.034,
+      "expected_points": 48.537,
       "p_target": {
-        "271619": 0.0325
+        "271619": 0.032
       }
     },
     {
       "key": "captain:411",
       "label": "Captain Haaland",
-      "expected_points": 46.843,
+      "expected_points": 47.037,
       "p_target": {
-        "271619": 0.0105
+        "271619": 0.0085
       }
     },
     {
       "key": "captain:165",
       "label": "Captain João Pedro",
-      "expected_points": 46.683,
+      "expected_points": 46.833,
       "p_target": {
-        "271619": 0.017
+        "271619": 0.015
       }
     }
   ],
@@ -384,9 +384,9 @@
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 49.178,
+        "expected_points": 49.298,
         "p_target": {
-          "271619": 0.0635
+          "271619": 0.052
         }
       }
     ],
@@ -396,19 +396,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "wildcard",
     "gameweek": 2,
-    "expected_gain": 56.19,
+    "expected_gain": 61.81,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "wildcard",
         "gameweek": 2,
-        "expected_gain": 56.19,
+        "expected_gain": 61.81,
         "ci95": [
-          53.66,
-          58.71
+          58.56,
+          65.06
         ],
-        "baseline_points": 46.84,
-        "with_chip_points": 60.89,
+        "baseline_points": 47.04,
+        "with_chip_points": 62.49,
         "assumptions": [
           "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
           "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
@@ -417,13 +417,13 @@
       {
         "chip": "freehit",
         "gameweek": 2,
-        "expected_gain": 14.05,
+        "expected_gain": 15.45,
         "ci95": [
-          13.42,
-          14.68
+          14.64,
+          16.27
         ],
-        "baseline_points": 46.84,
-        "with_chip_points": 60.89,
+        "baseline_points": 47.04,
+        "with_chip_points": 62.49,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game."
@@ -432,13 +432,13 @@
       {
         "chip": "bboost",
         "gameweek": 2,
-        "expected_gain": 10.97,
+        "expected_gain": 10.98,
         "ci95": [
-          10.78,
-          11.16
+          10.79,
+          11.17
         ],
-        "baseline_points": 46.84,
-        "with_chip_points": 57.81,
+        "baseline_points": 47.04,
+        "with_chip_points": 58.02,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -447,13 +447,13 @@
       {
         "chip": "3xc",
         "gameweek": 2,
-        "expected_gain": 4.9,
+        "expected_gain": 4.89,
         "ci95": [
-          4.72,
-          5.09
+          4.71,
+          5.07
         ],
-        "baseline_points": 46.84,
-        "with_chip_points": 51.75,
+        "baseline_points": 47.04,
+        "with_chip_points": 51.93,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -492,7 +492,7 @@
     ],
     "used": [],
     "state_known": true,
-    "reason": "wildcard projects +56.2 points (95% CI 53.7 to 58.7) in GW2"
+    "reason": "wildcard projects +61.8 points (95% CI 58.6 to 65.1) in GW2"
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
