@@ -1,15 +1,27 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-08-27T12:20:18+00:00",
+  "generated_at": "2026-08-27T20:54:04+00:00",
   "result": {
-    "considered": 0,
-    "new": 0,
+    "considered": 1,
+    "new": 1,
     "duplicates": 0,
     "suppressed": 0,
-    "delivered": 0,
+    "delivered": 1,
     "failed": 0,
     "dry_run": true,
-    "alerts": [],
+    "alerts": [
+      {
+        "kind": "deadline",
+        "title": "GW2 deadline tomorrow",
+        "body": "20.6 hours left. Check your transfer, captain and bench order.",
+        "severity": "important",
+        "event": 2,
+        "deep_link": "#/overview",
+        "dedupe_key": "deadline:3b664b1b3694",
+        "created_at": "2026-08-27T20:54:32+00:00",
+        "state": "dry_run"
+      }
+    ],
     "errors": []
   },
   "config": {
@@ -28,8 +40,20 @@
       "start": "22:30:00",
       "end": "07:30:00"
     },
-    "by_state": {},
-    "recent": []
+    "by_state": {
+      "dry_run": 1
+    },
+    "recent": [
+      {
+        "kind": "deadline",
+        "severity": "important",
+        "title": "GW2 deadline tomorrow",
+        "deep_link": "#/overview",
+        "created_at": "2026-08-27T20:54:32+00:00",
+        "state": "dry_run",
+        "event": 2
+      }
+    ]
   },
   "season": "2026-27"
 }
