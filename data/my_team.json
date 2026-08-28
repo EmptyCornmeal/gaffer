@@ -1,7 +1,7 @@
 {
-  "gw": 1,
-  "source_event": 1,
-  "projection_event": 2,
+  "gw": 2,
+  "source_event": 2,
+  "projection_event": 3,
   "status": "loaded",
   "players": [
     {
@@ -13,20 +13,20 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "GKP",
-      "net_transfers": 23884,
+      "net_transfers": -84,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": 23884,
-        "progress": 0.08,
-        "threshold": 283919
+        "momentum": -84,
+        "progress": 0.0,
+        "threshold": 285460
       },
       "price": 6.0,
       "owned_by": 38.3,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 6.0,
+      "form": 3.0,
       "ict": 1.2,
       "last_season": {
         "season": "2025/26",
@@ -37,26 +37,22 @@
         "xa90": 0.0
       },
       "dist": {
-        "mean": 5.05,
-        "floor": 5.0,
+        "mean": 4.82,
+        "floor": 2.0,
         "ceiling": 6.0,
         "boom": 0.1,
-        "std": 1.8
+        "std": 1.91
       },
       "defcon": null,
       "xgi90": 0.0,
       "defcon90": 0.0,
-      "next_gw_xp": 4.4,
-      "horizon_xp": 31.79,
-      "xp_window": 31.79,
+      "next_gw_xp": 3.63,
+      "horizon_xp": 31.41,
+      "xp_window": 31.41,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 4.4
-        },
-        {
           "gw": 3,
-          "xp": 5.11
+          "xp": 3.63
         },
         {
           "gw": 4,
@@ -73,6 +69,10 @@
         {
           "gw": 7,
           "xp": 5.34
+        },
+        {
+          "gw": 8,
+          "xp": 5.5
         }
       ],
       "p_start": 0.97,
@@ -82,7 +82,7 @@
         "kind": "good",
         "hint": "~80'"
       },
-      "rationale": "Nailed keeper with strong clean-sheet odds, in form (6.0) and a soft fixture run.",
+      "rationale": "Nailed keeper with strong clean-sheet odds and a soft fixture run.",
       "tags": [
         {
           "label": "nailed",
@@ -90,10 +90,6 @@
         },
         {
           "label": "clean-sheet source",
-          "kind": "good"
-        },
-        {
-          "label": "in form",
           "kind": "good"
         },
         {
@@ -106,14 +102,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "AVL",
-          "home": false,
-          "difficulty": 2,
-          "att": 4,
-          "def": 1
-        },
         {
           "gw": 3,
           "opp": "CHE",
@@ -145,19 +133,27 @@
           "difficulty": 2,
           "att": 3,
           "def": 1
+        },
+        {
+          "gw": 7,
+          "opp": "NFO",
+          "home": false,
+          "difficulty": 2,
+          "att": 4,
+          "def": 1
         }
       ],
-      "model_xp": 5.34,
-      "ep_next_xp": 4.0,
+      "model_xp": 5.11,
+      "ep_next_xp": 3.0,
       "breakdown": {
         "appearance": 1.94,
         "goals": 0,
         "assists": 0.0,
-        "clean_sheet": 3.09,
+        "clean_sheet": 2.88,
         "defcon": 0,
-        "bonus": 0.27,
+        "bonus": 0.25,
         "saves": 0.06,
-        "other": -0.02
+        "other": -0.03
       }
     },
     {
@@ -169,20 +165,20 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "DEF",
-      "net_transfers": 254745,
-      "cost_change_event": 1,
+      "net_transfers": 934,
+      "cost_change_event": 0,
       "price_pred": {
-        "dir": "up",
-        "momentum": 254745,
-        "progress": 0.82,
-        "threshold": 309124
+        "dir": "stable",
+        "momentum": 934,
+        "progress": 0.0,
+        "threshold": 310801
       },
       "price": 5.6,
       "owned_by": 41.7,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 9.0,
+      "form": 4.5,
       "ict": 4.2,
       "last_season": {
         "season": "2025/26",
@@ -193,11 +189,11 @@
         "xa90": 0.04
       },
       "dist": {
-        "mean": 3.79,
+        "mean": 3.47,
         "floor": 0.0,
         "ceiling": 6.0,
-        "boom": 7.4,
-        "std": 3.85
+        "boom": 5.6,
+        "std": 3.54
       },
       "defcon": {
         "p_hit": 0.003,
@@ -207,17 +203,13 @@
       },
       "xgi90": 0.14,
       "defcon90": 5.41,
-      "next_gw_xp": 2.96,
-      "horizon_xp": 23.5,
-      "xp_window": 23.5,
+      "next_gw_xp": 4.2,
+      "horizon_xp": 25.24,
+      "xp_window": 25.24,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.96
-        },
-        {
           "gw": 3,
-          "xp": 3.49
+          "xp": 4.2
         },
         {
           "gw": 4,
@@ -234,6 +226,10 @@
         {
           "gw": 7,
           "xp": 3.81
+        },
+        {
+          "gw": 8,
+          "xp": 4.0
         }
       ],
       "p_start": 0.58,
@@ -243,7 +239,7 @@
         "kind": "bad",
         "hint": "~50'"
       },
-      "rationale": "Rotation/bench defender with strong clean-sheet odds, in form (9.0) and a soft fixture run.",
+      "rationale": "Rotation/bench defender with strong clean-sheet odds and a soft fixture run.",
       "tags": [
         {
           "label": "rotation risk",
@@ -251,10 +247,6 @@
         },
         {
           "label": "clean-sheet source",
-          "kind": "good"
-        },
-        {
-          "label": "in form",
           "kind": "good"
         },
         {
@@ -268,14 +260,6 @@
       ],
       "fixtures": [
         {
-          "gw": 2,
-          "opp": "AVL",
-          "home": false,
-          "difficulty": 2,
-          "att": 4,
-          "def": 1
-        },
-        {
           "gw": 3,
           "opp": "CHE",
           "home": true,
@@ -306,112 +290,128 @@
           "difficulty": 2,
           "att": 3,
           "def": 1
+        },
+        {
+          "gw": 7,
+          "opp": "NFO",
+          "home": false,
+          "difficulty": 2,
+          "att": 4,
+          "def": 1
         }
       ],
-      "model_xp": 3.81,
-      "ep_next_xp": 2.6,
+      "model_xp": 3.49,
+      "ep_next_xp": 4.5,
       "breakdown": {
         "appearance": 1.24,
-        "goals": 0.52,
-        "assists": 0.07,
-        "clean_sheet": 1.77,
+        "goals": 0.36,
+        "assists": 0.05,
+        "clean_sheet": 1.65,
         "defcon": 0.01,
-        "bonus": 0.22,
+        "bonus": 0.19,
         "saves": 0,
         "other": -0.01
       }
     },
     {
-      "id": 31,
-      "code": 199798,
-      "name": "Konsa",
-      "full_name": "Ezri Konsa Ngoyo",
-      "team": "ARS",
-      "team_id": 1,
-      "team_code": 3,
+      "id": 115,
+      "code": 465730,
+      "name": "De Cuyper",
+      "full_name": "Maxim De Cuyper",
+      "team": "BHA",
+      "team_id": 5,
+      "team_code": 36,
       "pos": "DEF",
-      "net_transfers": -168723,
+      "net_transfers": 4593,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "down",
-        "momentum": -168723,
-        "progress": 1.0,
-        "threshold": 80060
+        "dir": "stable",
+        "momentum": 4593,
+        "progress": 0.07,
+        "threshold": 62607
       },
-      "price": 4.5,
-      "owned_by": 10.8,
+      "price": 4.6,
+      "owned_by": 8.4,
       "status": "a",
       "news": "",
-      "set_pieces": "",
-      "form": 0.0,
-      "ict": 0,
+      "set_pieces": "corners #2",
+      "form": 8.5,
+      "ict": 12.9,
       "last_season": {
         "season": "2025/26",
         "is_prior_season": true,
-        "minutes": 3035,
-        "starts": 34,
-        "xg90": 0.04,
-        "xa90": 0.02
+        "minutes": 1404,
+        "starts": 17,
+        "xg90": 0.11,
+        "xa90": 0.26
       },
       "dist": {
-        "mean": 5.06,
-        "floor": 2.0,
-        "ceiling": 6.0,
-        "boom": 3.4,
-        "std": 2.64
+        "mean": 3.78,
+        "floor": 0.0,
+        "ceiling": 13.0,
+        "boom": 15.3,
+        "std": 4.95
       },
       "defcon": {
-        "p_hit": 0.039,
-        "per90": 5.8,
+        "p_hit": 0.0,
+        "per90": 4.1,
         "threshold": 10,
         "near_hit": false
       },
-      "xgi90": 0.0,
-      "defcon90": 5.81,
-      "next_gw_xp": 2.7,
-      "horizon_xp": 28.93,
-      "xp_window": 28.93,
+      "xgi90": 1.97,
+      "defcon90": 4.1,
+      "next_gw_xp": 7.08,
+      "horizon_xp": 25.91,
+      "xp_window": 25.91,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.7
-        },
-        {
           "gw": 3,
-          "xp": 4.77
+          "xp": 7.08
         },
         {
           "gw": 4,
-          "xp": 5.59
+          "xp": 4.8
         },
         {
           "gw": 5,
-          "xp": 5.59
+          "xp": 2.62
         },
         {
           "gw": 6,
-          "xp": 5.22
+          "xp": 4.8
         },
         {
           "gw": 7,
-          "xp": 5.05
+          "xp": 3.78
+        },
+        {
+          "gw": 8,
+          "xp": 2.83
         }
       ],
-      "p_start": 0.9,
-      "confidence": 0.91,
+      "p_start": 0.45,
+      "confidence": 0.83,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~74'"
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~39'"
       },
-      "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
+      "rationale": "Rotation/bench defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (8.5) and a soft fixture run.",
       "tags": [
         {
-          "label": "nailed",
-          "kind": "good"
+          "label": "rotation risk",
+          "kind": "warn"
         },
         {
           "label": "clean-sheet source",
+          "kind": "good"
+        },
+        {
+          "label": "set-pieces",
+          "kind": "info"
+        },
+        {
+          "label": "in form",
           "kind": "good"
         },
         {
@@ -421,24 +421,16 @@
       ],
       "fixtures": [
         {
-          "gw": 2,
-          "opp": "AVL",
-          "home": false,
-          "difficulty": 2,
-          "att": 4,
-          "def": 1
-        },
-        {
           "gw": 3,
-          "opp": "CHE",
+          "opp": "LEE",
           "home": true,
           "difficulty": 2,
-          "att": 4,
+          "att": 3,
           "def": 1
         },
         {
           "gw": 4,
-          "opp": "SUN",
+          "opp": "COV",
           "home": false,
           "difficulty": 1,
           "att": 1,
@@ -446,30 +438,38 @@
         },
         {
           "gw": 5,
-          "opp": "BHA",
+          "opp": "ARS",
+          "home": true,
+          "difficulty": 3,
+          "att": 5,
+          "def": 1
+        },
+        {
+          "gw": 6,
+          "opp": "SUN",
           "home": false,
           "difficulty": 1,
           "att": 1,
           "def": 1
         },
         {
-          "gw": 6,
-          "opp": "LEE",
+          "gw": 7,
+          "opp": "CRY",
           "home": true,
           "difficulty": 2,
           "att": 3,
           "def": 1
         }
       ],
-      "model_xp": 5.05,
-      "ep_next_xp": 1.7,
+      "model_xp": 3.78,
+      "ep_next_xp": 8.5,
       "breakdown": {
-        "appearance": 1.76,
-        "goals": 0.18,
-        "assists": 0.04,
-        "clean_sheet": 2.72,
-        "defcon": 0.08,
-        "bonus": 0.28,
+        "appearance": 1.01,
+        "goals": 0.85,
+        "assists": 0.38,
+        "clean_sheet": 1.3,
+        "defcon": 0,
+        "bonus": 0.24,
         "saves": 0,
         "other": -0.01
       }
@@ -483,20 +483,20 @@
       "team_id": 6,
       "team_code": 8,
       "pos": "FWD",
-      "net_transfers": 337645,
-      "cost_change_event": 1,
+      "net_transfers": 2638,
+      "cost_change_event": 0,
       "price_pred": {
-        "dir": "up",
-        "momentum": 337645,
-        "progress": 0.67,
-        "threshold": 504087
+        "dir": "stable",
+        "momentum": 2638,
+        "progress": 0.01,
+        "threshold": 509803
       },
       "price": 7.6,
-      "owned_by": 68.0,
+      "owned_by": 68.4,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 11.0,
+      "form": 5.5,
       "ict": 11.1,
       "last_season": {
         "season": "2025/26",
@@ -507,11 +507,11 @@
         "xa90": 0.07
       },
       "dist": {
-        "mean": 4.12,
+        "mean": 3.05,
         "floor": 2.0,
         "ceiling": 7.0,
-        "boom": 9.4,
-        "std": 3.71
+        "boom": 3.7,
+        "std": 2.83
       },
       "defcon": {
         "p_hit": 0.001,
@@ -521,17 +521,13 @@
       },
       "xgi90": 0.69,
       "defcon90": 4.67,
-      "next_gw_xp": 2.93,
-      "horizon_xp": 23.61,
-      "xp_window": 23.61,
+      "next_gw_xp": 4.81,
+      "horizon_xp": 26.45,
+      "xp_window": 26.45,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.93
-        },
-        {
           "gw": 3,
-          "xp": 3.2
+          "xp": 4.81
         },
         {
           "gw": 4,
@@ -548,6 +544,10 @@
         {
           "gw": 7,
           "xp": 3.89
+        },
+        {
+          "gw": 8,
+          "xp": 4.16
         }
       ],
       "p_start": 0.82,
@@ -557,7 +557,7 @@
         "kind": "warn",
         "hint": "~68'"
       },
-      "rationale": "Likely-starting forward (rotation risk) with real underlying threat (0.69 xGI/90) and in form (11.0).",
+      "rationale": "Likely-starting forward (rotation risk) with real underlying threat (0.69 xGI/90) and in form (5.5).",
       "tags": [
         {
           "label": "high xGI",
@@ -573,14 +573,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "BHA",
-          "home": true,
-          "difficulty": 2,
-          "att": 3,
-          "def": 2
-        },
         {
           "gw": 3,
           "opp": "ARS",
@@ -612,17 +604,25 @@
           "difficulty": 2,
           "att": 3,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "EVE",
+          "home": false,
+          "difficulty": 4,
+          "att": 4,
+          "def": 3
         }
       ],
-      "model_xp": 4.16,
-      "ep_next_xp": 2.4,
+      "model_xp": 3.2,
+      "ep_next_xp": 5.5,
       "breakdown": {
         "appearance": 1.65,
-        "goals": 1.76,
-        "assists": 0.17,
+        "goals": 0.94,
+        "assists": 0.09,
         "clean_sheet": 0,
         "defcon": 0.0,
-        "bonus": 0.58,
+        "bonus": 0.52,
         "saves": 0,
         "other": 0
       }
@@ -636,28 +636,28 @@
       "team_id": 7,
       "team_code": 9,
       "pos": "DEF",
-      "net_transfers": -15807,
+      "net_transfers": -299,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -15807,
-        "progress": 0.16,
-        "threshold": 97110
+        "momentum": -299,
+        "progress": 0.0,
+        "threshold": 96892
       },
       "price": 4.0,
-      "owned_by": 13.1,
+      "owned_by": 13.0,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 1.0,
+      "form": 0.5,
       "ict": 1.5,
       "last_season": null,
       "dist": {
-        "mean": 1.31,
+        "mean": 0.77,
         "floor": 0.0,
-        "ceiling": 6.0,
-        "boom": 1.6,
-        "std": 2.36
+        "ceiling": 2.0,
+        "boom": 0.0,
+        "std": 1.22
       },
       "defcon": {
         "p_hit": 0.0,
@@ -667,17 +667,13 @@
       },
       "xgi90": 0.01,
       "defcon90": 7.54,
-      "next_gw_xp": 1.08,
-      "horizon_xp": 4.98,
-      "xp_window": 4.98,
+      "next_gw_xp": 0.51,
+      "horizon_xp": 4.78,
+      "xp_window": 4.78,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 1.08
-        },
-        {
           "gw": 3,
-          "xp": 0.52
+          "xp": 0.51
         },
         {
           "gw": 4,
@@ -694,6 +690,10 @@
         {
           "gw": 7,
           "xp": 0.79
+        },
+        {
+          "gw": 8,
+          "xp": 0.9
         }
       ],
       "p_start": 0.25,
@@ -715,14 +715,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "HUL",
-          "home": true,
-          "difficulty": 2,
-          "att": 1,
-          "def": 2
-        },
         {
           "gw": 3,
           "opp": "MCI",
@@ -754,19 +746,27 @@
           "difficulty": 4,
           "att": 3,
           "def": 4
+        },
+        {
+          "gw": 7,
+          "opp": "TOT",
+          "home": false,
+          "difficulty": 4,
+          "att": 4,
+          "def": 5
         }
       ],
-      "model_xp": 1.28,
-      "ep_next_xp": 1.0,
+      "model_xp": 0.52,
+      "ep_next_xp": 0.5,
       "breakdown": {
         "appearance": 0.66,
-        "goals": 0.11,
-        "assists": 0.05,
-        "clean_sheet": 0.42,
+        "goals": 0.04,
+        "assists": 0.01,
+        "clean_sheet": 0.03,
         "defcon": 0,
-        "bonus": 0.06,
+        "bonus": 0.01,
         "saves": 0,
-        "other": -0.02
+        "other": -0.24
       }
     },
     {
@@ -778,13 +778,13 @@
       "team_id": 8,
       "team_code": 31,
       "pos": "MID",
-      "net_transfers": -63613,
+      "net_transfers": -428,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "down",
-        "momentum": -63613,
-        "progress": 0.79,
-        "threshold": 80060
+        "dir": "stable",
+        "momentum": -428,
+        "progress": 0.01,
+        "threshold": 80495
       },
       "price": 4.5,
       "owned_by": 10.8,
@@ -802,11 +802,11 @@
         "xa90": 0.11
       },
       "dist": {
-        "mean": 1.47,
+        "mean": 2.32,
         "floor": 0.0,
-        "ceiling": 2.0,
-        "boom": 0.1,
-        "std": 1.47
+        "ceiling": 7.0,
+        "boom": 1.6,
+        "std": 2.67
       },
       "defcon": {
         "p_hit": 0.005,
@@ -816,33 +816,33 @@
       },
       "xgi90": 0.0,
       "defcon90": 8.54,
-      "next_gw_xp": 1.13,
-      "horizon_xp": 11.61,
-      "xp_window": 11.61,
+      "next_gw_xp": 2.14,
+      "horizon_xp": 12.14,
+      "xp_window": 12.14,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 1.13
-        },
-        {
           "gw": 3,
-          "xp": 2.16
+          "xp": 2.14
         },
         {
           "gw": 4,
-          "xp": 2.19
+          "xp": 2.17
         },
         {
           "gw": 5,
-          "xp": 2.16
+          "xp": 2.14
         },
         {
           "gw": 6,
-          "xp": 1.8
+          "xp": 1.78
         },
         {
           "gw": 7,
-          "xp": 2.16
+          "xp": 2.14
+        },
+        {
+          "gw": 8,
+          "xp": 1.78
         }
       ],
       "p_start": 0.5,
@@ -864,14 +864,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "MCI",
-          "home": true,
-          "difficulty": 5,
-          "att": 5,
-          "def": 5
-        },
         {
           "gw": 3,
           "opp": "FUL",
@@ -903,17 +895,25 @@
           "difficulty": 2,
           "att": 3,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "BHA",
+          "home": false,
+          "difficulty": 1,
+          "att": 1,
+          "def": 1
         }
       ],
-      "model_xp": 1.44,
-      "ep_next_xp": 1.0,
+      "model_xp": 2.14,
+      "ep_next_xp": 0.0,
       "breakdown": {
         "appearance": 1.19,
-        "goals": 0.08,
-        "assists": 0.09,
-        "clean_sheet": 0.04,
+        "goals": 0.3,
+        "assists": 0.32,
+        "clean_sheet": 0.23,
         "defcon": 0.01,
-        "bonus": 0.03,
+        "bonus": 0.09,
         "saves": 0,
         "other": 0
       }
@@ -927,20 +927,20 @@
       "team_id": 13,
       "team_code": 2,
       "pos": "FWD",
-      "net_transfers": -90666,
+      "net_transfers": -1542,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -90666,
-        "progress": 0.43,
-        "threshold": 212754
+        "momentum": -1542,
+        "progress": 0.01,
+        "threshold": 212418
       },
       "price": 6.0,
-      "owned_by": 28.7,
+      "owned_by": 28.5,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1",
-      "form": 1.0,
+      "form": 0.5,
       "ict": 0.7,
       "last_season": {
         "season": "2025/26",
@@ -951,11 +951,11 @@
         "xa90": 0.04
       },
       "dist": {
-        "mean": 3.71,
+        "mean": 5.02,
         "floor": 2.0,
-        "ceiling": 7.0,
-        "boom": 6.9,
-        "std": 3.51
+        "ceiling": 12.0,
+        "boom": 15.8,
+        "std": 4.57
       },
       "defcon": {
         "p_hit": 0.0,
@@ -965,17 +965,13 @@
       },
       "xgi90": 0.13,
       "defcon90": 3.47,
-      "next_gw_xp": 2.37,
-      "horizon_xp": 18.12,
-      "xp_window": 18.12,
+      "next_gw_xp": 1.68,
+      "horizon_xp": 17.44,
+      "xp_window": 17.44,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.37
-        },
-        {
           "gw": 3,
-          "xp": 4.44
+          "xp": 1.68
         },
         {
           "gw": 4,
@@ -992,6 +988,10 @@
         {
           "gw": 7,
           "xp": 2.51
+        },
+        {
+          "gw": 8,
+          "xp": 4.44
         }
       ],
       "p_start": 0.79,
@@ -1001,26 +1001,14 @@
         "kind": "warn",
         "hint": "~67'"
       },
-      "rationale": "Likely-starting forward (rotation risk) with on pens #1 and a soft fixture run.",
+      "rationale": "Likely-starting forward (rotation risk) with on pens #1.",
       "tags": [
         {
           "label": "set-pieces",
           "kind": "info"
-        },
-        {
-          "label": "soft fixtures",
-          "kind": "good"
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "BRE",
-          "home": true,
-          "difficulty": 2,
-          "att": 3,
-          "def": 1
-        },
         {
           "gw": 3,
           "opp": "BHA",
@@ -1052,17 +1040,25 @@
           "difficulty": 4,
           "att": 5,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "MUN",
+          "home": true,
+          "difficulty": 3,
+          "att": 4,
+          "def": 2
         }
       ],
-      "model_xp": 3.22,
-      "ep_next_xp": 2.0,
+      "model_xp": 4.44,
+      "ep_next_xp": 0.5,
       "breakdown": {
         "appearance": 1.61,
-        "goals": 1.53,
-        "assists": 0.07,
+        "goals": 2.54,
+        "assists": 0.12,
         "clean_sheet": 0,
         "defcon": 0,
-        "bonus": 0.22,
+        "bonus": 0.37,
         "saves": 0,
         "other": -0.22
       }
@@ -1076,20 +1072,20 @@
       "team_id": 15,
       "team_code": 43,
       "pos": "FWD",
-      "net_transfers": -32032,
+      "net_transfers": 2498,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -32032,
-        "progress": 0.06,
-        "threshold": 503345
+        "momentum": 2498,
+        "progress": 0.0,
+        "threshold": 506076
       },
       "price": 15.5,
       "owned_by": 67.9,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1",
-      "form": 2.0,
+      "form": 5.0,
       "ict": 5.9,
       "last_season": {
         "season": "2025/26",
@@ -1100,11 +1096,11 @@
         "xa90": 0.08
       },
       "dist": {
-        "mean": 5.13,
+        "mean": 7.95,
         "floor": 2.0,
-        "ceiling": 12.0,
-        "boom": 14.8,
-        "std": 4.16
+        "ceiling": 17.0,
+        "boom": 36.3,
+        "std": 5.78
       },
       "defcon": {
         "p_hit": 0.0,
@@ -1112,35 +1108,35 @@
         "threshold": 12,
         "near_hit": false
       },
-      "xgi90": 0.76,
+      "xgi90": 0.73,
       "defcon90": 3.17,
-      "next_gw_xp": 4.23,
-      "horizon_xp": 31.68,
-      "xp_window": 31.68,
+      "next_gw_xp": 5.8,
+      "horizon_xp": 32.2,
+      "xp_window": 32.2,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 4.23
-        },
-        {
           "gw": 3,
-          "xp": 7.51
+          "xp": 5.8
         },
         {
           "gw": 4,
-          "xp": 3.6
+          "xp": 4.04
         },
         {
           "gw": 5,
-          "xp": 5.21
+          "xp": 5.53
         },
         {
           "gw": 6,
-          "xp": 3.6
+          "xp": 4.04
         },
         {
           "gw": 7,
-          "xp": 7.51
+          "xp": 7.67
+        },
+        {
+          "gw": 8,
+          "xp": 5.12
         }
       ],
       "p_start": 0.9,
@@ -1150,7 +1146,7 @@
         "kind": "good",
         "hint": "~74'"
       },
-      "rationale": "Nailed forward with real underlying threat (0.76 xGI/90) and on pens #1.",
+      "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
       "tags": [
         {
           "label": "nailed",
@@ -1165,19 +1161,15 @@
           "kind": "info"
         },
         {
+          "label": "in form",
+          "kind": "good"
+        },
+        {
           "label": "template",
           "kind": "info"
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "CRY",
-          "home": false,
-          "difficulty": 2,
-          "att": 4,
-          "def": 1
-        },
         {
           "gw": 3,
           "opp": "COV",
@@ -1209,17 +1201,25 @@
           "difficulty": 4,
           "att": 5,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "IPS",
+          "home": true,
+          "difficulty": 1,
+          "att": 1,
+          "def": 1
         }
       ],
-      "model_xp": 4.77,
-      "ep_next_xp": 4.0,
+      "model_xp": 7.67,
+      "ep_next_xp": 5.0,
       "breakdown": {
         "appearance": 1.76,
-        "goals": 2.46,
-        "assists": 0.17,
+        "goals": 4.68,
+        "assists": 0.32,
         "clean_sheet": 0,
         "defcon": 0,
-        "bonus": 0.37,
+        "bonus": 0.92,
         "saves": 0,
         "other": 0
       }
@@ -1233,20 +1233,20 @@
       "team_id": 16,
       "team_code": 1,
       "pos": "DEF",
-      "net_transfers": -49250,
+      "net_transfers": -1609,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -49250,
-        "progress": 0.39,
-        "threshold": 126763
+        "momentum": -1609,
+        "progress": 0.01,
+        "threshold": 126705
       },
       "price": 5.0,
-      "owned_by": 17.1,
+      "owned_by": 17.0,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 1.0,
+      "form": 0.5,
       "ict": 7.3,
       "last_season": {
         "season": "2025/26",
@@ -1257,11 +1257,11 @@
         "xa90": 0.03
       },
       "dist": {
-        "mean": 3.13,
+        "mean": 2.16,
         "floor": 0.0,
         "ceiling": 6.0,
-        "boom": 6.9,
-        "std": 3.7
+        "boom": 2.3,
+        "std": 2.67
       },
       "defcon": {
         "p_hit": 0.015,
@@ -1271,17 +1271,13 @@
       },
       "xgi90": 0.44,
       "defcon90": 8.24,
-      "next_gw_xp": 2.45,
-      "horizon_xp": 13.78,
-      "xp_window": 13.78,
+      "next_gw_xp": 0.96,
+      "horizon_xp": 12.53,
+      "xp_window": 12.53,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.45
-        },
-        {
           "gw": 3,
-          "xp": 2.03
+          "xp": 0.96
         },
         {
           "gw": 4,
@@ -1298,6 +1294,10 @@
         {
           "gw": 7,
           "xp": 2.88
+        },
+        {
+          "gw": 8,
+          "xp": 2.27
         }
       ],
       "p_start": 0.5,
@@ -1307,26 +1307,14 @@
         "kind": "bad",
         "hint": "~44'"
       },
-      "rationale": "Rotation/bench defender with strong clean-sheet odds.",
+      "rationale": "Rotation/bench defender with projected 1.0 pts next GW.",
       "tags": [
         {
           "label": "rotation risk",
           "kind": "warn"
-        },
-        {
-          "label": "clean-sheet source",
-          "kind": "good"
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "IPS",
-          "home": true,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
-        },
         {
           "gw": 3,
           "opp": "EVE",
@@ -1358,19 +1346,27 @@
           "difficulty": 2,
           "att": 3,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "LEE",
+          "home": false,
+          "difficulty": 1,
+          "att": 1,
+          "def": 1
         }
       ],
-      "model_xp": 3.03,
-      "ep_next_xp": 2.2,
+      "model_xp": 2.03,
+      "ep_next_xp": 0.5,
       "breakdown": {
         "appearance": 1.1,
-        "goals": 0.31,
-        "assists": 0.2,
-        "clean_sheet": 1.22,
+        "goals": 0.16,
+        "assists": 0.11,
+        "clean_sheet": 0.63,
         "defcon": 0.03,
-        "bonus": 0.18,
+        "bonus": 0.1,
         "saves": 0,
-        "other": -0.02
+        "other": -0.1
       }
     },
     {
@@ -1382,20 +1378,20 @@
       "team_id": 16,
       "team_code": 1,
       "pos": "MID",
-      "net_transfers": -163847,
+      "net_transfers": -4176,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -163847,
-        "progress": 0.46,
-        "threshold": 358050
+        "momentum": -4176,
+        "progress": 0.01,
+        "threshold": 358502
       },
       "price": 12.0,
-      "owned_by": 48.3,
+      "owned_by": 48.1,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1, FK #1, corners #1",
-      "form": 2.0,
+      "form": 1.0,
       "ict": 9.3,
       "last_season": {
         "season": "2025/26",
@@ -1406,11 +1402,11 @@
         "xa90": 0.36
       },
       "dist": {
-        "mean": 7.54,
-        "floor": 3.0,
-        "ceiling": 15.0,
-        "boom": 27.2,
-        "std": 5.24
+        "mean": 4.81,
+        "floor": 2.0,
+        "ceiling": 9.0,
+        "boom": 9.5,
+        "std": 3.76
       },
       "defcon": {
         "p_hit": 0.089,
@@ -1420,17 +1416,13 @@
       },
       "xgi90": 0.34,
       "defcon90": 8.43,
-      "next_gw_xp": 4.89,
-      "horizon_xp": 31.63,
-      "xp_window": 31.63,
+      "next_gw_xp": 2.08,
+      "horizon_xp": 29.23,
+      "xp_window": 29.23,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 4.89
-        },
-        {
           "gw": 3,
-          "xp": 4.6
+          "xp": 2.08
         },
         {
           "gw": 4,
@@ -1447,6 +1439,10 @@
         {
           "gw": 7,
           "xp": 6.91
+        },
+        {
+          "gw": 8,
+          "xp": 5.01
         }
       ],
       "p_start": 0.92,
@@ -1473,14 +1469,6 @@
       ],
       "fixtures": [
         {
-          "gw": 2,
-          "opp": "IPS",
-          "home": true,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
-        },
-        {
           "gw": 3,
           "opp": "EVE",
           "home": false,
@@ -1511,17 +1499,25 @@
           "difficulty": 2,
           "att": 3,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "LEE",
+          "home": false,
+          "difficulty": 1,
+          "att": 1,
+          "def": 1
         }
       ],
-      "model_xp": 6.97,
-      "ep_next_xp": 4.0,
+      "model_xp": 4.6,
+      "ep_next_xp": 1.0,
       "breakdown": {
         "appearance": 1.79,
-        "goals": 2.24,
-        "assists": 1.63,
-        "clean_sheet": 0.54,
+        "goals": 1.17,
+        "assists": 0.85,
+        "clean_sheet": 0.28,
         "defcon": 0.18,
-        "bonus": 0.59,
+        "bonus": 0.33,
         "saves": 0,
         "other": 0
       }
@@ -1535,20 +1531,20 @@
       "team_id": 16,
       "team_code": 1,
       "pos": "MID",
-      "net_transfers": -122738,
+      "net_transfers": -3318,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -122738,
-        "progress": 0.46,
-        "threshold": 266128
+        "momentum": -3318,
+        "progress": 0.01,
+        "threshold": 265336
       },
       "price": 8.0,
-      "owned_by": 35.9,
+      "owned_by": 35.6,
       "status": "a",
       "news": "",
       "set_pieces": "pens #2, FK #2, corners #2",
-      "form": 2.0,
+      "form": 1.0,
       "ict": 8.7,
       "last_season": {
         "season": "2025/26",
@@ -1559,11 +1555,11 @@
         "xa90": 0.17
       },
       "dist": {
-        "mean": 7.02,
+        "mean": 4.42,
         "floor": 2.0,
-        "ceiling": 15.0,
-        "boom": 22.5,
-        "std": 5.9
+        "ceiling": 9.0,
+        "boom": 8.0,
+        "std": 4.03
       },
       "defcon": {
         "p_hit": 0.002,
@@ -1573,17 +1569,13 @@
       },
       "xgi90": 0.73,
       "defcon90": 4.79,
-      "next_gw_xp": 3.86,
-      "horizon_xp": 27.88,
-      "xp_window": 27.88,
+      "next_gw_xp": 1.93,
+      "horizon_xp": 26.33,
+      "xp_window": 26.33,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 3.86
-        },
-        {
           "gw": 3,
-          "xp": 4.09
+          "xp": 1.93
         },
         {
           "gw": 4,
@@ -1600,6 +1592,10 @@
         {
           "gw": 7,
           "xp": 6.29
+        },
+        {
+          "gw": 8,
+          "xp": 4.48
         }
       ],
       "p_start": 0.82,
@@ -1626,14 +1622,6 @@
       ],
       "fixtures": [
         {
-          "gw": 2,
-          "opp": "IPS",
-          "home": true,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
-        },
-        {
           "gw": 3,
           "opp": "EVE",
           "home": false,
@@ -1664,17 +1652,25 @@
           "difficulty": 2,
           "att": 3,
           "def": 2
+        },
+        {
+          "gw": 7,
+          "opp": "LEE",
+          "home": false,
+          "difficulty": 1,
+          "att": 1,
+          "def": 1
         }
       ],
-      "model_xp": 6.33,
-      "ep_next_xp": 2.8,
+      "model_xp": 4.09,
+      "ep_next_xp": 1.0,
       "breakdown": {
         "appearance": 1.64,
-        "goals": 2.99,
-        "assists": 0.76,
-        "clean_sheet": 0.48,
+        "goals": 1.56,
+        "assists": 0.4,
+        "clean_sheet": 0.25,
         "defcon": 0.0,
-        "bonus": 0.47,
+        "bonus": 0.24,
         "saves": 0,
         "other": 0
       }
@@ -1688,16 +1684,16 @@
       "team_id": 19,
       "team_code": 6,
       "pos": "GKP",
-      "net_transfers": -26312,
+      "net_transfers": 126,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": -26312,
-        "progress": 0.19,
-        "threshold": 137882
+        "momentum": 126,
+        "progress": 0.0,
+        "threshold": 137885
       },
       "price": 4.0,
-      "owned_by": 18.6,
+      "owned_by": 18.5,
       "status": "a",
       "news": "",
       "set_pieces": "",
@@ -1712,23 +1708,19 @@
         "xa90": 0.0
       },
       "dist": {
-        "mean": 1.96,
-        "floor": 2.0,
+        "mean": 1.9,
+        "floor": 1.9,
         "ceiling": 2.0,
         "boom": 0.0,
-        "std": 0.9
+        "std": 0.69
       },
       "defcon": null,
       "xgi90": 0.0,
       "defcon90": 0.0,
-      "next_gw_xp": 1.47,
-      "horizon_xp": 15.44,
-      "xp_window": 15.44,
+      "next_gw_xp": 2.65,
+      "horizon_xp": 17.09,
+      "xp_window": 17.09,
       "gw_xp": [
-        {
-          "gw": 2,
-          "xp": 1.47
-        },
         {
           "gw": 3,
           "xp": 2.65
@@ -1748,6 +1740,10 @@
         {
           "gw": 7,
           "xp": 2.78
+        },
+        {
+          "gw": 8,
+          "xp": 3.12
         }
       ],
       "p_start": 0.92,
@@ -1769,14 +1765,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "NEW",
-          "home": true,
-          "difficulty": 4,
-          "att": 3,
-          "def": 5
-        },
         {
           "gw": 3,
           "opp": "NFO",
@@ -1808,19 +1796,27 @@
           "difficulty": 5,
           "att": 5,
           "def": 5
+        },
+        {
+          "gw": 7,
+          "opp": "COV",
+          "home": true,
+          "difficulty": 2,
+          "att": 1,
+          "def": 4
         }
       ],
-      "model_xp": 2.55,
-      "ep_next_xp": 1.0,
+      "model_xp": 2.65,
+      "ep_next_xp": 0.0,
       "breakdown": {
         "appearance": 1.83,
         "goals": 0,
         "assists": 0.0,
-        "clean_sheet": 0.12,
+        "clean_sheet": 0.05,
         "defcon": 0,
         "bonus": 0.01,
-        "saves": 1.79,
-        "other": -1.2
+        "saves": 2.31,
+        "other": -1.55
       }
     },
     {
@@ -1832,12 +1828,12 @@
       "team_id": 5,
       "team_code": 36,
       "pos": "DEF",
-      "net_transfers": 8947,
+      "net_transfers": 223,
       "cost_change_event": 0,
       "price_pred": {
         "dir": "stable",
-        "momentum": 8947,
-        "progress": 0.3,
+        "momentum": 223,
+        "progress": 0.01,
         "threshold": 30000
       },
       "price": 5.0,
@@ -1845,15 +1841,15 @@
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 6.0,
+      "form": 3.0,
       "ict": 2.9,
       "last_season": null,
       "dist": {
-        "mean": 1.65,
+        "mean": 2.15,
         "floor": 0.0,
         "ceiling": 6.0,
-        "boom": 0.9,
-        "std": 2.43
+        "boom": 2.4,
+        "std": 2.97
       },
       "defcon": {
         "p_hit": 0.001,
@@ -1863,17 +1859,13 @@
       },
       "xgi90": 0.16,
       "defcon90": 6.85,
-      "next_gw_xp": 2.07,
-      "horizon_xp": 12.83,
-      "xp_window": 12.83,
+      "next_gw_xp": 2.74,
+      "horizon_xp": 13.13,
+      "xp_window": 13.13,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.07
-        },
-        {
           "gw": 3,
-          "xp": 2.15
+          "xp": 2.74
         },
         {
           "gw": 4,
@@ -1890,6 +1882,10 @@
         {
           "gw": 7,
           "xp": 2.15
+        },
+        {
+          "gw": 8,
+          "xp": 1.77
         }
       ],
       "p_start": 0.35,
@@ -1899,15 +1895,11 @@
         "kind": "bad",
         "hint": "~32'"
       },
-      "rationale": "Rotation/bench defender with in form (6.0) and a soft fixture run.",
+      "rationale": "Rotation/bench defender with strong clean-sheet odds and a soft fixture run.",
       "tags": [
         {
           "label": "rotation risk",
           "kind": "warn"
-        },
-        {
-          "label": "in form",
-          "kind": "good"
         },
         {
           "label": "soft fixtures",
@@ -1915,14 +1907,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "CHE",
-          "home": false,
-          "difficulty": 3,
-          "att": 5,
-          "def": 1
-        },
         {
           "gw": 3,
           "opp": "LEE",
@@ -1954,19 +1938,27 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 7,
+          "opp": "CRY",
+          "home": true,
+          "difficulty": 2,
+          "att": 3,
+          "def": 1
         }
       ],
-      "model_xp": 1.77,
-      "ep_next_xp": 2.2,
+      "model_xp": 2.15,
+      "ep_next_xp": 3.0,
       "breakdown": {
         "appearance": 0.84,
-        "goals": 0.07,
-        "assists": 0.02,
-        "clean_sheet": 0.78,
+        "goals": 0.13,
+        "assists": 0.04,
+        "clean_sheet": 1.02,
         "defcon": 0.0,
-        "bonus": 0.08,
+        "bonus": 0.11,
         "saves": 0,
-        "other": -0.02
+        "other": -0.0
       }
     },
     {
@@ -1978,20 +1970,20 @@
       "team_id": 20,
       "team_code": 56,
       "pos": "MID",
-      "net_transfers": -92382,
+      "net_transfers": -1083,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "down",
-        "momentum": -92382,
-        "progress": 1.0,
-        "threshold": 64493
+        "dir": "stable",
+        "momentum": -1083,
+        "progress": 0.02,
+        "threshold": 64098
       },
       "price": 6.0,
-      "owned_by": 8.7,
+      "owned_by": 8.6,
       "status": "a",
       "news": "",
       "set_pieces": "pens #2, FK #2, corners #1",
-      "form": 2.0,
+      "form": 1.0,
       "ict": 1.5,
       "last_season": {
         "season": "2025/26",
@@ -2002,11 +1994,11 @@
         "xa90": 0.18
       },
       "dist": {
-        "mean": 3.59,
+        "mean": 3.34,
         "floor": 2.0,
         "ceiling": 8.0,
-        "boom": 4.3,
-        "std": 3.01
+        "boom": 2.9,
+        "std": 2.73
       },
       "defcon": {
         "p_hit": 0.138,
@@ -2016,17 +2008,13 @@
       },
       "xgi90": 0.03,
       "defcon90": 9.8,
-      "next_gw_xp": 2.57,
-      "horizon_xp": 17.84,
-      "xp_window": 17.84,
+      "next_gw_xp": 1.67,
+      "horizon_xp": 17.15,
+      "xp_window": 17.15,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.57
-        },
-        {
           "gw": 3,
-          "xp": 3.23
+          "xp": 1.67
         },
         {
           "gw": 4,
@@ -2043,6 +2031,10 @@
         {
           "gw": 7,
           "xp": 3.23
+        },
+        {
+          "gw": 8,
+          "xp": 3.44
         }
       ],
       "p_start": 0.87,
@@ -2068,14 +2060,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "FUL",
-          "home": true,
-          "difficulty": 3,
-          "att": 3,
-          "def": 3
-        },
         {
           "gw": 3,
           "opp": "BRE",
@@ -2107,17 +2091,25 @@
           "difficulty": 3,
           "att": 3,
           "def": 3
+        },
+        {
+          "gw": 7,
+          "opp": "BOU",
+          "home": false,
+          "difficulty": 4,
+          "att": 4,
+          "def": 4
         }
       ],
-      "model_xp": 3.44,
-      "ep_next_xp": 2.2,
+      "model_xp": 3.23,
+      "ep_next_xp": 1.0,
       "breakdown": {
         "appearance": 1.71,
-        "goals": 0.63,
-        "assists": 0.44,
-        "clean_sheet": 0.16,
+        "goals": 0.55,
+        "assists": 0.39,
+        "clean_sheet": 0.11,
         "defcon": 0.28,
-        "bonus": 0.22,
+        "bonus": 0.2,
         "saves": 0,
         "other": 0
       }
@@ -2131,20 +2123,20 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "MID",
-      "net_transfers": 167715,
+      "net_transfers": 977,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "up",
-        "momentum": 167715,
-        "progress": 0.87,
-        "threshold": 193480
+        "dir": "stable",
+        "momentum": 977,
+        "progress": 0.01,
+        "threshold": 194530
       },
       "price": 6.5,
       "owned_by": 26.1,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 6.0,
+      "form": 3.0,
       "ict": 8.7,
       "last_season": {
         "season": "2021/22",
@@ -2155,11 +2147,11 @@
         "xa90": 0
       },
       "dist": {
-        "mean": 2.18,
+        "mean": 1.94,
         "floor": 0.0,
         "ceiling": 3.0,
-        "boom": 0.8,
-        "std": 2.37
+        "boom": 0.6,
+        "std": 2.12
       },
       "defcon": {
         "p_hit": 0.004,
@@ -2169,17 +2161,13 @@
       },
       "xgi90": 0.4,
       "defcon90": 8.32,
-      "next_gw_xp": 2.21,
-      "horizon_xp": 13.17,
-      "xp_window": 13.17,
+      "next_gw_xp": 2.65,
+      "horizon_xp": 13.87,
+      "xp_window": 13.87,
       "gw_xp": [
         {
-          "gw": 2,
-          "xp": 2.21
-        },
-        {
           "gw": 3,
-          "xp": 1.84
+          "xp": 2.65
         },
         {
           "gw": 4,
@@ -2196,6 +2184,10 @@
         {
           "gw": 7,
           "xp": 2.01
+        },
+        {
+          "gw": 8,
+          "xp": 2.1
         }
       ],
       "p_start": 0.48,
@@ -2205,15 +2197,11 @@
         "kind": "bad",
         "hint": "~44'"
       },
-      "rationale": "Rotation/bench midfielder with real underlying threat (0.40 xGI/90), in form (6.0) and a soft fixture run.",
+      "rationale": "Rotation/bench midfielder with real underlying threat (0.40 xGI/90) and a soft fixture run.",
       "tags": [
         {
           "label": "rotation risk",
           "kind": "warn"
-        },
-        {
-          "label": "in form",
-          "kind": "good"
         },
         {
           "label": "soft fixtures",
@@ -2221,14 +2209,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 2,
-          "opp": "AVL",
-          "home": false,
-          "difficulty": 2,
-          "att": 4,
-          "def": 1
-        },
         {
           "gw": 3,
           "opp": "CHE",
@@ -2260,17 +2240,25 @@
           "difficulty": 2,
           "att": 3,
           "def": 1
+        },
+        {
+          "gw": 7,
+          "opp": "NFO",
+          "home": false,
+          "difficulty": 2,
+          "att": 4,
+          "def": 1
         }
       ],
-      "model_xp": 2.01,
-      "ep_next_xp": 2.3,
+      "model_xp": 1.84,
+      "ep_next_xp": 3.0,
       "breakdown": {
         "appearance": 1.16,
-        "goals": 0.29,
-        "assists": 0.14,
-        "clean_sheet": 0.35,
+        "goals": 0.21,
+        "assists": 0.1,
+        "clean_sheet": 0.33,
         "defcon": 0.01,
-        "bonus": 0.06,
+        "bonus": 0.04,
         "saves": 0,
         "other": 0
       }
