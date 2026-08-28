@@ -434,6 +434,10 @@
   const ceilingOrder = $derived([...stats].sort((a, b) => b.ceiling - a.ceiling))
   const ceilingMoves = $derived(
     ceilingOrder.some((s, i) => s.entry !== stats[i]?.entry))
+  // A reshuffle below the top is not a change of leader. Reading `ceilingMoves`
+  // as one made the sentence claim a manager would lead instead of themselves.
+  const ceilingLeadMoves = $derived(
+    ceilingOrder[0]?.entry !== undefined && ceilingOrder[0].entry !== stats[0]?.entry)
 
   const CHART_TABS: { key: 'cumulative' | 'gw' | 'rank'; label: string }[] = [
     { key: 'cumulative', label: 'Points race' },
@@ -628,9 +632,11 @@
               </table>
             </div>
             <p class="text-mini {ceilingMoves ? 'text-yellow' : 'text-muted2'} mt-2">
-              {#if ceilingMoves}
-                It changes the order: <b>{ceilingOrder[0].name}</b> would lead instead of
+              {#if ceilingLeadMoves}
+                It changes the lead: <b>{ceilingOrder[0].name}</b> would lead instead of
                 <b>{stats[0].name}</b>.
+              {:else if ceilingMoves}
+                It reshuffles the table, but <b>{stats[0].name}</b> still leads.
               {:else}
                 It changes nothing. The order is the same either way.
               {/if}
