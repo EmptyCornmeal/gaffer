@@ -1,35 +1,114 @@
 {
-  "generated_at": "2026-08-28T19:37:01+00:00",
+  "generated_at": "2026-08-28T21:09:45+00:00",
   "status": "Optimal",
   "mode": "transfer",
   "horizon": 5,
-  "total_expected": 208.94,
+  "total_expected": 215.25,
   "steps": [
     {
       "gw": 3,
-      "xi_expected": 56.05,
+      "xi_expected": 65.94,
       "free_transfers": 1,
-      "hits": 3,
+      "hits": 4,
       "captain": {
-        "id": 115,
-        "name": "De Cuyper",
-        "team": "BHA",
-        "pos": "DEF",
-        "price": 4.6,
-        "code": 465730,
-        "team_code": 36,
-        "next_gw_xp": 7.08,
-        "confidence": 0.83,
-        "horizon_xp": 25.91,
-        "owned_by": 8.4,
-        "rationale": "Rotation/bench defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (8.5) and a soft fixture run.",
+        "id": 399,
+        "name": "Cherki",
+        "team": "MCI",
+        "pos": "MID",
+        "price": 7.5,
+        "code": 466052,
+        "team_code": 43,
+        "next_gw_xp": 9.01,
+        "confidence": 0.86,
+        "horizon_xp": 24.13,
+        "owned_by": 11.9,
+        "rationale": "Rotation/bench midfielder with real underlying threat (1.10 xGI/90), on FK #1, corners #1 and in form (11.0).",
         "tags": [
           {
             "label": "rotation risk",
             "kind": "warn"
           },
           {
-            "label": "clean-sheet source",
+            "label": "high xGI",
+            "kind": "good"
+          },
+          {
+            "label": "set-pieces",
+            "kind": "info"
+          },
+          {
+            "label": "in form",
+            "kind": "good"
+          }
+        ],
+        "xmins_badge": {
+          "label": "CAMEO?",
+          "kind": "bad",
+          "hint": "~46'"
+        },
+        "fixtures": [
+          {
+            "gw": 3,
+            "opp": "COV",
+            "home": true,
+            "difficulty": 1,
+            "att": 1,
+            "def": 1
+          },
+          {
+            "gw": 4,
+            "opp": "MUN",
+            "home": false,
+            "difficulty": 4,
+            "att": 5,
+            "def": 2
+          },
+          {
+            "gw": 5,
+            "opp": "SUN",
+            "home": true,
+            "difficulty": 2,
+            "att": 3,
+            "def": 1
+          },
+          {
+            "gw": 6,
+            "opp": "LIV",
+            "home": false,
+            "difficulty": 4,
+            "att": 5,
+            "def": 2
+          },
+          {
+            "gw": 7,
+            "opp": "IPS",
+            "home": true,
+            "difficulty": 1,
+            "att": 1,
+            "def": 1
+          }
+        ]
+      },
+      "vice": {
+        "id": 411,
+        "name": "Haaland",
+        "team": "MCI",
+        "pos": "FWD",
+        "price": 15.5,
+        "code": 223094,
+        "team_code": 43,
+        "next_gw_xp": 7.44,
+        "confidence": 0.91,
+        "horizon_xp": 32.59,
+        "owned_by": 68.0,
+        "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
+        "tags": [
+          {
+            "label": "nailed",
+            "kind": "good"
+          },
+          {
+            "label": "high xGI",
             "kind": "good"
           },
           {
@@ -41,89 +120,14 @@
             "kind": "good"
           },
           {
-            "label": "soft fixtures",
-            "kind": "good"
-          }
-        ],
-        "xmins_badge": {
-          "label": "CAMEO?",
-          "kind": "bad",
-          "hint": "~39'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "LEE",
-            "home": true,
-            "difficulty": 2,
-            "att": 3,
-            "def": 1
-          },
-          {
-            "gw": 4,
-            "opp": "COV",
-            "home": false,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          },
-          {
-            "gw": 5,
-            "opp": "ARS",
-            "home": true,
-            "difficulty": 3,
-            "att": 5,
-            "def": 1
-          },
-          {
-            "gw": 6,
-            "opp": "SUN",
-            "home": false,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          },
-          {
-            "gw": 7,
-            "opp": "CRY",
-            "home": true,
-            "difficulty": 2,
-            "att": 3,
-            "def": 1
-          }
-        ]
-      },
-      "vice": {
-        "id": 388,
-        "name": "Guéhi",
-        "team": "MCI",
-        "pos": "DEF",
-        "price": 6.0,
-        "code": 209036,
-        "team_code": 43,
-        "next_gw_xp": 6.17,
-        "confidence": 0.91,
-        "horizon_xp": 34.09,
-        "owned_by": 19.6,
-        "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "clean-sheet source",
-            "kind": "good"
-          },
-          {
-            "label": "in form",
-            "kind": "good"
+            "label": "template",
+            "kind": "info"
           }
         ],
         "xmins_badge": {
           "label": "NAILED",
           "kind": "good",
-          "hint": "~76'"
+          "hint": "~74'"
         },
         "fixtures": [
           {
@@ -245,81 +249,6 @@
           ]
         },
         {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF",
-          "price": 6.0,
-          "code": 209036,
-          "team_code": 43,
-          "next_gw_xp": 6.17,
-          "confidence": 0.91,
-          "horizon_xp": 34.09,
-          "owned_by": 19.6,
-          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            },
-            {
-              "label": "in form",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~76'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 328,
           "name": "Struijk",
           "team": "BHA",
@@ -409,7 +338,7 @@
           "next_gw_xp": 4.77,
           "confidence": 0.91,
           "horizon_xp": 31.45,
-          "owned_by": 10.8,
+          "owned_by": 10.7,
           "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
@@ -469,6 +398,160 @@
               "home": false,
               "difficulty": 2,
               "att": 4,
+              "def": 1
+            }
+          ]
+        },
+        {
+          "id": 88,
+          "name": "Kayode",
+          "team": "BRE",
+          "pos": "DEF",
+          "price": 4.6,
+          "code": 607464,
+          "team_code": 94,
+          "next_gw_xp": 6.14,
+          "confidence": 0.91,
+          "horizon_xp": 30.82,
+          "owned_by": 7.8,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.5).",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~80'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "BOU",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "CHE",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            },
+            {
+              "gw": 6,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "LIV",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            }
+          ]
+        },
+        {
+          "id": 399,
+          "name": "Cherki",
+          "team": "MCI",
+          "pos": "MID",
+          "price": 7.5,
+          "code": 466052,
+          "team_code": 43,
+          "next_gw_xp": 9.01,
+          "confidence": 0.86,
+          "horizon_xp": 24.13,
+          "owned_by": 11.9,
+          "rationale": "Rotation/bench midfielder with real underlying threat (1.10 xGI/90), on FK #1, corners #1 and in form (11.0).",
+          "tags": [
+            {
+              "label": "rotation risk",
+              "kind": "warn"
+            },
+            {
+              "label": "high xGI",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "CAMEO?",
+            "kind": "bad",
+            "hint": "~46'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "COV",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "MUN",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 5,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "LIV",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "IPS",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
               "def": 1
             }
           ]
@@ -636,7 +719,7 @@
           "next_gw_xp": 0.96,
           "confidence": 0.85,
           "horizon_xp": 12.53,
-          "owned_by": 17.0,
+          "owned_by": 16.9,
           "rationale": "Rotation/bench defender with projected 1.0 pts next GW.",
           "tags": [
             {
@@ -762,6 +845,77 @@
               "def": 1
             }
           ]
+        },
+        {
+          "id": 557,
+          "name": "Tzolis",
+          "team": "ARS",
+          "pos": "MID",
+          "price": 6.5,
+          "code": 439509,
+          "team_code": 3,
+          "next_gw_xp": 2.65,
+          "confidence": 0.64,
+          "horizon_xp": 13.87,
+          "owned_by": 26.1,
+          "rationale": "Rotation/bench midfielder with real underlying threat (0.40 xGI/90) and a soft fixture run.",
+          "tags": [
+            {
+              "label": "rotation risk",
+              "kind": "warn"
+            },
+            {
+              "label": "soft fixtures",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "CAMEO?",
+            "kind": "bad",
+            "hint": "~44'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "CHE",
+              "home": true,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "SUN",
+              "home": false,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "BHA",
+              "home": false,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "LEE",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "NFO",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            }
+          ]
         }
       ],
       "starting": [
@@ -836,81 +990,6 @@
               "home": true,
               "difficulty": 2,
               "att": 3,
-              "def": 1
-            }
-          ]
-        },
-        {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF",
-          "price": 6.0,
-          "code": 209036,
-          "team_code": 43,
-          "next_gw_xp": 6.17,
-          "confidence": 0.91,
-          "horizon_xp": 34.09,
-          "owned_by": 19.6,
-          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            },
-            {
-              "label": "in form",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~76'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
               "def": 1
             }
           ]
@@ -1005,7 +1084,7 @@
           "next_gw_xp": 4.77,
           "confidence": 0.91,
           "horizon_xp": 31.45,
-          "owned_by": 10.8,
+          "owned_by": 10.7,
           "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
@@ -1070,6 +1149,81 @@
           ]
         },
         {
+          "id": 88,
+          "name": "Kayode",
+          "team": "BRE",
+          "pos": "DEF",
+          "price": 4.6,
+          "code": 607464,
+          "team_code": 94,
+          "next_gw_xp": 6.14,
+          "confidence": 0.91,
+          "horizon_xp": 30.82,
+          "owned_by": 7.8,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.5).",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~80'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "BOU",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "CHE",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            },
+            {
+              "gw": 6,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "LIV",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 115,
           "name": "De Cuyper",
           "team": "BHA",
@@ -1080,7 +1234,7 @@
           "next_gw_xp": 7.08,
           "confidence": 0.83,
           "horizon_xp": 25.91,
-          "owned_by": 8.4,
+          "owned_by": 8.7,
           "rationale": "Rotation/bench defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (8.5) and a soft fixture run.",
           "tags": [
             {
@@ -1242,7 +1396,7 @@
           "next_gw_xp": 2.08,
           "confidence": 0.91,
           "horizon_xp": 29.23,
-          "owned_by": 48.1,
+          "owned_by": 47.8,
           "rationale": "Nailed midfielder with on pens #1, FK #1, corners #1.",
           "tags": [
             {
@@ -1307,6 +1461,85 @@
           ]
         },
         {
+          "id": 399,
+          "name": "Cherki",
+          "team": "MCI",
+          "pos": "MID",
+          "price": 7.5,
+          "code": 466052,
+          "team_code": 43,
+          "next_gw_xp": 9.01,
+          "confidence": 0.86,
+          "horizon_xp": 24.13,
+          "owned_by": 11.9,
+          "rationale": "Rotation/bench midfielder with real underlying threat (1.10 xGI/90), on FK #1, corners #1 and in form (11.0).",
+          "tags": [
+            {
+              "label": "rotation risk",
+              "kind": "warn"
+            },
+            {
+              "label": "high xGI",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "CAMEO?",
+            "kind": "bad",
+            "hint": "~46'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "COV",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "MUN",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 5,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "LIV",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "IPS",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            }
+          ]
+        },
+        {
           "id": 411,
           "name": "Haaland",
           "team": "MCI",
@@ -1314,11 +1547,11 @@
           "price": 15.5,
           "code": 223094,
           "team_code": 43,
-          "next_gw_xp": 5.8,
+          "next_gw_xp": 7.44,
           "confidence": 0.91,
-          "horizon_xp": 32.2,
-          "owned_by": 67.9,
-          "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
+          "horizon_xp": 32.59,
+          "owned_by": 68.0,
+          "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
           "tags": [
             {
               "label": "nailed",
@@ -1474,8 +1707,8 @@
           "team_code": 31,
           "next_gw_xp": 2.14,
           "confidence": 0.85,
-          "horizon_xp": 12.14,
-          "owned_by": 10.8,
+          "horizon_xp": 12.15,
+          "owned_by": 10.7,
           "rationale": "Rotation/bench midfielder with a soft fixture run.",
           "tags": [
             {
@@ -1534,77 +1767,6 @@
               "def": 1
             }
           ]
-        },
-        {
-          "id": 557,
-          "name": "Tzolis",
-          "team": "ARS",
-          "pos": "MID",
-          "price": 6.5,
-          "code": 439509,
-          "team_code": 3,
-          "next_gw_xp": 2.65,
-          "confidence": 0.64,
-          "horizon_xp": 13.87,
-          "owned_by": 26.1,
-          "rationale": "Rotation/bench midfielder with real underlying threat (0.40 xGI/90) and a soft fixture run.",
-          "tags": [
-            {
-              "label": "rotation risk",
-              "kind": "warn"
-            },
-            {
-              "label": "soft fixtures",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "CAMEO?",
-            "kind": "bad",
-            "hint": "~44'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "CHE",
-              "home": true,
-              "difficulty": 2,
-              "att": 4,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "SUN",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 5,
-              "opp": "BHA",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LEE",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 7,
-              "opp": "NFO",
-              "home": false,
-              "difficulty": 2,
-              "att": 4,
-              "def": 1
-            }
-          ]
         }
       ],
       "bench": [
@@ -1619,7 +1781,7 @@
           "next_gw_xp": 1.93,
           "confidence": 0.9,
           "horizon_xp": 26.33,
-          "owned_by": 35.6,
+          "owned_by": 35.3,
           "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.73 xGI/90) and on pens #2, FK #2, corners #2.",
           "tags": [
             {
@@ -1694,7 +1856,7 @@
           "next_gw_xp": 1.67,
           "confidence": 0.91,
           "horizon_xp": 17.15,
-          "owned_by": 8.6,
+          "owned_by": 8.5,
           "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
           "tags": [
             {
@@ -1769,7 +1931,7 @@
           "next_gw_xp": 1.68,
           "confidence": 0.9,
           "horizon_xp": 17.44,
-          "owned_by": 28.5,
+          "owned_by": 28.4,
           "rationale": "Likely-starting forward (rotation risk) with on pens #1.",
           "tags": [
             {
@@ -1900,7 +2062,7 @@
     },
     {
       "gw": 4,
-      "xi_expected": 57.77,
+      "xi_expected": 60.18,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -1983,101 +2145,93 @@
         ]
       },
       "vice": {
-        "id": 31,
-        "name": "Konsa",
-        "team": "ARS",
-        "pos": "DEF",
-        "price": 4.5,
-        "code": 199798,
-        "team_code": 3,
-        "next_gw_xp": 4.77,
+        "id": 155,
+        "name": "Enzo",
+        "team": "CHE",
+        "pos": "MID",
+        "price": 7.0,
+        "code": 448047,
+        "team_code": 8,
+        "next_gw_xp": 1.31,
         "confidence": 0.91,
-        "horizon_xp": 31.45,
-        "owned_by": 10.8,
-        "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
+        "horizon_xp": 24.57,
+        "owned_by": 4.3,
+        "rationale": "Nailed midfielder with on pens #2, FK #2.",
         "tags": [
           {
             "label": "nailed",
             "kind": "good"
           },
           {
-            "label": "clean-sheet source",
-            "kind": "good"
-          },
-          {
-            "label": "soft fixtures",
-            "kind": "good"
+            "label": "set-pieces",
+            "kind": "info"
           }
         ],
         "xmins_badge": {
           "label": "NAILED",
           "kind": "good",
-          "hint": "~74'"
+          "hint": "~76'"
         },
         "fixtures": [
           {
             "gw": 3,
-            "opp": "CHE",
-            "home": true,
-            "difficulty": 2,
-            "att": 4,
-            "def": 1
+            "opp": "ARS",
+            "home": false,
+            "difficulty": 5,
+            "att": 5,
+            "def": 5
           },
           {
             "gw": 4,
-            "opp": "SUN",
-            "home": false,
+            "opp": "HUL",
+            "home": true,
             "difficulty": 1,
             "att": 1,
             "def": 1
           },
           {
             "gw": 5,
-            "opp": "BHA",
+            "opp": "BRE",
             "home": false,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
+            "difficulty": 4,
+            "att": 4,
+            "def": 3
           },
           {
             "gw": 6,
-            "opp": "LEE",
+            "opp": "BOU",
             "home": true,
             "difficulty": 2,
             "att": 3,
-            "def": 1
+            "def": 2
           },
           {
             "gw": 7,
-            "opp": "NFO",
+            "opp": "EVE",
             "home": false,
-            "difficulty": 2,
+            "difficulty": 4,
             "att": 4,
-            "def": 1
+            "def": 3
           }
         ]
       },
       "transfers_in": [
         {
-          "id": 481,
-          "name": "Anderson",
-          "team": "MCI",
+          "id": 155,
+          "name": "Enzo",
+          "team": "CHE",
           "pos": "MID",
-          "price": 6.4,
-          "code": 215379,
-          "team_code": 43,
-          "next_gw_xp": 3.42,
-          "confidence": 0.92,
-          "horizon_xp": 26.84,
-          "owned_by": 6.1,
-          "rationale": "Nailed midfielder with on corners #2 and reliable DEFCON points (13.9/90 → +2 most weeks).",
+          "price": 7.0,
+          "code": 448047,
+          "team_code": 8,
+          "next_gw_xp": 1.31,
+          "confidence": 0.91,
+          "horizon_xp": 24.57,
+          "owned_by": 4.3,
+          "rationale": "Nailed midfielder with on pens #2, FK #2.",
           "tags": [
             {
               "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "elite DEFCON",
               "kind": "good"
             },
             {
@@ -2088,7 +2242,88 @@
           "xmins_badge": {
             "label": "NAILED",
             "kind": "good",
-            "hint": "~80'"
+            "hint": "~76'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "ARS",
+              "home": false,
+              "difficulty": 5,
+              "att": 5,
+              "def": 5
+            },
+            {
+              "gw": 4,
+              "opp": "HUL",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "BRE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            },
+            {
+              "gw": 6,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "EVE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            }
+          ]
+        }
+      ],
+      "transfers_out": [
+        {
+          "id": 399,
+          "name": "Cherki",
+          "team": "MCI",
+          "pos": "MID",
+          "price": 7.5,
+          "code": 466052,
+          "team_code": 43,
+          "next_gw_xp": 9.01,
+          "confidence": 0.86,
+          "horizon_xp": 24.13,
+          "owned_by": 11.9,
+          "rationale": "Rotation/bench midfielder with real underlying threat (1.10 xGI/90), on FK #1, corners #1 and in form (11.0).",
+          "tags": [
+            {
+              "label": "rotation risk",
+              "kind": "warn"
+            },
+            {
+              "label": "high xGI",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "CAMEO?",
+            "kind": "bad",
+            "hint": "~46'"
           },
           "fixtures": [
             {
@@ -2129,79 +2364,6 @@
               "home": true,
               "difficulty": 1,
               "att": 1,
-              "def": 1
-            }
-          ]
-        }
-      ],
-      "transfers_out": [
-        {
-          "id": 557,
-          "name": "Tzolis",
-          "team": "ARS",
-          "pos": "MID",
-          "price": 6.5,
-          "code": 439509,
-          "team_code": 3,
-          "next_gw_xp": 2.65,
-          "confidence": 0.64,
-          "horizon_xp": 13.87,
-          "owned_by": 26.1,
-          "rationale": "Rotation/bench midfielder with real underlying threat (0.40 xGI/90) and a soft fixture run.",
-          "tags": [
-            {
-              "label": "rotation risk",
-              "kind": "warn"
-            },
-            {
-              "label": "soft fixtures",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "CAMEO?",
-            "kind": "bad",
-            "hint": "~44'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "CHE",
-              "home": true,
-              "difficulty": 2,
-              "att": 4,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "SUN",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 5,
-              "opp": "BHA",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LEE",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 7,
-              "opp": "NFO",
-              "home": false,
-              "difficulty": 2,
-              "att": 4,
               "def": 1
             }
           ]
@@ -2279,81 +2441,6 @@
               "home": true,
               "difficulty": 2,
               "att": 3,
-              "def": 1
-            }
-          ]
-        },
-        {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF",
-          "price": 6.0,
-          "code": 209036,
-          "team_code": 43,
-          "next_gw_xp": 6.17,
-          "confidence": 0.91,
-          "horizon_xp": 34.09,
-          "owned_by": 19.6,
-          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            },
-            {
-              "label": "in form",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~76'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
               "def": 1
             }
           ]
@@ -2448,7 +2535,7 @@
           "next_gw_xp": 4.77,
           "confidence": 0.91,
           "horizon_xp": 31.45,
-          "owned_by": 10.8,
+          "owned_by": 10.7,
           "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
@@ -2513,6 +2600,81 @@
           ]
         },
         {
+          "id": 88,
+          "name": "Kayode",
+          "team": "BRE",
+          "pos": "DEF",
+          "price": 4.6,
+          "code": 607464,
+          "team_code": 94,
+          "next_gw_xp": 6.14,
+          "confidence": 0.91,
+          "horizon_xp": 30.82,
+          "owned_by": 7.8,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.5).",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~80'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "BOU",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "CHE",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            },
+            {
+              "gw": 6,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "LIV",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 115,
           "name": "De Cuyper",
           "team": "BHA",
@@ -2523,7 +2685,7 @@
           "next_gw_xp": 7.08,
           "confidence": 0.83,
           "horizon_xp": 25.91,
-          "owned_by": 8.4,
+          "owned_by": 8.7,
           "rationale": "Rotation/bench defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (8.5) and a soft fixture run.",
           "tags": [
             {
@@ -2685,7 +2847,7 @@
           "next_gw_xp": 2.08,
           "confidence": 0.91,
           "horizon_xp": 29.23,
-          "owned_by": 48.1,
+          "owned_by": 47.8,
           "rationale": "Nailed midfielder with on pens #1, FK #1, corners #1.",
           "tags": [
             {
@@ -2750,25 +2912,21 @@
           ]
         },
         {
-          "id": 481,
-          "name": "Anderson",
-          "team": "MCI",
+          "id": 155,
+          "name": "Enzo",
+          "team": "CHE",
           "pos": "MID",
-          "price": 6.4,
-          "code": 215379,
-          "team_code": 43,
-          "next_gw_xp": 3.42,
-          "confidence": 0.92,
-          "horizon_xp": 26.84,
-          "owned_by": 6.1,
-          "rationale": "Nailed midfielder with on corners #2 and reliable DEFCON points (13.9/90 → +2 most weeks).",
+          "price": 7.0,
+          "code": 448047,
+          "team_code": 8,
+          "next_gw_xp": 1.31,
+          "confidence": 0.91,
+          "horizon_xp": 24.57,
+          "owned_by": 4.3,
+          "rationale": "Nailed midfielder with on pens #2, FK #2.",
           "tags": [
             {
               "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "elite DEFCON",
               "kind": "good"
             },
             {
@@ -2779,48 +2937,48 @@
           "xmins_badge": {
             "label": "NAILED",
             "kind": "good",
-            "hint": "~80'"
+            "hint": "~76'"
           },
           "fixtures": [
             {
               "gw": 3,
-              "opp": "COV",
+              "opp": "ARS",
+              "home": false,
+              "difficulty": 5,
+              "att": 5,
+              "def": 5
+            },
+            {
+              "gw": 4,
+              "opp": "HUL",
               "home": true,
               "difficulty": 1,
               "att": 1,
               "def": 1
             },
             {
-              "gw": 4,
-              "opp": "MUN",
+              "gw": 5,
+              "opp": "BRE",
               "home": false,
               "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
+              "att": 4,
+              "def": 3
             },
             {
               "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
               "def": 2
             },
             {
               "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
+              "opp": "EVE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
             }
           ]
         },
@@ -2832,11 +2990,11 @@
           "price": 15.5,
           "code": 223094,
           "team_code": 43,
-          "next_gw_xp": 5.8,
+          "next_gw_xp": 7.44,
           "confidence": 0.91,
-          "horizon_xp": 32.2,
-          "owned_by": 67.9,
-          "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
+          "horizon_xp": 32.59,
+          "owned_by": 68.0,
+          "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
           "tags": [
             {
               "label": "nailed",
@@ -2993,7 +3151,7 @@
           "next_gw_xp": 1.68,
           "confidence": 0.9,
           "horizon_xp": 17.44,
-          "owned_by": 28.5,
+          "owned_by": 28.4,
           "rationale": "Likely-starting forward (rotation risk) with on pens #1.",
           "tags": [
             {
@@ -3062,7 +3220,7 @@
           "next_gw_xp": 1.93,
           "confidence": 0.9,
           "horizon_xp": 26.33,
-          "owned_by": 35.6,
+          "owned_by": 35.3,
           "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.73 xGI/90) and on pens #2, FK #2, corners #2.",
           "tags": [
             {
@@ -3137,7 +3295,7 @@
           "next_gw_xp": 1.67,
           "confidence": 0.91,
           "horizon_xp": 17.15,
-          "owned_by": 8.6,
+          "owned_by": 8.5,
           "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
           "tags": [
             {
@@ -3211,8 +3369,8 @@
           "team_code": 31,
           "next_gw_xp": 2.14,
           "confidence": 0.85,
-          "horizon_xp": 12.14,
-          "owned_by": 10.8,
+          "horizon_xp": 12.15,
+          "owned_by": 10.7,
           "rationale": "Rotation/bench midfielder with a soft fixture run.",
           "tags": [
             {
@@ -3347,7 +3505,7 @@
     },
     {
       "gw": 5,
-      "xi_expected": 64.17,
+      "xi_expected": 62.74,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -3361,7 +3519,7 @@
         "next_gw_xp": 2.08,
         "confidence": 0.91,
         "horizon_xp": 29.23,
-        "owned_by": 48.1,
+        "owned_by": 47.8,
         "rationale": "Nailed midfielder with on pens #1, FK #1, corners #1.",
         "tags": [
           {
@@ -3426,21 +3584,25 @@
         ]
       },
       "vice": {
-        "id": 427,
-        "name": "Mbeumo",
-        "team": "MUN",
-        "pos": "MID",
-        "price": 8.0,
-        "code": 446008,
-        "team_code": 1,
-        "next_gw_xp": 1.93,
-        "confidence": 0.9,
-        "horizon_xp": 26.33,
-        "owned_by": 35.6,
-        "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.73 xGI/90) and on pens #2, FK #2, corners #2.",
+        "id": 469,
+        "name": "N.Williams",
+        "team": "NFO",
+        "pos": "DEF",
+        "price": 5.0,
+        "code": 215136,
+        "team_code": 17,
+        "next_gw_xp": 2.29,
+        "confidence": 0.91,
+        "horizon_xp": 28.45,
+        "owned_by": 8.9,
+        "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
         "tags": [
           {
-            "label": "high xGI",
+            "label": "nailed",
+            "kind": "good"
+          },
+          {
+            "label": "clean-sheet source",
             "kind": "good"
           },
           {
@@ -3448,72 +3610,72 @@
             "kind": "info"
           },
           {
-            "label": "template",
-            "kind": "info"
+            "label": "soft fixtures",
+            "kind": "good"
           }
         ],
         "xmins_badge": {
-          "label": "ROTATION",
-          "kind": "warn",
-          "hint": "~68'"
+          "label": "NAILED",
+          "kind": "good",
+          "hint": "~78'"
         },
         "fixtures": [
           {
             "gw": 3,
-            "opp": "EVE",
-            "home": false,
-            "difficulty": 3,
-            "att": 4,
-            "def": 2
+            "opp": "TOT",
+            "home": true,
+            "difficulty": 2,
+            "att": 3,
+            "def": 1
           },
           {
             "gw": 4,
-            "opp": "MCI",
-            "home": true,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
+            "opp": "AVL",
+            "home": false,
+            "difficulty": 2,
+            "att": 4,
+            "def": 1
           },
           {
             "gw": 5,
-            "opp": "FUL",
-            "home": false,
+            "opp": "COV",
+            "home": true,
             "difficulty": 1,
             "att": 1,
             "def": 1
           },
           {
             "gw": 6,
-            "opp": "TOT",
-            "home": true,
+            "opp": "CRY",
+            "home": false,
             "difficulty": 2,
-            "att": 3,
-            "def": 2
+            "att": 4,
+            "def": 1
           },
           {
             "gw": 7,
-            "opp": "LEE",
-            "home": false,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
+            "opp": "ARS",
+            "home": true,
+            "difficulty": 4,
+            "att": 5,
+            "def": 2
           }
         ]
       },
       "transfers_in": [
         {
-          "id": 423,
-          "name": "Shaw",
-          "team": "MUN",
+          "id": 469,
+          "name": "N.Williams",
+          "team": "NFO",
           "pos": "DEF",
-          "price": 4.5,
-          "code": 106760,
-          "team_code": 1,
-          "next_gw_xp": 1.41,
+          "price": 5.0,
+          "code": 215136,
+          "team_code": 17,
+          "next_gw_xp": 2.29,
           "confidence": 0.91,
-          "horizon_xp": 21.5,
-          "owned_by": 19.5,
-          "rationale": "Nailed defender with strong clean-sheet odds.",
+          "horizon_xp": 28.45,
+          "owned_by": 8.9,
+          "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
               "label": "nailed",
@@ -3522,53 +3684,61 @@
             {
               "label": "clean-sheet source",
               "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "soft fixtures",
+              "kind": "good"
             }
           ],
           "xmins_badge": {
             "label": "NAILED",
             "kind": "good",
-            "hint": "~80'"
+            "hint": "~78'"
           },
           "fixtures": [
             {
               "gw": 3,
-              "opp": "EVE",
-              "home": false,
-              "difficulty": 3,
-              "att": 4,
-              "def": 2
+              "opp": "TOT",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
             },
             {
               "gw": 4,
-              "opp": "MCI",
-              "home": true,
-              "difficulty": 5,
-              "att": 5,
-              "def": 5
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
             },
             {
               "gw": 5,
-              "opp": "FUL",
-              "home": false,
+              "opp": "COV",
+              "home": true,
               "difficulty": 1,
               "att": 1,
               "def": 1
             },
             {
               "gw": 6,
-              "opp": "TOT",
-              "home": true,
+              "opp": "CRY",
+              "home": false,
               "difficulty": 2,
-              "att": 3,
-              "def": 2
+              "att": 4,
+              "def": 1
             },
             {
               "gw": 7,
-              "opp": "LEE",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
+              "opp": "ARS",
+              "home": true,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
             }
           ]
         }
@@ -3585,7 +3755,7 @@
           "next_gw_xp": 7.08,
           "confidence": 0.83,
           "horizon_xp": 25.91,
-          "owned_by": 8.4,
+          "owned_by": 8.7,
           "rationale": "Rotation/bench defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (8.5) and a soft fixture run.",
           "tags": [
             {
@@ -3735,81 +3905,6 @@
           ]
         },
         {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF",
-          "price": 6.0,
-          "code": 209036,
-          "team_code": 43,
-          "next_gw_xp": 6.17,
-          "confidence": 0.91,
-          "horizon_xp": 34.09,
-          "owned_by": 19.6,
-          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            },
-            {
-              "label": "in form",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~76'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 328,
           "name": "Struijk",
           "team": "BHA",
@@ -3899,7 +3994,7 @@
           "next_gw_xp": 4.77,
           "confidence": 0.91,
           "horizon_xp": 31.45,
-          "owned_by": 10.8,
+          "owned_by": 10.7,
           "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
@@ -3960,6 +4055,160 @@
               "difficulty": 2,
               "att": 4,
               "def": 1
+            }
+          ]
+        },
+        {
+          "id": 88,
+          "name": "Kayode",
+          "team": "BRE",
+          "pos": "DEF",
+          "price": 4.6,
+          "code": 607464,
+          "team_code": 94,
+          "next_gw_xp": 6.14,
+          "confidence": 0.91,
+          "horizon_xp": 30.82,
+          "owned_by": 7.8,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.5).",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~80'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "BOU",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "CHE",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            },
+            {
+              "gw": 6,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "LIV",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            }
+          ]
+        },
+        {
+          "id": 469,
+          "name": "N.Williams",
+          "team": "NFO",
+          "pos": "DEF",
+          "price": 5.0,
+          "code": 215136,
+          "team_code": 17,
+          "next_gw_xp": 2.29,
+          "confidence": 0.91,
+          "horizon_xp": 28.45,
+          "owned_by": 8.9,
+          "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "soft fixtures",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~78'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "TOT",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "COV",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "CRY",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "ARS",
+              "home": true,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
             }
           ]
         },
@@ -4043,77 +4292,6 @@
           ]
         },
         {
-          "id": 423,
-          "name": "Shaw",
-          "team": "MUN",
-          "pos": "DEF",
-          "price": 4.5,
-          "code": 106760,
-          "team_code": 1,
-          "next_gw_xp": 1.41,
-          "confidence": 0.91,
-          "horizon_xp": 21.5,
-          "owned_by": 19.5,
-          "rationale": "Nailed defender with strong clean-sheet odds.",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~80'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "EVE",
-              "home": false,
-              "difficulty": 3,
-              "att": 4,
-              "def": 2
-            },
-            {
-              "gw": 4,
-              "opp": "MCI",
-              "home": true,
-              "difficulty": 5,
-              "att": 5,
-              "def": 5
-            },
-            {
-              "gw": 5,
-              "opp": "FUL",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "TOT",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "LEE",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 426,
           "name": "B.Fernandes",
           "team": "MUN",
@@ -4124,7 +4302,7 @@
           "next_gw_xp": 2.08,
           "confidence": 0.91,
           "horizon_xp": 29.23,
-          "owned_by": 48.1,
+          "owned_by": 47.8,
           "rationale": "Nailed midfielder with on pens #1, FK #1, corners #1.",
           "tags": [
             {
@@ -4189,81 +4367,6 @@
           ]
         },
         {
-          "id": 481,
-          "name": "Anderson",
-          "team": "MCI",
-          "pos": "MID",
-          "price": 6.4,
-          "code": 215379,
-          "team_code": 43,
-          "next_gw_xp": 3.42,
-          "confidence": 0.92,
-          "horizon_xp": 26.84,
-          "owned_by": 6.1,
-          "rationale": "Nailed midfielder with on corners #2 and reliable DEFCON points (13.9/90 → +2 most weeks).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "elite DEFCON",
-              "kind": "good"
-            },
-            {
-              "label": "set-pieces",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~80'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 427,
           "name": "Mbeumo",
           "team": "MUN",
@@ -4274,7 +4377,7 @@
           "next_gw_xp": 1.93,
           "confidence": 0.9,
           "horizon_xp": 26.33,
-          "owned_by": 35.6,
+          "owned_by": 35.3,
           "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.73 xGI/90) and on pens #2, FK #2, corners #2.",
           "tags": [
             {
@@ -4339,6 +4442,77 @@
           ]
         },
         {
+          "id": 155,
+          "name": "Enzo",
+          "team": "CHE",
+          "pos": "MID",
+          "price": 7.0,
+          "code": 448047,
+          "team_code": 8,
+          "next_gw_xp": 1.31,
+          "confidence": 0.91,
+          "horizon_xp": 24.57,
+          "owned_by": 4.3,
+          "rationale": "Nailed midfielder with on pens #2, FK #2.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~76'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "ARS",
+              "home": false,
+              "difficulty": 5,
+              "att": 5,
+              "def": 5
+            },
+            {
+              "gw": 4,
+              "opp": "HUL",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "BRE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            },
+            {
+              "gw": 6,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "EVE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            }
+          ]
+        },
+        {
           "id": 411,
           "name": "Haaland",
           "team": "MCI",
@@ -4346,11 +4520,11 @@
           "price": 15.5,
           "code": 223094,
           "team_code": 43,
-          "next_gw_xp": 5.8,
+          "next_gw_xp": 7.44,
           "confidence": 0.91,
-          "horizon_xp": 32.2,
-          "owned_by": 67.9,
-          "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
+          "horizon_xp": 32.59,
+          "owned_by": 68.0,
+          "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
           "tags": [
             {
               "label": "nailed",
@@ -4509,7 +4683,7 @@
           "next_gw_xp": 1.67,
           "confidence": 0.91,
           "horizon_xp": 17.15,
-          "owned_by": 8.6,
+          "owned_by": 8.5,
           "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
           "tags": [
             {
@@ -4584,7 +4758,7 @@
           "next_gw_xp": 1.68,
           "confidence": 0.9,
           "horizon_xp": 17.44,
-          "owned_by": 28.5,
+          "owned_by": 28.4,
           "rationale": "Likely-starting forward (rotation risk) with on pens #1.",
           "tags": [
             {
@@ -4650,8 +4824,8 @@
           "team_code": 31,
           "next_gw_xp": 2.14,
           "confidence": 0.85,
-          "horizon_xp": 12.14,
-          "owned_by": 10.8,
+          "horizon_xp": 12.15,
+          "owned_by": 10.7,
           "rationale": "Rotation/bench midfielder with a soft fixture run.",
           "tags": [
             {
@@ -4786,7 +4960,7 @@
     },
     {
       "gw": 6,
-      "xi_expected": 59.56,
+      "xi_expected": 61.2,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -5186,81 +5360,6 @@
           ]
         },
         {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF",
-          "price": 6.0,
-          "code": 209036,
-          "team_code": 43,
-          "next_gw_xp": 6.17,
-          "confidence": 0.91,
-          "horizon_xp": 34.09,
-          "owned_by": 19.6,
-          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            },
-            {
-              "label": "in form",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~76'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 328,
           "name": "Struijk",
           "team": "BHA",
@@ -5429,7 +5528,7 @@
           "next_gw_xp": 4.77,
           "confidence": 0.91,
           "horizon_xp": 31.45,
-          "owned_by": 10.8,
+          "owned_by": 10.7,
           "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
@@ -5494,18 +5593,18 @@
           ]
         },
         {
-          "id": 423,
-          "name": "Shaw",
-          "team": "MUN",
+          "id": 88,
+          "name": "Kayode",
+          "team": "BRE",
           "pos": "DEF",
-          "price": 4.5,
-          "code": 106760,
-          "team_code": 1,
-          "next_gw_xp": 1.41,
+          "price": 4.6,
+          "code": 607464,
+          "team_code": 94,
+          "next_gw_xp": 6.14,
           "confidence": 0.91,
-          "horizon_xp": 21.5,
-          "owned_by": 19.5,
-          "rationale": "Nailed defender with strong clean-sheet odds.",
+          "horizon_xp": 30.82,
+          "owned_by": 7.8,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.5).",
           "tags": [
             {
               "label": "nailed",
@@ -5513,6 +5612,10 @@
             },
             {
               "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
               "kind": "good"
             }
           ],
@@ -5524,43 +5627,122 @@
           "fixtures": [
             {
               "gw": 3,
-              "opp": "EVE",
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "BOU",
               "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "CHE",
+              "home": true,
               "difficulty": 3,
               "att": 4,
               "def": 2
             },
             {
-              "gw": 4,
-              "opp": "MCI",
+              "gw": 6,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "LIV",
               "home": true,
-              "difficulty": 5,
-              "att": 5,
-              "def": 5
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
+            }
+          ]
+        },
+        {
+          "id": 469,
+          "name": "N.Williams",
+          "team": "NFO",
+          "pos": "DEF",
+          "price": 5.0,
+          "code": 215136,
+          "team_code": 17,
+          "next_gw_xp": 2.29,
+          "confidence": 0.91,
+          "horizon_xp": 28.45,
+          "owned_by": 8.9,
+          "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "soft fixtures",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~78'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "TOT",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
             },
             {
               "gw": 5,
-              "opp": "FUL",
-              "home": false,
+              "opp": "COV",
+              "home": true,
               "difficulty": 1,
               "att": 1,
               "def": 1
             },
             {
               "gw": 6,
-              "opp": "TOT",
-              "home": true,
+              "opp": "CRY",
+              "home": false,
               "difficulty": 2,
-              "att": 3,
-              "def": 2
+              "att": 4,
+              "def": 1
             },
             {
               "gw": 7,
-              "opp": "LEE",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
+              "opp": "ARS",
+              "home": true,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
             }
           ]
         },
@@ -5575,7 +5757,7 @@
           "next_gw_xp": 2.08,
           "confidence": 0.91,
           "horizon_xp": 29.23,
-          "owned_by": 48.1,
+          "owned_by": 47.8,
           "rationale": "Nailed midfielder with on pens #1, FK #1, corners #1.",
           "tags": [
             {
@@ -5640,81 +5822,6 @@
           ]
         },
         {
-          "id": 481,
-          "name": "Anderson",
-          "team": "MCI",
-          "pos": "MID",
-          "price": 6.4,
-          "code": 215379,
-          "team_code": 43,
-          "next_gw_xp": 3.42,
-          "confidence": 0.92,
-          "horizon_xp": 26.84,
-          "owned_by": 6.1,
-          "rationale": "Nailed midfielder with on corners #2 and reliable DEFCON points (13.9/90 → +2 most weeks).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "elite DEFCON",
-              "kind": "good"
-            },
-            {
-              "label": "set-pieces",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~80'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 427,
           "name": "Mbeumo",
           "team": "MUN",
@@ -5725,7 +5832,7 @@
           "next_gw_xp": 1.93,
           "confidence": 0.9,
           "horizon_xp": 26.33,
-          "owned_by": 35.6,
+          "owned_by": 35.3,
           "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.73 xGI/90) and on pens #2, FK #2, corners #2.",
           "tags": [
             {
@@ -5790,6 +5897,77 @@
           ]
         },
         {
+          "id": 155,
+          "name": "Enzo",
+          "team": "CHE",
+          "pos": "MID",
+          "price": 7.0,
+          "code": 448047,
+          "team_code": 8,
+          "next_gw_xp": 1.31,
+          "confidence": 0.91,
+          "horizon_xp": 24.57,
+          "owned_by": 4.3,
+          "rationale": "Nailed midfielder with on pens #2, FK #2.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~76'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "ARS",
+              "home": false,
+              "difficulty": 5,
+              "att": 5,
+              "def": 5
+            },
+            {
+              "gw": 4,
+              "opp": "HUL",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "BRE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            },
+            {
+              "gw": 6,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "EVE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            }
+          ]
+        },
+        {
           "id": 411,
           "name": "Haaland",
           "team": "MCI",
@@ -5797,11 +5975,11 @@
           "price": 15.5,
           "code": 223094,
           "team_code": 43,
-          "next_gw_xp": 5.8,
+          "next_gw_xp": 7.44,
           "confidence": 0.91,
-          "horizon_xp": 32.2,
-          "owned_by": 67.9,
-          "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
+          "horizon_xp": 32.59,
+          "owned_by": 68.0,
+          "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
           "tags": [
             {
               "label": "nailed",
@@ -5960,7 +6138,7 @@
           "next_gw_xp": 1.67,
           "confidence": 0.91,
           "horizon_xp": 17.15,
-          "owned_by": 8.6,
+          "owned_by": 8.5,
           "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
           "tags": [
             {
@@ -6035,7 +6213,7 @@
           "next_gw_xp": 1.68,
           "confidence": 0.9,
           "horizon_xp": 17.44,
-          "owned_by": 28.5,
+          "owned_by": 28.4,
           "rationale": "Likely-starting forward (rotation risk) with on pens #1.",
           "tags": [
             {
@@ -6101,8 +6279,8 @@
           "team_code": 31,
           "next_gw_xp": 2.14,
           "confidence": 0.85,
-          "horizon_xp": 12.14,
-          "owned_by": 10.8,
+          "horizon_xp": 12.15,
+          "owned_by": 10.7,
           "rationale": "Rotation/bench midfielder with a soft fixture run.",
           "tags": [
             {
@@ -6237,7 +6415,7 @@
     },
     {
       "gw": 7,
-      "xi_expected": 71.87,
+      "xi_expected": 68.72,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -6248,11 +6426,11 @@
         "price": 6.0,
         "code": 209036,
         "team_code": 43,
-        "next_gw_xp": 6.17,
+        "next_gw_xp": 6.43,
         "confidence": 0.91,
-        "horizon_xp": 34.09,
+        "horizon_xp": 33.08,
         "owned_by": 19.6,
-        "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
+        "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.0).",
         "tags": [
           {
             "label": "nailed",
@@ -6323,11 +6501,11 @@
         "price": 15.5,
         "code": 223094,
         "team_code": 43,
-        "next_gw_xp": 5.8,
+        "next_gw_xp": 7.44,
         "confidence": 0.91,
-        "horizon_xp": 32.2,
-        "owned_by": 67.9,
-        "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
+        "horizon_xp": 32.59,
+        "owned_by": 68.0,
+        "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
         "tags": [
           {
             "label": "nailed",
@@ -6398,8 +6576,164 @@
           }
         ]
       },
-      "transfers_in": [],
-      "transfers_out": [],
+      "transfers_in": [
+        {
+          "id": 388,
+          "name": "Guéhi",
+          "team": "MCI",
+          "pos": "DEF",
+          "price": 6.0,
+          "code": 209036,
+          "team_code": 43,
+          "next_gw_xp": 6.43,
+          "confidence": 0.91,
+          "horizon_xp": 33.08,
+          "owned_by": 19.6,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.0).",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~76'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "COV",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "MUN",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 5,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "LIV",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "IPS",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            }
+          ]
+        }
+      ],
+      "transfers_out": [
+        {
+          "id": 469,
+          "name": "N.Williams",
+          "team": "NFO",
+          "pos": "DEF",
+          "price": 5.0,
+          "code": 215136,
+          "team_code": 17,
+          "next_gw_xp": 2.29,
+          "confidence": 0.91,
+          "horizon_xp": 28.45,
+          "owned_by": 8.9,
+          "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "soft fixtures",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~78'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "TOT",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "AVL",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "COV",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "CRY",
+              "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 7,
+              "opp": "ARS",
+              "home": true,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            }
+          ]
+        }
+      ],
       "starting": [
         {
           "id": 109,
@@ -6472,81 +6806,6 @@
               "home": true,
               "difficulty": 2,
               "att": 3,
-              "def": 1
-            }
-          ]
-        },
-        {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF",
-          "price": 6.0,
-          "code": 209036,
-          "team_code": 43,
-          "next_gw_xp": 6.17,
-          "confidence": 0.91,
-          "horizon_xp": 34.09,
-          "owned_by": 19.6,
-          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.5).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "clean-sheet source",
-              "kind": "good"
-            },
-            {
-              "label": "in form",
-              "kind": "good"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~76'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
               "def": 1
             }
           ]
@@ -6626,6 +6885,81 @@
               "home": true,
               "difficulty": 2,
               "att": 3,
+              "def": 1
+            }
+          ]
+        },
+        {
+          "id": 388,
+          "name": "Guéhi",
+          "team": "MCI",
+          "pos": "DEF",
+          "price": 6.0,
+          "code": 209036,
+          "team_code": 43,
+          "next_gw_xp": 6.43,
+          "confidence": 0.91,
+          "horizon_xp": 33.08,
+          "owned_by": 19.6,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.0).",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
+              "kind": "good"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~76'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "COV",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "MUN",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 5,
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 6,
+              "opp": "LIV",
+              "home": false,
+              "difficulty": 4,
+              "att": 5,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "IPS",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
               "def": 1
             }
           ]
@@ -6720,7 +7054,7 @@
           "next_gw_xp": 4.77,
           "confidence": 0.91,
           "horizon_xp": 31.45,
-          "owned_by": 10.8,
+          "owned_by": 10.7,
           "rationale": "Nailed defender with strong clean-sheet odds and a soft fixture run.",
           "tags": [
             {
@@ -6785,18 +7119,18 @@
           ]
         },
         {
-          "id": 423,
-          "name": "Shaw",
-          "team": "MUN",
+          "id": 88,
+          "name": "Kayode",
+          "team": "BRE",
           "pos": "DEF",
-          "price": 4.5,
-          "code": 106760,
-          "team_code": 1,
-          "next_gw_xp": 1.41,
+          "price": 4.6,
+          "code": 607464,
+          "team_code": 94,
+          "next_gw_xp": 6.14,
           "confidence": 0.91,
-          "horizon_xp": 21.5,
-          "owned_by": 19.5,
-          "rationale": "Nailed defender with strong clean-sheet odds.",
+          "horizon_xp": 30.82,
+          "owned_by": 7.8,
+          "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.5).",
           "tags": [
             {
               "label": "nailed",
@@ -6804,6 +7138,10 @@
             },
             {
               "label": "clean-sheet source",
+              "kind": "good"
+            },
+            {
+              "label": "in form",
               "kind": "good"
             }
           ],
@@ -6815,43 +7153,43 @@
           "fixtures": [
             {
               "gw": 3,
-              "opp": "EVE",
+              "opp": "SUN",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 1
+            },
+            {
+              "gw": 4,
+              "opp": "BOU",
               "home": false,
+              "difficulty": 2,
+              "att": 4,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "CHE",
+              "home": true,
               "difficulty": 3,
               "att": 4,
               "def": 2
             },
             {
-              "gw": 4,
-              "opp": "MCI",
-              "home": true,
-              "difficulty": 5,
-              "att": 5,
-              "def": 5
-            },
-            {
-              "gw": 5,
-              "opp": "FUL",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
               "gw": 6,
-              "opp": "TOT",
-              "home": true,
+              "opp": "AVL",
+              "home": false,
               "difficulty": 2,
-              "att": 3,
-              "def": 2
+              "att": 4,
+              "def": 1
             },
             {
               "gw": 7,
-              "opp": "LEE",
-              "home": false,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
+              "opp": "LIV",
+              "home": true,
+              "difficulty": 3,
+              "att": 4,
+              "def": 2
             }
           ]
         },
@@ -6866,7 +7204,7 @@
           "next_gw_xp": 2.08,
           "confidence": 0.91,
           "horizon_xp": 29.23,
-          "owned_by": 48.1,
+          "owned_by": 47.8,
           "rationale": "Nailed midfielder with on pens #1, FK #1, corners #1.",
           "tags": [
             {
@@ -6931,81 +7269,6 @@
           ]
         },
         {
-          "id": 481,
-          "name": "Anderson",
-          "team": "MCI",
-          "pos": "MID",
-          "price": 6.4,
-          "code": 215379,
-          "team_code": 43,
-          "next_gw_xp": 3.42,
-          "confidence": 0.92,
-          "horizon_xp": 26.84,
-          "owned_by": 6.1,
-          "rationale": "Nailed midfielder with on corners #2 and reliable DEFCON points (13.9/90 → +2 most weeks).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "elite DEFCON",
-              "kind": "good"
-            },
-            {
-              "label": "set-pieces",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~80'"
-          },
-          "fixtures": [
-            {
-              "gw": 3,
-              "opp": "COV",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            },
-            {
-              "gw": 4,
-              "opp": "MUN",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 5,
-              "opp": "SUN",
-              "home": true,
-              "difficulty": 2,
-              "att": 3,
-              "def": 1
-            },
-            {
-              "gw": 6,
-              "opp": "LIV",
-              "home": false,
-              "difficulty": 4,
-              "att": 5,
-              "def": 2
-            },
-            {
-              "gw": 7,
-              "opp": "IPS",
-              "home": true,
-              "difficulty": 1,
-              "att": 1,
-              "def": 1
-            }
-          ]
-        },
-        {
           "id": 427,
           "name": "Mbeumo",
           "team": "MUN",
@@ -7016,7 +7279,7 @@
           "next_gw_xp": 1.93,
           "confidence": 0.9,
           "horizon_xp": 26.33,
-          "owned_by": 35.6,
+          "owned_by": 35.3,
           "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.73 xGI/90) and on pens #2, FK #2, corners #2.",
           "tags": [
             {
@@ -7081,6 +7344,77 @@
           ]
         },
         {
+          "id": 155,
+          "name": "Enzo",
+          "team": "CHE",
+          "pos": "MID",
+          "price": 7.0,
+          "code": 448047,
+          "team_code": 8,
+          "next_gw_xp": 1.31,
+          "confidence": 0.91,
+          "horizon_xp": 24.57,
+          "owned_by": 4.3,
+          "rationale": "Nailed midfielder with on pens #2, FK #2.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~76'"
+          },
+          "fixtures": [
+            {
+              "gw": 3,
+              "opp": "ARS",
+              "home": false,
+              "difficulty": 5,
+              "att": 5,
+              "def": 5
+            },
+            {
+              "gw": 4,
+              "opp": "HUL",
+              "home": true,
+              "difficulty": 1,
+              "att": 1,
+              "def": 1
+            },
+            {
+              "gw": 5,
+              "opp": "BRE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            },
+            {
+              "gw": 6,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 2,
+              "att": 3,
+              "def": 2
+            },
+            {
+              "gw": 7,
+              "opp": "EVE",
+              "home": false,
+              "difficulty": 4,
+              "att": 4,
+              "def": 3
+            }
+          ]
+        },
+        {
           "id": 411,
           "name": "Haaland",
           "team": "MCI",
@@ -7088,11 +7422,11 @@
           "price": 15.5,
           "code": 223094,
           "team_code": 43,
-          "next_gw_xp": 5.8,
+          "next_gw_xp": 7.44,
           "confidence": 0.91,
-          "horizon_xp": 32.2,
-          "owned_by": 67.9,
-          "rationale": "Nailed forward with real underlying threat (0.73 xGI/90), on pens #1 and in form (5.0).",
+          "horizon_xp": 32.59,
+          "owned_by": 68.0,
+          "rationale": "Nailed forward with real underlying threat (0.58 xGI/90), on pens #1 and in form (7.5).",
           "tags": [
             {
               "label": "nailed",
@@ -7251,7 +7585,7 @@
           "next_gw_xp": 1.67,
           "confidence": 0.91,
           "horizon_xp": 17.15,
-          "owned_by": 8.6,
+          "owned_by": 8.5,
           "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
           "tags": [
             {
@@ -7326,7 +7660,7 @@
           "next_gw_xp": 1.68,
           "confidence": 0.9,
           "horizon_xp": 17.44,
-          "owned_by": 28.5,
+          "owned_by": 28.4,
           "rationale": "Likely-starting forward (rotation risk) with on pens #1.",
           "tags": [
             {
@@ -7392,8 +7726,8 @@
           "team_code": 31,
           "next_gw_xp": 2.14,
           "confidence": 0.85,
-          "horizon_xp": 12.14,
-          "owned_by": 10.8,
+          "horizon_xp": 12.15,
+          "owned_by": 10.7,
           "rationale": "Rotation/bench midfielder with a soft fixture run.",
           "tags": [
             {
