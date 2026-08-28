@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.myles.gaffer-watchdog</string>
+
+    <!-- Run through zsh, not the interpreter directly. `gh` reads its token
+         from ~/.config/gh/hosts.yml so it does not strictly need a login
+         shell, but `discordctl` does, and launchd sources no startup file at
+         all. Compass and Nat Cat Watch both shipped degraded output for weeks
+         because their plists skipped this.
+
+         __PYTHON__ must be the checkout's venv interpreter, NOT `python3`.
+         The system python3 on this box is 3.9.6 and the watchdog uses
+         `datetime.UTC`, which is 3.11+. A bare python3 fails on import. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>-c</string>
+        <string>exec '__PYTHON__' '__GAFFER_ROOT__/deploy/macmini/refresh_watchdog.py'</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__GAFFER_ROOT__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>GAFFER_REPO_ROOT</key>
+        <string>__GAFFER_ROOT__</string>
+    </dict>
+
+    <!-- Every 20 minutes. The thing being watched asks GitHub for a tick every
+         15, and the watchdog only acts after 90 minutes of silence, so this
+         interval just needs to be short enough to notice within the margin.
+         Almost every wake-up is one `git fetch` and one `gh run list`. -->
+    <key>StartInterval</key>
+    <integer>1200</integer>
+
+    <!-- Deliberately RunAtLoad, unlike the sweep jobs. The failure this exists
+         to catch is a stall that began while nothing was watching - including
+         while this Mac was asleep or rebooting - so the first thing it should
+         do on coming back is ask how long GitHub has been quiet. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/gaffer-watchdog.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/gaffer-watchdog.err.log</string>
+</dict>
+</plist>

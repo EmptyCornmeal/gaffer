@@ -142,3 +142,62 @@ pipeline publishes whether or not your phone buzzed. Check state with:
 .venv/bin/python -m gaffer.notify --json | python3 -c \
   'import json,sys; print(json.load(sys.stdin)["summary"]["by_state"])'
 ```
+
+---
+
+# The refresh watchdog
+
+`refresh_watchdog.py` is the second job here, and unlike the notifier it is
+meant to be loaded. It exists because of what happened on **2026-08-28**.
+
+## What broke
+
+`refresh.yml` asks GitHub for a tick every 15 minutes plus three fixed daily
+crons. Between **13:44Z and 19:35Z not one of them fired** — the `0 17 * * *`
+belt-and-braces tick included — straight through the GW2 deadline at 17:30Z.
+The site served pre-deadline artifacts while FPL had already rolled to GW3.
+
+Nothing noticed, and nothing could have: a cron that never runs leaves no
+failed run behind. Every run in the list was green. Silence read as health.
+
+At the same time the Mac mini checkout — which the MCP server reads through
+`GAFFER_REPO_ROOT`, and which nothing has ever pulled — was **30 commits
+behind**, so Claude was answering from a build that still thought GW1 had not
+finished.
+
+## What it does, every 20 minutes
+
+1. **Detects a stalled scheduler** by the age of the last refresh *run*, not
+   the age of the last data commit. Those are different questions and only the
+   first one is a fault. The gate in `refresh.yml` deliberately no-ops when
+   nothing needs refreshing — 10-second runs, hours apart, `generated_at`
+   legitimately unmoved — so stale artifacts are normal. A workflow that has
+   not *started* in 90 minutes, when it is asked to start every 15, is not.
+2. **Dispatches `refresh.yml`** when that threshold trips, at most once an
+   hour, and posts to Discord `#gaffer` on the edge — once when it starts
+   rescuing, once when GitHub recovers. Not every 20 minutes.
+3. **Fast-forwards this checkout** to `origin/main` so the MCP answers from the
+   same artifacts the site serves. It refuses a dirty or diverged tree rather
+   than rebasing under a cron: two commits sat stranded here for five days, and
+   quietly rewriting them unattended is how you lose them. That refusal is
+   itself announced.
+
+It never pushes.
+
+## Install
+
+```sh
+cd /path/to/gaffer
+./deploy/macmini/install-watchdog.sh "$PWD"
+cat ~/Library/LaunchAgents/com.myles.gaffer-watchdog.plist   # read it
+.venv/bin/python deploy/macmini/refresh_watchdog.py          # run it by hand
+launchctl load ~/Library/LaunchAgents/com.myles.gaffer-watchdog.plist
+```
+
+The installer refuses an interpreter older than 3.11 (the watchdog uses
+`datetime.UTC`, and this box's system `python3` is 3.9.6) and refuses to render
+a plist when `gh` is unauthenticated, because a `gh workflow run` that cannot
+authenticate fails into a log nobody reads.
+
+State lives in `~/.local/state/gaffer-watchdog.json`, the log in
+`~/Library/Logs/gaffer-watchdog.log`.
