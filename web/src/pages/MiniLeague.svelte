@@ -292,7 +292,7 @@
   )
 
   // per-manager season stats
-  type Stat = { entry: number; name: string; team: string; total: number; gw: number; best: number; form: number; hits: number; bench: number; wins: number; move: number | null; ceiling: number }
+  type Stat = { entry: number; name: string; team: string; total: number; gw: number; best: number; form: number; hits: number; bench: number; wins: number; move: number | null; ceiling: number; liveGwFromTotal: number | null }
   const stats = $derived.by<Stat[]>(() => {
     if (!hasHistory) return []
     // GW winners: highest points each GW.
@@ -336,6 +336,29 @@
           // without showed the real number, in the same column.
           total: r.total ?? (h.length ? h[h.length - 1].total_points : 0),
           gw: h.length ? h[h.length - 1].points : 0,
+          // The GW column and the Total column were read from two different
+          // moments: `total` is FPL's own and updates DURING the gameweek,
+          // while `gw` above is the last SCORED gameweek's points. Mid-GW those
+          // describe different weeks, and on 2026-08-28 not one of seven rows
+          // agreed with itself.
+          //
+          // Difference FPL's two cumulative figures instead: the total now,
+          // minus the running total after the last scored gameweek. Both sides
+          // are net of hits, so the hits cancel and what is left is this week.
+          // Built from the pair already rendered beside it, the row cannot
+          // disagree with itself by construction — which a second live fetch,
+          // taken at its own moment, could never promise.
+          //
+          // null means "not answerable", and the column renders nothing rather
+          // than falling back to `gw` and quietly showing last week's score
+          // under this week's heading.
+          liveGwFromTotal: (() => {
+            if (!hasLive || !liveGw) return null
+            const last = h.length ? h[h.length - 1] : null
+            if (!last || last.event !== liveGw - 1) return null
+            if (typeof r.total !== 'number') return null
+            return r.total - last.total_points
+          })(),
           best: pts.length ? Math.max(...pts) : 0,
           form: pts.slice(-3).reduce((s, p) => s + p, 0),
           hits: h.reduce((s, g) => s + (g.event_transfers_cost ?? 0), 0),
@@ -703,8 +726,13 @@
                   <td class="tabular-nums {s.move == null ? 'text-muted2' : s.move > 0 ? 'text-brand-light' : s.move < 0 ? 'text-red' : 'text-muted2'}">
                     {#if s.move == null}new{:else if s.move > 0}&#9650;{s.move}{:else if s.move < 0}&#9660;{-s.move}{:else}&ndash;{/if}
                   </td>
-                  <td class={liveByEntry.has(s.entry) ? 'text-brand-light font-bold' : 'text-muted'}>
-                    {liveByEntry.get(s.entry) ?? s.gw}
+                  <td class={s.liveGwFromTotal != null ? 'text-brand-light font-bold' : 'text-muted'}>
+                    {#if s.liveGwFromTotal != null}{s.liveGwFromTotal}
+                    {:else if hasLive}<span
+                      class="text-muted2"
+                      title="This gameweek is in play and FPL has not published a figure that agrees with the total beside it."
+                    >&mdash;</span>
+                    {:else}{s.gw}{/if}
                   </td>
                   <td class="text-brand-light font-semibold">{s.best}</td>
                   <td class="text-muted">{s.form}</td>

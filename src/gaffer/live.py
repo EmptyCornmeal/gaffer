@@ -337,11 +337,23 @@ def player_live(
         stats = el.get("stats") or {}
         mins = int(stats.get("minutes") or 0)
         pts = int(stats.get("total_points") or 0)
+        # FPL's live ``total_points`` already contains whatever bonus the element
+        # row is carrying, and mid-match that includes *provisional* bonus. Our
+        # BPS-derived award is then a second copy of the same points, and the
+        # armband doubles the error: a captained Haaland on 8 (1 appearance +
+        # 4 goal + 3 bonus) shipped as (8 + 3) x 2 = 22 against a true 16.
+        # The per-fixture ``bonus_final`` skip in ``provisional_bonus`` only
+        # covers *finished* matches, so it cannot see this case at all.
+        # Trust the row over our own arithmetic, per player: where FPL has
+        # published a bonus figure it is authoritative, and where it has not we
+        # still supply one. Reading the row also makes the fix correct whether or
+        # not FPL populates this field mid-match, which is not ours to assume.
+        awarded_bonus = int(stats.get("bonus") or 0)
         fx = per_fixture.get(team_of.get(pid, -1), [])
         remaining = remaining_fixtures(fx, mins)
         out[pid] = PlayerLive(
             id=pid, minutes=mins, confirmed=pts,
-            provisional=int(prov_bonus.get(pid, 0)),
+            provisional=0 if awarded_bonus else int(prov_bonus.get(pid, 0)),
             predicted=remaining_xp(predictions.get(pid, 0.0), len(remaining),
                                    len(fx)),
             played=mins > 0,

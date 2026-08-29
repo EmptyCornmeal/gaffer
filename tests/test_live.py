@@ -798,3 +798,71 @@ ROUND2_TABLE = [
 @pytest.mark.parametrize(("value", "expected"), ROUND2_TABLE)
 def test_the_shared_rounding_table_is_what_python_actually_does(value, expected):
     assert round(value, 2) == expected
+
+
+# ==========================================================================
+# W7 — provisional bonus is counted once, not twice
+# ==========================================================================
+#
+# Observed live in GW2 on 2026-08-28. A squad whose only player on the pitch was
+# a captained Haaland on 8 was reported at 22, against an arithmetic ceiling of
+# 16. FPL's live ``total_points`` of 8 already contained his 3 provisional bonus
+# (1 appearance + 4 goal + 3 bonus); Gaffer added its own BPS-derived 3 on top,
+# and the armband doubled the error. Six of the seven managers in the league
+# captained him and every one was inflated by exactly +6; the seventh captained
+# someone else and was the only row that was right.
+#
+# The per-fixture ``bonus_final`` skip in ``provisional_bonus`` cannot catch
+# this: it only fires on *finished* matches, and this one was in play.
+
+W7_KO = datetime(2026, 8, 28, 19, 0, tzinfo=UTC)
+W7_NOW = datetime(2026, 8, 28, 19, 50, tzinfo=UTC)
+
+
+def _w7_world(bonus_in_row: int):
+    """One in-play fixture, player 9 top of the BPS and captained.
+
+    ``bonus_in_row`` is what FPL's element row reports under ``bonus`` — the
+    whole question, and not something we get to assume.
+    """
+    fixture = fx(fid=77, event=2, minutes=45, started=True, kickoff=W7_KO,
+                 stats=bps_block({9: 40}, {99: 10}))
+    states = live.fixture_states([fixture], 2, W7_NOW)
+    prov = live.provisional_bonus([fixture], states)
+    elements = [el(p, minutes=90, points=2) for p in XI + BENCH if p != 9]
+    nine = el(9, minutes=45, points=8)
+    nine["stats"]["bonus"] = bonus_in_row
+    elements.append(nine)
+    team_of = {p: 1 for p in XI + BENCH}
+    return prov, live.player_live({"elements": elements}, states, prov, team_of)
+
+
+def test_bonus_already_in_the_live_row_is_not_added_again():
+    prov, pl = _w7_world(bonus_in_row=3)
+    assert prov.get(9) == 3, "the BPS block does award him 3 - that is not the bug"
+    assert pl[9].confirmed == 8, "FPL's total_points, carried through untouched"
+    assert pl[9].provisional == 0, "and it already contains the 3"
+    assert pl[9].total == 8
+
+
+def test_bonus_absent_from_the_live_row_is_still_supplied():
+    """The guard must not switch provisional bonus off altogether.
+
+    Where FPL has published no bonus figure, ours is the only one there is.
+    """
+    _, pl = _w7_world(bonus_in_row=0)
+    assert pl[9].confirmed == 8 and pl[9].provisional == 3
+    assert pl[9].total == 11
+
+
+def test_a_captained_live_total_never_exceeds_the_rows_it_is_built_from():
+    """W7's acceptance criterion, at the level the manager actually reads."""
+    _, pl = _w7_world(bonus_in_row=3)
+    subs = live.apply_autosubs(XI, BENCH, POS, pl, captain=9, vice=10)
+    s = live.score_squad(XI, BENCH, POS, pl, captain=9, vice=10)
+    expected = sum(
+        pl[p].confirmed * (subs.multiplier if p == subs.captain else 1)
+        for p in subs.xi
+    )
+    assert s.current == expected
+    assert s.current == 10 * 2 + 8 * 2, "36; the shipped bug made this 42"

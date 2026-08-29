@@ -27,6 +27,12 @@
   // its own deadline — which is what sent this page into its pre-season
   // branch ninety minutes into GW1.
   const gw = $derived(Number(bundle.meta.squad_source_event || 0))
+  // The card is headed by the gameweek the picks were READ for and filled with
+  // the xP of the gameweek being PROJECTED. FPL exposes picks only for the
+  // locked gameweek, so past a deadline these are legitimately different
+  // numbers — and the header named neither, which made a GW2 heading sit on top
+  // of GW3 projections with nothing on screen to say so.
+  const projGw = $derived(Number(bundle.meta.projection_event || 0))
 
   $effect(() => {
     const entry = getEntryId()
@@ -145,7 +151,15 @@
     <div class="grid lg:grid-cols-3 gap-4">
       <div class="lg:col-span-2 card p-3">
         <div class="flex items-center justify-between mb-2 px-1">
-          <h2 class="font-bold">Your XI · GW{gw}</h2>
+          <div>
+            <h2 class="font-bold">Your XI · GW{gw}</h2>
+            {#if projGw && gw && projGw !== gw}
+              <p class="text-xs text-muted2 mt-0.5">
+                {bundle.meta.squad_status_reason
+                  ?? `picks read for GW${gw} while projecting GW${projGw}`}
+              </p>
+            {/if}
+          </div>
           <span class="text-xs text-muted">Bank £{((picks.entry_history?.bank ?? 0) / 10).toFixed(1)}m · TV £{((picks.entry_history?.value ?? 0) / 10).toFixed(1)}m</span>
         </div>
         <Pitch starting={starters} {captainId} {viceId} onpick={(p) => onpick(p.id)} />
