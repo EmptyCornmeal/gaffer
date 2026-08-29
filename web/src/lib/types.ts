@@ -123,6 +123,10 @@ export interface Meta {
   squad_status: string
   squad_status_reason?: string | null
   squad_source_event?: number | string | null
+  /** The gameweek the xP on the page describes. Past a deadline FPL exposes
+   *  picks only for the locked gameweek, so this legitimately differs from
+   *  `squad_source_event` — the squad card names both, rather than neither. */
+  projection_event?: number | string | null
   entry_name: string | null
   manager_name: string | null
   overall_rank: string | null
