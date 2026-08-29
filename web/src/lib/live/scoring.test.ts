@@ -5,7 +5,7 @@
 // doubles, postponements and the league swing.
 
 import { describe, expect, it } from 'vitest'
-import { fixtureStates, type RawFixture } from './fixtures'
+import { fixtureStates, provisionalBonus, type RawFixture } from './fixtures'
 import {
   applyAutosubs, largestSwing, playerLive, scoreSquad, type PlayerLive,
 } from './scoring'
@@ -216,5 +216,71 @@ describe('the largest swing', () => {
     const swing = largestSwing(mine, [theirs], st)
     expect(swing?.swing).toBe(5)
     expect(swing?.player_id).toBe(9)
+  })
+})
+
+// ==========================================================================
+// W7 — provisional bonus is counted once, not twice
+// ==========================================================================
+//
+// Observed live in GW2 on 2026-08-28, and this is the half of the rulebook the
+// browser runs, so it is the half that was on screen. FPL's live `total_points`
+// of 8 already contained Haaland's 3 provisional bonus (1 appearance + 4 goal +
+// 3 bonus); the scorer added its own BPS-derived 3 on top and the armband
+// doubled it, for 22 against an arithmetic ceiling of 16.
+//
+// Kept in step with test_live.py's tests of the same name, per the note at the
+// top of this file.
+describe('W7 — provisional bonus is counted once', () => {
+  const W7_KO = '2026-08-28T19:00:00Z'
+  const W7_NOW = new Date('2026-08-28T19:50:00Z')
+
+  function _w7World(bonusInRow: number) {
+    const fixture = fx({
+      id: 77, event: 2, minutes: 45, started: true, kickoff_time: W7_KO,
+      stats: [{
+        identifier: 'bps',
+        h: [{ value: 40, element: 9 }],
+        a: [{ value: 10, element: 99 }],
+      }],
+    })
+    const states = fixtureStates([fixture], 2, W7_NOW)
+    const prov = provisionalBonus([fixture], states)
+    const elements: ReturnType<typeof el>[] = []
+    for (const pid of [...XI, ...BENCH]) {
+      if (pid !== 9) elements.push(el(pid, 90, 2))
+    }
+    const nine = el(9, 45, 8) as ReturnType<typeof el> & {
+      stats: { bonus?: number }
+    }
+    nine.stats.bonus = bonusInRow
+    elements.push(nine)
+    const teams = new Map([...XI, ...BENCH].map((p) => [p, 1]))
+    return { prov, live: playerLive({ elements }, states, prov, teams) }
+  }
+
+  it('does not add bonus that is already in the live row', () => {
+    const { prov, live } = _w7World(3)
+    expect(prov.get(9)).toBe(3) // the BPS block does award him 3 — not the bug
+    expect(live.get(9)!.confirmed).toBe(8)
+    expect(live.get(9)!.provisional).toBe(0)
+  })
+
+  it('still supplies bonus the live row has not published', () => {
+    const { live } = _w7World(0)
+    expect(live.get(9)!.confirmed).toBe(8)
+    expect(live.get(9)!.provisional).toBe(3)
+  })
+
+  it('never lets a captained total exceed the rows it is built from', () => {
+    const { live } = _w7World(3)
+    const subs = applyAutosubs(XI, BENCH, POS, live, { captain: 9, vice: 10 })
+    const s = scoreSquad(XI, BENCH, POS, live, { captain: 9, vice: 10 })
+    let expected = 0
+    for (const pid of subs.xi) {
+      expected += live.get(pid)!.confirmed * (pid === subs.captain ? subs.multiplier : 1)
+    }
+    expect(s.confirmed + s.provisional).toBe(expected)
+    expect(s.confirmed + s.provisional).toBe(10 * 2 + 8 * 2) // 36; the bug shipped 42
   })
 })

@@ -21,7 +21,10 @@ export interface PlayerLive {
 }
 
 export interface RawLivePayload {
-  elements?: { id?: unknown; stats?: { minutes?: unknown; total_points?: unknown } }[]
+  elements?: {
+    id?: unknown
+    stats?: { minutes?: unknown; total_points?: unknown; bonus?: unknown }
+  }[]
 }
 
 function playerRecord(over: Partial<PlayerLive> & { id: number }): PlayerLive {
@@ -108,13 +111,24 @@ export function playerLive(
     const stats = el.stats ?? {}
     const mins = Number(stats.minutes ?? 0) || 0
     const pts = Number(stats.total_points ?? 0) || 0
+    // FPL's live `total_points` already contains whatever bonus the element row
+    // carries, provisional bonus included, mid-match. Ours would be a second
+    // copy of the same points and the armband doubles the error: a captained
+    // Haaland on 8 (1 appearance + 4 goal + 3 bonus) read as (8 + 3) x 2 = 22
+    // against a true 16. The per-fixture `bonusFinal` skip in `provisionalBonus`
+    // only fires on finished matches, so it cannot see this.
+    //
+    // Kept identical to `gaffer.live.player_live` deliberately: this is the half
+    // of the rulebook you actually look at during a match, and the two halves
+    // agreeing is the whole point of `parity.test.ts`.
+    const awardedBonus = Number(stats.bonus ?? 0) || 0
     const fx = perTeam.get(teamOf.get(pid) ?? -1) ?? []
     const remaining = remainingFixtures(fx, mins)
     out.set(pid, playerRecord({
       id: pid,
       minutes: mins,
       confirmed: pts,
-      provisional: provBonus.get(pid) ?? 0,
+      provisional: awardedBonus ? 0 : (provBonus.get(pid) ?? 0),
       predicted: remainingXp(preds.get(pid) ?? 0, remaining.length, fx.length),
       played: mins > 0,
       finished: fx.every(countsAsPlayed),
