@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 2,
-  "as_of": "2026-08-29T12:51:27+00:00",
+  "as_of": "2026-08-29T14:31:33+00:00",
   "fixtures": [
     {
       "id": 11,
@@ -18,8 +18,8 @@
       "event": 2,
       "team_h": 3,
       "team_a": 9,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "live",
+      "minutes": 29,
       "kickoff": "2026-08-29T14:00:00+00:00",
       "bonus_final": false
     },
@@ -28,8 +28,8 @@
       "event": 2,
       "team_h": 7,
       "team_a": 11,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "live",
+      "minutes": 28,
       "kickoff": "2026-08-29T14:00:00+00:00",
       "bonus_final": false
     },
@@ -38,8 +38,8 @@
       "event": 2,
       "team_h": 14,
       "team_a": 18,
-      "state": "live",
-      "minutes": 54,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-08-29T11:30:00+00:00",
       "bonus_final": false
     },
@@ -107,9 +107,9 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 1,
-      "live": 1,
-      "scheduled": 8
+      "awaiting_bonus": 2,
+      "live": 2,
+      "scheduled": 6
     },
     "all_finished": false,
     "bonus_final": false
@@ -124,9 +124,9 @@
     "predicted_remaining": 0.0,
     "current": 26,
     "projected": 26.0,
-    "bench_points": 0,
-    "players_played": 1,
-    "players_yet_to_play": 13,
+    "bench_points": 1,
+    "players_played": 2,
+    "players_yet_to_play": 12,
     "hits": 0,
     "season_total_before": 50,
     "season_total_projected": 76.0,
@@ -360,16 +360,16 @@
     },
     {
       "id": 175,
-      "minutes": 0,
-      "confirmed": 0,
+      "minutes": 28,
+      "confirmed": 1,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
+      "total": 1.0,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "live"
       ],
       "name": "van Ewijk",
       "pos": "DEF",
@@ -436,31 +436,41 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 105,
-      "projected": 105.0,
-      "gw_points": 28,
-      "yet_to_play": 11,
+      "current": 109,
+      "projected": 109.0,
+      "gw_points": 32,
+      "yet_to_play": 10,
       "provisional_position": 1
     },
     {
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "you": false,
-      "current": 89,
-      "projected": 89.0,
-      "gw_points": 28,
-      "yet_to_play": 13,
+      "current": 90,
+      "projected": 90.0,
+      "gw_points": 29,
+      "yet_to_play": 11,
       "provisional_position": 2
     },
     {
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "you": false,
-      "current": 79,
-      "projected": 79.0,
-      "gw_points": 33,
+      "current": 87,
+      "projected": 87.0,
+      "gw_points": 41,
       "yet_to_play": 9,
       "provisional_position": 3
+    },
+    {
+      "entry_id": 8346723,
+      "name": "Nat Stubbs",
+      "you": false,
+      "current": 85,
+      "projected": 85.0,
+      "gw_points": 40,
+      "yet_to_play": 7,
+      "provisional_position": 4
     },
     {
       "entry_id": 1066421,
@@ -469,8 +479,8 @@
       "current": 76,
       "projected": 76.0,
       "gw_points": 26,
-      "yet_to_play": 13,
-      "provisional_position": 4
+      "yet_to_play": 12,
+      "provisional_position": 5
     },
     {
       "entry_id": 1066421,
@@ -479,18 +489,18 @@
       "current": 76,
       "projected": 76.0,
       "gw_points": 26,
-      "yet_to_play": 13,
-      "provisional_position": 5
+      "yet_to_play": 12,
+      "provisional_position": 6
     },
     {
-      "entry_id": 8346723,
-      "name": "Nat Stubbs",
+      "entry_id": 1094262,
+      "name": "Kevin Colling",
       "you": false,
-      "current": 74,
-      "projected": 74.0,
-      "gw_points": 29,
-      "yet_to_play": 11,
-      "provisional_position": 6
+      "current": 75,
+      "projected": 75.0,
+      "gw_points": 28,
+      "yet_to_play": 9,
+      "provisional_position": 7
     },
     {
       "entry_id": 7419334,
@@ -499,17 +509,7 @@
       "current": 69,
       "projected": 69.0,
       "gw_points": 32,
-      "yet_to_play": 12,
-      "provisional_position": 7
-    },
-    {
-      "entry_id": 1094262,
-      "name": "Kevin Colling",
-      "you": false,
-      "current": 65,
-      "projected": 65.0,
-      "gw_points": 18,
-      "yet_to_play": 10,
+      "yet_to_play": 11,
       "provisional_position": 8
     }
   ],
@@ -522,6 +522,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-29T12:51:27+00:00",
+  "generated_at": "2026-08-29T14:31:33+00:00",
   "season": "2026-27"
 }
