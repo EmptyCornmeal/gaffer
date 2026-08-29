@@ -46,6 +46,24 @@ STALE_RUN_MINUTES = 90
 # A forced dispatch runs the whole pipeline. Do not do that on every wake-up
 # while Actions is down -- once an hour is enough to keep the site current.
 DISPATCH_COOLDOWN_MINUTES = 60
+# Announcing is a separate decision from rescuing, on a separate clock.
+#
+# Rescuing is cheap and should be eager. Announcing is not: a channel that
+# reports every rescue posts an alert AND a stand-down per cycle, which at the
+# throttle observed on 2026-08-29 (GitHub firing roughly every 100 minutes
+# instead of every 15) is about fourteen messages a day, all of them saying
+# the same thing. A channel nobody reads is worse than no channel, and that is
+# the exact failure Job Radar's health alerts were built to avoid.
+#
+# It cannot be a bigger number on the SAME clock either: the age below counts
+# the last run of any kind, our own dispatches included, so once the watchdog is
+# rescuing hourly that age can never grow past ~110 minutes however dark GitHub
+# goes. Raising the threshold would not damp the alert, it would delete it.
+#
+# So alerting reads the age of the last SCHEDULE-triggered run, which our
+# dispatches do not reset. Silence here means GitHub itself has stopped, which
+# is the only thing worth waking someone for.
+ALERT_SCHEDULE_SILENT_MINUTES = 240
 
 
 def log(msg):
@@ -89,12 +107,17 @@ def announce(msg):
         log(f"discord post failed rc={proc.returncode}: {proc.stderr.strip()[:200]}")
 
 
-def last_run_age_minutes():
-    """Minutes since the most recent refresh.yml run STARTED, or None if unknown."""
+def last_run_age_minutes(event=None):
+    """Minutes since the most recent refresh.yml run STARTED, or None if unknown.
+
+    ``event`` filters by trigger. Filtering happens here rather than through
+    ``gh --event`` so that an older gh without the flag degrades to a wrong
+    answer nobody notices -- it does not, because we never pass the flag.
+    """
     proc = run(
         "gh", "run", "list",
-        "--workflow=refresh.yml", "--limit", "1",
-        "--json", "createdAt,status,conclusion",
+        "--workflow=refresh.yml", "--limit", "30",
+        "--json", "createdAt,status,conclusion,event",
     )
     if proc.returncode != 0:
         log(f"gh run list failed rc={proc.returncode}: {proc.stderr.strip()[:200]}")
@@ -104,7 +127,14 @@ def last_run_age_minutes():
     except ValueError:
         log("gh run list returned unparseable JSON")
         return None
+    if event is not None:
+        runs = [r for r in runs if r.get("event") == event]
     if not runs:
+        # For a filtered query this is a real answer, not a missing one: within
+        # the window we can see, GitHub has not fired once. Report it as the
+        # width of that window so the caller alerts rather than shrugging.
+        if event is not None:
+            return float("inf")
         log("no refresh runs exist at all")
         return None
     started = datetime.fromisoformat(runs[0]["createdAt"].replace("Z", "+00:00"))
@@ -166,19 +196,31 @@ def main():
             if proc.returncode == 0:
                 state["last_dispatch"] = now.isoformat(timespec="seconds")
                 log(f"scheduler stalled ({age:.0f}m) -- dispatched refresh.yml")
-                if not state.get("alerted"):
+                # Rescued either way; whether to SAY so is a separate question,
+                # asked of GitHub's own clock rather than of ours.
+                sched_age = last_run_age_minutes(event="schedule")
+                if (sched_age is not None
+                        and sched_age > ALERT_SCHEDULE_SILENT_MINUTES
+                        and not state.get("alerted")):
+                    hours = sched_age / 60.0
+                    since = ("in the last 30 runs" if sched_age == float("inf")
+                             else f"for {hours:.1f} hours")
                     announce(
-                        f"Gaffer: GitHub has not started refresh.yml for {age:.0f} "
-                        f"minutes (it is scheduled every 15). Dispatched one from "
-                        f"the Mac mini."
+                        f"Gaffer: GitHub's scheduler has not fired refresh.yml "
+                        f"{since} (it is scheduled every 15 minutes). The Mac "
+                        f"mini is dispatching runs by hand to keep the site "
+                        f"current, and will keep doing so silently."
                     )
                     state["alerted"] = True
             else:
                 log(f"dispatch FAILED rc={proc.returncode}: {proc.stderr.strip()[:200]}")
     else:
         if state.get("alerted"):
-            announce("Gaffer: GitHub's scheduler is firing again. Watchdog standing down.")
-            state["alerted"] = False
+            sched_age = last_run_age_minutes(event="schedule")
+            if sched_age is not None and sched_age <= ALERT_SCHEDULE_SILENT_MINUTES:
+                announce("Gaffer: GitHub's scheduler is firing again. "
+                         "Watchdog standing down.")
+                state["alerted"] = False
         if age is not None:
             log(f"scheduler healthy (last run {age:.0f}m ago)")
 

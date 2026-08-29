@@ -37,12 +37,20 @@ Everything runs on free, unauthenticated endpoints. Nothing writes to FPL.
 
 ## 2. What is running
 
-**Gaffer runs in GitHub Actions, not on the Mac mini.** No launchd agent is
-installed for it.
+**Gaffer's pipeline runs in GitHub Actions.** One launchd agent on the Mac mini
+watches it — `com.myles.gaffer-watchdog`, added 2026-08-28. It computes nothing
+and publishes nothing; it dispatches `refresh.yml` when GitHub stops firing it,
+and fast-forwards this checkout so the MCP server answers from the artifacts the
+site is actually serving. Details in `deploy/macmini/README.md`.
+
+Corrected 2026-08-29: this section used to say "not on the Mac mini. No launchd
+agent is installed for it", which stopped being true the day the watchdog
+shipped, and would send a fresh session looking in the wrong place for the
+scheduler that is currently keeping the site current.
 
 | workflow | schedule | notes |
 |---|---|---|
-| `refresh.yml` | 02:00 / 11:00 / 17:00 UTC | gated: deps → tests → ruff → pipeline → artifact contract → commit → dispatch deploy |
+| `refresh.yml` | `*/15` + 02:00 / 11:00 / 17:00 UTC | gated: deps → tests → ruff → pipeline → artifact contract → commit → dispatch deploy |
 | `deploy.yml` | on push touching `web/**` or `data/**` | build → Pages |
 | `keepalive.yml` | — | GitHub disables `schedule:` after 60 quiet days |
 | `ci.yml` | on push | |
