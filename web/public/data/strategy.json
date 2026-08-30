@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.0",
-  "generated_at": "2026-08-30T11:14:28+00:00",
+  "generated_at": "2026-08-30T12:41:28+00:00",
   "gameweek": 3,
   "gameweeks_remaining": 36,
   "simulation": {
@@ -206,7 +206,7 @@
         "p_first": 0.0005,
         "p_target": 0.0005,
         "target_position": 1,
-        "expected_position": 5.5,
+        "expected_position": 5.48,
         "simulations": 2000,
         "ci95_halfwidth": 0.001,
         "basis": "shared fixture scenarios",
@@ -383,7 +383,7 @@
     {
       "key": "captain:411",
       "label": "Captain Haaland",
-      "expected_points": 46.634,
+      "expected_points": 46.65,
       "p_target": {
         "271619": 0.0005
       }
@@ -391,25 +391,25 @@
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 43.238,
+      "expected_points": 43.196,
       "p_target": {
-        "271619": 0.0035
+        "271619": 0.0015
       }
     },
     {
       "key": "captain:346",
       "label": "Captain Calvert-Lewin",
-      "expected_points": 42.831,
+      "expected_points": 42.823,
       "p_target": {
-        "271619": 0.002
+        "271619": 0.0035
       }
     },
     {
       "key": "captain:427",
       "label": "Captain Mbeumo",
-      "expected_points": 42.573,
+      "expected_points": 42.571,
       "p_target": {
-        "271619": 0.001
+        "271619": 0.0005
       }
     }
   ],
@@ -420,7 +420,7 @@
       {
         "key": "captain:411",
         "label": "Captain Haaland",
-        "expected_points": 46.634,
+        "expected_points": 46.65,
         "p_target": {
           "271619": 0.0005
         }
@@ -428,7 +428,15 @@
       {
         "key": "captain:426",
         "label": "Captain B.Fernandes",
-        "expected_points": 43.238,
+        "expected_points": 43.196,
+        "p_target": {
+          "271619": 0.0015
+        }
+      },
+      {
+        "key": "captain:346",
+        "label": "Captain Calvert-Lewin",
+        "expected_points": 42.823,
         "p_target": {
           "271619": 0.0035
         }
@@ -440,19 +448,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "wildcard",
     "gameweek": 3,
-    "expected_gain": 46.24,
+    "expected_gain": 45.41,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "wildcard",
         "gameweek": 3,
-        "expected_gain": 46.24,
+        "expected_gain": 45.41,
         "ci95": [
-          42.98,
-          49.5
+          42.18,
+          48.64
         ],
-        "baseline_points": 46.63,
-        "with_chip_points": 58.19,
+        "baseline_points": 46.65,
+        "with_chip_points": 58.0,
         "assumptions": [
           "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
           "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
@@ -461,13 +469,13 @@
       {
         "chip": "freehit",
         "gameweek": 3,
-        "expected_gain": 11.56,
+        "expected_gain": 11.35,
         "ci95": [
-          10.74,
-          12.38
+          10.54,
+          12.16
         ],
-        "baseline_points": 46.63,
-        "with_chip_points": 58.19,
+        "baseline_points": 46.65,
+        "with_chip_points": 58.0,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game."
@@ -476,13 +484,13 @@
       {
         "chip": "3xc",
         "gameweek": 3,
-        "expected_gain": 8.19,
+        "expected_gain": 8.25,
         "ci95": [
-          7.96,
-          8.43
+          8.01,
+          8.48
         ],
-        "baseline_points": 46.63,
-        "with_chip_points": 54.83,
+        "baseline_points": 46.65,
+        "with_chip_points": 54.9,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -491,13 +499,13 @@
       {
         "chip": "bboost",
         "gameweek": 3,
-        "expected_gain": 6.49,
+        "expected_gain": 6.46,
         "ci95": [
-          6.34,
-          6.65
+          6.31,
+          6.61
         ],
-        "baseline_points": 46.63,
-        "with_chip_points": 53.13,
+        "baseline_points": 46.65,
+        "with_chip_points": 53.11,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -536,7 +544,7 @@
     ],
     "used": [],
     "state_known": true,
-    "reason": "wildcard projects +46.2 points (95% CI 43.0 to 49.5) in GW3"
+    "reason": "wildcard projects +45.4 points (95% CI 42.2 to 48.6) in GW3"
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
