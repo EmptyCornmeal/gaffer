@@ -1,7 +1,7 @@
 {
   "weekly_version": "weekly-1.0",
   "decision_version": "decision-1.0",
-  "generated_at": "2026-08-30T09:34:34+00:00",
+  "generated_at": "2026-08-30T11:14:28+00:00",
   "gameweek": 3,
   "horizon": 6,
   "squad_state": {
@@ -183,7 +183,7 @@
   "decision": {
     "action": "too_close",
     "headline": "Too close to call — captain Cherki",
-    "reason": "the move averages +24.2 points but only beats holding in 16% of scenarios — a coin flip with a good-looking mean",
+    "reason": "the move averages +24.2 points but only beats holding in 17% of scenarios — a coin flip with a good-looking mean",
     "transfers_out": [
       {
         "id": 175,
@@ -1007,7 +1007,7 @@
         "next_gw_xp": 9.01,
         "confidence": 0.86,
         "horizon_xp": 24.1,
-        "owned_by": 15.6,
+        "owned_by": 15.7,
         "rationale": "Rotation/bench midfielder with real underlying threat (1.17 xGI/90), on FK #1, corners #1 and in form (11.0).",
         "tags": [
           {
@@ -1087,7 +1087,7 @@
       "next_gw_xp": 9.01,
       "confidence": 0.86,
       "horizon_xp": 24.1,
-      "owned_by": 15.6,
+      "owned_by": 15.7,
       "rationale": "Rotation/bench midfielder with real underlying threat (1.17 xGI/90), on FK #1, corners #1 and in form (11.0).",
       "tags": [
         {
@@ -2351,19 +2351,19 @@
       "chips_version": "chips-1.0",
       "recommendation": "wildcard",
       "gameweek": 3,
-      "expected_gain": 44.76,
+      "expected_gain": 46.24,
       "use_threshold": 4.0,
       "alternatives": [
         {
           "chip": "wildcard",
           "gameweek": 3,
-          "expected_gain": 44.76,
+          "expected_gain": 46.24,
           "ci95": [
-            41.5,
-            48.03
+            42.98,
+            49.5
           ],
-          "baseline_points": 46.64,
-          "with_chip_points": 57.83,
+          "baseline_points": 46.63,
+          "with_chip_points": 58.19,
           "assumptions": [
             "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
             "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
@@ -2372,13 +2372,13 @@
         {
           "chip": "freehit",
           "gameweek": 3,
-          "expected_gain": 11.19,
+          "expected_gain": 11.56,
           "ci95": [
-            10.38,
-            12.01
+            10.74,
+            12.38
           ],
-          "baseline_points": 46.64,
-          "with_chip_points": 57.83,
+          "baseline_points": 46.63,
+          "with_chip_points": 58.19,
           "assumptions": [
             "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
             "The comparison squad is a real budget-legal solve, not the strongest XI in the game."
@@ -2387,13 +2387,13 @@
         {
           "chip": "3xc",
           "gameweek": 3,
-          "expected_gain": 8.25,
+          "expected_gain": 8.19,
           "ci95": [
-            8.01,
-            8.49
+            7.96,
+            8.43
           ],
-          "baseline_points": 46.64,
-          "with_chip_points": 54.89,
+          "baseline_points": 46.63,
+          "with_chip_points": 54.83,
           "assumptions": [
             "Assumes the captain plays; a blank or an early injury forfeits the chip.",
             "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -2402,13 +2402,13 @@
         {
           "chip": "bboost",
           "gameweek": 3,
-          "expected_gain": 6.44,
+          "expected_gain": 6.49,
           "ci95": [
-            6.29,
-            6.59
+            6.34,
+            6.65
           ],
-          "baseline_points": 46.64,
-          "with_chip_points": 53.08,
+          "baseline_points": 46.63,
+          "with_chip_points": 53.13,
           "assumptions": [
             "Bench points are simulated under the same fixtures as the XI.",
             "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -2447,7 +2447,7 @@
       ],
       "used": [],
       "state_known": true,
-      "reason": "wildcard projects +44.8 points (95% CI 41.5 to 48.0) in GW3"
+      "reason": "wildcard projects +46.2 points (95% CI 43.0 to 49.5) in GW3"
     },
     "league_note": "",
     "confidence": "high",
@@ -2459,16 +2459,16 @@
       "The bar for calling a move an action (1.0 points and 55% chance of beating the hold) is a conservative policy choice, not a fitted one. It becomes fittable once ~6 gameweeks of decision snapshots and reviews exist."
     ],
     "comparison": {
-      "move_expected": 31.35,
-      "hold_expected": 45.18,
-      "delta": -13.83,
+      "move_expected": 31.59,
+      "hold_expected": 45.2,
+      "delta": -13.6,
       "delta_ci95": [
-        -14.5,
-        -13.16
+        -14.28,
+        -12.93
       ],
-      "p_move_beats_hold": 0.165,
+      "p_move_beats_hold": 0.1735,
       "simulations": 2000,
-      "short_term_delta": -13.83,
+      "short_term_delta": -13.6,
       "horizon_delta": 24.23,
       "hit_cost": 20
     },
@@ -2527,19 +2527,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "wildcard",
     "gameweek": 3,
-    "expected_gain": 44.76,
+    "expected_gain": 46.24,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "wildcard",
         "gameweek": 3,
-        "expected_gain": 44.76,
+        "expected_gain": 46.24,
         "ci95": [
-          41.5,
-          48.03
+          42.98,
+          49.5
         ],
-        "baseline_points": 46.64,
-        "with_chip_points": 57.83,
+        "baseline_points": 46.63,
+        "with_chip_points": 58.19,
         "assumptions": [
           "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
           "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
@@ -2548,13 +2548,13 @@
       {
         "chip": "freehit",
         "gameweek": 3,
-        "expected_gain": 11.19,
+        "expected_gain": 11.56,
         "ci95": [
-          10.38,
-          12.01
+          10.74,
+          12.38
         ],
-        "baseline_points": 46.64,
-        "with_chip_points": 57.83,
+        "baseline_points": 46.63,
+        "with_chip_points": 58.19,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game."
@@ -2563,13 +2563,13 @@
       {
         "chip": "3xc",
         "gameweek": 3,
-        "expected_gain": 8.25,
+        "expected_gain": 8.19,
         "ci95": [
-          8.01,
-          8.49
+          7.96,
+          8.43
         ],
-        "baseline_points": 46.64,
-        "with_chip_points": 54.89,
+        "baseline_points": 46.63,
+        "with_chip_points": 54.83,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -2578,13 +2578,13 @@
       {
         "chip": "bboost",
         "gameweek": 3,
-        "expected_gain": 6.44,
+        "expected_gain": 6.49,
         "ci95": [
-          6.29,
-          6.59
+          6.34,
+          6.65
         ],
-        "baseline_points": 46.64,
-        "with_chip_points": 53.08,
+        "baseline_points": 46.63,
+        "with_chip_points": 53.13,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
@@ -2623,7 +2623,7 @@
     ],
     "used": [],
     "state_known": true,
-    "reason": "wildcard projects +44.8 points (95% CI 41.5 to 48.0) in GW3"
+    "reason": "wildcard projects +46.2 points (95% CI 43.0 to 49.5) in GW3"
   },
   "leagues": [
     {
@@ -2637,8 +2637,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-08-30T09:34:34+00:00",
-    "squad_retrieved_at": "2026-08-30T09:34:41+00:00",
+    "generated_at": "2026-08-30T11:14:28+00:00",
+    "squad_retrieved_at": "2026-08-30T11:14:43+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "default",
     "selling_price_confidence": "exact"
