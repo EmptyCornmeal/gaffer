@@ -1,3 +1,85 @@
+<script module lang="ts">
+  // ── A14 — which gameweek is this? ──────────────────────────────────────────
+  //
+  // The header said "Live" and nothing else, while My Team said "Gameweek 3".
+  // Both were right and neither said so: GW2's deadline had passed with one
+  // fixture still to come, so GW2 was the gameweek being PLAYED while GW3 was
+  // the one being PICKED. With no gameweek named on this page the only way to
+  // read the pair was as a contradiction — "how is this week GW3, GW2 isn't
+  // even done yet?" — which is a fair question to ask of a screen that invites
+  // it.
+  //
+  // Everything below is derived from state the page already holds. Crucially it
+  // never asserts that a deadline has passed from a clock: `squad_source_event`
+  // is the pipeline's own answer to "which gameweek is locked", and a date
+  // comparison here would start lying the first time a fetch failed mid-season.
+
+  export interface GameweekHeading {
+    /** "Live · GW2", or plain "Live" while no gameweek is known yet. */
+    title: string
+    /** What state that gameweek is in, or null when there is nothing true to say. */
+    state: string | null
+  }
+
+  interface HeadingLive {
+    gameweek?: number
+    fixture_summary?: { total: number; by_state: Record<string, number> }
+  }
+  interface HeadingMeta {
+    current_gw?: string | null
+    squad_source_event?: number | string | null
+  }
+
+  function fixtureClause(
+    poss: string, total: number, inPlay: number, toKickOff: number,
+  ): string | null {
+    if (!total) return null
+    const of = (n: number) => `${n} of ${poss} ${total} fixture${total === 1 ? '' : 's'}`
+    const is = (n: number) => (n === 1 ? 'is' : 'are')
+    if (inPlay && toKickOff) {
+      return `${of(inPlay)} ${is(inPlay)} in play and ${toKickOff} ${is(toKickOff)} still to kick off`
+    }
+    if (inPlay) return `${of(inPlay)} ${is(inPlay)} in play`
+    if (toKickOff) return `${of(toKickOff)} ${is(toKickOff)} still to kick off`
+    return `all ${total} of ${poss} fixture${total === 1 ? '' : 's'} ${total === 1 ? 'has' : 'have'} been played`
+  }
+
+  export function gameweekHeading(
+    live: HeadingLive | null | undefined,
+    meta: HeadingMeta | null | undefined,
+    nextDeadline: string | null = null,
+  ): GameweekHeading {
+    const locked = Number(meta?.squad_source_event ?? 0) || 0
+    const gw = Number(live?.gameweek ?? 0) || locked
+    if (!gw) return { title: 'Live', state: null }
+
+    const by = live?.fixture_summary?.by_state ?? {}
+    const total = live?.fixture_summary?.total ?? 0
+    const toKickOff = by.scheduled ?? 0
+    const inPlay = (by.live ?? 0) + (by.half_time ?? 0)
+
+    // Locked means FPL has stopped taking changes for this gameweek. It is the
+    // producer's flag, not our arithmetic on the wall clock.
+    const passed = locked > 0 && gw <= locked
+    const opening = passed ? `GW${gw}'s deadline has passed` : null
+    const clause = fixtureClause(opening ? 'its' : `GW${gw}'s`, total, inPlay, toKickOff)
+
+    const sentences: string[] = []
+    const first = [opening, clause].filter(Boolean).join(' and ')
+    if (first) sentences.push(`${first}.`)
+
+    const next = Number(meta?.current_gw ?? 0) || 0
+    if (next && next !== gw) {
+      sentences.push(
+        `GW${next} is the gameweek you're picking now`
+        + `${nextDeadline ? ` — deadline ${nextDeadline}` : ''}.`,
+      )
+    }
+
+    return { title: `Live · GW${gw}`, state: sentences.join(' ') || null }
+  }
+</script>
+
 <script lang="ts">
   import type { Bundle } from '../lib/data'
   import { fetchLive, type LiveSourceName } from '../lib/live/source'
@@ -84,6 +166,17 @@
     }
   })
 
+  // Same shape as My Team's "(4 September)", from the same `meta.deadline`.
+  const nextDeadline = $derived.by(() => {
+    const raw = bundle?.meta?.deadline
+    if (!raw) return null
+    const d = new Date(raw)
+    return Number.isNaN(d.getTime())
+      ? null
+      : d.toLocaleDateString(undefined, { day: 'numeric', month: 'long' })
+  })
+  const heading = $derived(gameweekHeading(s, bundle?.meta, nextDeadline))
+
   function stateTone(st: string) {
     if (st === 'live' || st === 'half_time') return 'chip-good'
     if (st === 'awaiting_bonus') return 'chip-warn'
@@ -103,10 +196,15 @@
   <div class="flex items-start justify-between gap-2 flex-wrap">
     <div>
       <h2 class="font-bold text-lg flex items-center gap-2">
-        <Icon name="flame" size={18} /> Live
+        <Icon name="flame" size={18} /> {heading.title}
         {#if anyLive}<span class="chip chip-good">in play</span>{/if}
       </h2>
-      <p class="text-sm text-muted">
+      {#if heading.state}
+        <!-- The gameweek this page is scoring, and why it is not the one My Team
+             is picking. See `gameweekHeading` above. -->
+        <p class="text-sm text-muted mt-0.5">{heading.state}</p>
+      {/if}
+      <p class="text-mini text-muted2 mt-0.5">
         Confirmed, provisional and predicted points, kept apart. Updates itself
         every minute while a match is on.
       </p>

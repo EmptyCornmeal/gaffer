@@ -499,6 +499,15 @@ def fixture_rates(
     Exposed so the Monte-Carlo layer (``model.simulate``) samples from the *same*
     rates the deterministic projection sums — the point estimate and the
     distribution can never drift apart.
+
+    A13. Sharing the bundle turned out not to be enough on its own, and this
+    docstring was the reason nobody looked: the sampler read six of the eleven
+    components in it and the two readings differed by up to 1.25 points on a live
+    artifact. So the bundle now also carries `conceded_lam` and `saves_lam` — the
+    lambdas behind the two `expected_floor_div` terms, which cannot be recovered
+    from the expectations — and `bonus_points` is a shared function rather than a
+    formula written out twice. `tests/test_simulate.py` is what actually holds
+    the promise this docstring makes.
     """
     pos = player["position"]
     cur_min = player["minutes"] or 0
@@ -662,13 +671,16 @@ def fixture_rates(
     # Both derive from the SAME expected-goals-conceded figure that drives the
     # clean sheet, so the two cannot disagree about how leaky the fixture is.
     lam_conceded = ctx.expected_conceded(player["team_id"], fx.opponent_id, fx.at_home)
+    conceded_lam = 0.0
     conceded_units = 0.0
     if pos in config.CONCEDED_POSITIONS:
         # Only goals shipped while on the pitch count; scale the rate by the
         # share of the match played, not the whole 90.
+        conceded_lam = lam_conceded * mins_frac
         conceded_units = F.expected_floor_div(
-            lam_conceded * mins_frac, config.CONCEDED_PER_PENALTY)
+            conceded_lam, config.CONCEDED_PER_PENALTY)
 
+    saves_lam = 0.0
     save_units = 0.0
     if pos == "GKP":
         rate = _rate(player, "saves_per_90")
@@ -676,7 +688,8 @@ def fixture_rates(
             # No history: fall back to the league relationship between goals
             # conceded and shots faced rather than assuming a keeper never saves.
             rate = lam_conceded * _SAVES_PER_GOAL
-        save_units = F.expected_floor_div(rate * mins_frac, config.SAVES_PER_POINT)
+        saves_lam = rate * mins_frac
+        save_units = F.expected_floor_div(saves_lam, config.SAVES_PER_POINT)
 
     return {
         "pos": pos,
@@ -698,6 +711,13 @@ def fixture_rates(
         "lam_conceded": lam_conceded,
         "conceded_units": conceded_units,
         "save_units": save_units,
+        # A13. The Poisson means the two `expected_floor_div` calls integrate.
+        # `conceded_units` and `save_units` are E[floor(X/d)], and a floor is not
+        # linear, so a sampler cannot recover the lambda from the expectation.
+        # Publishing it is what lets `model.simulate` draw the SAME X the point
+        # estimate integrates over instead of guessing at one.
+        "conceded_lam": conceded_lam,
+        "saves_lam": saves_lam,
         # M11 — shrunk, not raw. See `_shrunk_rate`.
         "yellow_rate": _shrunk_rate(player, "yellow_per_90"),
         "red_rate": _shrunk_rate(player, "red_per_90"),
@@ -706,6 +726,37 @@ def fixture_rates(
         "pen_miss_rate": _shrunk_rate(player, "pen_miss_per_90"),
         "bonus_rate": _shrunk_rate(player, "bonus_per_90"),
     }
+
+
+def bonus_points(
+    pos: str, goals: Any, assists: Any, defcon_pts: Any, cs_pts: Any,
+    cs_pts_per: float, hist: Any, use_history: bool,
+) -> Any:
+    """The bonus proxy — ONE formula, read by the point estimate AND the sampler.
+
+    BPS is post-match, so it cannot be a feature. What is available before a
+    deadline is the player's own historical bonus rate (a prior-gameweeks
+    aggregate) and a proxy driven by the returns being projected.
+
+    A13. This used to live inline in `_project_one_fixture` while `model.simulate`
+    carried a SECOND, different proxy — `round(0.9*goals + 0.6*assists + 0.4*cs +
+    0.3*defcon)`, capped at 3 — so the distribution was centred on a different
+    bonus number from the one published beside it, by up to 0.41 points a player.
+    Two guesses at the same unmeasurable quantity is one guess too many.
+
+    `goals`, `assists`, `defcon_pts` and `cs_pts` are EXPECTATIONS when the point
+    estimate calls this and REALISED DRAWS when the sampler does. The arithmetic
+    is linear in all four, which is precisely why one function serves both: the
+    mean of the sampled bonus is the published bonus by construction, not by
+    calibration.
+    """
+    proxy = 0.55 * (goals + assists) + 0.25 * defcon_pts
+    if pos in ("GKP", "DEF"):
+        # `cs_pts / cs_pts_per` recovers the clean-sheet EVENT from its points.
+        proxy = proxy + 0.35 * cs_pts / max(cs_pts_per, 1.0)
+    if not use_history:
+        return proxy
+    return (1 - _BONUS_HISTORY_WEIGHT) * proxy + _BONUS_HISTORY_WEIGHT * hist
 
 
 def _project_one_fixture(
@@ -749,16 +800,11 @@ def _project_one_fixture(
     )
 
     # --- bonus ------------------------------------------------------------
-    # BPS is post-match, so it cannot be a feature. Blend the player's own
-    # historical bonus rate (a prior-gameweeks aggregate) with the returns-driven
-    # proxy, rather than inserting realised BPS.
-    proxy = 0.55 * (r["exp_goals"] + r["exp_assists"]) + 0.25 * exp_defcon_pts
-    if pos in ("GKP", "DEF"):
-        proxy += 0.35 * exp_cs_pts / max(r["cs_pts_per"], 1)
+    # Shared with `model.simulate` so the distribution centres on this number.
     hist = r["bonus_rate"] * mf
-    exp_bonus_pts = (
-        (1 - _BONUS_HISTORY_WEIGHT) * proxy + _BONUS_HISTORY_WEIGHT * hist
-        if hist > 0 else proxy
+    exp_bonus_pts = bonus_points(
+        pos, r["exp_goals"], r["exp_assists"], exp_defcon_pts,
+        exp_cs_pts, r["cs_pts_per"], hist, hist > 0,
     )
 
     exp_points = (

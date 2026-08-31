@@ -5,112 +5,311 @@
     {
       "id": "what-should-i-do",
       "question": "What should I do this week?",
-      "expect_tools": ["get_weekly_decision"],
-      "require_fields": ["action", "headline", "reason", "confidence", "biggest_risk", "threshold_status"],
-      "allowed_statuses": ["ok", "data_unavailable"],
-      "must_not_invent": ["a transfer when action is 'unavailable'"]
+      "expect_tools": [
+        "get_weekly_decision"
+      ],
+      "require_fields": [
+        "action",
+        "headline",
+        "reason",
+        "confidence",
+        "biggest_risk",
+        "threshold_status"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "must_not_invent": [
+        "a transfer when action is 'unavailable'"
+      ]
     },
     {
       "id": "why-roll",
       "question": "Why is rolling better than making the transfer?",
-      "expect_tools": ["get_weekly_decision"],
-      "require_fields": ["comparison", "threshold_status", "assumptions"],
-      "allowed_statuses": ["ok", "data_unavailable"],
-      "require_facts": {"threshold_status.fitted": false}
+      "expect_tools": [
+        "get_weekly_decision"
+      ],
+      "require_fields": [
+        "comparison",
+        "threshold_status",
+        "assumptions"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "require_facts": {
+        "threshold_status.fitted": false
+      }
     },
     {
       "id": "compare-two",
       "question": "Compare Saka and Palmer.",
-      "expect_tools": ["find_players", "compare_players"],
-      "require_fields": ["players", "differences"],
-      "allowed_statuses": ["ok", "not_found", "ambiguous"],
-      "must_not_invent": ["a recommendation between them"]
+      "expect_tools": [
+        "find_players",
+        "compare_players"
+      ],
+      "require_fields": [
+        "players",
+        "differences"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "not_found",
+        "ambiguous"
+      ],
+      "must_not_invent": [
+        "a recommendation between them"
+      ]
     },
     {
       "id": "biggest-risk",
       "question": "What is the biggest reason the recommendation could be wrong?",
-      "expect_tools": ["get_weekly_decision"],
-      "require_fields": ["biggest_risk", "limitations"],
-      "allowed_statuses": ["ok", "data_unavailable"]
+      "expect_tools": [
+        "get_weekly_decision"
+      ],
+      "require_fields": [
+        "biggest_risk",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ]
     },
     {
       "id": "league-captain",
       "question": "How does league 271619 change the captain choice?",
-      "expect_tools": ["get_league_strategy"],
-      "require_fields": ["leagues", "limitations"],
-      "allowed_statuses": ["ok", "data_unavailable"],
-      "require_facts": {"leagues.0.data_quality": "present"},
-      "must_not_invent": ["rival ownership when data_quality.with_picks is 0"]
+      "expect_tools": [
+        "get_league_strategy"
+      ],
+      "require_fields": [
+        "leagues",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "require_facts": {
+        "leagues.0.data_quality": "present"
+      },
+      "must_not_invent": [
+        "rival ownership when data_quality.with_picks is 0"
+      ]
     },
     {
       "id": "live-final",
       "question": "Is the live score final?",
-      "expect_tools": ["get_live_gameweek"],
+      "expect_tools": [
+        "get_live_gameweek"
+      ],
       "require_fields": [],
-      "allowed_statuses": ["ok", "data_unavailable"],
-      "must_not_invent": ["a final total while bonus is provisional"]
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "must_not_invent": [
+        "a final total while bonus is provisional"
+      ]
+    },
+    {
+      "id": "live-recompute",
+      "question": "How many points have I got this gameweek, and show me the maths?",
+      "expect_tools": [
+        "get_live_scorecard"
+      ],
+      "require_fields": [
+        "players",
+        "arithmetic",
+        "provenance",
+        "rivals",
+        "rivals_per_player",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "require_facts": {
+        "arithmetic.formula": "sum(total_points x multiplier) - hits",
+        "arithmetic.sum_of_products": "present",
+        "arithmetic.hits": "present",
+        "arithmetic.gameweek_points_confirmed": "present",
+        "arithmetic.reconciles_with_published_total": true,
+        "arithmetic.is_final": "present",
+        "players.0.total_points": "present",
+        "players.0.multiplier": "present",
+        "players.0.points": "present",
+        "provenance.read_at": "present"
+      },
+      "must_not_invent": [
+        "a total that is not the sum of the per-player products minus hits",
+        "a bonus column added on top of total_points, which already contains it",
+        "a per-player breakdown for a rival, which no artifact carries"
+      ]
     },
     {
       "id": "bad-decision-or-bad-luck",
       "question": "Was last week a bad decision or bad luck?",
-      "expect_tools": ["get_decision_review"],
-      "require_fields": ["quality", "comparison"],
-      "allowed_statuses": ["ok", "data_unavailable"],
-      "must_not_invent": ["a review before any gameweek has finished"]
+      "expect_tools": [
+        "get_decision_review"
+      ],
+      "require_fields": [
+        "quality",
+        "comparison"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "must_not_invent": [
+        "a review before any gameweek has finished"
+      ]
     },
     {
       "id": "blend-fitted",
       "question": "Is the ep_next blend fitted?",
-      "expect_tools": ["get_model_evidence"],
-      "require_fields": ["ep_next_blend"],
-      "allowed_statuses": ["ok"],
-      "require_facts": {"ep_next_blend.fitted": false, "ep_next_blend.weight": 0.7}
+      "expect_tools": [
+        "get_model_evidence"
+      ],
+      "require_fields": [
+        "ep_next_blend"
+      ],
+      "allowed_statuses": [
+        "ok"
+      ],
+      "require_facts": {
+        "ep_next_blend.fitted": false,
+        "ep_next_blend.weight": 0.7
+      }
     },
     {
       "id": "withdrawn-claims",
       "question": "Which accuracy claims were withdrawn?",
-      "expect_tools": ["get_model_evidence"],
-      "require_fields": ["withdrawn_baselines"],
-      "allowed_statuses": ["ok"],
-      "require_facts": {"withdrawn_baselines.fpl_xp": "present", "withdrawn_baselines.ensemble": "present"}
+      "expect_tools": [
+        "get_model_evidence"
+      ],
+      "require_fields": [
+        "withdrawn_baselines"
+      ],
+      "allowed_statuses": [
+        "ok"
+      ],
+      "require_facts": {
+        "withdrawn_baselines.fpl_xp": "present",
+        "withdrawn_baselines.ensemble": "present"
+      }
     },
     {
       "id": "model-experiments",
       "question": "Which model experiments were rejected or inconclusive?",
-      "expect_tools": ["get_model_evidence"],
-      "require_fields": ["model_candidates"],
-      "allowed_statuses": ["ok"],
-      "require_candidates": {"gbm": "rejected", "ridge": "inconclusive", "xp_models": "invalid_experiment"}
+      "expect_tools": [
+        "get_model_evidence"
+      ],
+      "require_fields": [
+        "model_candidates"
+      ],
+      "allowed_statuses": [
+        "ok"
+      ],
+      "require_candidates": {
+        "gbm": "rejected",
+        "ridge": "inconclusive",
+        "xp_models": "invalid_experiment"
+      }
+    },
+    {
+      "id": "minutes-accuracy",
+      "question": "How good is Gaffer at predicting who actually starts?",
+      "expect_tools": [
+        "get_minutes_evidence"
+      ],
+      "require_fields": [
+        "minutes_model",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok"
+      ],
+      "require_facts": {
+        "minutes_model.measured": true,
+        "minutes_model.verdict": "present",
+        "minutes_model.next_gameweek.brier.gaffer": "present",
+        "minutes_model.bands.overall": "present",
+        "minutes_model.bands.considered": "present",
+        "minutes_model.baselines": "present"
+      },
+      "must_not_invent": [
+        "a threshold accuracy figure -- p_start is a multiplier through the rate bundle, not a yes/no call, so accuracy scores 0.51 and 0.99 identically",
+        "a verdict that the minutes model beats its baselines, when it loses at every horizon",
+        "the pool-wide band table alone -- it looks calibrated while being wrong on the sub-population a squad is drawn from"
+      ]
     },
     {
       "id": "what-changed",
       "question": "What changed since the previous refresh?",
-      "expect_tools": ["what_changed"],
-      "require_fields": ["compared"],
-      "allowed_statuses": ["ok", "data_unavailable"],
-      "must_not_invent": ["a change when no prior snapshot exists"]
+      "expect_tools": [
+        "what_changed"
+      ],
+      "require_fields": [
+        "compared"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "must_not_invent": [
+        "a change when no prior snapshot exists"
+      ]
     },
     {
       "id": "squad-known",
       "question": "Is my squad currently known?",
-      "expect_tools": ["gaffer_status"],
-      "require_fields": ["squad", "build_mode", "gameweek"],
-      "allowed_statuses": ["ok"]
+      "expect_tools": [
+        "gaffer_status"
+      ],
+      "require_fields": [
+        "squad",
+        "build_mode",
+        "gameweek"
+      ],
+      "allowed_statuses": [
+        "ok"
+      ]
     },
     {
       "id": "player-outlook",
       "question": "What is the outlook for player 1?",
-      "expect_tools": ["get_player_outlook"],
-      "require_fields": ["player"],
-      "allowed_statuses": ["ok", "not_found"],
-      "require_facts": {"player.projection.blend_is_fitted": false}
+      "expect_tools": [
+        "get_player_outlook"
+      ],
+      "require_fields": [
+        "player"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "not_found"
+      ],
+      "require_facts": {
+        "player.projection.blend_is_fitted": false
+      }
     },
     {
       "id": "transfer-plan",
       "question": "What is the multi-week plan?",
-      "expect_tools": ["get_transfer_plan"],
-      "require_fields": ["plan", "limitations"],
-      "allowed_statuses": ["ok", "data_unavailable"]
+      "expect_tools": [
+        "get_transfer_plan"
+      ],
+      "require_fields": [
+        "plan",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ]
     }
   ]
 }

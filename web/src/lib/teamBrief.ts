@@ -2,7 +2,18 @@
 // viewing (the client-side Planner team the pipeline can't see). Same two-section
 // shape as the AI verdict: what's strong + what I'd change. Suggested changes
 // respect your ACTUAL budget (bank) and the 3-per-club limit.
+//
+// A15 sibling. That last sentence used to be false. The bank was DERIVED as
+// `100 - squadCost`, which is the right rule only for a squad being assembled
+// from scratch. For a squad you already own it is meaningless: team value rises
+// above 100 as your players appreciate, so the subtraction goes NEGATIVE on a
+// perfectly healthy squad. Measured on a real imported team it produced
+// -0.2, which then filtered every candidate through `p.price - s.price <= bank`
+// and left the briefing able to propose only DOWNGRADES -- while printing
+// "£-0.2m in the bank" to the reader. The bank now comes from the holding FPL
+// published, exactly as the planner's own money meter does.
 import type { Player } from './types'
+import { type Plan, holdingFunds } from './squad'
 
 const BUDGET = 100.0
 const CLUB_LIMIT = 3
@@ -17,9 +28,23 @@ interface Swap {
 
 /** Best affordable, club-legal single-transfer upgrades, chosen sequentially so
  *  together they stay within the bank. */
-function suggestChanges(squad: Player[], starters: Player[], pool: Player[]): { swaps: Swap[]; bank: number } {
+function suggestChanges(
+  squad: Player[], starters: Player[], pool: Player[], plan?: Plan,
+): { swaps: Swap[]; bank: number; bankIsCeiling: boolean } {
+  // Held squad -> FPL's own bank, adjusted for anything already swapped in the
+  // planner at list prices. Built squad (no holding) -> the 100m rule, which is
+  // correct there. Never `100 - cost` on a squad somebody owns.
+  const byId = new Map(pool.map((p) => [p.id, p]))
+  const funds = plan?.holding
+    ? holdingFunds(squad.map((p) => p.id), plan.holding, byId)
+    : null
   const squadCost = squad.reduce((s, p) => s + p.price, 0)
-  let bank = Math.round((BUDGET - squadCost) * 10) / 10
+  let bank = funds
+    ? funds.bank
+    : Math.round((BUDGET - squadCost) * 10) / 10
+  // A selling price is never above the list price, so a funds figure derived
+  // from list prices is an upper bound whenever anything has been swapped.
+  const bankIsCeiling = !!funds && funds.soldCount > 0
   const startBank = bank
 
   const owned = new Set(squad.map((p) => p.id))
@@ -59,7 +84,7 @@ function suggestChanges(squad: Player[], starters: Player[], pool: Player[]): { 
     clubCount.set(best.in.team_id, (clubCount.get(best.in.team_id) ?? 0) + 1)
     bank = Math.round((bank - (best.in.price - best.out.price)) * 10) / 10
   }
-  return { swaps, bank: startBank }
+  return { swaps, bank: startBank, bankIsCeiling }
 }
 
 export function generateTeamBrief(
@@ -67,6 +92,7 @@ export function generateTeamBrief(
   starterIds: number[],
   captainId: number,
   pool: Player[],
+  plan?: Plan,
 ): string {
   const starters = squad.filter((p) => starterIds.includes(p.id))
   const captain = squad.find((p) => p.id === captainId)
@@ -74,11 +100,14 @@ export function generateTeamBrief(
   const top = [...starters].sort((a, b) => b.next_gw_xp - a.next_gw_xp).slice(0, 3)
   const defcon = starters.filter((p) => p.defcon90 >= (DEFCON_THRESHOLD[p.pos] ?? 99))
   const flagged = squad.filter((p) => p.news || (p.status && p.status !== 'a'))
-  const { swaps, bank } = suggestChanges(squad, starters, pool)
+  const { swaps, bank, bankIsCeiling } = suggestChanges(squad, starters, pool, plan)
   const proj = starters.reduce((s, p) => s + p.next_gw_xp, 0) + (captain?.next_gw_xp ?? 0)
 
   const L: string[] = []
-  L.push(`**Your XI projects ${proj.toFixed(1)} pts — ${captain ? `captain ${captain.name}` : 'set your captain'}, £${bank.toFixed(1)}m in the bank.**`, '')
+  const bankText = bankIsCeiling
+    ? `up to £${bank.toFixed(1)}m in the bank`
+    : `£${bank.toFixed(1)}m in the bank`
+  L.push(`**Your XI projects ${proj.toFixed(1)} pts — ${captain ? `captain ${captain.name}` : 'set your captain'}, ${bankText}.**`, '')
 
   L.push("**✅ What's strong**")
   if (top.length) L.push(`- Best assets: ${top.map((p) => `**${p.name}** (${p.next_gw_xp.toFixed(1)})`).join(', ')}.`)

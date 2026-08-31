@@ -15,6 +15,7 @@ It establishes a baseline. It does not tune anything.
     python -m gaffer.backtest                 # prints, writes nothing
     python -m gaffer.backtest --write         # overwrites data/backtest.json
     python -m gaffer.backtest --horizons 1 3  # faster subset
+    python -m gaffer.backtest --minutes-only  # the A11 minutes block alone
 """
 
 from __future__ import annotations
@@ -63,7 +64,14 @@ from gaffer.model import projection
 #:       seasons and must never be diffed as though one were an improvement on
 #:       the other. Adds `season_split`, so the artifact states its own
 #:       train/select/test instead of leaving it to a comment that never ships.
-SCHEMA_VERSION = 7
+#:   8 = adds `minutes_model` (A11). `p_start` gates every projection — it scales
+#:       every rate, discounts `ep_next` through `rotation_scale`, drives the
+#:       autosubs and the solver, and is what the NAILED / ROTATION / CAMEO?
+#:       badge reports — and until this version it was the one major component
+#:       with no measured error rate at all. It has one now, and it loses to a
+#:       three-game rolling start rate at every horizon. Additive: nothing that
+#:       reads a version-7 artifact changes meaning.
+SCHEMA_VERSION = 8
 
 #: The chronological split. Disjoint, ordered, and no season used twice.
 #:
@@ -338,6 +346,789 @@ def _calibration_by_position(df: pd.DataFrame, col: str) -> dict[str, list]:
     return {
         pos: _calibration(grp, col, bins=5)
         for pos, grp in df.groupby("pos") if len(grp) >= 40
+    }
+
+
+# ---------------------------------------------------------------------------
+# The minutes model (A11)
+# ---------------------------------------------------------------------------
+#
+# `p_start` gates everything above it. It scales every rate in `fixture_rates`,
+# it is the `rotation_scale` input that discounts FPL's own `ep_next`, it is
+# what `model.simulate` and `model.scenarios` sample against, and it is what the
+# NAILED / ROTATION / CAMEO? badge on the player page reports. Until schema 8 it
+# was the only major component of the projection with no measured error rate at
+# all: the points model had MAE, rank correlation, a legal-XI decision metric
+# and a naive baseline; the thing deciding whether the player is on the pitch
+# had none of them, and every number that depended on it was published anyway.
+#
+# The target is FPL's own `starts` column — 1 when the player was in the
+# starting XI. It is a post-match field and appears in
+# `leakage.POST_MATCH_FIELDS` for that reason; it is legal here because it is
+# the evaluation target and is never read back as a feature.
+#
+# WHY THESE METRICS, since none was mandated:
+#
+#   Brier, with a skill score.  `p_start` is a probability that multiplies
+#     through a rate bundle, not a yes/no call, so the scoring rule has to be
+#     proper — one that cannot be improved by shading a forecast. Accuracy at a
+#     threshold is not: it would score 0.51 and 0.99 identically on a player who
+#     starts, and the difference between those two numbers is the difference
+#     between a projection of 2.1 points and 4.1. The skill score is not
+#     optional decoration; the raw Brier of a rare-event population is
+#     uninterpretable, and it is exactly what let the price-prior arm look
+#     respectable for three seasons (0.09 — against 0.02 for saying nothing).
+#
+#   A calibration curve, twice.  The most actionable form the answer takes: not
+#     "the model is wrong by X" but "when it says 0.90, he starts 86% of the
+#     time". Reported over the whole player list AND over the most-owned 250,
+#     because the two disagree in opposite directions and only the second is
+#     about a decision anyone makes.
+#
+#   The three shipped badge bands.  The badge is the interface. Measuring the
+#     probability without measuring the label would leave the one number the
+#     user actually reads unscored.
+#
+#   MAE of expected minutes.  `exp_minutes` is what the rate bundle multiplies,
+#     not `p_start`, so a calibration fix that left the minutes wrong would be a
+#     fix to the wrong quantity.
+#
+#   AUC, in support.  It separates "mis-calibrated but correctly ordered", which
+#     a recalibration fixes, from "cannot tell these players apart", which needs
+#     a feature the model does not have.
+#
+# The unit is a FIXTURE, not a gameweek. `p_start` is a per-match property —
+# `projection.py` takes the MAX across a double rather than summing it — so a
+# double gameweek is two chances to be picked and is scored as two rows.
+
+
+#: The badge bands, exactly as `model.rationale.xmins_badge` cuts them. That
+#: function owns the thresholds and is not edited from here; this is a reporting
+#: mirror, and `tests/test_backtest_minutes.py` fails if the two ever disagree.
+START_BANDS: tuple[tuple[str, float, float], ...] = (
+    ("NAILED", 0.85, 1.01),
+    ("ROTATION", 0.60, 0.85),
+    ("CAMEO?", -0.01, 0.60),
+)
+
+#: The population cut that turns the calibration table from a curiosity into a
+#: number worth acting on.
+#:
+#: Every band is reported twice, and the two disagree in opposite directions.
+#: Over the whole registered player list the CAMEO? band looks acceptable,
+#: because most of that list is third-choice goalkeepers and academy names who
+#: genuinely never play. They are trivially easy to call, there are thousands of
+#: them, and they carry the aggregate. Nobody picks them. The rows a manager
+#: actually decides between are the ones with ownership, and conditioning on
+#: that flips the CAMEO? error from over-prediction to under-prediction — in
+#: every season measured, and in the live gameweek audited below. A calibration
+#: curve averaged over a population the reader will never choose from is a curve
+#: about somebody else's problem.
+#:
+#: 250 is roughly the pool an FPL manager reads: 20 clubs, a first team and the
+#: obvious rotation options. Nothing was fitted to it and no threshold was
+#: swept; the 400 cut is reported alongside it so the reader can see a gradient
+#: rather than a cliff at one chosen number.
+CONSIDERED_OWNERSHIP_RANK = 250
+
+#: The naive baselines. All three are strictly prior-gameweek quantities.
+#:
+#: The first is deliberately almost the model itself: the shipped gate's primary
+#: arm IS `starts / fixtures_played`. Where the model takes that arm the two
+#: agree by construction, so the gap between them measures exactly one thing —
+#: what the OTHER two arms cost. That is the whole point of choosing it.
+MINUTES_BASELINES = {
+    "start_rate_td": "season-to-date starts over the team's completed fixtures. "
+                     "The shipped gate's own primary arm, applied to everyone "
+                     "rather than only to the players it lets through.",
+    "started_lag": "did he start his last fixture — 1 or 0. The crudest "
+                   "available answer, and the one a manager gives from memory.",
+    "start_rate_r3": "the share of his last three fixtures he started. A "
+                     "four-valued recency estimate: 0, 1/3, 2/3, 1.",
+}
+
+#: Columns the minutes evaluation reads, checked against the leakage contract on
+#: every run the way `histdata.FEATURE_COLUMNS` is. `starts` and `minutes` are
+#: deliberately absent: they are the targets.
+MINUTES_FEATURE_COLUMNS = (
+    "min_td", "starts_td", "base_minutes", "base_starts", "base_season",
+    "value", "position", "team_id", "selected",
+    "start_rate_td", "started_lag", "start_rate_r3", "mins_avg_td",
+)
+
+MINUTES_LIMITATIONS = [
+    "Availability is never varied. The archive carries no `status` or "
+    "`chance_of_playing_next_round` column, so every historical player resolves "
+    "to the model's available branch and `p_start` is measured with its "
+    "availability multiplier pinned at 1.0. This is the interesting half of the "
+    "error and it is NOT in these numbers: a player who is injured, suspended "
+    "or unregistered is exactly the case the badge gets catastrophically wrong, "
+    "and the archive cannot see it. The live audit below can, and does.",
+    "`starts` is the target, so a player who was in the squad and did not make "
+    "the matchday eighteen scores the same 0 as one who was omitted for "
+    "rotation. The model does not distinguish them either, which is the point "
+    "of the `price_prior` finding, but it means a 'wrong' call here can be an "
+    "unavailability the model was never told about.",
+    "Team strength ratings are rebuilt per gameweek from completed matches, "
+    "which is not how the live pipeline builds them. `p_start` does not read "
+    "them at all, so this affects `exp_minutes` only through nothing — it is "
+    "recorded for consistency with the points block rather than because it "
+    "bites here.",
+    "One season, one league, 38 gameweeks. The branch decomposition reproduces "
+    "on 2023-24 and 2024-25 (train and select) and the direction of every "
+    "finding holds there, but the headline figures are 2025-26 alone.",
+    "Nothing here has been fixed. This block measures; it proposes no "
+    "correction and no constant was moved on the strength of it. The obvious "
+    "candidate — believing a season-to-date zero the way the prior-season arm "
+    "already believes a `base_starts` zero — was measured on the train and "
+    "select seasons and is recorded in `candidate_fix`, unshipped, because "
+    "`projection.py` is where that decision belongs and it needs the full "
+    "points backtest re-run behind it.",
+]
+
+MINUTES_VERDICT = (
+    "Measured for the first time, and it loses. At h=1 the shipped `p_start` "
+    "scores a Brier of 0.150 where the share of a player's last three fixtures "
+    "he started scores 0.099, and it is beaten at all six horizons by both "
+    "recency baselines. It orders players less well too — AUC 0.83 against 0.90 "
+    "— so this is not a calibration problem with a good ranking underneath it. "
+    "Almost all of the gap is one branch: a third of every row gets its "
+    "`p_start` from a PRICE prior, is told it has a ~29% chance of starting, "
+    "and starts 2.3% of the time."
+)
+
+#: The obvious correction, measured on the train and select seasons FIRST, and
+#: deliberately not shipped from here.
+#:
+#: `fixture_rates` already knows that a zero can be evidence. Its prior-season
+#: arm says so at length — "zero starts off a full sample is the strongest bench
+#: evidence there is" — and believes a `base_starts` of 0. The current-season arm
+#: does the opposite: its gate is `fixtures_played >= 3 and cur_min and ...`, so
+#: a player whose team has played eight and who has played none of them fails on
+#: `cur_min` and falls through to a price prior that reads an expensive squad
+#: player as a probable starter. The lesson was learned once and applied to one
+#: of the two arms.
+#:
+#: Replacing the fallback with the season-to-date rate for exactly those rows —
+#: i.e. believing the current-season zero on the same terms the prior-season zero
+#: is believed — cuts the h=1 Brier by about a fifth, in all three seasons:
+#:
+#:     2023-24  (train)   0.1452 -> 0.1139
+#:     2024-25  (select)  0.1495 -> 0.1161
+#:     2025-26  (test)    0.1509 -> 0.1114
+#:
+#: Measured on train and select before the test season was looked at, and the
+#: test figure is confirmation rather than the finding. It is still NOT shipped,
+#: for two reasons that are not squeamishness. `p_start` multiplies through every
+#: rate, so changing it moves every published points number and needs the full
+#: points backtest re-run behind it; and the change belongs in `projection.py`,
+#: which this module measures and does not own. Recorded so the next person has
+#: the measurement rather than the intuition.
+MINUTES_CANDIDATE_FIX = {
+    "candidate": "believe_a_current_season_zero",
+    "decision": "measured, not shipped",
+    "change": "in `projection.fixture_rates`, drop `cur_min` from the "
+              "current-season gate so a player with a full team sample and zero "
+              "starts scores 0 rather than falling through to the price prior.",
+    "rationale": "the prior-season arm already believes a zero, and says so in "
+                 "its own comment. The current-season arm does not. The same "
+                 "lesson was applied to one of the two.",
+    "brier_h1": {
+        "2023-24": {"role": "train", "before": 0.1452, "after": 0.1139},
+        "2024-25": {"role": "select", "before": 0.1495, "after": 0.1161},
+        "2025-26": {"role": "test", "before": 0.1509, "after": 0.1114},
+    },
+    "not_shipped_because": "`p_start` multiplies through every rate, so this "
+                           "moves every points number in this artifact and "
+                           "needs the points backtest re-run behind it. It also "
+                           "belongs in `projection.py`, which this module "
+                           "measures rather than owns.",
+    "caveat": "even after the fix the model would still lose to `start_rate_r3` "
+              "(0.0986). This closes most of the gap to `start_rate_td`; it does "
+              "not make the shipped gate the best available estimator.",
+}
+
+
+def _brier(pred: Any, actual: Any) -> float:
+    """Mean squared error of a probability against a 0/1 outcome."""
+    p = np.asarray(pred, dtype=float)
+    y = np.asarray(actual, dtype=float)
+    if not len(y):
+        return float("nan")
+    return float(np.mean((p - y) ** 2))
+
+
+def _brier_skill(pred: Any, actual: Any) -> float:
+    """Brier against this population's own base rate. 0 = no skill, <0 = worse.
+
+    The raw score is unreadable alone. A population that is 2% starters scores
+    0.022 by answering "no" to everything, so 0.09 on it is four times worse
+    than saying nothing — which is what the price prior does, and what the raw
+    number hid for three seasons.
+    """
+    y = np.asarray(actual, dtype=float)
+    if not len(y):
+        return float("nan")
+    ref = _brier(np.full(len(y), float(y.mean())), y)
+    if ref <= 0:
+        return float("nan")
+    return float(1.0 - _brier(pred, y) / ref)
+
+
+def _auc(pred: Any, actual: Any) -> float:
+    """P(a random starter outranks a random non-starter). Calibration-free."""
+    y = np.asarray(actual, dtype=int)
+    n1 = int(y.sum())
+    n0 = len(y) - n1
+    if n1 == 0 or n0 == 0:
+        return float("nan")
+    ranks = pd.Series(np.asarray(pred, dtype=float)).rank().to_numpy()
+    return float((ranks[y == 1].sum() - n1 * (n1 + 1) / 2) / (n1 * n0))
+
+
+def _start_calibration(
+    df: pd.DataFrame, col: str = "p_start", bins: int = 10,
+) -> list[dict[str, float]]:
+    """Predicted start probability against the realised start rate, by decile.
+
+    Binned on the RANK rather than the value. `p_start` piles up on a handful of
+    discrete points — `starts / fixtures_played` for small denominators, and a
+    price prior that is a function of price alone — so value-binning collapses
+    to three or four bins and hides the shape that matters.
+    """
+    d = df[[col, "started", "minutes"]].dropna()
+    if len(d) < bins * 5 or float(d[col].std()) == 0:
+        return []
+    try:
+        d = d.assign(_b=pd.qcut(d[col].rank(method="first"), bins, duplicates="drop"))
+    except ValueError:
+        return []
+    out = []
+    for _, g in d.groupby("_b", observed=True):
+        out.append({
+            "pred": round(float(g[col].mean()), 3),
+            "actual": round(float(g["started"].mean()), 3),
+            "appear_rate": round(float((g["minutes"] > 0).mean()), 3),
+            "n": int(len(g)),
+        })
+    return sorted(out, key=lambda x: x["pred"])
+
+
+def _start_bands(df: pd.DataFrame, col: str = "p_start") -> list[dict[str, Any]]:
+    """The three shipped badges, scored on what the badged players then did."""
+    out = []
+    for name, lo, hi in START_BANDS:
+        g = df[(df[col] >= lo) & (df[col] < hi)]
+        if g.empty:
+            continue
+        out.append({
+            "band": name,
+            "n": int(len(g)),
+            "claimed": round(float(g[col].mean()), 3),
+            "start_rate": round(float(g["started"].mean()), 3),
+            "appear_rate": round(float((g["minutes"] > 0).mean()), 3),
+            "exp_minutes": round(float(g["exp_minutes"].mean()), 1),
+            "actual_minutes": round(float(g["minutes"].mean()), 1),
+        })
+    return out
+
+
+def _minutes_branch(player: Mapping[str, Any], fixtures_played: int) -> str:
+    """Which arm of the shipped minutes gate produced this ``p_start``.
+
+    A transcription of the conditions in `projection.fixture_rates`, because that
+    function returns a number and not the branch that made it. Duplicated logic
+    is a liability, so it is pinned rather than trusted:
+    `test_the_branch_label_names_the_formula_that_produced_p_start` recomputes
+    all three arms over a grid of synthetic players and asserts the label names
+    the one `p_start` actually equals.
+    """
+    cur_min = player["minutes"] or 0
+    base_min = player["base_minutes"] or 0
+    base_starts = player.get("base_starts") or 0
+    have_base = base_min >= config.BASE_SAMPLE_MINUTES
+    zero_is_evidence = config.season_reports_advanced_stats(
+        player.get("base_season")) is not False
+    zero_starts_possible = base_min <= projection._MAX_UNSTARTED_MINUTES
+    if fixtures_played >= 3 and cur_min and player.get("starts") is not None:
+        return "current_season"
+    if have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
+        return "prior_season"
+    return "price_prior"
+
+
+def build_minutes_evaluation(
+    season: str = TEST_SEASON, horizons: tuple[int, ...] = HORIZONS,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Every start prediction and its outcome, one row per player-fixture.
+
+    `p_start` is computed ONCE per (decision gameweek, player) and joined onto
+    every target fixture. That is not a shortcut: the shipped gate reads only
+    frozen season-to-date aggregates, the prior season, price, availability and
+    the team's completed-fixture count, none of which varies with the opponent,
+    the venue or the horizon — so the value really is identical across them.
+    `test_p_start_does_not_vary_with_the_fixture` holds that true rather than
+    leaving it as an assumption that a later change to `fixture_rates` could
+    quietly break.
+
+    Availability is the model's "available" branch throughout, because the
+    archive carries no status column. That is the single most important thing to
+    know about these numbers and it is first in `MINUTES_LIMITATIONS`.
+    """
+    hist = histdata.load_season(season)
+    df = hist.frame
+    leakage.assert_no_leakage(MINUTES_FEATURE_COLUMNS, context="minutes features")
+    if "starts" not in df.columns:
+        raise histdata.MissingHistoryError(
+            f"{season} carries no `starts` column, so there is no start outcome "
+            "to score against")
+    max_gw = int(df["GW"].max())
+    avail = projection._availability("a", None)
+    coverage = {"decision_gws": 0, "rows": 0, "skipped_unpriced": 0}
+    records: list[dict[str, Any]] = []
+    for decision_gw in range(FIRST_DECISION_GW, max_gw + 1):
+        snap = df[df["GW"] == decision_gw]
+        if snap.empty:
+            continue
+        feat = snap.drop_duplicates("element").set_index("element")
+        ctx = _context_for(hist, decision_gw)
+        fixtures_played = hist.team_fixtures_played(decision_gw)
+        # Ownership at the freeze, ranked. `selected` is a pre-deadline field and
+        # this is the value from the DECISION snapshot, not the target one.
+        own_rank = feat["selected"].rank(ascending=False, method="first")
+        # Strictly prior gameweeks. That is the entire leakage policy for the
+        # baselines: they may read every completed fixture and nothing else.
+        prior = df[df["GW"] < decision_gw]
+        if len(prior):
+            grouped = prior.sort_values("GW").groupby("element")["starts"]
+            last_start = grouped.last()
+            rate_r3 = grouped.apply(lambda s: float(s.tail(3).mean()))
+        else:
+            last_start = pd.Series(dtype=float)
+            rate_r3 = pd.Series(dtype=float)
+        frozen: dict[int, dict[str, Any]] = {}
+        for element, row in feat.iterrows():
+            player = _player_inputs(row)
+            if not player["position"] or pd.isna(row.get("value")):
+                coverage["skipped_unpriced"] += 1
+                continue
+            played = int(fixtures_played.get(player["team_id"], 0))
+            opponent = row.get("opponent_team")
+            fx = F.Fixture(
+                gw=decision_gw,
+                opponent_id=int(opponent) if not pd.isna(opponent) else 1,
+                at_home=True, fdr=3,
+            )
+            rates = projection.fixture_rates(player, fx, ctx, avail, played)
+            frozen[int(element)] = {
+                "p_start": float(rates["p_start"]),
+                "p_play": float(rates["p_play"]),
+                "exp_minutes": float(rates["exp_minutes"]),
+                "branch": _minutes_branch(player, played),
+                "pos": player["position"],
+                "own_rank": float(own_rank.get(element, np.nan)),
+                "start_rate_td": (player["starts"] / played) if played else np.nan,
+                "mins_avg_td": (player["minutes"] / played) if played else np.nan,
+                "started_lag": float(last_start.get(element, np.nan)),
+                "start_rate_r3": float(rate_r3.get(element, np.nan)),
+            }
+        coverage["decision_gws"] += 1
+        for h in horizons:
+            target_gw = decision_gw + h - 1
+            if target_gw > max_gw:
+                continue
+            for r in df[df["GW"] == target_gw].itertuples(index=False):
+                f = frozen.get(int(r.element))
+                if f is None:
+                    continue
+                records.append({
+                    "decision_gw": decision_gw, "target_gw": target_gw,
+                    "horizon": h, "element": int(r.element),
+                    "started": int(r.starts), "minutes": float(r.minutes), **f,
+                })
+    if not records:
+        raise histdata.MissingHistoryError("no evaluable start rows were produced")
+    ev = pd.DataFrame(records)
+    coverage["rows"] = int(len(ev))
+    return ev, coverage
+
+
+def _paired_brier_diff(
+    sub: pd.DataFrame, model_col: str, base_col: str,
+    n_boot: int = 4000, seed: int = 20260831,
+) -> dict[str, Any]:
+    """Model-minus-baseline Brier, bootstrapped over gameweeks.
+
+    Paired by target gameweek and resampled at that level, because rows within a
+    gameweek are not independent — one manager's rotation moves eleven of them
+    at once, and resampling rows would give an interval an order of magnitude
+    too tight. NEGATIVE is the model winning: lower Brier is better.
+    """
+    d = sub[[model_col, base_col, "started", "target_gw"]].dropna()
+    per_gw = []
+    for _, g in d.groupby("target_gw"):
+        if len(g) < 10:
+            continue
+        per_gw.append(_brier(g[model_col], g["started"])
+                      - _brier(g[base_col], g["started"]))
+    if len(per_gw) < 5:
+        return {"gameweeks": len(per_gw), "diff": None,
+                "note": "too few gameweeks to pair"}
+    arr = np.asarray(per_gw, dtype=float)
+    rng = np.random.default_rng(seed)
+    draws = arr[rng.integers(0, len(arr), size=(n_boot, len(arr)))].mean(axis=1)
+    return {
+        "gameweeks": int(len(arr)),
+        "diff": round(float(arr.mean()), 4),
+        "ci95": [round(float(np.percentile(draws, 2.5)), 4),
+                 round(float(np.percentile(draws, 97.5)), 4)],
+        "gameweeks_model_better": int((arr < 0).sum()),
+        "gameweeks_model_worse": int((arr > 0).sum()),
+    }
+
+
+def live_start_audit(
+    outcomes: Mapping[int, Mapping[str, Any]],
+    snapshot_path: Path | None = None,
+    target_gw: int = 1,
+    considered_rank: int = CONSIDERED_OWNERSHIP_RANK,
+) -> dict[str, Any]:
+    """Score a FROZEN pre-deadline `p_start` snapshot against what happened.
+
+    The archive cannot measure the availability multiplier, because it has no
+    status column — and availability is where the badge fails worst. The live
+    pipeline writes `data/state/projections.ndjson` with `is_pre_deadline = 1`
+    and an `as_of` timestamp before the deadline, so those rows ARE the shipped
+    minutes model with availability included, frozen before kickoff. Joining
+    them to the finished gameweek is the only honest way to see that half.
+
+    ``outcomes`` maps element id to a mapping with ``starts`` and ``minutes``,
+    and optionally ``own_rank``. It is passed in rather than fetched: this module
+    does not make network calls, and a backtest that needed one could not run in
+    CI. Reproduce it from ``event/{gw}/live/`` and ``bootstrap-static/``.
+    """
+    path = snapshot_path or (config.DATA_DIR / "state" / "projections.ndjson")
+    if not Path(path).exists():
+        return {"status": "unavailable",
+                "reason": f"no frozen snapshot at {path}"}
+    rows = []
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if rec.get("target_gw") != target_gw or not rec.get("is_pre_deadline"):
+            continue
+        outcome = outcomes.get(int(rec["player_id"]))
+        if outcome is None:
+            continue
+        rows.append({
+            "element": int(rec["player_id"]),
+            "p_start": float(rec["p_start"]),
+            "exp_minutes": float(rec["exp_minutes"]),
+            "availability": float(rec.get("availability", 1.0)),
+            "as_of": rec.get("as_of"),
+            "started": int(outcome.get("starts", 0)),
+            "minutes": float(outcome.get("minutes", 0.0)),
+            "own_rank": float(outcome.get("own_rank", np.nan)),
+        })
+    if len(rows) < 20:
+        return {"status": "unavailable",
+                "reason": f"only {len(rows)} frozen rows matched an outcome"}
+    ev = pd.DataFrame(rows)
+    considered = ev[ev["own_rank"] <= considered_rank]
+    nailed = ev[ev["p_start"] >= START_BANDS[0][1]]
+    cameo = ev[ev["p_start"] < START_BANDS[2][2]]
+    out: dict[str, Any] = {
+        "status": "measured",
+        "target_gw": target_gw,
+        "as_of": ev["as_of"].iloc[0],
+        "n": int(len(ev)),
+        "start_rate": round(float(ev["started"].mean()), 4),
+        "brier": round(_brier(ev["p_start"], ev["started"]), 4),
+        "brier_skill": round(_brier_skill(ev["p_start"], ev["started"]), 4),
+        "auc": round(_auc(ev["p_start"], ev["started"]), 4),
+        "exp_minutes_mae": round(_mae(ev["exp_minutes"], ev["minutes"]), 2),
+        "bands": _start_bands(ev),
+        "nailed_that_did_not_start": int((nailed["started"] == 0).sum()),
+        "nailed_n": int(len(nailed)),
+        "cameo_that_started": int(cameo["started"].sum()),
+        "cameo_n": int(len(cameo)),
+    }
+    if len(considered) >= 20:
+        c_cameo = considered[considered["p_start"] < START_BANDS[2][2]]
+        out["considered"] = {
+            "rank_cut": considered_rank,
+            "n": int(len(considered)),
+            "brier": round(_brier(considered["p_start"], considered["started"]), 4),
+            "bands": _start_bands(considered),
+            "cameo_that_started": int(c_cameo["started"].sum()),
+            "cameo_n": int(len(c_cameo)),
+        }
+    return out
+
+
+#: The live gameweek, measured. FROZEN, and re-runnable rather than merely
+#: asserted: `live_start_audit` recomputes every figure below from
+#: `data/state/projections.ndjson` plus the two public endpoints named in
+#: `method`. It is recorded here because this module makes no network calls, so
+#: the published artifact would otherwise carry no measurement of the one thing
+#: the archive cannot see — the availability multiplier.
+#:
+#: It exists because of a specific claim. After GW1 2026-27 the reported
+#: experience was that the cameo calls "went 1-for-7", that three badged cameos
+#: started and produced most of the points, and that a player badged
+#: "NAILED 0.90, ~74'" did not play at all. Every part of that is checkable
+#: against a snapshot frozen two and a half hours before the deadline, so it was
+#: checked rather than repeated.
+LIVE_GW1_START_AUDIT: dict[str, Any] = {
+    "status": "measured",
+    "season": "2026-27",
+    "target_gw": 1,
+    "snapshot": "data/state/projections.ndjson, is_pre_deadline = 1",
+    "as_of": "2026-08-21T17:00:28+00:00",
+    "deadline": "2026-08-21T17:30:00Z",
+    "method": "join the frozen snapshot to `event/1/live/` for `starts` and "
+              "`minutes`, and to `bootstrap-static/` for ownership rank. "
+              "Reproduce with `live_start_audit(outcomes)`.",
+    "why_it_exists": "the archive has no status column, so the backtest above "
+                     "measures `p_start` with availability pinned at 1.0. This "
+                     "is the same model with availability included, frozen two "
+                     "and a half hours before the deadline, against a finished "
+                     "gameweek.",
+    "n": 600,
+    "start_rate": 0.3667,
+    "brier": 0.1837,
+    "brier_skill": 0.2091,
+    "auc": 0.766,
+    "exp_minutes_mae": 26.39,
+    "bands": [
+        {"band": "NAILED", "n": 52, "claimed": 0.928, "start_rate": 0.808,
+         "appear_rate": 0.885, "exp_minutes": 76.5, "actual_minutes": 72.0},
+        {"band": "ROTATION", "n": 72, "claimed": 0.743, "start_rate": 0.694,
+         "appear_rate": 0.847, "exp_minutes": 62.7, "actual_minutes": 62.0},
+        {"band": "CAMEO?", "n": 476, "claimed": 0.256, "start_rate": 0.269,
+         "appear_rate": 0.422, "exp_minutes": 24.3, "actual_minutes": 24.0},
+    ],
+    "nailed_that_did_not_start": 10,
+    "nailed_n": 52,
+    "cameo_that_started": 128,
+    "cameo_n": 476,
+    "considered": {
+        "rank_cut": 250,
+        "n": 249,
+        "brier": 0.2367,
+        "bands": [
+            {"band": "NAILED", "n": 47, "claimed": 0.933, "start_rate": 0.851,
+             "appear_rate": 0.915, "exp_minutes": 76.8, "actual_minutes": 76.0},
+            {"band": "ROTATION", "n": 61, "claimed": 0.751, "start_rate": 0.754,
+             "appear_rate": 0.836, "exp_minutes": 63.2, "actual_minutes": 65.1},
+            {"band": "CAMEO?", "n": 141, "claimed": 0.339, "start_rate": 0.574,
+             "appear_rate": 0.723, "exp_minutes": 31.6, "actual_minutes": 50.0},
+        ],
+        "cameo_that_started": 81,
+        "cameo_n": 141,
+    },
+    #: The claim this was built to check, and what the snapshot says about it.
+    "reported_claim": {
+        "as_stated": "the cameo calls went 1-for-7; three badged cameos started "
+                     "and produced 21 of 39 points; and a player badged "
+                     "NAILED 0.90, ~74' was not registered to play.",
+        "verdict": "substantially confirmed, and the counts are slightly worse "
+                   "than remembered rather than better.",
+        "on_the_squad": "six of the fifteen picked for GW1 were badged CAMEO?, "
+                        "and FIVE of them started — so 1-for-6, not 1-for-7. "
+                        "Four were in the XI and contributed 22 of its 50 "
+                        "points.",
+        "the_nailed_player": "Konsa, badged NAILED at p_start 0.895 and "
+                             "exp_minutes 73.8 — which renders as `~74'` — with "
+                             "availability 1.0, played 0 minutes. Dubravka was "
+                             "badged the same way at 0.921 / ~76' and also "
+                             "played 0. Both were on the bench, so neither cost "
+                             "points directly; both were live autosub cover.",
+        "but_not_bad_luck": "across all 600 players the CAMEO? band was very "
+                            "nearly calibrated — 0.256 claimed against a 0.269 "
+                            "realised start rate — so the pool-wide badge was "
+                            "not broken that week. Restricted to the 250 "
+                            "most-owned players it claims 0.339 and realises "
+                            "0.574. The badge is calibrated on players nobody "
+                            "picks and wrong on the players everybody picks, "
+                            "and a fifteen-man squad is drawn entirely from the "
+                            "second group. That is a selection effect in the "
+                            "MEASUREMENT, not a run of bad luck in the week.",
+        "reproduces_in_the_archive": "not a one-off. At GW1 among the 250 "
+                                     "most-owned players the CAMEO? band claims "
+                                     "0.334 and realises 0.433 on 2025-26, and "
+                                     "the same cut on 2024-25 gives 0.35 "
+                                     "against 0.43. The pre-season regime "
+                                     "under-calls starts for exactly the "
+                                     "players a manager is choosing between, in "
+                                     "every season it can be measured on.",
+    },
+    "limitations": [
+        "One gameweek, 600 players, and the first gameweek of a season — the "
+        "regime with the least information and the widest error. It is a spot "
+        "check on the half of the model the archive cannot see, not a second "
+        "backtest.",
+        "115 of the 600 carried an availability multiplier below 1.0, so the "
+        "availability path is exercised here. It is exercised ONCE.",
+        "Frozen. These numbers are not recomputed on a backtest run, because "
+        "this module makes no network calls. `live_start_audit` reproduces them "
+        "from the same snapshot given the outcomes.",
+    ],
+}
+
+
+def minutes_report(
+    season: str = TEST_SEASON, horizons: tuple[int, ...] = HORIZONS,
+) -> dict[str, Any]:
+    """The published minutes-model block.
+
+    Ordered so it reads in one pass: how good is the number, against what, where
+    the error lives, and what the badge is worth on the players a manager would
+    actually pick.
+    """
+    ev, coverage = build_minutes_evaluation(season, horizons)
+    methods = {"gaffer": "p_start", **{k: k for k in MINUTES_BASELINES}}
+
+    # In-season only for the paired table. At GW1 none of the three baselines
+    # exists — there are no completed fixtures to average — so a GW1 row would
+    # be the model measured against nothing, dressed as a comparison. GW1 gets
+    # its own block below, exactly as the points model's pre-season one does.
+    per_horizon: dict[str, Any] = {}
+    for h in horizons:
+        sub = ev[(ev["horizon"] == h) & (ev["decision_gw"] > 1)]
+        if sub.empty:
+            continue
+        paired = sub.dropna(subset=[*methods.values(), "mins_avg_td"])
+        if paired.empty:
+            continue
+        block: dict[str, Any] = {
+            "n": int(len(paired)),
+            "start_rate": round(float(paired["started"].mean()), 4),
+            "brier": {k: round(_brier(paired[c], paired["started"]), 4)
+                      for k, c in methods.items()},
+            "brier_skill": {k: round(_brier_skill(paired[c], paired["started"]), 4)
+                            for k, c in methods.items()},
+            "auc": {k: round(_auc(paired[c], paired["started"]), 4)
+                    for k, c in methods.items()},
+            # `exp_minutes` is what the rate bundle multiplies, not `p_start`, so
+            # a calibration fix that left this wrong would fix the wrong thing.
+            "exp_minutes_mae": {
+                "gaffer": round(_mae(paired["exp_minutes"], paired["minutes"]), 2),
+                "mins_avg_td": round(_mae(paired["mins_avg_td"], paired["minutes"]), 2),
+                "started_lag_x90": round(
+                    _mae(paired["started_lag"] * 90.0, paired["minutes"]), 2),
+            },
+        }
+        if h == 1:
+            block["paired_vs_baseline"] = {
+                b: _paired_brier_diff(paired, "p_start", b) for b in MINUTES_BASELINES
+            }
+        per_horizon[str(h)] = block
+
+    h1 = ev[ev["horizon"] == 1]
+    in_season = h1[h1["decision_gw"] > 1]
+    gw1 = h1[h1["decision_gw"] == 1]
+
+    branches = []
+    for name, g in h1.groupby("branch"):
+        branches.append({
+            "branch": str(name),
+            "n": int(len(g)),
+            "share_pct": round(100.0 * len(g) / len(h1), 1),
+            "mean_p_start": round(float(g["p_start"].mean()), 3),
+            "start_rate": round(float(g["started"].mean()), 3),
+            "brier": round(_brier(g["p_start"], g["started"]), 4),
+            "brier_skill": round(_brier_skill(g["p_start"], g["started"]), 4),
+        })
+    branches.sort(key=lambda b: -b["n"])
+
+    return {
+        "measured": True,
+        "target": "FPL `starts` == 1, per player-fixture. A post-match column, "
+                  "legal here as the evaluation target and never as a feature.",
+        "unit": "player-fixture. A double gameweek is two rows, because "
+                "`p_start` is a per-match property and the projection takes the "
+                "max across a double rather than summing it.",
+        "season": season,
+        "model_version": projection.MODEL_VERSION,
+        "decision_gameweeks": f"GW{FIRST_DECISION_GW}-GW{int(ev['decision_gw'].max())}",
+        "why_these_metrics": (
+            "Brier because `p_start` is a multiplier, not a yes/no call, and a "
+            "proper scoring rule is the only kind that cannot be gamed by "
+            "shading the forecast. A skill score beside it because a raw Brier "
+            "on a rare-event population is unreadable — 0.09 looks respectable "
+            "until you notice that saying nothing scores 0.02. A calibration "
+            "curve because it is the only form of the answer a reader can act "
+            "on. The badge bands because the badge is the interface. Minutes "
+            "MAE because `exp_minutes`, not `p_start`, is what multiplies "
+            "through the rates."
+        ),
+        "coverage": {
+            **coverage,
+            "start_rate": round(float(ev["started"].mean()), 4),
+            "zero_minute_share_pct": round(
+                100.0 * float((ev["minutes"] == 0).mean()), 1),
+        },
+        "leakage_check": {
+            "enforced": True,
+            "post_match_fields_in_features": leakage.check_features(
+                MINUTES_FEATURE_COLUMNS),
+            "policy": "features are frozen season-to-date aggregates and strictly "
+                      "prior-gameweek rolls; the target is post-match by "
+                      "definition and is never read back as a feature",
+        },
+        "baselines": MINUTES_BASELINES,
+        "per_horizon": per_horizon,
+        "calibration": {
+            "overall": _start_calibration(in_season),
+            "considered": _start_calibration(
+                in_season[in_season["own_rank"] <= CONSIDERED_OWNERSHIP_RANK]),
+            "considered_rank_cut": CONSIDERED_OWNERSHIP_RANK,
+            "note": "`overall` is every registered player. Most of that list "
+                    "never plays, they are trivially easy to call, and they "
+                    "carry the aggregate. `considered` is the same rows cut to "
+                    "the most-owned players — the ones a manager is choosing "
+                    "between — and the CAMEO? error changes SIGN between the "
+                    "two. Read the second one.",
+        },
+        "bands": {
+            "overall": _start_bands(h1),
+            "considered": _start_bands(h1[h1["own_rank"] <= CONSIDERED_OWNERSHIP_RANK]),
+            "considered_400": _start_bands(h1[h1["own_rank"] <= 400]),
+            "pre_season": _start_bands(gw1),
+            "pre_season_considered": _start_bands(
+                gw1[gw1["own_rank"] <= CONSIDERED_OWNERSHIP_RANK]),
+            "note": "`claimed` is the mean `p_start` of the players wearing that "
+                    "badge; `start_rate` is how often they then started. The "
+                    "thresholds live in `model.rationale.xmins_badge` and are "
+                    "mirrored here, never redefined.",
+        },
+        "branches": branches,
+        "branch_note": "Which arm of the shipped gate produced `p_start`. "
+                       "`price_prior` fires when a player has no minutes this "
+                       "season and no usable prior season, and it answers with "
+                       "a function of his PRICE. It is a third of the "
+                       "population and its skill score is deeply negative: not "
+                       "merely uninformative, but worse than quoting that "
+                       "group's own base rate to every one of them.",
+        "pre_season": {
+            "decision_gw": 1,
+            "n": int(len(gw1)),
+            "regime": "no season-to-date history exists, so `p_start` comes from "
+                      "last season's `starts / 38` or the price prior alone",
+            "brier": round(_brier(gw1["p_start"], gw1["started"]), 4),
+            "brier_skill": round(_brier_skill(gw1["p_start"], gw1["started"]), 4),
+            "auc": round(_auc(gw1["p_start"], gw1["started"]), 4),
+            "naive_baseline": "does not exist. Every baseline here averages over "
+                              "completed fixtures and before GW1 there are none. "
+                              "The model's GW1 figure is unopposed and must not "
+                              "be read as a win.",
+        },
+        "candidate_fix": MINUTES_CANDIDATE_FIX,
+        "limitations": MINUTES_LIMITATIONS,
+        "verdict": MINUTES_VERDICT,
+        "live_audit": LIVE_GW1_START_AUDIT,
     }
 
 
@@ -1025,6 +1816,7 @@ def run(
     baselines: dict[str, Any] | None = None,
     ablations: list[dict[str, Any]] | None = None,
     season_end_ratings: bool = False,
+    with_minutes: bool = True,
 ) -> dict[str, Any]:
     """Evaluate and (only on request) persist.
 
@@ -1073,6 +1865,17 @@ def run(
     h1 = ev[ev["horizon"] == 1]
     zero_min = int((ev["minutes"] == 0).sum())
     pre_season = _pre_season_block(ev)
+    # A11. Measured on the same season, through the same leakage policy, and
+    # reported in the same artifact — because a component that gates every
+    # number above it should not be the one component with no error bar.
+    minutes: dict[str, Any] | None = None
+    if with_minutes:
+        try:
+            minutes = minutes_report(season, horizons)
+        except histdata.MissingHistoryError as exc:
+            # A season with no `starts` column has no start outcome to score
+            # against. Say that, rather than measuring something adjacent.
+            minutes = {"measured": False, "reason": str(exc)}
 
     out: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -1181,6 +1984,20 @@ def run(
             "not this one. Absence appears to predict absence, so the conflation is "
             "crude rather than simply wrong. A real fix needs per-fixture "
             "history, not a constant.",
+            "The minutes model is measured for the first time in this schema "
+            "version, and it LOSES to every naive baseline it was given. See "
+            "`minutes_model`: at h=1 the shipped `p_start` scores a Brier of "
+            "0.150 against 0.099 for the share of a player's last three "
+            "fixtures he started, and it is beaten at all six horizons. Because "
+            "`p_start` multiplies through every rate in `fixture_rates`, that "
+            "error is inside every point projection on this page, and none of "
+            "the numbers above are corrected for it.",
+            "A third of every backtested row has its `p_start` set by the PRICE "
+            "prior — the arm that fires when a player has no minutes this "
+            "season and no usable prior season. Those rows are told they have a "
+            "~29% chance of starting and they start 2.3% of the time, in each "
+            "of the three most recent seasons. It is the single largest source "
+            "of minutes error and it is not a season artefact.",
             "This artifact reports 2025-26; the one before it reported 2024-25. "
             "They are not two readings of one instrument. 2025-26 has a DEFCON "
             "column and 2024-25 has none, zero-minute share is 61.4% against "
@@ -1205,6 +2022,10 @@ def run(
         out["baselines"] = baselines
     if ablations:
         out["ablations"] = ablations
+    # Omitted rather than nulled when `--no-minutes` was asked for: a key
+    # present and empty reads as "measured, and it found nothing".
+    if minutes is not None:
+        out["minutes_model"] = minutes
     if write:
         target = Path(out_path) if out_path else data_dir / "backtest.json"
         # Say exactly what is being overwritten, before it happens.
@@ -1228,7 +2049,22 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--xp-diagnostic", action="store_true",
                     help="reproduce the measurement that withdrew the fpl_xp "
                          "baseline, and exit")
+    ap.add_argument("--minutes-only", action="store_true",
+                    help="print the minutes-model block alone and exit. Writes "
+                         "nothing, and skips the points backtest, which is the "
+                         "slow half.")
+    ap.add_argument("--no-minutes", action="store_true",
+                    help="omit the minutes-model block. It is part of the "
+                         "artifact; this exists for a fast points-only run.")
     args = ap.parse_args(argv)
+    if args.minutes_only:
+        try:
+            print(json.dumps(minutes_report(
+                args.season, tuple(args.horizons)), indent=2))
+        except histdata.MissingHistoryError as exc:
+            print(f"minutes backtest unavailable: {exc}", file=sys.stderr)
+            return 2
+        return 0
     if args.xp_diagnostic:
         try:
             print(json.dumps(xp_leakage_diagnostic(), indent=2))
@@ -1239,7 +2075,8 @@ def main(argv: list[str] | None = None) -> int:
     write = args.write or args.out is not None
     try:
         out = run(season=args.season, horizons=tuple(args.horizons),
-                  write=write, out_path=Path(args.out) if args.out else None)
+                  write=write, out_path=Path(args.out) if args.out else None,
+                  with_minutes=not args.no_minutes)
     except histdata.MissingHistoryError as exc:
         print(f"backtest unavailable: {exc}", file=sys.stderr)
         return 2

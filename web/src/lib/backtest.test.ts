@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   horizonKeys, leakageClean, methodsIn, parseBacktest, SUPPORTED_SCHEMA_VERSIONS,
   withdrawalConsequence, withdrawn, modelCandidates, DECISION_LABELS,
+  minutesModel, minutesUnmeasured, minutesBaselineSweeps, minutesHorizonKeys,
+  MINUTES_METHOD_LABELS,
 } from './backtest'
 
 const valid = {
-  schema_version: 6,
+  schema_version: 7,
   model_version: 'heuristic-0.1',
   dataset: 'vaastav/Fantasy-Premier-League merged_gw',
   season: '2024-25',
@@ -62,20 +64,128 @@ const valid = {
   generated_at: '2026-08-06T18:00:00+00:00',
 }
 
+// A11 — the minutes block, as schema 8 publishes it.
+const minutes = {
+  measured: true,
+  season: '2025-26',
+  model_version: 'heuristic-0.5',
+  verdict: 'Measured for the first time, and it loses.',
+  baselines: {
+    start_rate_td: 'season-to-date starts over the team fixtures played',
+    start_rate_r3: 'the share of his last three fixtures he started',
+  },
+  per_horizon: {
+    '1': {
+      n: 28913, start_rate: 0.281,
+      brier: { gaffer: 0.1502, start_rate_td: 0.11, start_rate_r3: 0.0986 },
+      brier_skill: { gaffer: 0.2554, start_rate_td: 0.4553, start_rate_r3: 0.5123 },
+      auc: { gaffer: 0.8284, start_rate_td: 0.9074, start_rate_r3: 0.9038 },
+      exp_minutes_mae: { gaffer: 27.17, mins_avg_td: 14.87, started_lag_x90: 11.54 },
+    },
+    '2': {
+      n: 27662, start_rate: 0.281,
+      brier: { gaffer: 0.1566, start_rate_td: 0.1193, start_rate_r3: 0.1216 },
+      brier_skill: { gaffer: 0.22, start_rate_td: 0.41, start_rate_r3: 0.4 },
+      auc: { gaffer: 0.8141, start_rate_td: 0.8924, start_rate_r3: 0.8712 },
+      exp_minutes_mae: { gaffer: 27.9, mins_avg_td: 15.4, started_lag_x90: 14.2 },
+    },
+  },
+  bands: {
+    overall: [
+      { band: 'NAILED', n: 3398, claimed: 0.944, start_rate: 0.835,
+        appear_rate: 0.876, exp_minutes: 77.7, actual_minutes: 73.3 },
+      { band: 'CAMEO?', n: 22535, claimed: 0.259, start_rate: 0.147,
+        appear_rate: 0.259, exp_minutes: 25.1, actual_minutes: 13.6 },
+    ],
+    considered: [
+      { band: 'CAMEO?', n: 4248, claimed: 0.32, start_rate: 0.331,
+        appear_rate: 0.508, exp_minutes: 29.9, actual_minutes: 30.2 },
+    ],
+  },
+  branches: [
+    { branch: 'price_prior', n: 10791, share_pct: 36.3, mean_p_start: 0.288,
+      start_rate: 0.023, brier: 0.0916, brier_skill: -3.07 },
+  ],
+  calibration: { overall: [], considered_rank_cut: 250 },
+  limitations: ['availability is never varied'],
+  live_audit: { status: 'measured', target_gw: 1, n: 600, brier: 0.1837,
+                nailed_n: 52, nailed_that_did_not_start: 10 },
+}
+
 describe('parseBacktest — acceptance', () => {
-  it('accepts a well-formed v6 artifact', () => {
+  it('accepts a well-formed v7 artifact', () => {
     const s = parseBacktest(valid)
     expect(s.kind).toBe('ok')
     if (s.kind === 'ok') expect(s.data.model_version).toBe('heuristic-0.1')
   })
-
-  it('accepts a v7 artifact, which differs from v6 only by addition', () => {
-    const s = parseBacktest({ ...valid, schema_version: 7, season: '2025-26' })
+  it('accepts a v8 artifact, which differs from v7 only by addition', () => {
+    const s = parseBacktest({ ...valid, schema_version: 8, minutes_model: minutes })
     expect(s.kind).toBe('ok')
   })
-
   it('only claims support for versions it can render', () => {
-    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([6, 7])
+    expect(SUPPORTED_SCHEMA_VERSIONS).toEqual([7, 8])
+  })
+  // v6 was honest, so it was supported through the 6/7 window. It is refused
+  // now: it reports a different split AND predates every minutes number, and a
+  // transition window two splits wide is not a transition.
+  it('refuses v6 now that the window has moved on', () => {
+    const s = parseBacktest({ ...valid, schema_version: 6 })
+    expect(s.kind).toBe('unsupported')
+  })
+})
+
+describe('the minutes model', () => {
+  const v8 = { ...valid, schema_version: 8, minutes_model: minutes }
+  const parsed = parseBacktest(v8)
+  const bt = parsed.kind === 'ok' ? parsed.data : null
+
+  it('is absent from a v7 artifact rather than empty', () => {
+    const p = parseBacktest(valid)
+    expect(p.kind).toBe('ok')
+    if (p.kind === 'ok') {
+      expect(minutesModel(p.data)).toBeNull()
+      expect(minutesUnmeasured(p.data)).toBeNull()
+    }
+  })
+
+  it('surfaces the block when it was measured', () => {
+    expect(bt && minutesModel(bt)?.season).toBe('2025-26')
+  })
+
+  // "we could not measure this" and "there is nothing to show" are different
+  // sentences, and the page must be able to say the first one.
+  it('reports an unmeasured season as unmeasured, with its reason', () => {
+    const p = parseBacktest({
+      ...valid, schema_version: 8,
+      minutes_model: { measured: false, reason: 'no `starts` column' },
+    })
+    expect(p.kind).toBe('ok')
+    if (p.kind === 'ok') {
+      expect(minutesModel(p.data)).toBeNull()
+      expect(minutesUnmeasured(p.data)).toContain('starts')
+    }
+  })
+
+  it('derives the "a baseline beats us everywhere" claim from the numbers', () => {
+    expect(bt && minutesBaselineSweeps(minutesModel(bt)!)).toBe(true)
+  })
+
+  // The one that stops the page congratulating itself: if Gaffer ever wins a
+  // horizon, the sweeping claim must stop rendering.
+  it('stops claiming a sweep the moment Gaffer wins one horizon', () => {
+    const won = structuredClone(minutes)
+    won.per_horizon['2'].brier = { gaffer: 0.05, start_rate_td: 0.11, start_rate_r3: 0.12 }
+    expect(minutesBaselineSweeps(won as never)).toBe(false)
+  })
+
+  it('orders minutes horizons numerically', () => {
+    expect(bt && minutesHorizonKeys(minutesModel(bt)!)).toEqual(['1', '2'])
+  })
+
+  it('names every baseline it renders as a column', () => {
+    for (const k of Object.keys(minutes.per_horizon['1'].brier)) {
+      expect(MINUTES_METHOD_LABELS[k], `no label for ${k}`).toBeTruthy()
+    }
   })
 })
 
@@ -104,7 +214,7 @@ describe('parseBacktest — rejection', () => {
   it('rejects a superseded numeric schema version', () => {
     const s = parseBacktest({ ...valid, schema_version: 2 })
     expect(s.kind).toBe('unsupported')
-    if (s.kind === 'unsupported') expect(s.detail).toContain('supported: 6')
+    if (s.kind === 'unsupported') expect(s.detail).toContain('supported: 7')
   })
 
   it('rejects v3 — it reported baselines that were later withdrawn', () => {

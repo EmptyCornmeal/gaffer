@@ -771,6 +771,22 @@ def build_decision(
         dec[key] = [_rec_card(i, idx) for i in dec.get(key) or []]
     for key in ("captain", "vice"):
         dec[key] = _rec_card(dec[key], idx) if dec.get(key) is not None else None
+
+    candidate = dec.get("candidate_move")
+    if isinstance(candidate, dict):
+        candidate = dict(candidate)
+        for key in ("transfers_in", "transfers_out"):
+            candidate[key] = [
+                _rec_card(i, idx) for i in candidate.get(key) or []
+            ]
+        for key in ("captain", "vice"):
+            candidate[key] = (
+                _rec_card(candidate[key], idx)
+                if candidate.get(key) is not None else None
+            )
+        dec["candidate_move"] = candidate
+    else:
+        dec["candidate_move"] = None
     out["decision"] = dec
 
     squad = dict(payload.get("squad_state") or {})

@@ -161,6 +161,44 @@ class Executability:
         }
 
 
+CANDIDATE_STATUS_EVIDENCE_ONLY = "evidence_only"
+CANDIDATE_BASIS_FUTURE_HORIZON = "future_horizon"
+
+
+@dataclass
+class CandidateMove:
+    """A solver plan retained as evidence, explicitly not this week's action.
+
+    The primary decision fields must describe the action a manager should take.
+    Before A4 a rejected five-transfer plan still occupied those fields,
+    so a ``too_close`` headline sat above a -16 hit and five named transfers. A
+    candidate lives in its own labelled block and cannot be mistaken for advice.
+    """
+
+    basis: str
+    reason: str
+    transfers_out: list[int]
+    transfers_in: list[int]
+    captain: int | None
+    vice: int | None
+    executability: Executability
+    status: str = CANDIDATE_STATUS_EVIDENCE_ONLY
+    label: str = "Future plan — not this week's action"
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "basis": self.basis,
+            "label": self.label,
+            "reason": self.reason,
+            "transfers_out": list(self.transfers_out),
+            "transfers_in": list(self.transfers_in),
+            "captain": self.captain,
+            "vice": self.vice,
+            "executability": self.executability.as_dict(),
+        }
+
+
 @dataclass
 class Decision:
     action: str
@@ -179,13 +217,16 @@ class Decision:
     confidence: str = "unknown"
     biggest_risk: str = ""
     assumptions: list[str] = field(default_factory=list)
+    candidate_move: CandidateMove | None = None
 
     def as_dict(self) -> dict[str, Any]:
         d = {k: v for k, v in asdict(self).items()
-             if k not in ("comparison", "executability")}
+             if k not in ("comparison", "executability", "candidate_move")}
         d["comparison"] = self.comparison.as_dict() if self.comparison else None
         d["executability"] = (
             self.executability.as_dict() if self.executability else None)
+        d["candidate_move"] = (
+            self.candidate_move.as_dict() if self.candidate_move else None)
         # Travels with every decision so the screen cannot present the bars as
         # measured while this module knows they are not.
         d["threshold_status"] = dict(THRESHOLD_STATUS)
@@ -259,6 +300,23 @@ def classify(
     # An absent horizon contributes nothing rather than a zero floor.
     best = cmp_.delta if cmp_.horizon_delta is None else max(
         cmp_.delta, cmp_.horizon_delta)
+
+    # A future edge cannot turn a current loss into uncertainty. ``too_close``
+    # means the evidence around THIS deadline is genuinely close to zero; it does
+    # not mean one timescale says no while a weaker one says yes. The live GW3
+    # failure was -4.6 now, ahead in 29% of scenarios, +16.7 over six weeks and a
+    # -16 hit: a confident hold presented beside the rejected transfer plan.
+    if cmp_.delta < 0 and cmp_.p_move_beats_hold < 0.5:
+        if cmp_.horizon_delta is not None and cmp_.horizon_delta >= min_points:
+            return ACTION_ROLL, (
+                f"the longer-term plan projects {cmp_.horizon_delta:+.1f} points, "
+                f"but making it now loses {abs(cmp_.delta):.1f} points and only "
+                f"beats holding in {100 * cmp_.p_move_beats_hold:.0f}% of "
+                "scenarios — roll this week and keep the plan as future evidence")
+        return ACTION_ROLL, (
+            f"the move loses {abs(cmp_.delta):.1f} points this gameweek and only "
+            f"beats holding in {100 * cmp_.p_move_beats_hold:.0f}% of scenarios "
+            "— roll the transfer")
 
     # The decisive waiver exists so a genuinely large edge is not blocked by a
     # wide distribution around it. It is deliberate — but as written it tested
@@ -349,7 +407,12 @@ def executability(
 # ---------------------------------------------------------------------------
 
 def confidence_band(cmp_: Comparison, coverage: float | None = None) -> str:
-    """A word, not a number. The interval is published alongside it."""
+    """Precision of the current-week comparison, not confidence in a move.
+
+    The UI qualifies this with the action (for example, ``high confidence in
+    holding``). A narrow interval around a negative number is legitimately high
+    confidence; rendering the bare phrase beside ``too_close`` was the defect.
+    """
     if cmp_.n_sims == 0:
         return "unknown"
     lo, hi = cmp_.delta_ci95

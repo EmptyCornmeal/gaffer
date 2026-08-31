@@ -70,6 +70,18 @@ export interface Executability {
   reason: string
 }
 
+export interface CandidateMove {
+  status: 'evidence_only'
+  basis: 'future_horizon'
+  label: string
+  reason: string
+  transfers_in: Card[]
+  transfers_out: Card[]
+  captain: Card | null
+  vice: Card | null
+  executability: Executability
+}
+
 export interface DecisionBody {
   action: Action
   headline: string
@@ -87,6 +99,7 @@ export interface DecisionBody {
   confidence: 'high' | 'medium' | 'low' | 'unknown'
   biggest_risk: string
   assumptions: string[]
+  candidate_move?: CandidateMove | null
 }
 
 export interface WeeklyDecision {
@@ -169,6 +182,17 @@ export const ACTION_TONE: Record<Action, string> = {
 /** Does the comparison clear the bar the backend used? Purely for wording. */
 export function isActionable(d: WeeklyDecision): boolean {
   return d.decision.action === 'transfer'
+}
+
+/** Say what the confidence applies to. A narrow CI around a negative move is
+ * high confidence IN HOLDING; the bare phrase "high confidence" beside
+ * "too close" was the live A4 contradiction. */
+export function confidenceLabel(body: DecisionBody): string {
+  if (body.confidence === 'unknown') return 'confidence unknown'
+  if (body.action === 'roll') return `${body.confidence} confidence in holding`
+  if (body.action === 'transfer') return `${body.confidence} confidence in the move`
+  if (body.action === 'too_close') return `${body.confidence} confidence in the comparison`
+  return `${body.confidence} confidence`
 }
 
 // ---------------------------------------------------------------------------

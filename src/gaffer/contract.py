@@ -227,6 +227,8 @@ def _check_backtest(bt: Any, report: Report) -> None:
     """The published backtest must be a renderable, self-describing artifact."""
     from gaffer import backtest as bt_mod
 
+    if isinstance(bt, dict):
+        _check_minutes_model(bt, report)
     if not isinstance(bt, dict):
         report.violations.append(
             Violation("backtest.json", "<root>", type(bt).__name__, "a JSON object")
@@ -338,6 +340,71 @@ def _check_backtest(bt: Any, report: Report) -> None:
                                   "no withdrawn baseline — these were retracted "
                                   "for leakage and must not be reported as measured")
                     )
+
+
+def _check_minutes_model(bt: Any, report: Report) -> None:
+    """The minutes block, and the two ways it could quietly stop meaning anything.
+
+    `p_start` gates every projection and went unmeasured for the project's whole
+    life. Now that it is measured, these keep the measurement honest.
+    """
+    name = "backtest.json"
+    mm = bt.get("minutes_model")
+    if mm is None:
+        return
+    if not isinstance(mm, dict) or not isinstance(mm.get("measured"), bool):
+        report.violations.append(
+            Violation(name, "minutes_model.measured", mm if not isinstance(mm, dict)
+                      else mm.get("measured"),
+                      "an explicit boolean -- 'not measured' is a state, not an "
+                      "absent block"))
+        return
+    if not mm.get("measured"):
+        return
+
+    for key in ("per_horizon", "bands", "limitations", "verdict"):
+        if not mm.get(key):
+            report.violations.append(
+                Violation(name, f"minutes_model.{key}", None,
+                          "to be present once the block claims to be measured"))
+
+    # G1/A11a. The band table must carry BOTH populations. Publishing only the
+    # pool-wide one is exactly how the CAMEO? band looked calibrated (claims
+    # 0.256, realises 0.269) while being wrong on everyone anybody owns (claims
+    # 0.339, realises 0.574). A fifteen-man squad is drawn entirely from the
+    # second population, and the error changes sign between them.
+    bands = mm.get("bands")
+    if isinstance(bands, dict):
+        for key in ("overall", "considered"):
+            if key not in bands:
+                report.violations.append(
+                    Violation(name, f"minutes_model.bands.{key}", None,
+                              "both the whole pool and the owned sub-population "
+                              "-- the pool-wide table alone hid the defect"))
+
+    # G1/A11b. Prose must match numbers. A verdict saying the model loses, beside
+    # a table where nothing beats it, is the failure mode this project has hit
+    # from the other direction (an artifact asserting an assumption it never
+    # measured).
+    h1 = (mm.get("per_horizon") or {}).get("1") or (mm.get("per_horizon") or {}).get(1)
+    brier = (h1 or {}).get("brier") or {}
+    ours = brier.get("gaffer")
+    others = [v for k, v in brier.items() if k != "gaffer" and isinstance(v, (int, float))]
+    if isinstance(ours, (int, float)) and others:
+        beaten = any(v < ours for v in others)
+        says_loses = "loses" in str(mm.get("verdict") or "").lower()
+        if says_loses and not beaten:
+            report.violations.append(
+                Violation(name, "minutes_model.verdict", "claims the model loses",
+                          "a verdict consistent with its own h=1 Brier table"))
+        # Every published column must be named as a baseline.
+        known = set(mm.get("baselines") or {})
+        for k in brier:
+            if k != "gaffer" and k not in known:
+                report.violations.append(
+                    Violation(name, f"minutes_model.per_horizon.1.brier.{k}", k,
+                              "a method named in minutes_model.baselines -- an "
+                              "unlabelled column is not a comparison"))
 
 
 def _check_ai_text(name: str, blob: Any, report: Report, *, body: str) -> None:
@@ -730,6 +797,89 @@ def _check_decision(
                     Violation(name, "decision.comparison.delta_ci95", ci,
                               "an ordered [low, high] interval"))
 
+    # A non-action must not carry a transfer prescription in the action fields.
+    # This is the A4 invariant: the live site said ``too_close`` while naming
+    # five transfers, a -16 hit and an executable plan immediately underneath.
+    def refs(value: Any) -> list[Any]:
+        rows = value if isinstance(value, list) else ([] if value is None else [value])
+        return [row.get("id") if isinstance(row, dict) else row for row in rows]
+
+    direct_transfers = {
+        "in": refs(body.get("transfers_in")),
+        "out": refs(body.get("transfers_out")),
+    }
+    if action != D.ACTION_TRANSFER:
+        if direct_transfers["in"] or direct_transfers["out"]:
+            report.violations.append(
+                Violation(name, "decision.transfers", direct_transfers,
+                          "no primary transfer list when the action is not "
+                          "'transfer' — rejected plans belong in the labelled "
+                          "candidate_move block"))
+        if body.get("executability") is not None:
+            report.violations.append(
+                Violation(name, "decision.executability",
+                          body.get("executability"),
+                          "null when no transfer is being recommended"))
+
+    candidate = body.get("candidate_move")
+    if action == D.ACTION_TRANSFER and candidate is not None:
+        report.violations.append(
+            Violation(name, "decision.candidate_move", candidate,
+                      "null when the candidate is already the action"))
+    if candidate is not None:
+        if not isinstance(candidate, dict):
+            report.violations.append(
+                Violation(name, "decision.candidate_move", candidate,
+                          "a labelled evidence-only object or null"))
+        else:
+            if candidate.get("status") != D.CANDIDATE_STATUS_EVIDENCE_ONLY:
+                report.violations.append(
+                    Violation(name, "decision.candidate_move.status",
+                              candidate.get("status"),
+                              D.CANDIDATE_STATUS_EVIDENCE_ONLY))
+            if candidate.get("basis") != D.CANDIDATE_BASIS_FUTURE_HORIZON:
+                report.violations.append(
+                    Violation(name, "decision.candidate_move.basis",
+                              candidate.get("basis"),
+                              D.CANDIDATE_BASIS_FUTURE_HORIZON))
+            for key in ("label", "reason"):
+                if not candidate.get(key):
+                    report.violations.append(
+                        Violation(name, f"decision.candidate_move.{key}",
+                                  candidate.get(key),
+                                  "plain language that this is evidence, not "
+                                  "the action"))
+            if not candidate.get("transfers_in"):
+                report.violations.append(
+                    Violation(name, "decision.candidate_move.transfers_in",
+                              candidate.get("transfers_in"),
+                              "the future plan being retained as evidence"))
+
+    # A current loss that loses most scenarios is a hold, not ``too_close``.
+    # If a positive horizon is what created the conflict, retain it explicitly.
+    if isinstance(cmp_, dict):
+        current = cmp_.get("delta")
+        p = cmp_.get("p_move_beats_hold")
+        future = cmp_.get("horizon_delta")
+        current_loss = (
+            isinstance(current, (int, float)) and float(current) < 0
+            and isinstance(p, (int, float)) and float(p) < 0.5
+        )
+        if current_loss and action != D.ACTION_ROLL:
+            report.violations.append(
+                Violation(name, "decision.action", action,
+                          "'roll' when the move loses this gameweek and in most "
+                          "scenarios — that is a negative result, not a close one"))
+        hit = cmp_.get("hit_cost")
+        if (current_loss and isinstance(future, (int, float))
+                and float(future) > 0
+                and isinstance(hit, (int, float)) and float(hit) > 0
+                and not isinstance(candidate, dict)):
+            report.violations.append(
+                Violation(name, "decision.candidate_move", candidate,
+                          "the positive-horizon plan, labelled evidence_only, "
+                          "when it conflicts with a current-week hold"))
+
     # Provenance: which model, objective and simulation produced this.
     versions = dec.get("versions")
     if not isinstance(versions, dict):
@@ -845,6 +995,36 @@ def _check_live(live: Any, report: Report, meta: Any = None) -> None:
                 report.violations.append(
                     Violation(name, f"me.{_k}", _me.get(_k),
                               f"{_you[0].get(_k)!r}, matching the 'you' row"))
+
+    # G1/B3. The artifact must carry the rows its totals are built from. Before
+    # this, `live.json` could publish a squad total with no per-player rows at
+    # all, and nothing noticed -- which is why the recompute the working method
+    # depends on had to be rebuilt by hand from the raw API every week.
+    _players = live.get("players")
+    if not isinstance(_players, list) or not _players:
+        report.violations.append(
+            Violation(name, "players", _players,
+                      "the per-player rows the published totals are built from"))
+    else:
+        _have = {r.get("id") for r in _players if isinstance(r, dict)}
+        _subs = (live.get("squad") or {}).get("autosubs") or {}
+        _need = set(_subs.get("xi") or []) | set(_subs.get("bench") or [])
+        _missing = sorted(x for x in _need if x not in _have)
+        if _missing:
+            report.violations.append(
+                Violation(name, "players[].id", _missing,
+                          "a row for every player in autosubs.xi and .bench -- "
+                          "a missing row under-counts silently"))
+
+    # G1/B3. An absent `hits` reads as 0, and `live.entry_baseline_and_hits`
+    # records exactly that defect: "a -8 week read four points better than it
+    # was". Absence must not be spellable as zero.
+    _hits = (live.get("squad") or {}).get("hits")
+    if not isinstance(_hits, int):
+        report.violations.append(
+            Violation(name, "squad.hits", _hits,
+                      "an integer -- an absent hits figure reads as 0 and "
+                      "flatters the week by the size of the hit"))
 
     sep = live.get("separation")
     if not isinstance(sep, dict) or not {
@@ -1067,6 +1247,37 @@ def validate(
             # generous 20-point cap on a single gameweek,
             #     E[X] <= 0.9*c + 0.1*20 = 0.9*c + 2.0
             # Anything above that is not skew, it is two models disagreeing.
+            # G1/A13. `model_xp` and `dist` are two readings of ONE set of
+            # fixture rates, so the point estimate must sit inside its own
+            # distribution. It did not: the sampler drew six of the projection's
+            # eleven components, omitting goals conceded, saves, cards, own
+            # goals and penalties, which nets negative for a defender and
+            # positive for a keeper -- three keepers published ABOVE their own
+            # 90th percentile and seven players below their own 25th.
+            # The 0.05 is publishing slack: `model_xp` carries 2dp and
+            # floor/ceiling carry 1dp. It is not modelling slack.
+            for _p in players:
+                if not isinstance(_p, dict):
+                    continue
+                _dd = _p.get("dist")
+                if isinstance(_dd, dict):
+                    _m = _p.get("model_xp")
+                    _lo, _hi = _dd.get("floor"), _dd.get("ceiling")
+                    if _m is not None and _lo is not None and _hi is not None:
+                        _who = _p.get("name", _p.get("id"))
+                        if float(_m) > float(_hi) + 0.05 + 1e-9:
+                            report.violations.append(
+                                Violation("players.json", f"[{_who}].model_xp", _m,
+                                          f"at most its own simulated ceiling "
+                                          f"{_hi} -- the point estimate and the "
+                                          "distribution are built from the same "
+                                          "rates and must agree"))
+                        elif float(_m) < float(_lo) - 0.05 - 1e-9:
+                            report.violations.append(
+                                Violation("players.json", f"[{_who}].model_xp", _m,
+                                          f"at least its own simulated floor "
+                                          f"{_lo} -- same rates, same answer"))
+
             for _p in players:
                 if not isinstance(_p, dict):
                     continue

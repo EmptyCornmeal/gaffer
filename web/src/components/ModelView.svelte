@@ -34,7 +34,9 @@
     if (planValid) view = 'your'
   })
   const teamBrief = $derived(
-    planValid ? generateTeamBrief(planSquad, plan.starters, plan.captainId, bundle.players) : '',
+    planValid
+      ? generateTeamBrief(planSquad, plan.starters, plan.captainId, bundle.players, plan)
+      : '',
   )
   const showYourBrief = $derived(view === 'your' && planValid)
   const P = $derived(bundle.players)

@@ -2,8 +2,11 @@
   import type { Bundle } from '../lib/data'
   import {
     DECISION_LABELS, horizonKeys, leakageClean, METHOD_LABELS, methodsIn,
-    modelCandidates, parseBacktest, withdrawalConsequence, withdrawn,
+    MINUTES_METHOD_LABELS, minutesBaselineSweeps, minutesHorizonKeys,
+    minutesModel, minutesUnmeasured, modelCandidates, parseBacktest,
+    withdrawalConsequence, withdrawn,
   } from '../lib/backtest'
+  import type { StartBand } from '../lib/backtest'
 
   let { bundle }: { bundle: Bundle } = $props()
 
@@ -33,6 +36,39 @@
   // regime, not the first row of one.
   const pre = $derived(
     bt?.pre_season && 'n' in bt.pre_season ? bt.pre_season : null)
+
+  // A11 — the minutes model. `p_start` gates every number above it, and until
+  // schema 8 it was the only major component with no measured error rate.
+  const mins = $derived(bt ? minutesModel(bt) : null)
+  const minsUnmeasured = $derived(bt ? minutesUnmeasured(bt) : null)
+  const minsHs = $derived(mins ? minutesHorizonKeys(mins) : [])
+  const minsMethods = $derived(
+    mins ? Object.keys(mins.per_horizon?.[minsHs[0]]?.brier ?? {}) : [])
+  // Asserted in prose beside the table, so it has to be true of THIS artifact
+  // rather than of the artifact that existed when the sentence was typed.
+  const minsSweeps = $derived(mins ? minutesBaselineSweeps(mins) : false)
+  const minsBands = $derived(mins?.bands ?? null)
+  const minsCal = $derived(mins?.calibration ?? null)
+  const minsLive = $derived(
+    (mins?.live_audit ?? null) as Record<string, any> | null)
+  // The badge table, twice over. Built here rather than as an inline tuple so
+  // the two populations keep their type: a `[label, rows]` pair widens to
+  // `string | StartBand[]` and the compiler stops checking the columns.
+  const minsBandGroups = $derived.by(() => {
+    const out: Array<{ heading: string; rows: StartBand[] }> = []
+    if (!minsBands) return out
+    if (minsBands.overall?.length) {
+      out.push({ heading: 'Every player', rows: minsBands.overall })
+    }
+    if (minsBands.considered?.length) {
+      out.push({
+        heading: `Most-owned ${minsCal?.considered_rank_cut ?? 250}`,
+        rows: minsBands.considered,
+      })
+    }
+    return out
+  })
+  const minsLabel = (m: string) => MINUTES_METHOD_LABELS[m] ?? m
 
   // ── Colour ────────────────────────────────────────────────────────────────
   // Colour has exactly one job on this page: it marks the result of a
@@ -122,6 +158,7 @@
       { id: 'acc-measured', label: 'What was measured', on: true },
       { id: 'acc-gw1', label: 'GW1 on its own', on: !!pre },
       { id: 'acc-horizon', label: 'Accuracy by horizon', on: true },
+      { id: 'acc-minutes', label: 'Minutes model', on: !!mins || !!minsUnmeasured },
       { id: 'acc-withdrawn', label: 'Withdrawn numbers', on: retracted.length > 0 },
       { id: 'acc-decisions', label: 'Decision-level results', on: !!h1?.decisions },
       { id: 'acc-models', label: 'Trained models', on: candidates.length > 0 },
@@ -425,6 +462,202 @@
         </p>
       {/if}
     </section>
+
+    <!-- A11 — the minutes model. Placed directly under the horizon table
+         because `p_start` multiplies through every number in it, so a reader
+         who stops before this point has read the points model's accuracy
+         without its largest uncorrected error term. -->
+    {#if mins || minsUnmeasured}
+      <section id="acc-minutes" tabindex="-1" class="card p-3 scroll-mt-3">
+        <h2 class="font-bold">{num('acc-minutes')} · Will he even start?</h2>
+        <p class="text-mini text-muted2 mb-2">
+          <code>p_start</code> gates everything above: it scales every rate, it
+          discounts FPL's own <code>ep_next</code>, it drives the autosubs and
+          the solver, and it is what the NAILED / ROTATION / CAMEO? badge
+          reports. Until schema&nbsp;8 it was the only major component with no
+          measured error rate at all.
+        </p>
+
+        {#if minsUnmeasured}
+          <p class="text-sm text-amber">
+            Not measured on this artifact: {minsUnmeasured}
+          </p>
+        {:else if mins}
+          <p class="text-sm leading-relaxed mb-3">
+            {mins.verdict}
+          </p>
+
+          <!-- Headline table. Lower Brier is better; higher skill and AUC are
+               better. The winner is derived, never typed. -->
+          <div class="overflow-x-auto">
+            <table class="data w-full text-sm">
+              <thead>
+                <tr>
+                  <th class="text-left">h</th>
+                  {#each minsMethods as m}<th class="text-right">{minsLabel(m)}</th>{/each}
+                </tr>
+              </thead>
+              <tbody>
+                {#each minsHs as h}
+                  {@const b = mins.per_horizon?.[h]}
+                  {@const win = b ? best(b.brier, true) : null}
+                  <tr>
+                    <td class="text-muted">Brier · h={h}</td>
+                    {#each minsMethods as m}
+                      <td class="text-right tabular-nums {win === m ? WIN : ''}"
+                        >{fmt(b?.brier?.[m], 4)}</td>
+                    {/each}
+                  </tr>
+                {/each}
+                {#each minsHs as h}
+                  {@const b = mins.per_horizon?.[h]}
+                  {@const win = b ? best(b.auc) : null}
+                  <tr>
+                    <td class="text-muted">AUC · h={h}</td>
+                    {#each minsMethods as m}
+                      <td class="text-right tabular-nums {win === m ? WIN : ''}"
+                        >{fmt(b?.auc?.[m], 3)}</td>
+                    {/each}
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+
+          {#if minsSweeps}
+            <p class="text-mini text-red mt-2">
+              A naive baseline beats <code>p_start</code> at every horizon
+              measured. It is beaten on ordering as well as on calibration, so
+              this is not a mis-scaled forecast with a good ranking underneath.
+            </p>
+          {/if}
+
+          {#if mins.baselines}
+            <p class="text-mini text-muted2 mt-2">
+              {#each Object.entries(mins.baselines) as [k, why], i}{i > 0 ? ' · ' : ''}<b
+                >{minsLabel(k)}</b> — {why}{/each}
+            </p>
+          {/if}
+
+          <!-- The badges, scored twice. The two populations disagree, and only
+               the second is about a decision anyone makes. -->
+          {#if minsBands?.overall?.length}
+            <h3 class="text-xs font-bold mt-4 mb-1">What the badge is worth</h3>
+            <p class="text-mini text-muted2 mb-2">
+              <b>Claimed</b> is the average probability of the players wearing
+              that badge. <b>Started</b> is how often they then did.
+              {#if minsBands.considered?.length}
+                The second block cuts the same rows to the most-owned players —
+                the ones you are actually choosing between — and the CAMEO?
+                error changes sign between them.
+              {/if}
+            </p>
+            <div class="overflow-x-auto">
+              <table class="data w-full text-sm">
+                <thead>
+                  <tr>
+                    <th class="text-left">Badge</th>
+                    <th class="text-right">Claimed</th>
+                    <th class="text-right">Started</th>
+                    <th class="text-right">Played</th>
+                    <th class="text-right">Mins pred</th>
+                    <th class="text-right">Mins actual</th>
+                    <th class="text-right">n</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each minsBandGroups as g}
+                    {#if g.rows.length}
+                      <tr><td colspan="7" class="text-mini text-muted2 pt-2">{g.heading}</td></tr>
+                      {#each g.rows as b}
+                        <tr>
+                          <td>{b.band}</td>
+                          <td class="text-right tabular-nums">{fmt(b.claimed, 2)}</td>
+                          <td class="text-right tabular-nums {b.start_rate < b.claimed ? 'text-red' : ''}"
+                            >{fmt(b.start_rate, 2)}</td>
+                          <td class="text-right tabular-nums text-muted">{fmt(b.appear_rate, 2)}</td>
+                          <td class="text-right tabular-nums text-muted">{fmt(b.exp_minutes, 0)}'</td>
+                          <td class="text-right tabular-nums text-muted">{fmt(b.actual_minutes, 0)}'</td>
+                          <td class="text-right tabular-nums text-muted2">{b.n}</td>
+                        </tr>
+                      {/each}
+                    {/if}
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          {/if}
+
+          <!-- Where the error lives. This is the actionable half. -->
+          {#if mins.branches?.length}
+            <h3 class="text-xs font-bold mt-4 mb-1">Where the error is</h3>
+            <p class="text-mini text-muted2 mb-2">{mins.branch_note}</p>
+            <div class="overflow-x-auto">
+              <table class="data w-full text-sm">
+                <thead>
+                  <tr>
+                    <th class="text-left">Branch</th>
+                    <th class="text-right">Share</th>
+                    <th class="text-right">Says</th>
+                    <th class="text-right">Truth</th>
+                    <th class="text-right">Skill</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each mins.branches as b}
+                    <tr>
+                      <td>{b.branch.replace(/_/g, ' ')}</td>
+                      <td class="text-right tabular-nums text-muted">{fmt(b.share_pct, 1)}%</td>
+                      <td class="text-right tabular-nums">{fmt(b.mean_p_start, 2)}</td>
+                      <td class="text-right tabular-nums">{fmt(b.start_rate, 2)}</td>
+                      <td class="text-right tabular-nums {b.brier_skill < 0 ? 'text-red' : ''}"
+                        >{fmt(b.brier_skill, 2)}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+            <p class="text-mini text-muted2 mt-1">
+              <b>Skill</b> is measured against that group's own base rate. Below
+              zero means the branch is worse than saying nothing to everyone in
+              it.
+            </p>
+          {/if}
+
+          <!-- The live gameweek, which is the only place availability is
+               measured at all. -->
+          {#if minsLive && minsLive.status === 'measured'}
+            <details class="mt-4 border-t border-line pt-3">
+              <summary class="cursor-pointer text-xs font-bold">
+                The live gameweek, checked against a frozen pre-deadline snapshot
+              </summary>
+              <p class="text-mini text-muted leading-relaxed mt-2">
+                The archive has no availability column, so everything above is
+                measured with availability pinned at 1.0. This is the same model
+                with availability included, frozen before the GW{minsLive.target_gw}
+                deadline and scored on what happened: {minsLive.n} players,
+                Brier {fmt(minsLive.brier as number, 3)}.
+                {minsLive.nailed_that_did_not_start} of {minsLive.nailed_n}
+                players badged NAILED did not start.
+              </p>
+              {#if minsLive.reported_claim}
+                <p class="text-mini text-muted leading-relaxed mt-2">
+                  {(minsLive.reported_claim as any).but_not_bad_luck}
+                </p>
+              {/if}
+            </details>
+          {/if}
+
+          {#if mins.limitations?.length}
+            <ul class="text-mini text-muted2 space-y-1 mt-3 pt-3 border-t border-line">
+              {#each mins.limitations as l}
+                <li class="flex gap-2"><span class="text-amber shrink-0">·</span><span>{l}</span></li>
+              {/each}
+            </ul>
+          {/if}
+        {/if}
+      </section>
+    {/if}
 
     <!-- Retracted numbers. Deliberately above the fold and never collapsed: a
          withdrawn claim mentioned only in a footnote — or only behind a tap —

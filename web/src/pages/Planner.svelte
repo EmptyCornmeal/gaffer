@@ -2,9 +2,9 @@
   import type { Bundle } from '../lib/data'
   import type { OptimalHorizon, Player, Pos, RecPlayer, RiskStance } from '../lib/types'
   import {
-    QUOTA, BUDGET, totals, addBlocker, squadValidity, autoLineup, lineupErrors,
+    QUOTA, totals, addBlocker, squadValidity, autoLineup, lineupErrors,
     formationOf, planPoints, loadCurrent, saveCurrent, listPlans, savePlan, deletePlan,
-    planFromPicks, type Plan,
+    planFromPicks, budgetView, squadWatch, asBuilt, emptyPlan, type Plan,
   } from '../lib/squad'
   import { matches } from '../lib/search'
   import { fpl } from '../lib/fpl'
@@ -47,25 +47,22 @@
 
   const squad = $derived(plan.ids.map((id) => byId.get(id)).filter((p): p is Player => !!p))
   const t = $derived(totals(squad))
-  const squadErrs = $derived(squadValidity(squad))
+  // A15: which money rule applies is a fact about where the fifteen CAME FROM,
+  // not about the fifteen. `budgetView` branches on the plan's holding — the
+  // £100m cap for a squad built here, bank-against-selling-price for one
+  // imported from FPL. Both need `byId` because a player sold out of an
+  // imported squad has already left `squad` and still has to be priced.
+  const budget = $derived(budgetView(squad, plan, byId))
+  const squadErrs = $derived(squadValidity(squad, plan, byId))
   const starters = $derived(squad.filter((p) => plan.starters.includes(p.id)))
   const bench = $derived(squad.filter((p) => !plan.starters.includes(p.id)))
   const xiErrs = $derived(lineupErrors(squad, plan.starters))
   const isValid = $derived(squad.length === 15 && squadErrs.length === 0 && xiErrs.length === 0)
-  // Availability watch: planned players who are flagged (injury/suspension, status
-  // ≠ available) or a rotation risk (xMins badge 'bad'). A plan that leans on a
-  // doubtful asset should say so before the deadline.
-  const flagged = $derived(
-    squad
-      .filter((p) => (p.status && p.status !== 'a') || p.xmins_badge?.kind === 'bad')
-      .map((p) => ({
-        p,
-        reason: p.status && p.status !== 'a'
-          ? (p.news?.trim() || 'flagged — check status')
-          : 'rotation risk',
-        starting: plan.starters.includes(p.id),
-      })),
-  )
+  // Squad watch: players who are flagged by FPL (injury/suspension, status ≠
+  // available) or a rotation risk (xMins badge 'bad'). Counted apart, because
+  // they are different worries and the header used to call both the first one.
+  // See `squadWatch` in lib/squad.ts.
+  const watch = $derived(squadWatch(squad, plan.starters))
 
   $effect(() => saveCurrent(plan))
 
@@ -74,7 +71,7 @@
     plan = { ...plan, ...a }
   }
   function add(p: Player) {
-    if (addBlocker(squad, p)) return
+    if (addBlocker(squad, p, plan, byId)) return
     const ids = [...plan.ids, p.id]
     plan = { ...plan, ids }
     if (ids.length === 15 && plan.starters.length === 0) {
@@ -152,13 +149,16 @@
     const starters = src.starting.map((p) => p.id)
     const bench = src.bench.map((p) => p.id)
     const ids = [...starters, ...bench]
-    plan = {
+    // These fifteen are the solver's, not yours: any FPL bank and team value
+    // carried on the plan describe a squad that is no longer on screen, so the
+    // holding is detached and the from-scratch £100m cap comes back with it.
+    plan = asBuilt({
       ...plan,
       ids,
       starters,
       captainId: src.captain?.id ?? -1,
       viceId: src.vice?.id ?? -1,
-    }
+    })
     shownOptimal = oh ?? null
   }
 
@@ -182,7 +182,15 @@
     importMsg = 'Importing…'
     try {
       const picks = await fpl.picks(entry, gw)
-      plan = planFromPicks(picks.picks, 'My team')
+      // `entry_history` is the only exact money FPL publishes without a login:
+      // the bank, and a team value that already includes it. Carrying it onto
+      // the plan is what tells the budget which squad this is.
+      const hist = picks.entry_history
+      plan = planFromPicks(
+        picks.picks,
+        'My team',
+        hist ? { gw, bank: hist.bank / 10, teamValue: hist.value / 10 } : undefined,
+      )
       planName = 'My team'
       importMsg = `Imported your GW${gw} squad — now plan your transfers.`
     } catch {
@@ -204,7 +212,7 @@
       return
     }
     clearArmed = false
-    plan = { name: planName, ids: [], starters: [], captainId: -1, viceId: -1 }
+    plan = { ...emptyPlan(), name: planName }
   }
   function doSave() {
     const name = planName.trim() || `Plan ${plans.length + 1}`
@@ -375,14 +383,19 @@
         >{clearArmed ? `Discard ${squad.length}?` : 'Clear squad'}</button>
       </div>
 
-      <!-- budget + counts -->
+      <!-- Money + counts. The label, the meter and the caption all come from one
+           `budgetView`, so the screen cannot show a green bar beside a red
+           number, or a £100m cap over a squad that has no cap. -->
       <div class="flex items-center gap-3 text-sm mb-1 min-w-0">
-        <span class="text-muted shrink-0">Budget</span>
+        <span class="text-muted shrink-0">{budget.basis === 'holding' ? 'Your money' : 'Budget'}</span>
         <div class="flex-1 min-w-0 h-2 rounded-full bg-bg3 overflow-hidden">
-          <div class="h-full {t.cost > BUDGET ? 'bg-red' : 'bg-brand'}" style="width:{Math.min(100, (t.cost / BUDGET) * 100)}%"></div>
+          <div class="h-full {budget.over ? 'bg-red' : 'bg-brand'}" style="width:{budget.fill * 100}%"></div>
         </div>
-        <span class="tabular-nums shrink-0 whitespace-nowrap {BUDGET - t.cost < 0 ? 'text-red' : ''}">£{t.cost.toFixed(1)} / {BUDGET}m</span>
+        <span class="tabular-nums shrink-0 {budget.over ? 'text-red' : ''}">{budget.label}</span>
       </div>
+      {#if budget.note}
+        <p class="text-micro leading-snug text-muted2 mb-1">{budget.note}</p>
+      {/if}
       <div class="flex gap-3 text-xs text-muted">
         {#each ['GKP', 'DEF', 'MID', 'FWD'] as pos}
           <span class="{t.byPos[pos as Pos] === QUOTA[pos as Pos] ? 'text-brand-light' : ''}">{pos} {t.byPos[pos as Pos]}/{QUOTA[pos as Pos]}</span>
@@ -398,12 +411,12 @@
         <div class="mt-2 text-xs chip-warn rounded px-2 py-1">Add players ({squad.length}/15){squadErrs.length ? ' · ' + squadErrs.join(' · ') : ''}</div>
       {/if}
 
-      {#if flagged.length}
+      {#if watch.items.length}
         <div class="mt-2 text-xs chip-warn rounded px-2 py-1.5">
-          <div class="font-bold mb-0.5">⚠ {flagged.length} availability {flagged.length === 1 ? 'flag' : 'flags'} in your squad{flagged.some((f) => f.starting) ? ` · ${flagged.filter((f) => f.starting).length} starting` : ''}</div>
-          {#each flagged as f}
+          <div class="font-bold mb-0.5">⚠ {watch.headline}</div>
+          {#each watch.items as f}
             <div class="leading-tight">
-              <span class="font-semibold">{f.p.name}</span>{f.starting ? ' (XI)' : ' (bench)'} — {f.reason}
+              <span class="font-semibold">{f.player.name}</span>{f.starting ? ' (XI)' : ' (bench)'} — {f.reason}
             </div>
           {/each}
         </div>
@@ -493,7 +506,7 @@
 
     <div class="card overflow-y-auto max-h-[78vh]">
       {#each picker as p (p.id)}
-        {@const blocker = addBlocker(squad, p)}
+        {@const blocker = addBlocker(squad, p, plan, byId)}
         <div class="flex items-center gap-2 px-3 py-1.5 border-b border-line/50">
           <Crest code={p.team_code} short={p.team} size={22} />
           <button onclick={() => onpick(p.id)} class="flex-1 min-w-0 text-left hover:opacity-80">

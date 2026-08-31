@@ -173,7 +173,10 @@ def build(
     exe = decision.executability(
         conn, list(sol.transfers_in), list(sol.transfers_out), ft, bank)
 
-    horizon_driven = cmp_.horizon_delta > cmp_.delta + 0.5
+    horizon_driven = (
+        cmp_.horizon_delta is not None
+        and cmp_.horizon_delta > cmp_.delta + 0.5
+    )
     action, reason = decision.classify(cmp_)
 
     # A move nobody can pay for is not a recommendation, whatever it projects.
@@ -187,21 +190,64 @@ def build(
         reason = ("no transfer beats holding, so the free transfer is worth more "
                   "kept than spent")
 
-    headline = _headline(conn, action, sol, cmp_, exe)
+    is_transfer = action == decision.ACTION_TRANSFER
+    captain = (sol.captain or None) if is_transfer else hold["captain"]
+    vice = (sol.vice or None) if is_transfer else hold["vice"]
+
+    # Preserve a horizon-driven solver result as inspectable evidence, but only
+    # in a block whose schema says it is NOT the action. The primary transfer and
+    # executability fields are empty for every non-transfer decision.
+    candidate = None
+    if (not is_transfer and action == decision.ACTION_ROLL
+            and sol.transfers_in and horizon_driven
+            and cmp_.horizon_delta is not None and cmp_.horizon_delta > 0):
+        candidate = decision.CandidateMove(
+            basis=decision.CANDIDATE_BASIS_FUTURE_HORIZON,
+            reason=(
+                f"The solver sees {cmp_.horizon_delta:+.1f} points over the "
+                f"{horizon}-gameweek horizon, but doing it now is "
+                f"{cmp_.delta:+.1f} and wins only "
+                f"{100 * cmp_.p_move_beats_hold:.0f}% of scenarios. Re-evaluate "
+                "it after this deadline; it is not a transfer instruction."
+            ),
+            transfers_out=list(sol.transfers_out),
+            transfers_in=list(sol.transfers_in),
+            captain=sol.captain or None,
+            vice=sol.vice or None,
+            executability=exe,
+        )
+
+    headline = _headline(conn, action, sol, captain, exe)
     league_note = _league_note(strategy)
     chip = (strategy or {}).get("chips")
 
+    if candidate is not None:
+        risk = (
+            f"The weaker {horizon}-gameweek model values the future plan at "
+            f"{cmp_.horizon_delta:+.1f}; if that estimate is right, waiting may "
+            "give up part of its longer-term edge."
+        )
+    else:
+        risk = decision.biggest_risk(
+            conn,
+            list(sol.transfers_in) if is_transfer else [],
+            captain,
+            horizon_driven if is_transfer else False,
+        )
+
     return decision.Decision(
         action=action, headline=headline, reason=reason,
-        transfers_out=list(sol.transfers_out), transfers_in=list(sol.transfers_in),
-        captain=sol.captain or None, vice=sol.vice or None,
-        starting=move_xi if action == decision.ACTION_TRANSFER else hold["starting"],
-        bench=list(sol.bench) if action == decision.ACTION_TRANSFER else hold["bench"],
-        comparison=cmp_, executability=exe, chip=chip, league_note=league_note,
+        transfers_out=list(sol.transfers_out) if is_transfer else [],
+        transfers_in=list(sol.transfers_in) if is_transfer else [],
+        captain=captain, vice=vice,
+        starting=move_xi if is_transfer else hold["starting"],
+        bench=list(sol.bench) if is_transfer else hold["bench"],
+        comparison=cmp_, executability=exe if is_transfer else None,
+        chip=chip, league_note=league_note,
         confidence=decision.confidence_band(cmp_),
-        biggest_risk=decision.biggest_risk(
-            conn, list(sol.transfers_in), sol.captain or None, horizon_driven),
+        biggest_risk=risk,
         assumptions=_assumptions(conn, scen, horizon, hold, held),
+        candidate_move=candidate,
     )
 
 
@@ -213,15 +259,15 @@ def _name(conn: sqlite3.Connection, pid: int | None) -> str:
 
 
 def _headline(
-    conn: sqlite3.Connection, action: str, sol: Any,
-    cmp_: decision.Comparison, exe: decision.Executability,
+    conn: sqlite3.Connection, action: str, sol: Any, captain: int | None,
+    exe: decision.Executability,
 ) -> str:
     if action == decision.ACTION_UNAVAILABLE:
         return "No executable recommendation this week"
     if action == decision.ACTION_ROLL:
-        return f"Roll your transfer — captain {_name(conn, sol.captain)}"
+        return f"Roll your transfer — captain {_name(conn, captain)}"
     if action == decision.ACTION_TOO_CLOSE:
-        return f"Too close to call — captain {_name(conn, sol.captain)}"
+        return f"Too close to call — captain {_name(conn, captain)}"
     outs = ", ".join(_name(conn, p) for p in sol.transfers_out)
     ins = ", ".join(_name(conn, p) for p in sol.transfers_in)
     hit = f" (-{exe.paid_transfers * config.HIT_COST})" if exe.paid_transfers else ""

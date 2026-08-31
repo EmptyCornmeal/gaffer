@@ -637,3 +637,63 @@ def test_exception_text_in_a_published_artifact_is_rejected(art):
     r = validate(art)
     assert not r.ok
     assert any(v.field == "<content>" for v in r.violations)
+
+
+
+def _a4_decision(*, action="roll", direct=False, candidate=True):
+    from gaffer import decision as decision_mod
+    from gaffer import weekly as weekly_mod
+    future = ({
+        "status": "evidence_only", "basis": "future_horizon",
+        "label": "Future plan — not this week's action",
+        "reason": "positive over six weeks, negative now",
+        "transfers_in": [_card(3)], "transfers_out": [_card(2)],
+        "captain": _card(3), "vice": _card(1),
+        "executability": {"paid_transfers": 4},
+    } if candidate else None)
+    return {
+        "weekly_version": weekly_mod.WEEKLY_VERSION,
+        "decision_version": decision_mod.DECISION_VERSION,
+        "gameweek": 3,
+        "decision": {
+            "action": action, "headline": "Roll your transfer",
+            "reason": "negative now", "biggest_risk": "future edge",
+            "transfers_in": [_card(3)] if direct else [],
+            "transfers_out": [_card(2)] if direct else [],
+            "executability": {"paid_transfers": 4} if direct else None,
+            "candidate_move": future,
+            "comparison": {
+                "move_expected": 43.76, "hold_expected": 48.34,
+                "delta": -4.58, "delta_ci95": [-4.99, -4.17],
+                "p_move_beats_hold": 0.2865, "simulations": 2000,
+                "short_term_delta": -4.58, "horizon_delta": 16.67,
+                "hit_cost": 16,
+            },
+        },
+        "versions": {
+            "model_version": "m", "objective_version": "o",
+            "sim_version": "s", "n_sims": 2000, "seed": 1,
+        },
+        "freshness": {"generated_at": STAMP},
+    }
+
+
+def test_a4_contract_accepts_a_roll_with_separate_future_evidence():
+    report = contract.Report("test")
+    contract._check_decision(_a4_decision(), report)
+    assert report.ok, report.render()
+
+
+def test_a4_contract_rejects_transfers_attached_to_a_non_action():
+    report = contract.Report("test")
+    contract._check_decision(_a4_decision(action="too_close", direct=True), report)
+    assert "decision.transfers" in fields(report)
+    assert "decision.executability" in fields(report)
+    assert any(v.field == "decision.action" and "negative result" in v.expected
+               for v in report.violations)
+
+
+def test_a4_contract_requires_the_conflicting_horizon_plan_to_be_labelled():
+    report = contract.Report("test")
+    contract._check_decision(_a4_decision(candidate=False), report)
+    assert "decision.candidate_move" in fields(report)

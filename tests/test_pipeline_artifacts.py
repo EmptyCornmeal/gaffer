@@ -460,3 +460,32 @@ def test_the_meta_export_carries_the_evidence_for_refusing_the_blend(conn):
     meta = artifacts.build_meta(conn, "test-1", settings=config.Settings())
     for key, value in stamped.items():
         assert meta[key] == value, f"{key} never reached the artifact"
+
+
+
+def test_decision_export_decorates_the_future_plan_without_promoting_it():
+    payload = {
+        "decision": {
+            "action": "roll", "transfers_in": [], "transfers_out": [],
+            "starting": [1], "bench": [2], "captain": 1, "vice": 2,
+            "candidate_move": {
+                "status": "evidence_only", "basis": "future_horizon",
+                "label": "Future plan", "reason": "not now",
+                "transfers_in": [3], "transfers_out": [2],
+                "captain": 3, "vice": 1, "executability": {},
+            },
+        },
+        "squad_state": {"squad": [1, 2]},
+    }
+    players = [
+        {"id": 1, "name": "Hold captain"},
+        {"id": 2, "name": "Would sell"},
+        {"id": 3, "name": "Would buy"},
+    ]
+    out = artifacts.build_decision(
+        payload, players, generated_at=PRE_GW1.isoformat())
+    body = out["decision"]
+    assert body["transfers_in"] == []
+    assert body["captain"]["name"] == "Hold captain"
+    assert body["candidate_move"]["transfers_in"][0]["name"] == "Would buy"
+    assert body["candidate_move"]["transfers_out"][0]["name"] == "Would sell"

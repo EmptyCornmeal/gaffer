@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   parseDecision, parseLive, parseReview, parseNotifications,
-  ALL_ACTIONS, signed, pctOf, money,
+  ALL_ACTIONS, signed, pctOf, money, confidenceLabel,
   SUPPORTED_WEEKLY, SUPPORTED_LIVE, SUPPORTED_REVIEW,
 } from './weekly'
 
@@ -31,6 +31,7 @@ function decision(overrides: Record<string, unknown> = {}) {
       },
       executability: null, chip: null, league_note: '',
       confidence: 'medium', biggest_risk: 'minutes', assumptions: [],
+      candidate_move: null,
     },
     versions: {
       model_version: 'm', objective_version: 'o', sim_version: 's',
@@ -245,5 +246,27 @@ describe('formatting', () => {
     expect(money(15)).toBe('£1.5m')
     expect(money(0)).toBe('£0.0m')
     expect(money(null)).toBe('unknown')
+  })
+})
+
+
+describe('decision confidence wording', () => {
+  it('says a narrow negative comparison is confidence in holding', () => {
+    const parsed = parseDecision(decision())
+    expect(parsed.kind).toBe('ok')
+    if (parsed.kind !== 'ok') return
+    parsed.data.decision.action = 'roll'
+    parsed.data.decision.confidence = 'high'
+    expect(confidenceLabel(parsed.data.decision)).toBe('high confidence in holding')
+  })
+
+  it('does not call a too-close verdict high confidence without qualification', () => {
+    const parsed = parseDecision(decision())
+    expect(parsed.kind).toBe('ok')
+    if (parsed.kind !== 'ok') return
+    parsed.data.decision.action = 'too_close'
+    parsed.data.decision.confidence = 'high'
+    expect(confidenceLabel(parsed.data.decision))
+      .toBe('high confidence in the comparison')
   })
 })

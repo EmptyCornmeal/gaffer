@@ -1163,3 +1163,321 @@ def test_the_plan_rows_carry_the_evidence_the_decision_is_argued_from():
         pytest.skip("this plan names no captain")
     assert "next_gw_xp" in captain, "a plan row still says only who moved"
     assert M.serialized_bytes(r) < M.MAX_RESULT_BYTES
+
+
+# ---------------------------------------------------------------------------
+# B3 - the live total arrives with the arithmetic that produced it
+#
+# The rule the manager works to is "recompute a manager's score as
+# sum(element.total_points x multiplier) - hits, and never quote an aggregate
+# while a fixture is in play". `get_live_gameweek` published only the aggregate,
+# so every live conversation left Gaffer and rebuilt that join by hand against
+# the public API - five times in one session. These tests hold the response to
+# being re-addable rather than merely correct.
+# ---------------------------------------------------------------------------
+
+def _scorecard():
+    r = M.call("get_live_scorecard")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip(f"no live gameweek to score: {r.get('unavailable_reason')}")
+    return r
+
+
+def test_the_scorecard_rows_sum_to_the_published_total_minus_hits():
+    """The whole point: the total can be re-added off the response.
+
+    Not "the tool returns a number" - that is what it did before. The products
+    the caller can see must add up to the total the caller is given, or the
+    rows are decoration.
+    """
+    r = _scorecard()
+    a = r["arithmetic"]
+    assert sum(p["points"] for p in r["players"]) == a["sum_of_products"]
+    assert a["sum_of_products"] - a["hits"] == a["gameweek_points_confirmed"]
+    assert a["reconciles_with_published_total"] is True
+    assert a["discrepancy"] == 0
+    assert (a["gameweek_points_confirmed"] + a["plus_provisional_bonus"]
+            == a["gameweek_points_including_provisional"])
+
+
+def test_every_scorecard_row_shows_the_multiplication_it_did():
+    r = _scorecard()
+    assert r["players"], "an ok scorecard with no rows is not an answer"
+    for p in r["players"]:
+        for field in ("element", "name", "minutes", "total_points",
+                      "multiplier", "points", "role", "yet_to_play"):
+            assert field in p, f"a row that cannot be checked on {field}"
+        assert p["points"] == p["total_points"] * p["multiplier"]
+
+
+def test_the_scorecard_multiplier_agrees_with_the_autosub_armband():
+    r = _scorecard()
+    subs = r["autosubs"]
+    doubled = [p for p in r["players"] if p["role"] == "captain"]
+    assert len(doubled) <= 1, "two captains is not a squad"
+    if doubled:
+        assert doubled[0]["element"] == subs["captain"]
+        assert doubled[0]["multiplier"] == subs["multiplier"]
+    for p in r["players"]:
+        assert p["multiplier"] in (0, 1, subs["multiplier"])
+        if p["role"] in ("bench", "autosub_out"):
+            assert p["multiplier"] == 0 and p["points"] == 0
+
+
+def test_the_scorecard_keeps_confirmed_provisional_and_predicted_apart():
+    r = _scorecard()
+    a = r["arithmetic"]
+    for field in ("gameweek_points_confirmed", "plus_provisional_bonus",
+                  "plus_predicted_remaining", "is_final", "not_final_because"):
+        assert field in a
+    if not a["is_final"]:
+        assert a["not_final_because"], "not final, with no reason given"
+    assert any("ALREADY contains" in lim for lim in r["limitations"]), \
+        "nothing warns that total_points already carries FPL's bonus"
+    assert any("is_final" in lim for lim in r["limitations"])
+
+
+def test_the_scorecard_names_the_endpoints_and_when_they_were_read():
+    r = _scorecard()
+    prov = r["provenance"]
+    urls = " ".join(e["url"] for e in prov["endpoints"])
+    assert f"/event/{r['gameweek']}/live/" in urls
+    assert "/picks/" in urls and "/fixtures/" in urls
+    assert prov["read_at"] and prov["read_seconds_ago"] is not None
+    assert "total_points" in prov["how_to_recompute"]
+
+
+def test_the_scorecard_cannot_show_a_rival_breakdown_and_says_so():
+    """Absence stays absence. An empty rival breakdown would read as 'your
+    rivals have no players', which is a different claim from 'no artifact this
+    server may read carries another entry's picks'."""
+    r = _scorecard()
+    gap = r["rivals_per_player"]
+    assert gap["available"] is False
+    assert gap["unavailable_reason"] == M.RIVAL_ROWS_UNAVAILABLE
+    assert gap["how_to_get_it"]
+    assert "{entry_id}" in r["provenance"]["rival_picks_url_template"]
+    for row in r["rivals"]:
+        assert "players_yet_to_play" in row, \
+            "a rival total without how much of it is still to come"
+
+
+def test_the_live_aggregate_points_at_the_arithmetic_behind_it():
+    r = M.call("get_live_gameweek")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no live gameweek")
+    assert r["recompute"]["tool"] == "get_live_scorecard"
+    assert any("get_live_scorecard" in lim for lim in r["limitations"])
+
+
+# --- synthetic artifacts: the states a live Saturday will not hand you --------
+
+_STATES = {"total": 10, "by_state": {"finished": 10}, "all_finished": True,
+           "bonus_final": True}
+
+
+def _live_row(pid, name, pos, mins, pts, **over):
+    row = {"id": pid, "name": name, "pos": pos, "minutes": mins,
+           "confirmed": pts, "provisional": 0, "predicted": 0.0,
+           "played": mins > 0, "finished": True, "yet_to_play": False,
+           "fixture_states": ["finished"]}
+    row.update(over)
+    return row
+
+
+def _live_artifact(players, squad, **over):
+    blob = {"live_version": "live-1.0", "gameweek": 7, "available": True,
+            "unavailable_reason": None, "active_chip": None,
+            "as_of": "2026-10-04T16:00:00+00:00",
+            "fixture_summary": dict(_STATES), "players": players,
+            "squad": squad, "rivals": []}
+    blob.update(over)
+    return blob
+
+
+def _live_squad(autosubs, confirmed, **over):
+    sq = {"entry_id": 99, "confirmed": confirmed, "provisional_bonus": 0,
+          "predicted_remaining": 0.0, "current": confirmed, "projected": confirmed,
+          "bench_points": 0, "players_played": 11, "players_yet_to_play": 0,
+          "hits": 0, "season_total_before": 100,
+          "season_total_projected": 100 + confirmed, "autosubs": autosubs}
+    sq.update(over)
+    return sq
+
+
+def _publish_live(tmp_path, monkeypatch, blob):
+    (tmp_path / "meta.json").write_text(
+        json.dumps({"season": "2026-27", "entry_id": 99,
+                    "generated_at": "2026-10-04T16:00:00+00:00",
+                    "model_version": "heuristic-0.5"}), encoding="utf-8")
+    (tmp_path / "live.json").write_text(json.dumps(blob), encoding="utf-8")
+    monkeypatch.setattr(M, "data_dir", lambda: tmp_path)
+    return M.call("get_live_scorecard")
+
+
+def test_a_hit_is_subtracted_from_the_total_and_from_nothing_else(tmp_path,
+                                                                  monkeypatch):
+    """Hits were once hardcoded to zero, which made a -8 week read four points
+    better than it was. A hit is not a player, so no row may absorb it."""
+    players = [_live_row(i, f"P{i}", "MID", 90, 5) for i in range(1, 12)]
+    players += [_live_row(i, f"B{i}", "MID", 90, 9) for i in range(12, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": 3, "captain_source":
+            "captain", "multiplier": 2, "provisional": False, "notes": []}
+    # 10 players at 5, plus the captain at 5 x 2 = 60.
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 60, hits=8, current=52, projected=52,
+                        bench_points=36, season_total_projected=152)))
+    a = r["arithmetic"]
+    assert a["sum_of_products"] == 60
+    assert a["hits"] == 8
+    assert a["gameweek_points_confirmed"] == 52
+    assert a["reconciles_with_published_total"] is True
+    assert all(p["points"] == p["total_points"] * p["multiplier"]
+               for p in r["players"])
+    assert sum(p["points"] for p in r["players"]) == 60, \
+        "a hit was smuggled into a player row"
+
+
+def test_bench_boost_scores_all_fifteen(tmp_path, monkeypatch):
+    """The one week `autosubs.xi` is the wrong set. Reading eleven names when
+    fifteen are scoring makes the bench invisible in the week it decides the
+    league."""
+    players = [_live_row(i, f"P{i}", "MID", 90, 4) for i in range(1, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": 1,
+            "captain_source": "captain", "multiplier": 2, "provisional": False,
+            "notes": ["Bench Boost is active"]}
+    # 14 at 4, plus the captain at 4 x 2 = 64.
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 64, current=64, projected=64),
+        active_chip="bboost"))
+    assert r["arithmetic"]["sum_of_products"] == 64
+    assert r["arithmetic"]["reconciles_with_published_total"] is True
+    boosted = [p for p in r["players"] if p["role"] == "bench_boost"]
+    assert len(boosted) == 4
+    assert all(p["multiplier"] == 1 and p["points"] == 4 for p in boosted)
+    assert not [p for p in r["players"] if p["multiplier"] == 0]
+
+
+def test_an_autosub_and_a_moved_armband_are_both_visible_in_the_rows(
+        tmp_path, monkeypatch):
+    """A player who did not play may have been substituted, and a captain who
+    did not play hands the armband to the vice. Both change which rows count,
+    so both have to be readable off the response."""
+    players = [_live_row(i, f"P{i}", "MID", 90, 3) for i in range(1, 11)]
+    players.append(_live_row(11, "Benched", "MID", 0, 0))
+    players.append(_live_row(12, "CameOn", "MID", 70, 7))        # subbed in
+    players.append(_live_row(13, "Captain", "FWD", 0, 0))        # blanked, subbed out
+    players.append(_live_row(14, "Vice", "FWD", 90, 11))         # takes the armband
+    players.append(_live_row(15, "Spare", "DEF", 90, 2))
+    # Started 1-9, 13 (captain) and 14 (vice). 13 blanked, so 12 came on for him
+    # and the armband moved to 14.
+    subs = {"xi": [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 14],
+            "bench": [13, 11, 15, 10], "subs_in": [12], "subs_out": [13],
+            "captain": 14, "captain_source": "vice", "multiplier": 2,
+            "provisional": False,
+            "notes": ["Captain recorded no minutes, so the armband passed to "
+                      "the vice-captain."]}
+    # 9 at 3 = 27, CameOn 7, Vice 11 x 2 = 22 -> 56.
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 56, current=56, projected=56, bench_points=5)))
+    by_id = {p["element"]: p for p in r["players"]}
+    assert by_id[12]["role"] == "autosub_in" and by_id[12]["points"] == 7
+    assert by_id[13]["role"] == "autosub_out" and by_id[13]["points"] == 0
+    assert by_id[14]["role"] == "captain" and by_id[14]["points"] == 22
+    assert by_id[10]["role"] == "bench" and by_id[10]["multiplier"] == 0, \
+        "a starter who was never on the pitch this week still scored"
+    assert r["autosubs"]["captain_source"] == "vice"
+    assert r["arithmetic"]["sum_of_products"] == 56
+    assert r["arithmetic"]["reconciles_with_published_total"] is True
+
+
+def test_a_disagreement_with_the_published_total_is_reported_not_hidden(
+        tmp_path, monkeypatch):
+    """Two routes to one number. A scorecard whose rows do not add up to its own
+    total is worse than no scorecard, so the gap is published."""
+    players = [_live_row(i, f"P{i}", "MID", 90, 5) for i in range(1, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": None,
+            "captain_source": "none", "multiplier": 1, "provisional": False,
+            "notes": []}
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 999)))          # rows say 55, artifact says 999
+    a = r["arithmetic"]
+    assert a["sum_of_products"] == 55
+    assert a["published_confirmed"] == 999
+    assert a["reconciles_with_published_total"] is False
+    assert a["discrepancy"] == 55 - 999
+
+
+def test_a_finished_gameweek_is_allowed_to_call_itself_final(tmp_path,
+                                                             monkeypatch):
+    players = [_live_row(i, f"P{i}", "MID", 90, 5) for i in range(1, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": 1,
+            "captain_source": "captain", "multiplier": 2, "provisional": False,
+            "notes": []}
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 60)))
+    assert r["arithmetic"]["is_final"] is True
+    assert r["arithmetic"]["not_final_because"] == []
+
+    # ...and an unfinished one is not, whatever the numbers look like.
+    r2 = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 60),
+        fixture_summary={"total": 10, "by_state": {"live": 1, "finished": 9},
+                         "all_finished": False, "bonus_final": False}))
+    assert r2["arithmetic"]["is_final"] is False
+    assert len(r2["arithmetic"]["not_final_because"]) >= 2
+
+
+def test_a_duplicated_entry_in_the_league_table_is_flagged(tmp_path,
+                                                           monkeypatch):
+    """A manager is a member of his own mini-league. Listed twice he displaces
+    every rival below him, and the table quietly lies about placing."""
+    players = [_live_row(i, f"P{i}", "MID", 90, 5) for i in range(1, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": 1,
+            "captain_source": "captain", "multiplier": 2, "provisional": False,
+            "notes": []}
+    rivals = [{"entry_id": 99, "name": "You", "you": True, "current": 160,
+               "projected": 160, "gw_points": 60, "yet_to_play": 0,
+               "provisional_position": 1},
+              {"entry_id": 99, "name": "Me Again", "you": False, "current": 160,
+               "projected": 160, "gw_points": 60, "yet_to_play": 0,
+               "provisional_position": 2}]
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 60), rivals=rivals))
+    assert r["data_warnings"], "a duplicated entry passed without comment"
+    assert any("99" in w for w in r["data_warnings"])
+    assert sum(1 for row in r["rivals"] if row["is_you"]) == 2
+
+
+def test_a_live_artifact_with_no_per_player_rows_says_so(tmp_path, monkeypatch):
+    """An older artifact, or one written before per-player publication, is a
+    named state rather than an empty scorecard."""
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        [], {"entry_id": 99, "confirmed": 0, "autosubs": {}}))
+    assert r["status"] == M.STATUS_UNAVAILABLE
+    assert r["unavailable_reason"] == "no_per_player_rows"
+    assert r["detail"]
+
+
+def test_the_scorecard_fits_the_budget_with_a_full_league(tmp_path, monkeypatch):
+    """Fifteen rows plus a big league is the size case. The player rows are the
+    answer and are never cut; the rival table gives way, and says it did."""
+    players = [_live_row(i, f"Player Number {i}", "MID", 90, 5) for i in range(1, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": 1,
+            "captain_source": "captain", "multiplier": 2, "provisional": False,
+            "notes": []}
+    rivals = [{"entry_id": 1000 + i, "name": f"A Rival With A Name {i}",
+               "you": False, "current": 200 - i, "projected": 200 - i,
+               "gw_points": 60 - i, "yet_to_play": i % 4,
+               "provisional_position": i + 1} for i in range(40)]
+    r = _publish_live(tmp_path, monkeypatch, _live_artifact(
+        players, _live_squad(subs, 60), rivals=rivals))
+    assert len(r["players"]) == 15, "the arithmetic was trimmed"
+    assert M.serialized_bytes(r) <= M.MAX_RESULT_BYTES
+    assert len(r["rivals"]) <= M.MAX_RIVAL_ROWS

@@ -56,7 +56,7 @@ MAX_COMPARE = 4
 #: Every default tool response must serialise below this. `get_transfer_plan`
 #: used to return 74 KB — five repetitions of fifteen full player cards — which
 #: the MCP client refused outright, so the tool was unusable however correct its
-#: contents were. The budget is asserted for all eleven tools in
+#: contents were. The budget is asserted for every tool in
 #: `tests/test_mcp_server.py`; it is a design constraint on what each tool
 #: *returns*, never a blind truncation of what it built.
 MAX_RESULT_BYTES = 20_000
@@ -81,6 +81,25 @@ FIXTURE_WINDOWS = (3, 5)
 #: already caps at ten; this is what stops a third league making the tool
 #: unanswerable, and it is reported rather than applied silently.
 MAX_OWNERSHIP_ROWS = 10
+
+#: Where the live numbers come from. Published with every scorecard so a reader
+#: can go and re-derive the total from the same public endpoints Gaffer read,
+#: rather than having to trust the aggregate. No request is ever made from this
+#: module - these are provenance strings, and `tests/test_mcp_server.py` asserts
+#: that no HTTP client is even importable here.
+FPL_API_BASE = "https://fantasy.premierleague.com/api"
+
+#: Rival rows in a scorecard before the list is thinned to fit the budget. The
+#: manager's own fifteen rows are never thinned: they are the arithmetic.
+MAX_RIVAL_ROWS = 12
+
+#: Reported instead of a per-player breakdown for a rival. The live artifact
+#: publishes per-player rows for the manager's own squad only, and no other
+#: artifact - and no table in the read-only database - carries another entry's
+#: picks. Producing one would mean fetching `entry/{id}/event/{gw}/picks/`, and
+#: this server has no HTTP client by design. Saying so, with the join spelled
+#: out, is worth more than a silently absent key.
+RIVAL_ROWS_UNAVAILABLE = "no_rival_picks_in_any_artifact"
 
 #: Detail levels for the transfer plan.
 DETAIL_SUMMARY = "summary"
@@ -1479,12 +1498,315 @@ def get_live_gameweek() -> dict[str, Any]:
         autosubs=(live.get("me") or {}).get("substitutions"),
         largest_swing=live.get("largest_swing"),
         players_yet_to_play=(live.get("me") or {}).get("yet_to_play"),
+        # Everything above is an aggregate, which is precisely the figure a
+        # reader is told not to quote while a fixture is in play. Nothing here
+        # showed how it was arrived at, so every live conversation left Gaffer
+        # and rebuilt the join by hand against the public API. Naming the tool
+        # that does show it is what stops the aggregate travelling alone.
+        recompute={
+            "tool": "get_live_scorecard",
+            "why": "the totals here are aggregates. `get_live_scorecard` "
+                   "returns the per-player rows behind yours - minutes, FPL's "
+                   "own total_points, the multiplier and the product - plus "
+                   "hits, so `sum(total_points x multiplier) - hits` can be "
+                   "re-added by hand and checked.",
+        },
         limitations=[
             "Bonus is PROVISIONAL until every relevant fixture is finished. "
             "Confirmed points, provisional bonus and predicted remaining are "
             "three separate numbers and must not be added into one 'total' "
             "that reads as final.",
+            "These are aggregates with no arithmetic attached. Call "
+            "`get_live_scorecard` before quoting one: it carries the per-player "
+            "rows the total is made of, and the endpoints they came from.",
         ])
+
+
+
+def _scorecard_row(p: dict[str, Any], mult: int, captain: Any,
+                   subs_in: set[int], subs_out: set[int],
+                   scoring: set[int], in_xi: set[int]) -> dict[str, Any]:
+    """One line of the recomputation, readable as arithmetic.
+
+    ``total_points`` is FPL's own live figure for the player, untouched: it is
+    `event/{gw}/live/` `elements[].stats.total_points` as `live.player_live`
+    read it, and it already contains whatever bonus FPL has published. The
+    multiplied product sits beside it so a column of them can be re-added by
+    hand and checked against the published total.
+
+    The multiplier is Gaffer's, and it is autosub-aware: 0 for a bench player
+    who is not scoring, ``autosubs.multiplier`` for whoever actually holds the
+    armband, 1 otherwise. Until every relevant fixture is over that is a
+    projection of what FPL will do, which ``autosubs.provisional`` states.
+    """
+    pid = int(p.get("id") or 0)
+    points = int(p.get("confirmed") or 0)
+    wears_armband = captain is not None and pid == captain and pid in scoring
+    if pid not in scoring:
+        m = 0
+    elif wears_armband:
+        m = int(mult)
+    else:
+        m = 1
+    if wears_armband:
+        role = "captain"
+    elif pid in subs_in:
+        role = "autosub_in"
+    elif pid in subs_out:
+        role = "autosub_out"
+    elif pid in in_xi:
+        role = "xi"
+    elif pid in scoring:
+        role = "bench_boost"
+    else:
+        role = "bench"
+    states = p.get("fixture_states") or []
+    return {
+        "element": pid,
+        "name": p.get("name"),
+        "pos": p.get("pos"),
+        "role": role,
+        "minutes": p.get("minutes"),
+        "total_points": points,
+        "multiplier": m,
+        "points": points * m,
+        "provisional_bonus": int(p.get("provisional") or 0),
+        "predicted_remaining": p.get("predicted"),
+        "yet_to_play": bool(p.get("yet_to_play")),
+        "fixture_state": "+".join(str(s) for s in states) or None,
+    }
+
+
+def _live_provenance(live: dict[str, Any], meta: Any) -> dict[str, Any]:
+    """Which public endpoints these numbers came from, and when they were read.
+
+    ``read_at`` is the live artifact's own `as_of` - the moment the pipeline
+    read FPL - never the moment this tool was called. The two are different
+    numbers, and conflating them is how a forty-minute-old score gets quoted as
+    the current one during a match.
+    """
+    gw = live.get("gameweek")
+    entry = ((live.get("squad") or {}).get("entry_id")
+             or (meta or {}).get("entry_id"))
+    read_at = live.get("as_of")
+    stamp = _parse_ts(read_at)
+    return {
+        "read_at": read_at,
+        "read_seconds_ago": (None if stamp is None
+                             else round((_now() - stamp).total_seconds())),
+        "endpoints": [
+            {"url": f"{FPL_API_BASE}/event/{gw}/live/",
+             "supplies": "total_points, minutes and any bonus FPL has awarded, "
+                         "per element"},
+            {"url": f"{FPL_API_BASE}/entry/{entry}/event/{gw}/picks/",
+             "supplies": "the fifteen picks, FPL's own multipliers, the active "
+                         "chip, and entry_history.event_transfers_cost (hits)"},
+            {"url": f"{FPL_API_BASE}/fixtures/?event={gw}",
+             "supplies": "match state, and live BPS for bonus FPL has not "
+                         "awarded yet"},
+            {"url": f"{FPL_API_BASE}/entry/{entry}/history/",
+             "supplies": "the season total carried into this gameweek"},
+        ],
+        "rival_picks_url_template":
+            f"{FPL_API_BASE}/entry/{{entry_id}}/event/{gw}/picks/",
+        "how_to_recompute":
+            "join picks[].element to event/{gw}/live/ "
+            "elements[].stats.total_points, multiply by the multiplier, sum, "
+            "subtract entry_history.event_transfers_cost",
+    }
+
+
+def get_live_scorecard() -> dict[str, Any]:
+    """Your live score with the rows it is made of: points x multiplier, per player.
+
+    An aggregate is the one thing a careful reader is told not to trust while a
+    fixture is in play, so `get_live_gameweek` on its own always ended in a
+    hand-written join against the public API. This returns the same total *with
+    its inputs*: element id, name, minutes, FPL's own `total_points`, the
+    multiplier Gaffer applied and the product - plus hits, so
+    `sum(total_points x multiplier) - hits` can be re-added straight off the
+    response and checked against what is published.
+
+    Nothing here re-scores anything. Every number is lifted from the live
+    artifact `gaffer.live` already produced; the one derived column is the
+    multiplier, and the sum of the products is reconciled against the published
+    total so a disagreement is reported rather than hidden.
+    """
+    meta = _meta()
+    live = load_artifact("live.json", required=False)
+    if live is None:
+        raise ToolError(STATUS_UNAVAILABLE, "no live artifact has been published")
+    if not live.get("available"):
+        return envelope("live.json", meta, blob=live, status=STATUS_UNAVAILABLE,
+                        available=False,
+                        unavailable_reason=live.get("unavailable_reason"),
+                        detail=live.get("note") or "no live data to score",
+                        gameweek=live.get("gameweek"))
+
+    rows_in = live.get("players") or []
+    squad = live.get("squad") or {}
+    subs = squad.get("autosubs") or {}
+    if not rows_in or not subs.get("xi"):
+        return envelope(
+            "live.json", meta, blob=live, status=STATUS_UNAVAILABLE,
+            available=False, gameweek=live.get("gameweek"),
+            unavailable_reason="no_per_player_rows",
+            detail="this live artifact carries no per-player rows, or no "
+                   "post-substitution XI, so the arithmetic cannot be shown")
+
+    chip = live.get("active_chip")
+    xi = [int(p) for p in subs.get("xi") or []]
+    bench = [int(p) for p in subs.get("bench") or []]
+    # Bench Boost is the one week the bench scores, so the scoring set is not
+    # the XI. `live.score_squad` makes the same distinction; getting it wrong
+    # here would silently zero four players in exactly the week they matter.
+    scoring = set(xi) | (set(bench) if chip == "bboost" else set())
+    captain = subs.get("captain")
+    mult = int(subs.get("multiplier") or 1)
+    rows = [_scorecard_row(p, mult, captain, set(subs.get("subs_in") or []),
+                           set(subs.get("subs_out") or []), scoring, set(xi))
+            for p in rows_in if isinstance(p, dict)]
+
+    hits = int(squad.get("hits") or 0)
+    products = sum(r["points"] for r in rows)
+    published = squad.get("confirmed")
+    reconciles = published is None or products == published
+    prov = int(squad.get("provisional_bonus") or 0)
+    fx = live.get("fixture_summary") or {}
+    blockers = []
+    if not fx.get("all_finished"):
+        blockers.append("not every fixture in this gameweek has finished")
+    if not fx.get("bonus_final"):
+        blockers.append("bonus is not final in every played fixture")
+    if subs.get("provisional"):
+        blockers.append("substitutions are projected rather than applied - a "
+                        "player still to finish could change who counts")
+
+    arithmetic = {
+        "formula": "sum(total_points x multiplier) - hits",
+        "sum_of_products": products,
+        "hits": hits,
+        "gameweek_points_confirmed": products - hits,
+        "plus_provisional_bonus": prov,
+        "gameweek_points_including_provisional": squad.get("current"),
+        "plus_predicted_remaining": squad.get("predicted_remaining"),
+        "projected_if_nothing_changes": squad.get("projected"),
+        "season_total_before": squad.get("season_total_before"),
+        "season_total_including_provisional": squad.get("season_total_projected"),
+        # The self-check. `sum_of_products` is re-derived here from the rows the
+        # caller can see; `published_confirmed` is what `live.score_squad`
+        # computed from the same payload. They are two routes to one number, and
+        # a scorecard whose rows do not add up to its own total is worse than no
+        # scorecard, so the disagreement is published rather than smoothed over.
+        "reconciles_with_published_total": reconciles,
+        "published_confirmed": published,
+        "discrepancy": (0 if published is None else products - int(published)),
+        "is_final": not blockers,
+        "not_final_because": blockers,
+    }
+
+    my_entry = squad.get("entry_id")
+    rival_rows = []
+    for r in live.get("rivals") or []:
+        if not isinstance(r, dict):
+            continue
+        rival_rows.append({
+            "entry_id": r.get("entry_id"),
+            "name": r.get("name"),
+            "is_you": bool(r.get("you")) or r.get("entry_id") == my_entry,
+            "gameweek_points": r.get("gw_points"),
+            "season_total": r.get("current"),
+            "projected": r.get("projected"),
+            "players_yet_to_play": r.get("yet_to_play"),
+            "provisional_position": r.get("provisional_position"),
+        })
+    seen = [r["entry_id"] for r in rival_rows]
+    warnings = []
+    dupes = sorted({i for i in seen if seen.count(i) > 1})
+    if dupes:
+        warnings.append(
+            f"the live artifact lists entry {dupes} more than once, so this "
+            "league table double-counts a manager and every position below him "
+            "is one too low. Read the rows, not the placing.")
+    if sum(1 for r in rival_rows if r["is_you"]) > 1:
+        warnings.append(
+            "more than one row resolves to your own entry - a manager is a "
+            "member of his own mini-league and this artifact did not drop him.")
+
+    limitations = [
+        "`total_points` is FPL's own live figure and ALREADY contains any bonus "
+        "FPL has published. `provisional_bonus` is Gaffer's BPS-derived award "
+        "for a fixture whose bonus FPL has NOT published, and is zero wherever "
+        "FPL has published one, so the two are never two copies of the same "
+        "points - but adding a bonus column of your own on top would "
+        "double-count.",
+        "`multiplier` is Gaffer's, after autosubs. While "
+        "`autosubs.provisional` is true it is a projection of what FPL will do; "
+        "FPL's own `picks[].multiplier` still carries the pre-match value and "
+        "the two can differ until every relevant fixture is over.",
+        "Nothing here is final while `arithmetic.is_final` is false. "
+        "`gameweek_points_confirmed`, `plus_provisional_bonus` and "
+        "`plus_predicted_remaining` are three separate numbers and must not be "
+        "added into one total that reads as settled.",
+        "Per-player rows exist for your squad only. Rival totals are aggregates "
+        "Gaffer scored from the same live payload at the same instant; their "
+        "arithmetic is not shown because no artifact carries a rival's picks, "
+        "and a rival total without `players_yet_to_play` beside it is not "
+        "comparable to yours.",
+    ]
+
+    def build(n_rivals: int) -> dict[str, Any]:
+        return envelope(
+            "live.json", meta, blob=live, available=True,
+            gameweek=live.get("gameweek"), active_chip=chip,
+            entry_id=my_entry,
+            provenance=_live_provenance(live, meta),
+            players=rows,
+            arithmetic=arithmetic,
+            bench_points=squad.get("bench_points"),
+            players_played=squad.get("players_played"),
+            players_yet_to_play=squad.get("players_yet_to_play"),
+            autosubs={
+                "captain": captain,
+                "captain_source": subs.get("captain_source"),
+                "multiplier": mult,
+                "subs_in": subs.get("subs_in"),
+                "subs_out": subs.get("subs_out"),
+                "provisional": subs.get("provisional"),
+                "notes": subs.get("notes"),
+                "xi_and_bench_omitted": "spelled out by players[].role",
+            },
+            rivals=rival_rows[:n_rivals],
+            rivals_per_player={
+                "available": False,
+                "unavailable_reason": RIVAL_ROWS_UNAVAILABLE,
+                "detail": "the live artifact publishes per-player rows for your "
+                          "squad only, and no artifact or read-only table holds "
+                          "another entry's picks. This server has no HTTP "
+                          "client by design, so it cannot fetch them.",
+                "how_to_get_it": "GET provenance.rival_picks_url_template with "
+                                 "the entry id, then join picks[].element to "
+                                 "event/{gw}/live/ "
+                                 "elements[].stats.total_points and multiply by "
+                                 "picks[].multiplier",
+            },
+            data_warnings=warnings,
+            limitations=limitations)
+
+    n = MAX_RIVAL_ROWS
+    out = build(n)
+    # The fifteen player rows are the answer and are never cut. The rival table
+    # is a summary of numbers `get_live_gameweek` publishes in full, so it is
+    # what gives way first - and it says it gave way rather than going quiet.
+    while serialized_bytes(out) > MAX_RESULT_BYTES - RESULT_HEADROOM_BYTES \
+            and n > 3:
+        n = max(3, n - 3)
+        out = build(n)
+        out["rivals_thinned"] = (
+            f"the rival table was cut to {n} rows to fit the "
+            f"{MAX_RESULT_BYTES:,}-byte response budget; `get_live_gameweek` "
+            "publishes the full table")
+    return out
 
 
 def get_decision_review() -> dict[str, Any]:
@@ -1572,6 +1894,60 @@ def _summarise_candidates(mc: Any) -> Any:
     return out
 
 
+def _summarise_minutes(mm: Any) -> Any:
+    """The minutes model reduced to what a decision needs, keeping both bands.
+
+    Both band populations survive deliberately: the pool-wide table alone is
+    precisely how the CAMEO? band looked calibrated (claims 0.256, realises
+    0.269) while being wrong on everyone anybody owns (0.339 against 0.574).
+    """
+    if not isinstance(mm, dict) or not mm.get("measured"):
+        return mm
+    ph = mm.get("per_horizon") or {}
+    h1 = ph.get("1") or ph.get(1)
+    bands = mm.get("bands") or {}
+    return {
+        "measured": True,
+        "verdict": mm.get("verdict"),
+        "next_gameweek": h1,
+        "bands": {k: bands.get(k) for k in ("overall", "considered")
+                  if k in bands},
+        "baselines": mm.get("baselines"),
+        "branches": mm.get("branches"),
+        "candidate_fix": mm.get("candidate_fix"),
+        "limitations": mm.get("limitations"),
+        "projected": ("decile calibration curves, the remaining band "
+                      "populations and horizons 2-6 are omitted here; call "
+                      "again with detail='full'"),
+    }
+
+
+def _thin_candidates(mc: Any) -> Any:
+    """Keep every candidate's decision and reason; drop its metric block.
+
+    `model_candidates` is FROZEN at 2024-25, measured against a code path that
+    was deleted in the same batch that recorded it, and the file says so
+    plainly: "Nothing here describes what ships today." Its per-candidate
+    numbers are history; its decisions are the part that still governs. Full
+    detail remains one `detail="full"` away.
+    """
+    if not isinstance(mc, dict):
+        return mc
+    cands = mc.get("candidates")
+    if not isinstance(cands, list):
+        return mc
+    # `candidate` is the identity key the eval harness reads; dropping it made
+    # every candidate anonymous and the decisions unattributable.
+    keep = ("candidate", "name", "decision", "reason", "outcome", "verdict",
+            "status")
+    thin = [{k: c.get(k) for k in keep if k in c} if isinstance(c, dict) else c
+            for c in cands]
+    return {**mc, "candidates": thin,
+            "candidates_projected": ("per-candidate metrics omitted; this block "
+                                     "is frozen at 2024-25 and describes nothing "
+                                     "that ships today. detail='full' returns it")}
+
+
 def get_model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
     """What the model is actually measured to do, and what was withdrawn.
 
@@ -1593,8 +1969,16 @@ def get_model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
             STATUS_UNSUPPORTED,
             f"backtest.json is schema {bt.get('schema_version')}, this build "
             f"reads {BT.SCHEMA_VERSION}", artifact="backtest.json")
+    mm = bt.get("minutes_model")
     return envelope(
         "backtest.json", meta, blob=bt,
+        # The minutes model has its own tool: named here it costs 3.4 KB over
+        # budget, and truncating either model's evidence to fit would be the
+        # wrong trade. `blob` is read by `envelope` for versions and never
+        # rendered, so a caller needs the pointer.
+        minutes_model=("measured separately — call get_minutes_evidence"
+                       if isinstance(mm, dict) and mm.get("measured")
+                       else "not measured in this artifact"),
         schema_version=bt.get("schema_version"),
         season_tested=bt.get("season"),
         honest_metrics={h: {"mae": b.get("mae"), "rank_corr": b.get("rank_corr")}
@@ -1602,7 +1986,8 @@ def get_model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
         decisions=(bt.get("per_horizon") or {}).get("1", {}).get("decisions"),
         withdrawn_baselines=bt.get("withdrawn_baselines"),
         model_candidates=(bt.get("model_candidates") if detail == DETAIL_FULL
-                          else _summarise_candidates(bt.get("model_candidates"))),
+                          else _thin_candidates(
+                              _summarise_candidates(bt.get("model_candidates")))),
         detail=detail,
         detail_available=("already the full candidate block"
                           if detail == DETAIL_FULL else
@@ -1685,6 +2070,41 @@ def what_changed() -> dict[str, Any]:
                      "that produced it."])
 
 
+def get_minutes_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
+    """How well `p_start` predicts who starts, against naive baselines.
+
+    Separate from `get_model_evidence` because they answer different questions
+    and together they do not fit one response. Defaults to a projection that
+    keeps the verdict, the next gameweek, both band populations and every
+    decision; `detail="full"` adds the decile calibration curves and horizons
+    2-6.
+    """
+    detail = (detail or DETAIL_SUMMARY).strip().lower()
+    if detail not in EVIDENCE_DETAIL:
+        raise ToolError(STATUS_INVALID,
+                        f"detail must be one of {sorted(EVIDENCE_DETAIL)}")
+    meta = _meta()
+    bt = load_artifact("backtest.json", required=False)
+    if bt is None:
+        raise ToolError(STATUS_UNAVAILABLE, "no backtest artifact published")
+    mm = bt.get("minutes_model")
+    if not isinstance(mm, dict) or not mm.get("measured"):
+        raise ToolError(
+            STATUS_UNAVAILABLE,
+            "this backtest artifact carries no measured minutes model",
+            artifact="backtest.json")
+    return envelope(
+        "backtest.json", meta, blob=bt,
+        schema_version=bt.get("schema_version"),
+        season_tested=bt.get("season"),
+        minutes_model=(mm if detail == DETAIL_FULL else _summarise_minutes(mm)),
+        detail=detail,
+        detail_available=("already the full minutes block" if detail == DETAIL_FULL
+                          else "call again with detail='full' for the decile "
+                               "calibration curves and horizons 2-6"),
+        limitations=mm.get("limitations"))
+
+
 #: name -> (callable, one-line description)
 TOOLS: dict[str, Any] = {
     "gaffer_status": gaffer_status,
@@ -1695,8 +2115,10 @@ TOOLS: dict[str, Any] = {
     "get_transfer_plan": get_transfer_plan,
     "get_league_strategy": get_league_strategy,
     "get_live_gameweek": get_live_gameweek,
+    "get_live_scorecard": get_live_scorecard,
     "get_decision_review": get_decision_review,
     "get_model_evidence": get_model_evidence,
+    "get_minutes_evidence": get_minutes_evidence,
     "what_changed": what_changed,
 }
 
@@ -1798,6 +2220,11 @@ def build_server() -> Any:
     def live_gameweek() -> dict[str, Any]:
         return call("get_live_gameweek")
 
+    @server.tool(name="get_live_scorecard",
+                 description=get_live_scorecard.__doc__)
+    def live_scorecard() -> dict[str, Any]:
+        return call("get_live_scorecard")
+
     @server.tool(name="get_decision_review",
                  description=get_decision_review.__doc__)
     def decision_review() -> dict[str, Any]:
@@ -1807,6 +2234,11 @@ def build_server() -> Any:
                  description=get_model_evidence.__doc__)
     def model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
         return call("get_model_evidence", detail=detail)
+
+    @server.tool(name="get_minutes_evidence",
+                 description=get_minutes_evidence.__doc__)
+    def minutes_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
+        return call("get_minutes_evidence", detail=detail)
 
     @server.tool(name="what_changed", description=what_changed.__doc__)
     def changed() -> dict[str, Any]:

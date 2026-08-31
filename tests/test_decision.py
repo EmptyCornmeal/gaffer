@@ -280,6 +280,7 @@ def test_a_decision_serialises_with_its_evidence():
     assert out["action"] == "roll"
     assert out["comparison"]["simulations"] == 8000
     assert out["executability"]["free_transfers_after"] == 2
+    assert out["candidate_move"] is None
 
 
 def test_every_action_is_in_the_declared_vocabulary():
@@ -305,11 +306,23 @@ def test_a_horizon_mean_cannot_buy_a_hit_that_loses_this_gameweek():
         delta_ci95=(-12.94, -11.89), p_move_beats_hold=0.133, n_sims=2000,
         short_term_delta=-12.41, horizon_delta=15.52, hit_cost=20)
     action, reason = decision.classify(c)
-    assert action != decision.ACTION_TRANSFER, (
-        "a move losing 12.4 points now, winning 13% of the time, must never be "
-        "published as an action"
+    assert action == decision.ACTION_ROLL, (
+        "a move losing 12.4 points now, winning 13% of the time, is a hold — "
+        "not an uncertain transfer"
     )
     assert "13%" in reason
+    assert "longer-term" in reason
+
+
+def test_the_live_gw3_conflict_is_a_confident_roll_not_too_close():
+    c = decision.Comparison(
+        move_expected=43.76, hold_expected=48.34, delta=-4.58,
+        delta_ci95=(-4.99, -4.17), p_move_beats_hold=0.2865, n_sims=2000,
+        short_term_delta=-4.58, horizon_delta=16.67, hit_cost=16)
+    action, reason = decision.classify(c)
+    assert action == decision.ACTION_ROLL
+    assert "16.7" in reason and "29%" in reason
+    assert decision.confidence_band(c) == "high"
 
 
 def test_the_waiver_still_needs_the_edge_to_be_present_not_promised():

@@ -2,7 +2,7 @@
   import type { Bundle } from '../lib/data'
   import {
     parseDecision, ACTION_LABELS, ACTION_TONE, signed, pctOf, money,
-    type Card,
+    confidenceLabel, type Card,
   } from '../lib/weekly'
   import { classifyFreshness } from '../lib/freshness'
   import { deadlineState } from '../lib/data'
@@ -33,6 +33,7 @@
   const dl = $derived(meta?.deadline ? deadlineState(meta.deadline, now) : null)
   const cmp = $derived(body?.comparison ?? null)
   const exe = $derived(body?.executability ?? null)
+  const candidate = $derived(body?.candidate_move ?? null)
   const chip = $derived((d?.chip ?? null) as { recommendation?: string; reason?: string; expected_gain?: number } | null)
   // Whether the squad below is the owner's or one the optimiser invented. The
   // artifact says so directly; `action` does not — an unavailable recommendation
@@ -165,7 +166,7 @@
         <section class="card p-4" aria-labelledby="decision-heading">
           <div class="flex items-center gap-2 flex-wrap">
             <span class="chip {toneClass}">{ACTION_LABELS[body.action]}</span>
-            <span class="text-xs {confidenceClass}">{body.confidence} confidence</span>
+            <span class="text-xs {confidenceClass}">{confidenceLabel(body)}</span>
           </div>
           <h2 id="decision-heading" class="font-black text-2xl mt-2 leading-tight">
             {body.headline}
@@ -246,7 +247,9 @@
         <!-- ── versus holding ─────────────────────────────────────── -->
         {#if cmp}
           <section class="card p-4" aria-labelledby="vs-hold">
-            <h3 id="vs-hold" class="font-bold text-sm">Versus doing nothing</h3>
+            <h3 id="vs-hold" class="font-bold text-sm">
+              {candidate ? 'Why the future plan is not this week’s action' : 'Versus doing nothing'}
+            </h3>
             <div class="grid grid-cols-3 gap-2 mt-2 text-center">
               <div class="rounded-lg bg-bg3 p-2">
                 <div class="text-micro uppercase text-muted2 font-bold">Gain</div>
@@ -267,6 +270,46 @@
               this GW {signed(cmp.short_term_delta)}{#if cmp.horizon_delta != null}, over the
               horizon {signed(cmp.horizon_delta)}{/if}
             </p>
+          </section>
+        {/if}
+
+        <!-- A rejected solver result remains inspectable, but this card's
+             vocabulary makes it impossible to read as this week's instruction. -->
+        {#if candidate}
+          <section class="card p-4 border border-yellow/30" aria-labelledby="candidate-plan">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="chip chip-warn">Evidence only</span>
+              <span class="text-mini text-muted2">Re-evaluate later</span>
+            </div>
+            <h3 id="candidate-plan" class="font-bold text-sm mt-2">{candidate.label}</h3>
+            <p class="text-sm text-muted mt-1">{candidate.reason}</p>
+            <div class="grid grid-cols-2 gap-2 mt-3">
+              <div class="rounded-lg bg-bg3 p-2">
+                <div class="text-micro uppercase font-bold text-muted2 mb-1">Would sell</div>
+                {#each candidate.transfers_out as p (p.id)}
+                  <button class="flex items-center gap-2 w-full min-h-11 text-left" onclick={() => onpick(p.id)}>
+                    <Crest code={p.team_code} short={p.team ?? ''} size={16} />
+                    <span class="truncate">{label(p)}</span>
+                  </button>
+                {/each}
+              </div>
+              <div class="rounded-lg bg-bg3 p-2">
+                <div class="text-micro uppercase font-bold text-muted2 mb-1">Would buy</div>
+                {#each candidate.transfers_in as p (p.id)}
+                  <button class="flex items-center gap-2 w-full min-h-11 text-left" onclick={() => onpick(p.id)}>
+                    <Crest code={p.team_code} short={p.team ?? ''} size={16} />
+                    <span class="truncate">{label(p)}</span>
+                  </button>
+                {/each}
+              </div>
+            </div>
+            {#if cmp}
+              <p class="text-mini text-muted2 mt-2">
+                This GW {signed(cmp.delta)} · horizon {signed(cmp.horizon_delta)} ·
+                {pctOf(cmp.p_move_beats_hold)} chance of beating hold now ·
+                {cmp.hit_cost ? `−${cmp.hit_cost} hit if done now` : 'no hit'}
+              </p>
+            {/if}
           </section>
         {/if}
 
