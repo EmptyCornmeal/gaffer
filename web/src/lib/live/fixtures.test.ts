@@ -4,7 +4,8 @@
 
 import { describe, expect, it } from 'vitest'
 import {
-  classifyFixture, countsAsPlayed, round2, STATE_POSTPONED, type RawFixture,
+  bonusFinal, classifyFixture, countsAsPlayed, round2, STATE_AWAITING_BONUS,
+  STATE_POSTPONED, type RawFixture,
 } from './fixtures'
 
 // The same table as `ROUND2_TABLE` in tests/test_live.py, which asserts that
@@ -62,5 +63,37 @@ describe('countsAsPlayed', () => {
     const s = classifyFixture(fx({ kickoff_time: null }), NOW)
     expect(s.state).toBe(STATE_POSTPONED)
     expect(countsAsPlayed(s)).toBe(true)
+  })
+})
+
+describe('bonusFinal', () => {
+  it('is false while the match is being played', () => {
+    expect(bonusFinal(classifyFixture(fx({ started: true, minutes: 70 }), NOW)))
+      .toBe(false)
+  })
+
+  it('is false at 90 minutes with no flag settling the bonus', () => {
+    const s = classifyFixture(fx({ started: true, minutes: 90 }), NOW)
+    expect(s.state).toBe(STATE_AWAITING_BONUS)
+    expect(bonusFinal(s)).toBe(false)
+  })
+
+  it('is true once the fixture is provisionally finished', () => {
+    // A1. FPL flips a fixture's `finished` only when the WHOLE event is
+    // processed, so the flag is per-gameweek wearing a per-fixture name. On
+    // 2026-08-31 nine of GW2's ten fixtures were still
+    // (finished=false, finished_provisional=true) three days after they were
+    // played, held there by one straggler — and every one of them therefore
+    // had its long-settled bonus recomputed from BPS on every refresh.
+    const s = classifyFixture(
+      fx({ started: true, minutes: 90, finished_provisional: true }), NOW)
+    expect(s.finished).toBe(false)
+    expect(bonusFinal(s)).toBe(true)
+  })
+
+  it('is true once the fixture is finished', () => {
+    expect(bonusFinal(
+      classifyFixture(fx({ started: true, minutes: 90, finished: true }), NOW)))
+      .toBe(true)
   })
 })

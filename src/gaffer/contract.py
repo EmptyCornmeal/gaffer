@@ -619,6 +619,24 @@ def _check_strategy(
                 report.violations.append(
                     Violation(name, f"chips.{key}", None, "to be present")
                 )
+    # G1/A7. `evaluate_wildcard` multiplied the gain by `weeks_retained` and
+    # published the un-multiplied one-week means beside it, so the headline
+    # (0.47) disagreed with baseline/with_chip (implying 0.11) by exactly the
+    # multiplier. Three of four chips reconciled; only the wildcard did not.
+        for _alt in (ch.get("alternatives") or []):
+            _b, _w, _g = (_alt.get("baseline_points"), _alt.get("with_chip_points"),
+                          _alt.get("expected_gain"))
+            if None in (_b, _w, _g):
+                continue
+            if abs(float(_g) - (float(_w) - float(_b))) > 0.05:
+                report.violations.append(
+                    Violation(name, f"chips.alternatives[{_alt.get('chip')}].expected_gain",
+                              _g,
+                              f"{float(_w) - float(_b):.2f} -- the gain must equal "
+                              "with_chip_points minus baseline_points, or the "
+                              "reader checking the arithmetic gets a different "
+                              "answer from the headline"))
+
         rec = ch.get("recommendation")
         known = {CH.WILDCARD, CH.FREEHIT, CH.BENCH_BOOST, CH.TRIPLE_CAPTAIN, "hold"}
         if rec is not None and rec not in known:
@@ -791,6 +809,43 @@ def _check_live(live: Any, report: Report, meta: Any = None) -> None:
             report.violations.append(
                 Violation(name, "fixtures[].state", s.get("state"),
                           f"one of {sorted(L.ALL_STATES)}"))
+    # G1/A5. The manager is a member of his own mini-league, so the league
+    # fetch returns him; prepending a synthetic "You" row put him in twice,
+    # displaced every rival below him, and made him his own closest rival --
+    # which silently returned `largest_swing: null` on every run.
+    _rivals = live.get("rivals") or []
+    _ids = [r.get("entry_id") for r in _rivals if isinstance(r, dict)]
+    if len(_ids) != len(set(_ids)):
+        _dupes = sorted({i for i in _ids if _ids.count(i) > 1})
+        report.violations.append(
+            Violation(name, "rivals[].entry_id", _dupes,
+                      "each entry to appear exactly once -- a duplicated entry "
+                      "displaces every rival below it and makes the manager his "
+                      "own closest rival"))
+
+    # G1/A5b. Requested by the fix: one duplicate row sat in the artifact in
+    # plain sight for a fortnight. Assert the shape that made it visible.
+    _you = [r for r in _rivals if isinstance(r, dict) and r.get("you")]
+    if len(_you) != 1:
+        report.violations.append(
+            Violation(name, "rivals[].you", len(_you),
+                      "exactly one row flagged as the manager himself"))
+
+    # G1/A6. `me` was published as null on every run because nothing wrote it.
+    # Now that it exists, stop it drifting from the table it was lifted out of.
+    _me = live.get("me")
+    if not isinstance(_me, dict):
+        report.violations.append(
+            Violation(name, "me", _me,
+                      "the manager's own row -- a permanently null field trains "
+                      "a reader to ignore the schema"))
+    elif _you:
+        for _k in ("entry_id", "provisional_position"):
+            if _me.get(_k) != _you[0].get(_k):
+                report.violations.append(
+                    Violation(name, f"me.{_k}", _me.get(_k),
+                              f"{_you[0].get(_k)!r}, matching the 'you' row"))
+
     sep = live.get("separation")
     if not isinstance(sep, dict) or not {
             "confirmed", "provisional_bonus", "predicted_remaining"} <= set(sep):
@@ -853,6 +908,31 @@ def _check_review(review: Any, report: Report) -> None:
         report.violations.append(
             Violation(name, "quality.outcome_percentile", pct,
                       "a percentile in [0, 1]"))
+
+    # G1/A10a. No record at all means nothing to grade.
+    if not review.get("has_snapshot") and pct is not None:
+        report.violations.append(
+            Violation(name, "quality.outcome_percentile", pct,
+                      "to be withheld when no pre-deadline snapshot exists -- a "
+                      "grade may not be computed from a record that is absent"))
+
+    # G1/A10b. The defect was a review asserting the record was absent while
+    # reporting `has_snapshot: true` two fields above. Tie the sentence to the
+    # state it describes.
+    if (review.get("has_snapshot")
+            and "No pre-deadline record exists" in str(q.get("explanation") or "")):
+        report.violations.append(
+            Violation(name, "quality.explanation", "claims no pre-deadline record",
+                      "a sentence consistent with has_snapshot=true -- name the "
+                      "missing field instead of denying the record"))
+
+    # G1/A10c. A published percentile must say what it is a percentile OF.
+    if pct is not None and not str(q.get("percentile_basis") or "").strip():
+        report.violations.append(
+            Violation(name, "quality.percentile_basis", q.get("percentile_basis"),
+                      "a stated reference class -- the number is a position in "
+                      "the distribution of the squad Gaffer RECOMMENDED, not a "
+                      "rank against other managers"))
 
     # A review that claims to assess a decision must name the snapshot it read.
     if review.get("has_snapshot") and not review.get("snapshot_as_of"):
@@ -973,6 +1053,58 @@ def validate(
                 Violation("players.json", "<length>", len(players),
                           f"at least {min_players} player entries")
             )
+        else:
+            # G1/A0. `next_gw_xp` and `dist` come from two different models --
+            # the published number is a blend with FPL's `ep_next`, the
+            # distribution is Gaffer's own simulation. When the blend overrides
+            # the model hard enough, the artifact ships an expectation the same
+            # artifact says is nearly impossible: a keeper published at 7.27
+            # beside a 90th percentile of 2.0 and a 0.2% chance of a haul.
+            #
+            # The bound is deliberately loose rather than `xp <= ceiling`. For a
+            # right-skewed distribution the mean can sit above the 90th
+            # percentile, so a strict test would be wrong. With p90 = c and a
+            # generous 20-point cap on a single gameweek,
+            #     E[X] <= 0.9*c + 0.1*20 = 0.9*c + 2.0
+            # Anything above that is not skew, it is two models disagreeing.
+            for _p in players:
+                if not isinstance(_p, dict):
+                    continue
+                _d = _p.get("dist")
+                _c = _d.get("ceiling") if isinstance(_d, dict) else None
+                _x = _p.get("next_gw_xp")
+                if _c is None or _x is None:
+                    continue
+                _bound = 0.9 * float(_c) + 2.0
+                if float(_x) > _bound:
+                    report.violations.append(
+                        Violation("players.json",
+                                  f"[{_p.get('name', _p.get('id'))}].next_gw_xp",
+                                  _x,
+                                  f"at most {_bound:.2f}, the most an expectation "
+                                  f"can be given this player's own simulated "
+                                  f"ceiling of {_c} -- the published projection "
+                                  f"and the simulation disagree"))
+
+    # G1/A0b. Nothing asserted that the regime was actually applied to the
+    # rows. A regime recorded in meta while the rows say otherwise is the same
+    # class of defect as the reason string that described an assumption.
+    if isinstance(players, list) and isinstance(meta, dict):
+        if str(meta.get("projection_regime")) == "component_only":
+            for _p in players:
+                if not isinstance(_p, dict):
+                    continue
+                _m, _x = _p.get("model_xp"), _p.get("next_gw_xp")
+                if _m is None or _x is None:
+                    continue
+                if abs(float(_x) - float(_m)) > 0.01:
+                    report.violations.append(
+                        Violation("players.json",
+                                  f"[{_p.get('name', _p.get('id'))}].next_gw_xp",
+                                  _x,
+                                  f"{_m} -- the regime is 'component_only', so the "
+                                  "published number must BE the model"))
+                    break
 
     # --- meta.json ---------------------------------------------------------
     run_stamp: datetime | None = None

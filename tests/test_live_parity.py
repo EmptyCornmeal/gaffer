@@ -70,9 +70,19 @@ def fixture(fid=1, team_h=1, team_a=2, minutes=0, started=False, finished=False,
     return raw
 
 
-def element(pid, minutes=0, points=0):
-    return {"id": pid, "stats": {"minutes": minutes, "total_points": points,
-                                 "bps": 0}}
+def element(pid, minutes=0, points=0, bonus=None):
+    """One row of ``event/{gw}/live/``.
+
+    ``bonus`` is FPL's own per-element bonus figure and is left OUT of the row
+    unless asked for, which is how the real payload behaves before FPL publishes
+    one. It is the field that decides whether our BPS-derived bonus is a second
+    copy of points already inside ``total_points``, and until A2 not one row in
+    this file carried it.
+    """
+    stats = {"minutes": minutes, "total_points": points, "bps": 0}
+    if bonus is not None:
+        stats["bonus"] = bonus
+    return {"id": pid, "stats": stats}
 
 
 def squad(captain=9, vice=10, starting=None, bench=None):
@@ -201,6 +211,76 @@ def build_cases() -> list[dict]:
             ),
         },
         {
+            # A2. Every element row in this file carried minutes, total_points
+            # and bps and nothing else, so no case had ever exercised the one
+            # field that decides whether provisional bonus is counted twice —
+            # the case named "bonus already final" tests the FIXTURE-state path,
+            # not this one. That is how a real bug shipped: the guard landed in
+            # Python while the browser went on double-counting, and parity
+            # stayed green through all of it.
+            #
+            # Player 5 tops the BPS and his row already carries FPL's bonus, so
+            # ours must not be added on top; player 6 is second on BPS with no
+            # bonus field at all, so ours is the only figure there is. 5 wears
+            # the armband, which is what doubled the error in GW2.
+            "name": "bonus already in the live row is not counted twice",
+            "input": base(
+                squad=squad(captain=5, vice=6),
+                fixtures_payload=[fixture(1, started=True, minutes=70,
+                                          bps={5: 40, 6: 30, 7: 20})],
+                live_payload={"elements": [
+                    element(5, 70, 8, bonus=3),
+                    element(6, 70, 5),
+                    *[element(p, 90, 2) for p in range(1, 16)
+                      if p not in (5, 6)],
+                ]},
+            ),
+        },
+        {
+            # A1. FPL flips a fixture's ``finished`` only when the WHOLE event
+            # is processed, so a played match sits at
+            # (finished=False, finished_provisional=True) for as long as one
+            # straggler is outstanding — nine of GW2's ten were still there on
+            # 2026-08-31, three days after they were played. Its bonus is
+            # settled and already inside ``total_points``, so recomputing it
+            # from BPS files a second copy of the same points.
+            "name": "a provisionally finished fixture has settled bonus",
+            "input": base(
+                fixtures_payload=[fixture(1, started=True, minutes=90,
+                                          provisional=True,
+                                          bps={5: 40, 6: 30, 7: 20})],
+                live_payload={"elements": live_els},
+            ),
+        },
+        {
+            # A5. He is a member of his own mini-league, so his own entry comes
+            # back among the standings. The table prepends a synthetic "You"
+            # row, so he was published twice — and the duplicate is a rival at
+            # distance ZERO from himself, so he was always his own closest
+            # rival, every player scored identically for both squads, and
+            # ``largest_swing`` came back null on every single run.
+            #
+            # Same football and same real rival as "rivals, live table and the
+            # biggest swing" above: the swing here must be that case's swing,
+            # not None.
+            "name": "your own entry is not a rival to yourself",
+            "input": base(
+                fixtures_payload=[fixture(1, started=True, minutes=70,
+                                          bps={5: 40, 6: 30})],
+                live_payload={"elements": [
+                    element(p, 90, 12 if p == 9 else 2) for p in range(1, 16)]},
+                rivals=[{"entry_id": 1, "name": "You, from the standings",
+                         "starting": list(XI), "bench": list(BENCH),
+                         "captain": 9, "vice": 10,
+                         "total": 50, "hits": 4, "active_chip": None},
+                        {"entry_id": 2, "name": "Rival",
+                         "starting": [p for p in XI if p != 9] + [15],
+                         "bench": [12, 13, 14, 9], "captain": 1, "vice": 2,
+                         "total": 40, "hits": 4, "active_chip": None}],
+                baseline=50, hits=4,
+            ),
+        },
+        {
             "name": "abandoned fixture four hours after kick-off",
             "input": base(
                 now="2026-08-22T19:00:00Z", as_of="2026-08-22T19:00:00Z",
@@ -304,8 +384,42 @@ def test_the_case_file_covers_the_behaviour_that_matters():
         "GAFFER_REGEN_LIVE_FIXTURES=1 python -m pytest tests/test_live_parity.py")
     names = {c["name"] for c in cases}
     for needle in ("kicked off", "provisional bonus", "armband", "triple captain",
-                   "bench boost", "swing", "yet to kick off"):
+                   "bench boost", "swing", "yet to kick off",
+                   "in the live row", "provisionally finished", "own entry"):
         assert any(needle in n for n in names), f"no case covers {needle!r}"
+
+
+def _element_rows(cases):
+    return [e.get("stats") or {}
+            for c in cases
+            for e in (c["input"].get("live_payload") or {}).get("elements") or []]
+
+
+def test_the_case_file_exercises_the_element_bonus_field():
+    """A2. The parity suite was blind to the field that decides double-counting.
+
+    Not one element row in this file carried a ``bonus`` — the case named for
+    bonus tests the FIXTURE-state path, not the element one. So the guard could
+    land in Python, the browser could go on adding a second copy of the same
+    points, and parity would stay green. It did exactly that.
+    """
+    rows = _element_rows(_load())
+    assert rows, "no element rows at all"
+    assert any(row.get("bonus") for row in rows), \
+        "no element row carries a non-zero `bonus`, so nothing pins the guard"
+
+
+def test_the_case_file_covers_the_manager_being_in_his_own_league():
+    """A5. The duplicate that emptied `largest_swing` is a shape, not a value.
+
+    A rivals list that never contains the manager cannot catch a filter that
+    stops working, and no case here had ever contained him.
+    """
+    assert any(
+        any(r.get("entry_id") == c["input"].get("entry_id")
+            for r in c["input"].get("rivals") or [])
+        for c in _load()
+    ), "no case supplies the manager's own entry among the rivals"
 
 
 @pytest.mark.parametrize("case", _load(), ids=lambda c: c["name"])

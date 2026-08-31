@@ -16,6 +16,19 @@ A -EV punt that hauls was a bad call that got paid. The stored pre-deadline
 distribution gives the outcome's percentile, which is what separates the two, and
 the verdict wording is driven by EV and percentile independently.
 
+**A percentile is meaningless without its reference class.** ``outcome_percentile``
+is where the realised total landed among the simulated outcomes of the squad
+Gaffer recommended before the deadline — a percentile against your own squad's
+range, NOT a rank against other managers. It shipped unlabelled, and 0.206 on a
+gameweek that scored the exact league median read as "bottom fifth of the
+country".
+
+**A missing field is not a missing record.** ``assess`` used to answer "no
+pre-deadline record exists for this gameweek" whenever ONE field of the snapshot
+was absent — while publishing a percentile computed from that same snapshot two
+keys away. If a snapshot exists, say so and name the field that is missing; if it
+does not, publish nothing derived from one.
+
 Reviews are season-aware and idempotent, and can be regenerated when FPL revises
 points after bonus or appeal — the *decision* side is read from the immutable
 snapshot and is never rewritten here.
@@ -48,6 +61,14 @@ VERDICT_UNKNOWN = "not_assessable"
 #: result is simply what the distribution said would probably happen.
 LUCKY_ABOVE = 0.85
 UNLUCKY_BELOW = 0.15
+
+#: What ``outcome_percentile`` is a percentile OF. It travels with the number
+#: into the artifact, because a bare 0.206 reads as a rank against other
+#: managers and it is nothing of the kind.
+PERCENTILE_BASIS = (
+    "the realised gameweek total's position among the simulated outcomes of the "
+    "squad Gaffer recommended, stored before the deadline — a percentile within "
+    "your own squad's simulated range, NOT a rank against other managers")
 
 
 @dataclass
@@ -102,6 +123,19 @@ class Quality:
     positive_ev: bool | None
     verdict: str
     explanation: str
+    #: What the percentile is a percentile of. None exactly when there is no
+    #: percentile: a number without its reference class is not publishable.
+    percentile_basis: str | None = None
+    #: Snapshot fields the assessment needed and did not find. Empty when the
+    #: assessment ran; non-empty when it could not — so the artifact can name
+    #: the gap instead of denying the record.
+    missing_fields: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.percentile is not None and not self.percentile_basis:
+            self.percentile_basis = PERCENTILE_BASIS
+        if self.percentile is None:
+            self.percentile_basis = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -110,9 +144,11 @@ class Quality:
             "realised": None if self.realised is None else round(self.realised, 2),
             "outcome_percentile": (None if self.percentile is None
                                    else round(self.percentile, 3)),
+            "outcome_percentile_basis": self.percentile_basis,
             "positive_ev": self.positive_ev,
             "verdict": self.verdict,
             "explanation": self.explanation,
+            "missing_fields": list(self.missing_fields),
         }
 
 
@@ -165,6 +201,10 @@ def outcome_percentile(distribution: list[float] | None, realised: float | None
 
     This is the number that separates a bad decision from bad luck, and it is
     only meaningful because the distribution was stored pre-deadline.
+
+    The reference class is :data:`PERCENTILE_BASIS` — the recommended squad's own
+    simulated range. It is not a rank against other managers, and every caller
+    that publishes the number must publish that alongside it.
     """
     if not distribution or realised is None:
         return None
@@ -174,19 +214,63 @@ def outcome_percentile(distribution: list[float] | None, realised: float | None
     return (below + 0.5 * equal) / len(arr)
 
 
+def _luck_phrase(percentile: float | None) -> str:
+    """One sentence on outcome luck — always carrying its reference class."""
+    if percentile is None:
+        return "no stored distribution, so outcome luck cannot be measured"
+    if percentile >= LUCKY_ABOVE:
+        return (f"the result landed in the top {100 * (1 - percentile):.0f}% of "
+                "what was simulated for your own recommended squad — an "
+                "unusually good outcome")
+    if percentile <= UNLUCKY_BELOW:
+        return (f"the result landed in the bottom {100 * percentile:.0f}% of "
+                "what was simulated for your own recommended squad (not a rank "
+                "against other managers) — an unusually bad outcome")
+    return ("the result was close to what your own squad's distribution "
+            "predicted, so luck is not the story")
+
+
 def assess(
     *, expected: float | None, realised: float | None,
     percentile: float | None, hold_expected: float | None,
+    has_snapshot: bool = True, missing_fields: list[str] | None = None,
 ) -> Quality:
     """Judge the decision on its EV and the outcome on its percentile.
 
     These are answered independently on purpose. Collapsing them is exactly the
     error a results-driven review makes: it praises whatever worked.
+
+    ``has_snapshot`` separates the two ways an assessment can fail, which this
+    function used to conflate. No snapshot means there is genuinely no
+    pre-deadline record, and nothing derived from a record may be published on
+    that branch — the percentile included. A snapshot missing one field is a
+    record that EXISTS: name the field, and keep reporting what the record does
+    support.
     """
+    missing = list(missing_fields or [])
+    if not has_snapshot:
+        # No record at all. Nothing derived from a record may ship here, the
+        # percentile included — publishing one was the contradiction: a branch
+        # that says the record is absent, shipping a number computed from it.
+        return Quality(
+            expected, realised, None, None, VERDICT_UNKNOWN,
+            "No pre-deadline record exists for this gameweek, so the decision "
+            "cannot be assessed — only the result is known.",
+            missing_fields=missing)
+
     if expected is None or realised is None:
-        return Quality(expected, realised, percentile, None, VERDICT_UNKNOWN,
-                       "No pre-deadline record exists for this gameweek, so the "
-                       "decision cannot be assessed — only the result is known.")
+        if expected is None and not missing:
+            missing = ["decision.comparison.move_expected"]
+        if realised is None:
+            missing = [*missing, "the realised gameweek total"]
+        named = ", ".join(f"`{m}`" for m in missing)
+        return Quality(
+            expected, realised, percentile, None, VERDICT_UNKNOWN,
+            "A pre-deadline record exists for this gameweek, but it is missing "
+            f"{named}, so the decision's expected value — and therefore its "
+            "quality — cannot be scored. What the record does support is "
+            f"reported: {_luck_phrase(percentile)}.",
+            missing_fields=missing)
 
     positive_ev = hold_expected is None or expected >= hold_expected
     lucky = percentile is not None and percentile >= LUCKY_ABOVE
@@ -202,19 +286,7 @@ def assess(
     ev_phrase = ("was the higher-expected-value choice at the deadline"
                  if positive_ev else
                  "had lower expected value than holding at the deadline")
-    if lucky:
-        luck_phrase = (f"the result landed in the top "
-                       f"{100 * (1 - (percentile or 0)):.0f}% of what was "
-                       "simulated — an unusually good outcome")
-    elif unlucky:
-        luck_phrase = (f"the result landed in the bottom "
-                       f"{100 * (percentile or 0):.0f}% of what was simulated — "
-                       "an unusually bad outcome")
-    elif percentile is not None:
-        luck_phrase = ("the result was close to what the distribution predicted, "
-                       "so luck is not the story")
-    else:
-        luck_phrase = "no stored distribution, so outcome luck cannot be measured"
+    luck_phrase = _luck_phrase(percentile)
 
     tail = ""
     if positive_ev and unlucky:
@@ -319,6 +391,16 @@ def lesson_from_history(
 
     window = recent[:6]
 
+    def _fact_percentile(r: dict[str, Any]) -> float | None:
+        """The stored outcome percentile, under either key.
+
+        It shipped as ``captain_percentile`` while carrying the whole XI's
+        percentile — the number is the squad's, never the armband's — and
+        reviews written before the rename still use the old key.
+        """
+        v = r.get("outcome_percentile")
+        return r.get("captain_percentile") if v is None else v
+
     def count(pred) -> int:
         return sum(1 for r in window if pred(r))
 
@@ -330,10 +412,12 @@ def lesson_from_history(
          "{w} gameweeks. Minutes are the weakest part of the model; treat a "
          "start probability under 60% as a bench player, not a starter."),
         (LESSON_CAPTAIN,
-         count(lambda r: (r.get("captain_percentile") or 1.0) <= 0.25),
-         "Your captain landed in the bottom quartile of his own simulated range "
-         "in {n} of the last {w} gameweeks. That is captaincy variance, not "
-         "captaincy error — but if it persists, prefer the higher-floor armband."),
+         count(lambda r: (_fact_percentile(r) or 1.0) <= 0.25),
+         "Your gameweek total landed in the bottom quartile of your own "
+         "pre-deadline simulated range in {n} of the last {w} gameweeks. That "
+         "is squad-level variance, not captaincy error — but the armband is the "
+         "biggest single lever on it, so if it persists, prefer the "
+         "higher-floor captain."),
         (LESSON_HITS,
          count(lambda r: r.get("hits", 0) > 0
                and (r.get("transfer_delta") or 0) < r.get("hits", 0)),
@@ -438,6 +522,7 @@ def build(
     snap = snapshots.final_pre_deadline(conn, entry_id, event, season)
 
     limits: list[str] = []
+    missing_fields: list[str] = []
     rec_pts = hold_pts = exp = pctile = None
     followed = None
     snapshot_as_of = None
@@ -451,6 +536,17 @@ def build(
         dec = (snap.payload.get("decision") or {})
         cmpd = dec.get("comparison") or {}
         exp = cmpd.get("move_expected")
+        if exp is None:
+            missing_fields.append("decision.comparison.move_expected")
+            limits.append(
+                "The pre-deadline snapshot exists but recorded no "
+                "`decision.comparison.move_expected`, so the decision's expected "
+                "value is unknown and its quality is not scored. Everything else "
+                "in the snapshot — the recommended squad and its stored outcome "
+                "distribution — is present and is used. Gaffer omits the "
+                "comparison when there is no held squad to compare a move "
+                "against, which is every snapshot taken before the season's "
+                "first deadline.")
         hold_pts = cmpd.get("hold_expected")
         rec_ids = set(dec.get("transfers_in") or [])
         actual_in = set(actual.get("transfers_in") or [])
@@ -467,6 +563,14 @@ def build(
         limits.append(
             "The snapshot stored no outcome distribution, so the result's "
             "percentile — and therefore luck — cannot be measured.")
+    if pctile is not None:
+        limits.append("outcome_percentile is " + PERCENTILE_BASIS + ".")
+        if followed is False:
+            limits.append(
+                "You did not make the recommended move, so the percentile "
+                "places YOUR total inside the distribution of the squad Gaffer "
+                "RECOMMENDED. It measures the result against the advice, not "
+                "against the team you actually fielded.")
 
     attribution = attribute(
         xi=actual.get("starting") or [], bench=actual.get("bench") or [],
@@ -478,7 +582,8 @@ def build(
         transfers_out=actual.get("transfers_out"))
 
     quality = assess(expected=exp, realised=actual_pts, percentile=pctile,
-                     hold_expected=hold_pts)
+                     hold_expected=hold_pts, has_snapshot=snap is not None,
+                     missing_fields=missing_fields)
 
     prior = load_all(conn, entry_id, season)
     facts = [{"event": event, **_facts(actual, points, attribution, pctile)}] + [
@@ -511,7 +616,11 @@ def build(
 
 
 def _facts(actual, points, attribution, pctile) -> dict[str, Any]:
-    """The measurable per-gameweek signals the learning loop pattern-matches on."""
+    """The measurable per-gameweek signals the learning loop pattern-matches on.
+
+    ``outcome_percentile`` is :data:`PERCENTILE_BASIS` — the recommended squad's
+    own simulated range, not a rank against other managers.
+    """
     xi = actual.get("starting") or []
     zeros = sum(1 for p in xi if int(points.get(p, 0) or 0) == 0)
     return {
@@ -519,7 +628,10 @@ def _facts(actual, points, attribution, pctile) -> dict[str, Any]:
         "bench_points": attribution.bench,
         "hits": attribution.hit_cost,
         "transfer_delta": attribution.transfers,
-        "captain_percentile": pctile,
+        # The whole XI's percentile, under a name that says so. It was stored as
+        # `captain_percentile` and is not the armband's: it comes from the
+        # recommended SQUAD's stored distribution.
+        "outcome_percentile": pctile,
         "forecast_error": None,
         "summary": f"{zeros} blank starter(s), {attribution.bench:.0f} on the bench",
     }

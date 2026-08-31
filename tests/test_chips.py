@@ -53,6 +53,19 @@ class Scen:
         return t
 
 
+
+def now_is_best(chip, gw, through=19, now=99.0, later=1.0):
+    """A timing profile covering the whole window, peaking at ``gw``.
+
+    Planning tests that are not about timing pass this so the WHEN question is
+    answered explicitly. A test that simply omits it is asserting the opposite —
+    that Gaffer declines to recommend a chip whose timing it has not checked.
+    """
+    prof = {g: later for g in range(gw, through + 1)}
+    prof[gw] = now
+    return {chip: prof}
+
+
 @pytest.fixture
 def scen():
     rng = np.random.default_rng(3)
@@ -160,7 +173,7 @@ def test_an_unreadable_chip_ledger_recommends_nothing(scen):
 def test_a_known_ledger_still_recommends_a_strong_chip(scen):
     ws = C.parse_windows(LIVE_CHIPS)
     ev = [C.evaluate_bench_boost(scen, list(range(1, 12)), [12, 13, 14, 15], 1, 5)]
-    plan = C.plan_chips(ev, ws, [], 5)
+    plan = C.plan_chips(ev, ws, [], 5, timing=now_is_best(C.BENCH_BOOST, 5))
     assert plan.state_known is True
     assert plan.recommendation == "bboost"
 
@@ -202,20 +215,56 @@ def test_free_hit_is_a_one_week_gain_that_reverts(scen):
     assert any("revert" in a for a in e.assumptions)
 
 
-def test_wildcard_persists_and_scales_with_retention(scen):
+def test_the_wildcard_is_not_the_free_hit_times_the_window(scen):
+    """The defect: `d = (optimal - yours) * weeks_retained` on the SAME inputs
+    the Free Hit got, so the wildcard was `free_hit_gain x weeks` by
+    construction. It could never rank below the Free Hit, and a four-week
+    window quartered the real bar for burning it."""
     one = C.evaluate_wildcard(scen, [1, 2, 3], 3, [18, 19, 20], 20, gw=5,
                               weeks_retained=1)
     four = C.evaluate_wildcard(scen, [1, 2, 3], 3, [18, 19, 20], 20, gw=5,
                                weeks_retained=4)
-    assert four.expected_gain == pytest.approx(4 * one.expected_gain, rel=1e-6)
-    assert any("hold its edge" in a for a in four.assumptions)
+    assert four.expected_gain != pytest.approx(4 * one.expected_gain, rel=1e-3)
+    assert any("free-transfer path" in a for a in four.assumptions)
+    assert any("OVERSTATES" in a for a in four.assumptions)
 
 
-def test_wildcard_and_free_hit_differ_only_in_persistence(scen):
+def test_a_one_week_wildcard_never_beats_a_free_hit(scen):
+    """One week of the same squad, but the Free Hit costs no transfers and the
+    wildcard consumes ones you would have had anyway."""
     fh = C.evaluate_free_hit(scen, [1, 2, 3], 3, [18, 19, 20], 20, gw=5)
     wc = C.evaluate_wildcard(scen, [1, 2, 3], 3, [18, 19, 20], 20, gw=5,
                              weeks_retained=1)
-    assert fh.expected_gain == pytest.approx(wc.expected_gain, rel=1e-6)
+    assert wc.expected_gain < fh.expected_gain
+
+
+def test_the_wildcard_nets_off_the_transfers_you_had_anyway(scen):
+    """Its value is ACCELERATION. The raw distance to the optimum is a property
+    every squad has every week; free transfers close it for nothing."""
+    xi, best = [1, 2, 3], [18, 19, 20]
+    raw = float((scen.squad_points(best, captain=20)
+                 - scen.squad_points(xi, captain=3)).mean())
+    wc = C.evaluate_wildcard(scen, xi, 3, best, 20, gw=5, weeks_retained=4)
+    # Three players differ, one free transfer a week: by GW4 the free-transfer
+    # path has caught up entirely, so only 2/3 + 1/3 + 0 + 0 = 1 week of edge
+    # is the chip's.
+    assert wc.expected_gain == pytest.approx(raw, rel=1e-6)
+    assert wc.expected_gain < 4 * raw
+
+
+def test_a_wildcard_that_changes_nothing_is_worth_nothing(scen):
+    """A free transfer reaches an identical squad, so the chip buys no time."""
+    wc = C.evaluate_wildcard(scen, [1, 2, 3], 3, [1, 2, 3], 3, gw=5,
+                             weeks_retained=4)
+    assert wc.expected_gain == pytest.approx(0.0, abs=1e-9)
+
+
+def test_the_free_transfer_catchup_closes_the_gap_and_stops():
+    w = C.free_transfer_catchup(weeks=6, changes=3, free_transfers_per_week=1.0)
+    assert w == pytest.approx([2 / 3, 1 / 3, 0.0, 0.0, 0.0, 0.0])
+    # A gap wider than the window is never fully closed by free transfers.
+    assert all(x > 0 for x in C.free_transfer_catchup(4, 10, 1.0))
+    assert C.free_transfer_catchup(3, 0, 1.0) == [0.0, 0.0, 0.0]
 
 
 def test_every_evaluation_reports_a_confidence_interval(scen):
@@ -236,10 +285,11 @@ def test_every_evaluation_reports_a_confidence_interval(scen):
 def test_a_big_gain_is_recommended(scen):
     ws = C.parse_windows(LIVE_CHIPS)
     ev = [C.ChipEvaluation(C.BENCH_BOOST, 5, 12.0, (10.0, 14.0), 50, 62)]
-    plan = C.plan_chips(ev, ws, [], 5)
+    plan = C.plan_chips(ev, ws, [], 5, timing=now_is_best(C.BENCH_BOOST, 5))
     assert plan.recommendation == C.BENCH_BOOST
     assert plan.gameweek == 5 and plan.expected_gain == 12.0
     assert "95% CI" in plan.reason
+    assert plan.candidate is None
 
 
 def test_a_marginal_gain_is_held(scen):
@@ -273,7 +323,9 @@ def test_multiple_available_chips_pick_the_best_and_list_alternatives():
         C.ChipEvaluation(C.BENCH_BOOST, 5, 6.0, (4, 8), 50, 56),
         C.ChipEvaluation(C.TRIPLE_CAPTAIN, 5, 11.0, (9, 13), 50, 61),
     ]
-    plan = C.plan_chips(ev, ws, [], 5)
+    plan = C.plan_chips(ev, ws, [], 5,
+                        timing={**now_is_best(C.BENCH_BOOST, 5),
+                                **now_is_best(C.TRIPLE_CAPTAIN, 5)})
     assert plan.recommendation == C.TRIPLE_CAPTAIN
     assert len(plan.alternatives) == 2
     assert plan.alternatives[0]["chip"] == C.TRIPLE_CAPTAIN
@@ -294,7 +346,9 @@ def test_a_chip_is_never_recommended_against_a_squad_you_do_not_own():
 def test_the_same_gain_IS_recommended_once_the_squad_is_known():
     ws = C.parse_windows(LIVE_CHIPS)
     ev = [C.ChipEvaluation(C.BENCH_BOOST, 1, 22.0, (20.0, 24.0), 50, 72)]
-    assert C.plan_chips(ev, ws, [], 1, squad_known=True).recommendation == C.BENCH_BOOST
+    plan = C.plan_chips(ev, ws, [], 1, squad_known=True,
+                        timing=now_is_best(C.BENCH_BOOST, 1))
+    assert plan.recommendation == C.BENCH_BOOST
 
 
 def test_no_beneficial_chip_returns_hold_with_a_reason():
@@ -336,3 +390,160 @@ def test_chip_value_is_not_double_counted_across_leagues(scen):
     assert e1.expected_gain == e2.expected_gain
     # Two leagues sharing one ScenarioSet must see the identical gain.
     assert e1.as_dict()["expected_gain"] == e2.as_dict()["expected_gain"]
+
+
+# --------------------------------------------------------------------------
+# Published arithmetic must close
+# --------------------------------------------------------------------------
+
+def _all_four(scen):
+    xi, bench, best = [1, 2, 3], [10, 11], [18, 19, 20]
+    return [
+        C.evaluate_bench_boost(scen, xi, bench, captain=3, gw=5),
+        C.evaluate_triple_captain(scen, xi, captain=3, gw=5),
+        C.evaluate_free_hit(scen, xi, 3, best, 20, gw=5),
+        C.evaluate_wildcard(scen, xi, 3, best, 20, gw=5, weeks_retained=4),
+    ]
+
+
+def test_every_chip_gain_equals_its_own_published_difference(scen):
+    """The defect: the wildcard multiplied the GAIN by the retention window and
+    published the UN-multiplied one-week means beside it, so `strategy.json`
+    disagreed with itself by exactly the multiplier — 0.47 shown against 0.11
+    computable — and only for the wildcard."""
+    for e in _all_four(scen):
+        d = e.as_dict()
+        implied = round(d["with_chip_points"] - d["baseline_points"], 2)
+        assert implied == d["expected_gain"], (
+            f"{e.chip}: publishes a gain of {d['expected_gain']} beside figures "
+            f"that differ by {implied}")
+
+
+def test_the_wildcard_specifically_cannot_diverge_again(scen):
+    """The regression that matters: the wildcard's ratio of published gain to
+    published difference was 4.27 while every other chip's was 1.00."""
+    wc = next(e for e in _all_four(scen) if e.chip == C.WILDCARD)
+    d = wc.as_dict()
+    implied = d["with_chip_points"] - d["baseline_points"]
+    assert implied == pytest.approx(d["expected_gain"], abs=0.01)
+    assert wc.horizon == 4 and d["horizon_gameweeks"] == 4
+    assert d["expected_gain_per_gameweek"] == pytest.approx(
+        d["expected_gain"] / 4, abs=0.01)
+
+
+def test_an_evaluation_whose_arithmetic_does_not_close_cannot_be_built():
+    with pytest.raises(ValueError, match="with_chip - baseline"):
+        C.ChipEvaluation(C.WILDCARD, 5, 0.47, (0.0, 1.0), 49.38, 49.49)
+
+
+def test_a_horizon_below_one_gameweek_is_refused():
+    with pytest.raises(ValueError, match="at least one gameweek"):
+        C.ChipEvaluation(C.WILDCARD, 5, 1.0, (0.0, 2.0), 10.0, 11.0, horizon=0)
+
+
+def test_the_published_figures_reconcile_at_two_decimal_places():
+    """Rounding all three independently let a 0.115 gain print beside a
+    difference of 0.11."""
+    e = C.ChipEvaluation(C.BENCH_BOOST, 5, 0.115, (0.0, 0.3), 49.375, 49.49)
+    d = e.as_dict()
+    assert round(d["with_chip_points"] - d["baseline_points"], 2) == \
+        d["expected_gain"]
+
+
+# --------------------------------------------------------------------------
+# Timing: a chip is a WHEN decision
+# --------------------------------------------------------------------------
+
+def test_a_chip_is_not_recommended_when_its_timing_was_never_assessed():
+    """The defect: the highest-gain available chip was fired in the CURRENT
+    gameweek the moment it cleared a flat bar. Live, that recommended Triple
+    Captain in GW3 with 36 gameweeks left in the season."""
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.TRIPLE_CAPTAIN, 3, 7.82, (7.6, 8.1), 49.38, 57.20)]
+    plan = C.plan_chips(ev, ws, [], 3)
+    assert plan.recommendation == "hold"
+    assert plan.candidate is not None
+    assert plan.candidate["chip"] == C.TRIPLE_CAPTAIN
+    assert "not been assessed" in plan.reason
+    assert plan.timing["not_assessed"] == [C.TRIPLE_CAPTAIN]
+
+
+def test_a_partly_assessed_window_is_a_candidate_not_a_recommendation():
+    """Gaffer projects five gameweeks; the 3xc window runs to GW19. Best of what
+    it can see is not best of the window, and it must not claim otherwise."""
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.TRIPLE_CAPTAIN, 3, 7.82, (7.6, 8.1), 49.38, 57.20)]
+    profile = {C.TRIPLE_CAPTAIN: {3: 7.8, 4: 6.0, 5: 6.2, 6: 5.9, 7: 6.1}}
+    plan = C.plan_chips(ev, ws, [], 3, timing=profile, projected_through=7)
+    assert plan.recommendation == "hold"
+    assert plan.candidate is not None
+    assert "GW8-GW19" in plan.reason
+    assert plan.timing["partly_assessed"] == [C.TRIPLE_CAPTAIN]
+    assert plan.timing["by_chip"][C.TRIPLE_CAPTAIN]["coverage"] == C.TIMING_PARTIAL
+
+
+def test_a_better_later_gameweek_is_held_for_by_name():
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.BENCH_BOOST, 3, 8.0, (6.0, 10.0), 50.0, 58.0)]
+    profile = {C.BENCH_BOOST: {3: 8.0, 4: 6.0, 5: 19.0, 6: 7.0, 7: 6.5}}
+    plan = C.plan_chips(ev, ws, [], 3, timing=profile, projected_through=7)
+    assert plan.recommendation == "hold"
+    assert "GW5" in plan.reason
+    assert plan.timing["by_chip"][C.BENCH_BOOST]["best_gameweek"] == 5
+
+
+def test_a_thin_future_edge_is_not_a_plan():
+    """Multi-week projections are weak; a fraction of a point later is noise."""
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.BENCH_BOOST, 3, 8.0, (6.0, 10.0), 50.0, 58.0)]
+    profile = {C.BENCH_BOOST: {g: 8.0 for g in range(3, 20)}}
+    profile[C.BENCH_BOOST][9] = 8.0 + C.TIMING_MARGIN / 2
+    plan = C.plan_chips(ev, ws, [], 3, timing=profile, projected_through=19)
+    assert plan.recommendation == C.BENCH_BOOST
+
+
+def test_a_fully_assessed_window_where_now_wins_is_recommended():
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.BENCH_BOOST, 3, 12.0, (10.0, 14.0), 50.0, 62.0)]
+    profile = {C.BENCH_BOOST: {g: 4.0 for g in range(3, 20)}}
+    profile[C.BENCH_BOOST][3] = 12.0
+    plan = C.plan_chips(ev, ws, [], 3, timing=profile, projected_through=19)
+    assert plan.recommendation == C.BENCH_BOOST
+    assert plan.timing["by_chip"][C.BENCH_BOOST]["coverage"] == C.TIMING_FULL
+    assert plan.candidate is None
+
+
+def test_the_last_gameweek_of_a_window_needs_no_timing_check():
+    """There is no later gameweek to hold it for: use it or lose it."""
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.BENCH_BOOST, 19, 6.0, (4.0, 8.0), 50.0, 56.0)]
+    plan = C.plan_chips(ev, ws, [], 19)
+    assert plan.recommendation == C.BENCH_BOOST
+    assert plan.timing["by_chip"][C.BENCH_BOOST]["coverage"] == C.TIMING_MOOT
+    assert "window ends here" in plan.reason
+
+
+def test_the_plan_publishes_what_it_did_and_did_not_check():
+    ws = C.parse_windows(LIVE_CHIPS)
+    ev = [C.ChipEvaluation(C.TRIPLE_CAPTAIN, 3, 7.82, (7.6, 8.1), 49.38, 57.20),
+          C.ChipEvaluation(C.WILDCARD, 3, 5.0, (3.0, 7.0), 197.5, 202.5,
+                           horizon=4)]
+    plan = C.plan_chips(ev, ws, [], 3,
+                        timing={C.TRIPLE_CAPTAIN: {3: 7.8, 4: 6.0}},
+                        timing_basis="mean projections GW3-GW4",
+                        projected_through=4)
+    d = plan.as_dict()
+    assert d["timing"]["basis"] == "mean projections GW3-GW4"
+    assert d["timing"]["projected_through"] == 4
+    assert d["timing"]["not_assessed"] == [C.WILDCARD]
+    assert d["timing"]["partly_assessed"] == [C.TRIPLE_CAPTAIN]
+    assert d["candidate"]["chip"] == C.TRIPLE_CAPTAIN
+    assert d["candidate"]["why_not_recommended"]
+
+
+def test_timing_ignores_gameweeks_outside_the_chips_window():
+    """A second-half wildcard peak is no reason to hold a first-half chip."""
+    rep = C.timing_report(C.BENCH_BOOST, 3, 19,
+                          {3: 6.0, 10: 7.0, 25: 40.0})
+    assert rep["best_gameweek"] == 10
+    assert "25" not in rep["gameweeks"]

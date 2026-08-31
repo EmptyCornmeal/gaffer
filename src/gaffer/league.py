@@ -285,12 +285,46 @@ def league_ownership(state: LeagueState) -> dict[int, Ownership]:
     return out
 
 
+#: How many ownership rows the capped lists publish. Shields and threats are
+#: drawn from every player any rival owns, so they need a cap. Differentials are
+#: drawn from the fifteen players *you* own and cannot grow past a squad, so
+#: capping them only ever threw real ones away.
+OWNERSHIP_ROWS = 10
+
+
 def shields_and_differentials(
     state: LeagueState, my_squad: list[int], my_captain: int | None = None,
-) -> dict[str, list[dict[str, Any]]]:
-    """What protects your position, and what can move it."""
+    xp: dict[int, float] | None = None,
+) -> dict[str, Any]:
+    """What protects your position, and what can move it. Four answers, not two.
+
+    ``shields``            players you own that at least half the league owns
+    ``differentials``      players you own that no rival owns
+    ``threats``            players your rivals own and you do not
+    ``my_captain_eo_pct``  the share of the league that captained who you did
+
+    ``threats`` is the only one of the three lists that names a move you have
+    *not* made, and ``my_captain_eo_pct`` is what decides whether a differential
+    captain is worth its variance. Both were computed here on every run and
+    dropped by every consumer downstream.
+
+    Shields and threats rank by effective ownership, which is what decides how
+    far someone else's haul moves you. Differentials cannot: by construction
+    every one of them has an effective ownership of exactly zero, so ownership
+    has nothing to separate them by, and the list used to come out sorted by
+    ``player_id`` — a database identifier standing in for a ranking — and then
+    cut to ten, which keeps whichever differentials happen to have the smallest
+    ids. Pass ``xp`` (player id -> projected points) to rank them by what they
+    are worth. Without it the list is returned COMPLETE and unranked, for a
+    caller to rank once it has joined the projections; an unranked list is never
+    truncated, because a truncated unranked list is just a lost one.
+
+    ``my_captain_eo_pct`` is ``None`` when no captain was given. Zero is a real
+    answer — nobody else captained him — and must not stand in for not knowing.
+    """
     own = league_ownership(state)
     mine = set(my_squad)
+    n_known = len([r for r in state.rivals if r.has_picks])
     shields, diffs, threats = [], [], []
     for pid, o in own.items():
         entry = {"player_id": pid, "owners": o.owners, "n_rivals": o.n_rivals,
@@ -304,17 +338,20 @@ def shields_and_differentials(
     for pid in mine:
         o = own.get(pid)
         if o is None or o.ownership == 0:
-            diffs.append({"player_id": pid, "owners": 0,
-                          "n_rivals": len([r for r in state.rivals if r.has_picks]),
+            diffs.append({"player_id": pid, "owners": 0, "n_rivals": n_known,
                           "ownership_pct": 0.0, "effective_ownership_pct": 0.0,
                           "captain_eo_pct": 0.0})
     key = lambda e: -e["effective_ownership_pct"]  # noqa: E731
+    if xp is None:
+        diffs.sort(key=lambda e: e["player_id"])
+    else:
+        diffs.sort(key=lambda e: (-(xp.get(e["player_id"]) or 0.0), e["player_id"]))
     return {
-        "shields": sorted(shields, key=key)[:10],
-        "differentials": sorted(diffs, key=lambda e: e["player_id"])[:10],
-        "threats": sorted(threats, key=key)[:10],
-        "my_captain_eo_pct": round(
-            100 * own[my_captain].captain_eo, 1) if my_captain in own else 0.0,
+        "shields": sorted(shields, key=key)[:OWNERSHIP_ROWS],
+        "differentials": diffs,
+        "threats": sorted(threats, key=key)[:OWNERSHIP_ROWS],
+        "my_captain_eo_pct": (None if my_captain is None else round(
+            100 * own[my_captain].captain_eo, 1) if my_captain in own else 0.0),
     }
 
 

@@ -140,6 +140,13 @@ def build_meta(
         # squad, so it travels with the artifact like a model version does.
         "projection_regime", "projection_regime_reason", "ep_next_blend_weight",
         "ep_next_sample", "ep_next_ep_max", "ep_next_spread_ratio",
+        # Why the blend was refused, and how much of it survived. `ep_next` was
+        # measured identical to `form` for most blend-eligible players, which is
+        # the degeneracy that turns "FPL's independent estimate" into a copy of
+        # a column we already have. This block is the evidence for that call,
+        # and a meta key that is not named here never reaches the artifact.
+        "ep_next_form_match", "ep_next_form_sample",
+        "ep_next_blend_weight_applied_mean",
     ]
     meta = {}
     for k in keys:
@@ -680,6 +687,12 @@ def _mini_card(pid: Any, idx: dict[int, dict[str, Any]]) -> dict[str, Any]:
             "team_code": p.get("team_code"), "next_gw_xp": p.get("next_gw_xp")}
 
 
+#: Ownership rows published per league per list. `league` caps shields and
+#: threats itself; differentials arrive complete and unranked and are cut here,
+#: after they have been ranked by something that means anything.
+LEAGUE_OWNERSHIP_ROWS = 10
+
+
 def build_strategy(
     strategy: dict[str, Any], players_index: list[dict[str, Any]],
     generated_at: str | None = None,
@@ -708,12 +721,35 @@ def build_strategy(
             rows.append(row)
         return rows
 
-    out["leagues"] = [
-        {**lg,
-         "shields": decorate(lg.get("shields")),
-         "differentials": decorate(lg.get("differentials"))}
-        for lg in strategy.get("leagues") or []
-    ]
+    def rank_differentials(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Order differentials by what they are projected to return.
+
+        A differential is a player no rival owns, so its effective ownership is
+        exactly zero by definition and ownership cannot rank the list. It used
+        to be emitted in `player_id` order and cut to ten, which is an arbitrary
+        database identifier deciding which of your bets you get to see. Ranking
+        happens here because this is the first place the ids meet a projection.
+        """
+        rows.sort(key=lambda r: (-((r.get("player") or {}).get("next_gw_xp") or 0.0),
+                                 (r.get("player") or {}).get("name") or "",
+                                 r.get("player_id") or 0))
+        return rows[:LEAGUE_OWNERSHIP_ROWS]
+
+    leagues = []
+    for lg in strategy.get("leagues") or []:
+        block = {
+            **lg,
+            "shields": decorate(lg.get("shields")),
+            "differentials": rank_differentials(decorate(lg.get("differentials"))),
+            "differentials_ranked_by": "next_gw_xp",
+        }
+        # Absence stays absence. An empty `threats` would read as "your rivals
+        # own nothing you don't", which is a different statement from "this
+        # strategy build did not produce them".
+        if "threats" in lg:
+            block["threats"] = decorate(lg["threats"])
+        leagues.append(block)
+    out["leagues"] = leagues
     return out
 
 

@@ -10,7 +10,12 @@ export const SUPPORTED = {
   strategy: ['strategy-1.0'],
   league: ['league-1.0'],
   multileague: ['multileague-1.0'],
-  chips: ['chips-1.0'],
+  // 1.0 and 1.1 are a deliberate transition pair. In 1.1 `expected_gain` is
+  // netted against the free-transfer path over the same window, and a chip is
+  // only a `recommendation` when its whole remaining window was assessed --
+  // otherwise it ships as a `candidate`. Drop 1.0 once the deployed artifact
+  // is 1.1.
+  chips: ['chips-1.0', 'chips-1.1'],
 } as const
 
 export interface MiniCard {

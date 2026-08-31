@@ -171,6 +171,11 @@ class LeagueView:
     data_quality: dict[str, Any]
     differs_from_neutral: bool = False
     difference_reason: str = ""
+    #: Players your rivals own and you do not, and how much of the league
+    #: captained who you captained. `league` computes both on every run;
+    #: this view used to carry neither, so nothing downstream could.
+    threats: list[dict[str, Any]] = field(default_factory=list)
+    my_captain_eo_pct: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -179,6 +184,8 @@ class LeagueView:
             "size": self.size, "target_position": self.target,
             "posture": self.posture, "placing": self.placing,
             "shields": self.shields, "differentials": self.differentials,
+            "threats": self.threats,
+            "my_captain_eo_pct": self.my_captain_eo_pct,
             "data_quality": self.data_quality,
             "differs_from_neutral": self.differs_from_neutral,
             "difference_reason": self.difference_reason,
@@ -208,7 +215,9 @@ def build_view(
         league_type=state.league_type, classification=state.classification,
         size=state.size, target=target, posture=p.as_dict(),
         placing=placing.as_dict(), shields=sd["shields"],
-        differentials=sd["differentials"], data_quality=state.data_quality(),
+        differentials=sd["differentials"], threats=sd["threats"],
+        my_captain_eo_pct=sd["my_captain_eo_pct"],
+        data_quality=state.data_quality(),
         differs_from_neutral=differs, difference_reason=reason,
     )
 

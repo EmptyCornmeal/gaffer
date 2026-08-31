@@ -49,8 +49,9 @@ _BONUS_HISTORY_WEIGHT = 0.5
 
 # --- h=1 blend regime -------------------------------------------------------
 # The shipped one-week number blends FPL's own `ep_next` at
-# `config.EP_NEXT_BLEND_WEIGHT`. In-season that is defensible: FPL sees team news
-# Gaffer does not. Out of season it is not a forecast at all.
+# `config.EP_NEXT_BLEND_WEIGHT`. The stated justification is that FPL sees team
+# news Gaffer does not. That justification is a claim about the source, so it is
+# measured every run rather than assumed.
 #
 # Measured on the live 2026/27 pre-season payload, one week before the GW1
 # deadline: `ep_next` topped out at exactly 4.0 across all 587 players, and
@@ -60,7 +61,23 @@ _BONUS_HISTORY_WEIGHT = 0.5
 # and — because the deflation is uneven — reordered the players the decision
 # turns on. A goalkeeper outranked a premium forward.
 #
-# So the weight is gated on the external source actually carrying information.
+# Measured again on 2026-08-31, after GW1 had completed: `ep_next` was exactly
+# equal to FPL's own backward-looking `form` for 596 of 626 players (95.2%), was
+# equal to `ep_this` for 614 of them, and took only 30 distinct values across
+# the entire game. It is a form average. It carries no fixture adjustment and no
+# team news — the one thing the whole deference argument rests on. A backup
+# goalkeeper who happened to score 10 in GW1 (p_start 0.30) carried `ep_next`
+# 10.0 and was published at 7.27 expected points against his own simulated
+# 90th-percentile ceiling of 2.0. Forty players were published above their own
+# ceiling.
+#
+# Both of those are the SAME failure at different times of year, so the guard is
+# the same guard and it runs every gameweek. It used to be skipped outright once
+# a gameweek had completed, on the assumption that a result to compute from
+# makes `ep_next` a forecast. The second measurement is what that assumption
+# looks like when it is false: the guards were disabled exactly when the season
+# made them checkable.
+#
 # The gate is measured, recorded in meta.json, and lifts by itself.
 
 #: Below this the whole population tops out too low to be a one-week points
@@ -73,6 +90,24 @@ EP_NEXT_MIN_POPULATION_MAX = 4.5
 EP_NEXT_MIN_SPREAD_RATIO = 0.5
 #: Fewer paired players than this and neither statistic means anything.
 EP_NEXT_MIN_SAMPLE = 10
+
+#: Above this share of the paired population, `ep_next` is FPL's own
+#: backward-looking `form` rather than a forecast of anything. `form` is the
+#: player's recent points average: it looks only at matches he has already
+#: played, so a number that IS it cannot contain the fixture or the team news
+#: that are the entire reason for deferring to an external source.
+#:
+#: Measured 2026-08-31 over the 355 players actually eligible for the blend:
+#: 93.0% exact agreement. The rate expected by chance, drawing independently
+#: from the two observed marginals, is 11.2% — the coarse one-decimal grid does
+#: collide, but nowhere near this often. 0.60 is roughly five times the chance
+#: rate and comfortably below the observed collapse, so it separates the two
+#: without needing to be precise.
+EP_NEXT_MAX_FORM_MATCH = 0.60
+
+#: `ep_next` and `form` are published to one decimal place, so equality is exact
+#: up to float representation.
+_FORM_MATCH_TOL = 1e-3
 
 #: The published h=1 number is the blend of the component model with `ep_next`.
 REGIME_BLENDED = "blended"
@@ -91,24 +126,33 @@ def _quantile(sorted_values: list[float], q: float) -> float:
 
 def ep_next_regime(
     pairs: list[tuple[float, float]], *, season_started: bool,
+    forms: list[float | None] | None = None,
 ) -> dict[str, Any]:
     """Decide whether FPL's ``ep_next`` is worth blending into h=1 this run.
 
     ``pairs`` is ``(ep_next, model_points)`` for every player carrying both.
+    ``forms`` is FPL's own ``form`` for those same players in the same order,
+    when the caller has it; ``None`` means the collapse test cannot run, and the
+    reason says so rather than passing the test by default.
 
-    Two independent degeneracy tests, either of which disables the blend:
+    Three independent degeneracy tests, any one of which disables the blend:
 
-    1. **Absolute** — the population maximum is at or below
+    1. **Collapse onto form** — ``ep_next`` equals FPL's own ``form`` for more
+       than ``EP_NEXT_MAX_FORM_MATCH`` of the population. A number that IS the
+       backward-looking average carries no fixture and no team news, which is
+       the entire justification for deferring to it.
+    2. **Absolute** — the population maximum is at or below
        ``EP_NEXT_MIN_POPULATION_MAX``. Nothing that tops out at 4.0 across every
        player in the game is a one-week points forecast.
-    2. **Relative** — the source's upper spread is less than
+    3. **Relative** — the source's upper spread is less than
        ``EP_NEXT_MIN_SPREAD_RATIO`` of the model's own, so it cannot discriminate
        where the model can.
 
-    Both are skipped entirely once a gameweek has completed: from then on
-    ``ep_next`` is computed from real form and fixtures, and the guard must not be
-    able to fire. That is what makes the restoration automatic rather than a
-    thing somebody has to remember.
+    All three run every gameweek. ``season_started`` is recorded because it is
+    worth knowing, and is deliberately NOT acted on: it used to short-circuit
+    every test above on the assumption that a completed gameweek makes
+    ``ep_next`` "real form and fixtures", and the 2026-08-31 measurement is what
+    that assumption looks like when it is wrong.
     """
     eps = sorted(e for e, _ in pairs)
     mods = sorted(m for _, m in pairs)
@@ -118,6 +162,8 @@ def ep_next_regime(
         "ep_spread": None,
         "model_spread": None,
         "spread_ratio": None,
+        "form_sample": 0,
+        "form_match": None,
         "season_started": season_started,
     }
     full = config.EP_NEXT_BLEND_WEIGHT
@@ -126,15 +172,24 @@ def ep_next_regime(
         return {**stats, "regime": regime, "blend_weight": round(weight, 4),
                 "reason": reason}
 
-    if season_started:
-        return out(REGIME_BLENDED, full,
-                   "a gameweek has been completed, so ep_next is computed from "
-                   "real form and fixtures rather than a pre-season placeholder")
     if len(pairs) < EP_NEXT_MIN_SAMPLE:
         return out(REGIME_COMPONENT_ONLY, 0.0,
                    f"only {len(pairs)} player(s) carry both an ep_next and a "
                    "model projection, which is too few to judge whether the "
                    "external forecast carries any information")
+
+    if forms is not None:
+        if len(forms) != len(pairs):
+            raise ValueError(
+                f"forms has {len(forms)} entries for {len(pairs)} pairs; they "
+                "must be parallel or the match rate is measured against the "
+                "wrong players")
+        matched = [(e, f) for (e, _), f in zip(pairs, forms, strict=True)
+                   if f is not None]
+        stats["form_sample"] = len(matched)
+        if len(matched) >= EP_NEXT_MIN_SAMPLE:
+            same = sum(1 for e, f in matched if abs(e - float(f)) <= _FORM_MATCH_TOL)
+            stats["form_match"] = round(same / len(matched), 3)
 
     ep_spread = _quantile(eps, 0.95) - _quantile(eps, 0.50)
     model_spread = _quantile(mods, 0.95) - _quantile(mods, 0.50)
@@ -143,55 +198,129 @@ def ep_next_regime(
     stats["model_spread"] = round(model_spread, 3)
     stats["spread_ratio"] = round(ratio, 3)
 
+    if stats["form_match"] is not None and stats["form_match"] > EP_NEXT_MAX_FORM_MATCH:
+        return out(REGIME_COMPONENT_ONLY, 0.0,
+                   f"measured this run: ep_next is identical to FPL's own "
+                   f"backward-looking `form` for {stats['form_match']:.0%} of the "
+                   f"{stats['form_sample']} players eligible for the blend, so it "
+                   "is a recent-points average carrying no fixture adjustment and "
+                   "no team news rather than a one-week forecast")
+
     if stats["ep_max"] is not None and stats["ep_max"] <= EP_NEXT_MIN_POPULATION_MAX:
         return out(REGIME_COMPONENT_ONLY, 0.0,
-                   f"ep_next tops out at {stats['ep_max']:g} across all "
-                   f"{len(pairs)} projected players, which is a clipped "
-                   "pre-season placeholder rather than a one-week forecast")
+                   f"measured this run: ep_next tops out at {stats['ep_max']:g} "
+                   f"across all {len(pairs)} projected players, which is a clipped "
+                   "placeholder rather than a one-week forecast")
+
     if ratio < EP_NEXT_MIN_SPREAD_RATIO:
         return out(REGIME_COMPONENT_ONLY, 0.0,
-                   f"ep_next spreads only {ratio:.2f}x as widely as Gaffer's own "
-                   "projection over the same players, so blending it would "
-                   "compress the ranking rather than inform it")
+                   f"measured this run: ep_next spreads only {ratio:.2f}x as "
+                   "widely as Gaffer's own projection over the same players, so "
+                   "blending it would compress the ranking rather than inform it")
+
+    if stats["form_match"] is None:
+        seen = ("FPL's own `form` was not supplied to this check, so the "
+                "collapse-onto-form test did not run")
+    else:
+        seen = (f"it repeats FPL's own `form` for {stats['form_match']:.0%} of "
+                f"the {stats['form_sample']} eligible players, under the "
+                f"{EP_NEXT_MAX_FORM_MATCH:.0%} collapse threshold")
     return out(REGIME_BLENDED, full,
-               f"ep_next spreads {ratio:.2f}x as widely as Gaffer's own "
-               "projection, so it carries usable one-week information")
+               f"measured this run: ep_next tops out at {stats['ep_max']:g}, "
+               f"spreads {ratio:.2f}x as widely as Gaffer's own projection over "
+               f"{len(pairs)} players, and {seen}")
+
+
+def rotation_scale(p_start: float | None) -> float:
+    """The share of the external weight a player's start probability supports.
+
+    ``ep_next`` contains no start information at all. For most of the population
+    it is FPL's ``form`` — an average over matches the player actually played —
+    so applied to somebody Gaffer's own model says is a bench option it is not
+    merely noisy, it is biased high by roughly ``1 / p_start``. The availability
+    scaler does not catch this: a fit backup is ``1.0``.
+
+    So the deference decays with the model's own read of whether the player will
+    start. Linear ramp: all of the weight at or above
+    ``config.EP_NEXT_ROTATION_FULL_P_START``, none of it at or below
+    ``config.EP_NEXT_ROTATION_ZERO_P_START``.
+
+    A missing ``p_start`` means "no rotation information", which must read as no
+    attenuation rather than as a silent kill of the blend.
+    """
+    if p_start is None:
+        return 1.0
+    lo = config.EP_NEXT_ROTATION_ZERO_P_START
+    hi = config.EP_NEXT_ROTATION_FULL_P_START
+    if hi <= lo:  # misconfigured; refuse to invent a ramp
+        return 1.0
+    return clamp((float(p_start) - lo) / (hi - lo), 0.0, 1.0)
 
 
 def apply_ep_next_blend(
     rows: list[dict], *, from_gw: int, availability: dict[int, float],
-    season_started: bool,
+    season_started: bool, form: dict[int, float] | None = None,
 ) -> dict[str, Any]:
     """Blend ``ep_next`` into the h=1 rows, unless the source is degenerate.
 
     Mutates ``rows`` in place and returns the regime record. Rows keep
     ``exp_points_model`` and ``exp_points_ep_next`` untouched either way, so the
     component breakdown always adds up and the two inputs stay auditable.
+
+    ``form`` maps player id to FPL's own ``form``, and is what lets the regime
+    check see whether ``ep_next`` has collapsed onto it.
     """
-    pairs = [
-        (float(r["exp_points_ep_next"]), float(r["exp_points_model"]))
-        for r in rows
+    eligible = [
+        r for r in rows
         if r["gw"] == from_gw
         and r.get("exp_points_ep_next") is not None
         and float(r["exp_points_ep_next"]) > 0
         and float(r["exp_points_model"]) > 0
     ]
-    regime = ep_next_regime(pairs, season_started=season_started)
+    pairs = [(float(r["exp_points_ep_next"]), float(r["exp_points_model"]))
+             for r in eligible]
+    forms = None
+    if form is not None:
+        forms = [form.get(r["player_id"]) for r in eligible]
+    regime = ep_next_regime(pairs, season_started=season_started, forms=forms)
     base = regime["blend_weight"]
     if base <= 0:
         return regime
+    applied: list[float] = []
+    zeroed = 0
     for r in rows:
         if r["gw"] != from_gw:
             continue
         ep = r.get("exp_points_ep_next")
         if ep is None or float(ep) <= 0:
             continue
-        # Scale the external weight by OUR availability read. FPL's ep_next does
-        # not always reflect fresh injury news, and without this an unavailable
-        # player would be resurrected by the blend.
-        w = base * availability.get(r["player_id"], 1.0)
+        # Two independent suppressions of the external weight, and they are not
+        # the same thing. Availability is our own injury/suspension read, kept
+        # because FPL's ep_next does not always reflect fresh news and without it
+        # an unavailable player would be resurrected by the blend. Rotation is
+        # the failure availability cannot see: a fit backup scores 1.0 there.
+        #
+        # p_start already has availability multiplied into it, so for the ~97% of
+        # blended players on status "a" the product IS the rotation scale alone.
+        # It compounds only for doubtful players, where being extra reluctant to
+        # defer to a number that may not have seen the news is the right
+        # direction to be wrong in.
+        w = (base
+             * availability.get(r["player_id"], 1.0)
+             * rotation_scale(r.get("p_start")))
+        applied.append(w)
+        if w <= 0:
+            zeroed += 1
         r["exp_points"] = round(
             (1.0 - w) * float(r["exp_points_model"]) + w * float(ep), 3)
+    if applied:
+        mean_w = sum(applied) / len(applied)
+        regime["blend_weight_applied_mean"] = round(mean_w, 4)
+        regime["blend_weight_zeroed"] = zeroed
+        regime["reason"] += (
+            f"; the nominal weight of {base:g} was then scaled per player by "
+            f"availability and start probability, averaging {mean_w:.2f} across "
+            f"the {len(applied)} blended players and falling to zero for {zeroed}")
     return regime
 
 
@@ -207,7 +336,8 @@ def record_regime(conn: sqlite3.Connection, regime: dict[str, Any]) -> None:
     db.set_meta(conn, "projection_regime", regime.get("regime"))
     db.set_meta(conn, "projection_regime_reason", regime.get("reason") or "")
     db.set_meta(conn, "ep_next_blend_weight", regime.get("blend_weight"))
-    for key in ("sample", "ep_max", "spread_ratio"):
+    for key in ("sample", "ep_max", "spread_ratio", "form_match",
+                "form_sample", "blend_weight_applied_mean"):
         val = regime.get(key)
         db.set_meta(conn, f"ep_next_{key}", "" if val is None else val)
 
@@ -694,9 +824,18 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
 
     rows: list[dict] = []
     avail_by_player: dict[int, float] = {}
+    form_by_player: dict[int, float] = {}
     for p in players:
         avail = _availability(p["status"], p["chance_playing"])
         avail_by_player[p["id"]] = avail
+        # FPL's own `form`, kept beside the projection so the regime check can
+        # measure whether `ep_next` has simply collapsed onto it.
+        raw_form = _field(p, "form", None)
+        if raw_form is not None:
+            try:
+                form_by_player[p["id"]] = float(raw_form)
+            except (TypeError, ValueError):
+                pass
         conf = _confidence(p, avail)
         team_fx = fixtures.get(p["team_id"], {})
         # group this team's fixtures by gw (handles doubles/blanks)
@@ -741,7 +880,7 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
     # scoring is exactly what was published.
     regime = apply_ep_next_blend(
         rows, from_gw=from_gw, availability=avail_by_player,
-        season_started=games_played > 0,
+        season_started=games_played > 0, form=form_by_player,
     )
     record_regime(conn, regime)
 

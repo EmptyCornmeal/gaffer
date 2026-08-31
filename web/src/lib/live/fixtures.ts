@@ -107,9 +107,22 @@ export function parseTime(raw: unknown): Date | null {
   return Number.isNaN(ms) ? null : new Date(ms)
 }
 
-/** True once FPL has awarded the real bonus for this match. */
+/**
+ * True once this match's bonus is settled and inside `total_points`.
+ *
+ * Not `finished` alone. A1: FPL flips a fixture's `finished` only when the WHOLE
+ * event is processed, so the flag is per-gameweek wearing a per-fixture name.
+ * Read live on 2026-08-31: GW1's ten fixtures were all
+ * `(finished=true, finished_provisional=true)`, while GW2's nine played fixtures
+ * were all `(finished=false, finished_provisional=true)` three days after they
+ * were played, held there by one straggler still to come. So matches sat in
+ * AWAITING_BONUS for days while `provisionalBonus` kept computing a BPS award
+ * for bonus FPL had settled long before and already folded into the live row.
+ *
+ * Kept identical to `FixtureState.bonus_final` in src/gaffer/live.py.
+ */
 export function bonusFinal(s: FixtureState): boolean {
-  return s.finished
+  return s.finished || s.finishedProvisional
 }
 
 /**

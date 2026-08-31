@@ -72,12 +72,39 @@ def test_full_time_awaiting_bonus():
     s = live.classify_fixture(fx(started=True, minutes=90, provisional=True), NOW)
     assert s.state == live.STATE_AWAITING_BONUS
     assert s.counts_as_played, "the match is over, so a blank is a real blank"
-    assert not s.bonus_final, "bonus is not confirmed until `finished`"
+
+
+def test_a_provisionally_finished_fixture_has_settled_bonus():
+    """A1. `finished` is a per-EVENT flag wearing a per-fixture name.
+
+    FPL flips a fixture's `finished` only once the WHOLE gameweek is processed.
+    Measured against the public API on 2026-08-31: GW1's ten fixtures were all
+    (finished=True, finished_provisional=True), while GW2's nine played fixtures
+    were all (finished=False, finished_provisional=True) three days after they
+    were played, held there by one straggler still to come.
+
+    So reading `finished` alone left nine settled matches in AWAITING_BONUS for
+    days, and `provisional_bonus` went on inventing a BPS award for bonus FPL
+    had long since settled and folded into the live row's `total_points`.
+    """
+    s = live.classify_fixture(fx(started=True, minutes=90, provisional=True), NOW)
+    assert s.bonus_final
+    assert not s.finished, "and it is still not `finished` — that is the whole point"
+
+
+def test_a_provisionally_finished_fixture_contributes_no_provisional_bonus():
+    """The consequence of A1, where it was actually costing points."""
+    f = fx(started=True, minutes=90, provisional=True,
+           stats=bps_block({5: 40, 6: 30}, {}))
+    states = live.fixture_states([f], 1, NOW)
+    assert live.provisional_bonus([f], states) == {}, \
+        "settled bonus is already inside the live row's total_points"
 
 
 def test_ninety_minutes_without_the_provisional_flag_is_still_over():
     s = live.classify_fixture(fx(started=True, minutes=90), NOW)
     assert s.state == live.STATE_AWAITING_BONUS
+    assert not s.bonus_final, "over is not the same as scored — no flag says so yet"
 
 
 def test_finished_match_has_final_bonus():
@@ -866,3 +893,118 @@ def test_a_captained_live_total_never_exceeds_the_rows_it_is_built_from():
     )
     assert s.current == expected
     assert s.current == 10 * 2 + 8 * 2, "36; the shipped bug made this 42"
+
+
+# ==========================================================================
+# The assembled view: the league table, the swing and the manager's own row
+# ==========================================================================
+#
+# A5, read out of `data/live.json` on 2026-08-31: eight rival rows for seven
+# managers, entry 1066421 present twice, and `largest_swing: null` on every run
+# the artifact had ever published.
+
+A_TEAM_OF = {p: 1 for p in XI + BENCH}
+A_NAMES = {p: f"P{p}" for p in XI + BENCH}
+MINE = 1066421
+THEIRS = 3557534
+
+#: The manager's own entry, exactly as his mini-league standings hand it back.
+SELF_AS_RIVAL = {"entry_id": MINE, "name": "Myles", "starting": XI,
+                 "bench": BENCH, "captain": 9, "vice": 10, "total": 100,
+                 "hits": 0, "active_chip": None}
+#: A real rival: he does not own the captained haul, and he owns 15 instead.
+RIVAL = {"entry_id": THEIRS, "name": "Rival",
+         "starting": [p for p in XI if p != 9] + [15],
+         "bench": [12, 13, 14, 9], "captain": 1, "vice": 2, "total": 95,
+         "hits": 0, "active_chip": None}
+
+
+def assembled(**over):
+    """A whole live view: one match in play, player 9 hauling and captained."""
+    fixture = fx(fid=1, event=1, minutes=70, started=True,
+                 stats=bps_block({9: 40}, {}))
+    kwargs = dict(
+        gw=1,
+        live_payload={"elements": [el(p, minutes=90, points=12 if p == 9 else 2)
+                                   for p in XI + BENCH]},
+        fixtures_payload=[fixture],
+        squad={"starting": XI, "bench": BENCH, "captain": 9, "vice": 10},
+        positions=POS, team_of=A_TEAM_OF, now=NOW, names=A_NAMES,
+        entry_id=MINE, baseline=100, hits=0, rivals=[SELF_AS_RIVAL, RIVAL],
+    )
+    kwargs.update(over)
+    return live.assemble(**kwargs)
+
+
+def test_the_manager_appears_in_his_own_league_table_exactly_once():
+    """A5. He is a member of his own mini-league, so the standings return him,
+    and `assemble` prepends a synthetic "You" row on top of that."""
+    table = assembled()["rivals"]
+    assert [r["entry_id"] for r in table].count(MINE) == 1
+    assert sum(1 for r in table if r["you"]) == 1
+    assert len(table) == 2, "two managers, two rows"
+    assert [r["provisional_position"] for r in table] == [1, 2]
+
+
+def test_the_swing_survives_the_manager_being_in_his_own_league():
+    """A5's real cost, and the reason it went unnoticed for a fortnight.
+
+    `largest_swing` measures against the CLOSEST rival. A duplicate of yourself
+    sits at distance zero, so it always won that contest — and then every player
+    scored identically for both squads, `edge` was zero for all of them, and the
+    function returned None. Not an error, not an empty table: one null key in a
+    published artifact, on every run.
+    """
+    with_self = assembled()
+    clean = assembled(rivals=[RIVAL])
+
+    swing = with_self["largest_swing"]
+    assert swing is not None, "the duplicate silently emptied this on every run"
+    assert swing["player_id"] == 9 and swing["swing"] != 0
+    assert swing["against"] == THEIRS, "measured against a real rival, not himself"
+    assert swing == clean["largest_swing"], \
+        "his own entry must not change the answer at all"
+
+
+def test_a_real_league_still_produces_a_swing():
+    """The property that can only fail silently, asserted on its own.
+
+    Rivals with genuinely differing squads must yield a swing. This is the
+    assertion that would have caught A5 on the day it shipped.
+    """
+    swing = assembled(rivals=[RIVAL])["largest_swing"]
+    assert swing is not None
+    assert swing["player_id"] == 9
+    # 12 confirmed + 3 provisional bonus, captained by him alone: 15 x (2 - 0).
+    assert swing["swing"] == 30
+    assert swing["in_your_xi"] is True
+
+
+def test_the_published_view_carries_the_managers_own_row():
+    """A6. `mcp_server.publish` reads `live["me"]`, and nothing ever wrote it,
+    so `me`, `autosubs` and `players_yet_to_play` all published None while the
+    numbers sat two lines away in `rivals`."""
+    state = assembled()
+    me = state["me"]
+    assert {"entry_id", "current", "projected", "gw_points", "yet_to_play",
+            "provisional_position", "substitutions"} <= set(me)
+
+    row = next(r for r in state["rivals"] if r["you"])
+    assert me["entry_id"] == row["entry_id"] == MINE
+    assert me["current"] == row["current"]
+    assert me["projected"] == row["projected"]
+    assert me["gw_points"] == row["gw_points"]
+    assert me["yet_to_play"] == row["yet_to_play"]
+    assert me["provisional_position"] == row["provisional_position"] == 1
+    assert me["substitutions"] == state["squad"]["autosubs"]
+
+
+def test_the_managers_own_row_exists_without_a_league_at_all():
+    me = assembled(rivals=[])["me"]
+    assert me["entry_id"] == MINE and me["provisional_position"] == 1
+
+
+def test_an_unavailable_view_publishes_no_scores_to_read():
+    """The early returns stay early: no squad means no `me` to be believed."""
+    state = assembled(squad=None)
+    assert state["available"] is False and "me" not in state

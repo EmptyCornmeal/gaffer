@@ -427,3 +427,148 @@ def test_the_full_payload_carries_versions_and_identity(conn):
     assert d["entry_id"] == ENTRY and d["event"] == 1
     assert "facts" in d and "attribution" in d and "quality" in d
     assert d["generated_at"].endswith("+00:00")
+
+
+# ==========================================================================
+# A missing field is not a missing record  (A10)
+# ==========================================================================
+
+def no_comparison_snapshot(conn, *, dist=None, starting=None, captain=1):
+    """The exact shape GW1 stored: a real pre-deadline snapshot, a stored
+    outcome distribution, and no `comparison` at all — because before the first
+    deadline FPL exposes no picks, so there is no held squad to compare a move
+    against."""
+    snapshots.record(
+        conn, entry_id=ENTRY, target_event=1, deadline=DL_ISO, now=BEFORE,
+        payload={
+            "decision": {
+                "action": "unavailable",
+                "starting": starting or list(range(1, 12)),
+                "captain": captain,
+                "transfers_in": [], "transfers_out": [],
+                "comparison": None,
+            },
+            "outcome_distribution": dist,
+        })
+
+
+def test_a_snapshot_missing_one_field_is_not_reported_as_no_record(conn):
+    """The defect: `assess` took the `expected is None` branch and answered "No
+    pre-deadline record exists for this gameweek" — while `has_snapshot` was
+    true, `snapshot_as_of` named a genuinely pre-deadline time, and a percentile
+    computed from that same snapshot shipped two fields away."""
+    no_comparison_snapshot(conn, dist=[float(x) for x in range(40, 140)])
+    rev = review.build(conn, entry_id=ENTRY, event=1,
+                       actual=actual(total=50, transfers_in=[]),
+                       points=PTS, now=AFTER)
+    d = rev.as_dict()
+    assert d["has_snapshot"] is True and d["snapshot_as_of"]
+    q = d["quality"]
+    assert q["verdict"] == review.VERDICT_UNKNOWN
+    assert "No pre-deadline record exists" not in q["explanation"]
+    assert "decision.comparison.move_expected" in q["explanation"]
+    assert q["missing_fields"] == ["decision.comparison.move_expected"]
+
+
+def test_the_missing_field_is_named_in_the_limitations(conn):
+    no_comparison_snapshot(conn, dist=[50.0] * 100)
+    rev = review.build(conn, entry_id=ENTRY, event=1,
+                       actual=actual(total=50, transfers_in=[]),
+                       points=PTS, now=AFTER)
+    assert any("move_expected" in x for x in rev.limitations)
+
+
+def test_no_snapshot_publishes_no_percentile():
+    """A branch that asserts the record is absent must not ship a number
+    computed from that record."""
+    q = review.assess(expected=None, realised=50, percentile=0.206,
+                      hold_expected=None, has_snapshot=False)
+    assert q.verdict == review.VERDICT_UNKNOWN
+    assert "No pre-deadline record exists" in q.explanation
+    assert q.percentile is None
+    assert q.as_dict()["outcome_percentile"] is None
+    assert q.as_dict()["outcome_percentile_basis"] is None
+
+
+def test_a_percentile_kept_on_a_partial_record_states_its_basis():
+    q = review.assess(expected=None, realised=50, percentile=0.206,
+                      hold_expected=None, has_snapshot=True)
+    assert q.as_dict()["outcome_percentile"] == 0.206
+    assert q.as_dict()["outcome_percentile_basis"] == review.PERCENTILE_BASIS
+    assert "your own squad" in q.explanation
+
+
+def test_every_published_percentile_carries_its_reference_class():
+    """0.206 read as "bottom fifth of the country" on a gameweek that scored the
+    exact median. It is a percentile inside your OWN squad's simulated range."""
+    scored = review.assess(expected=60.0, realised=50, percentile=0.206,
+                           hold_expected=55.0)
+    partial = review.assess(expected=None, realised=50, percentile=0.206,
+                            hold_expected=None, has_snapshot=True)
+    for q in (scored, partial):
+        assert q.as_dict()["outcome_percentile_basis"] == review.PERCENTILE_BASIS
+    assert "NOT a rank against other managers" in review.PERCENTILE_BASIS
+
+
+def test_the_reference_class_reaches_the_artifact(conn):
+    store_snapshot(conn, move=60.0, hold=55.0, dist=[float(x) for x in range(100)])
+    rev = review.build(conn, entry_id=ENTRY, event=1, actual=actual(total=58),
+                       points=PTS, now=AFTER)
+    assert any("outcome_percentile is" in x for x in rev.limitations)
+    assert rev.as_dict()["quality"]["outcome_percentile_basis"]
+
+
+def test_a_percentile_against_advice_you_did_not_take_says_so(conn):
+    """The stored distribution belongs to the RECOMMENDED squad, so when the
+    manager did something else the percentile is measuring the result against
+    the advice, not against the team he fielded."""
+    store_snapshot(conn, move=60.0, hold=55.0, transfers_in=[12],
+                   dist=[float(x) for x in range(100)])
+    rev = review.build(conn, entry_id=ENTRY, event=1,
+                       actual=actual(total=58, transfers_in=[99]),
+                       points=PTS, now=AFTER)
+    assert rev.comparison.followed_advice is False
+    assert any("not against the team you actually fielded" in x
+               for x in rev.limitations)
+
+
+def test_the_gw1_contradiction_cannot_reassemble(conn):
+    """All of this shipped at once: has_snapshot true, a pre-deadline
+    snapshot_as_of, a comparison, a percentile of 0.206 — and "No pre-deadline
+    record exists for this gameweek"."""
+    no_comparison_snapshot(conn, dist=[float(x) for x in range(40, 140)])
+    d = review.build(conn, entry_id=ENTRY, event=1,
+                     actual=actual(total=50, transfers_in=[]),
+                     points=PTS, now=AFTER).as_dict()
+    denies_record = "No pre-deadline record exists" in d["quality"]["explanation"]
+    assert not (d["has_snapshot"] and denies_record)
+    assert not (denies_record and d["quality"]["outcome_percentile"] is not None)
+
+
+# ==========================================================================
+# The percentile is the squad's, not the armband's
+# ==========================================================================
+
+def test_the_stored_fact_names_the_squad_percentile(conn):
+    """It shipped as `captain_percentile` while carrying the whole XI's
+    percentile, and that name is what LESSON_CAPTAIN pattern-matched on."""
+    store_snapshot(conn, move=60.0, hold=55.0, dist=[float(x) for x in range(100)])
+    rev = review.build(conn, entry_id=ENTRY, event=1, actual=actual(total=58),
+                       points=PTS, now=AFTER)
+    assert "outcome_percentile" in rev.facts
+    assert "captain_percentile" not in rev.facts
+
+
+def test_a_review_written_before_the_rename_still_feeds_the_lesson():
+    old = [{"event": e, "captain_percentile": 0.1} for e in (5, 4)]
+    new = [{"event": e, "outcome_percentile": 0.1} for e in (5, 4)]
+    assert (review.lesson_from_history(old)["key"]
+            == review.lesson_from_history(new)["key"]
+            == review.LESSON_CAPTAIN)
+
+
+def test_the_lesson_text_describes_what_it_measured():
+    hist = [{"event": e, "outcome_percentile": 0.1} for e in (5, 4)]
+    text = review.lesson_from_history(hist)["text"]
+    assert "gameweek total" in text
+    assert "his own simulated range" not in text

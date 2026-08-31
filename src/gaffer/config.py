@@ -394,6 +394,32 @@ EP_NEXT_BLEND_WEIGHT = 0.7
 #: changes with the code rather than drifting away from it.
 EP_NEXT_BLEND_IS_FITTED = False
 
+# The weight above is the NOMINAL ceiling. What actually reaches a player is
+# scaled twice: by Gaffer's own availability read, and — since 2026-08-31 — by
+# the model's own start probability.
+#
+# The rotation scaler exists because `ep_next` carries no start information
+# whatsoever. Measured after GW1 of 2026/27 it was FPL's own backward-looking
+# `form` for 596 of 626 players, and `form` is an average over matches the
+# player actually PLAYED. Handed to somebody the model says is a bench option
+# it is not merely noisy, it is biased high by roughly 1/p_start. Availability
+# cannot catch this: a fit backup scores 1.0 there. On that date a backup
+# goalkeeper with p_start 0.30, whose ep_next was 10.0 because he happened to
+# score 10 in GW1, was published at 7.27 expected points against his own
+# simulated 90th-percentile ceiling of 2.0.
+#
+# Linear ramp between the two points below: none of the external weight at or
+# under ZERO, all of it at or over FULL. The midpoint falls at p_start 0.55, so
+# a coin-flip starter receives half of it — which is the claim being made, that
+# deferring to FPL is worth exactly as much as the chance the player FPL's
+# number describes is the player who takes the field.
+#
+# POLICY, NOT FITTED — the same status as EP_NEXT_BLEND_WEIGHT itself, and for
+# the same reason: the archive holds no faithful copy of the live `ep_next`, so
+# there is nothing offline to fit the attenuation against either.
+EP_NEXT_ROTATION_ZERO_P_START = 0.35
+EP_NEXT_ROTATION_FULL_P_START = 0.75
+
 
 class ConfigError(ValueError):
     """Raised for malformed personal configuration (bad entry id, bad league list)."""

@@ -124,6 +124,17 @@ export function assembleLive(input: AssembleInput): LiveState {
     activeChip = null, asOf = null,
   } = input
 
+  // A5. A manager is a member of his own mini-league, so the rivals list he
+  // arrives with contains him. `ranked` below prepends a synthetic "You" row,
+  // which listed him twice — and the duplicate is a rival at distance ZERO from
+  // himself, so `largestSwing` picked it as the closest, found `edge === 0` for
+  // every player because both squads were his, and returned null every run.
+  // `gatherRivals` in ./source.ts already drops him, which is the only reason
+  // the browser escaped it; this is the defence that does not depend on the
+  // fetch layer, and it mirrors `assemble` in src/gaffer/live.py exactly.
+  const contenders = entryId == null
+    ? rivals
+    : rivals.filter((r) => r.entry_id !== entryId)
   const states = fixtureStates(fixturesPayload, gw, now)
   const base = {
     live_version: LIVE_VERSION,
@@ -170,7 +181,7 @@ export function assembleLive(input: AssembleInput): LiveState {
     entryId, baseline, hits,
   })
 
-  const rivalStates = rivals
+  const rivalStates = contenders
     .filter((r) => r.starting?.length)
     .map((r) => scoreSquad(r.starting, r.bench ?? [], positions, pl, {
       captain: r.captain, vice: r.vice,
@@ -192,7 +203,7 @@ export function assembleLive(input: AssembleInput): LiveState {
     },
     ...rivalStates.map((r) => ({
       entry_id: r.entry_id,
-      name: rivals.find((x) => x.entry_id === r.entry_id)?.name || String(r.entry_id),
+      name: contenders.find((x) => x.entry_id === r.entry_id)?.name || String(r.entry_id),
       you: false,
       current: round2(r.baseline + squadCurrent(r)),
       projected: round2(r.baseline + squadProjected(r)),
@@ -220,6 +231,20 @@ export function assembleLive(input: AssembleInput): LiveState {
         is_captain: p === mine.autosubs.captain,
       })),
     rivals: ranked,
+    // A6. The manager's own row, lifted out of the table so a consumer does not
+    // have to hunt the league for `you`. Nothing wrote this key on either side,
+    // and `mcp_server.publish` reads `live["me"]` (and `me.substitutions`, and
+    // `me.yet_to_play`) directly — so all three published null while the numbers
+    // sat two lines away in `rivals`. Mirrors `assemble` in src/gaffer/live.py.
+    me: {
+      entry_id: mine.entry_id,
+      current: round2(mine.baseline + squadCurrent(mine)),
+      projected: round2(mine.baseline + squadProjected(mine)),
+      gw_points: round2(squadCurrent(mine)),
+      yet_to_play: mine.playersYetToPlay,
+      provisional_position: ranked.findIndex((r) => r.you) + 1,
+      substitutions: { ...mine.autosubs },
+    },
     largest_swing: swing,
     separation: {
       confirmed: mine.confirmed,

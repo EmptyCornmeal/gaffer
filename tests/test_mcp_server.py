@@ -794,3 +794,372 @@ def test_no_nullable_field_is_promised_without_a_reason():
         assert proj["unavailable_reason"]
     if minutes["exp_minutes"] is None:
         assert minutes["exp_minutes_source"] != "projections"
+
+
+# ---------------------------------------------------------------------------
+# A8 — the league view publishes all four of its answers, not the two that fit
+# ---------------------------------------------------------------------------
+
+def test_the_league_view_publishes_all_four_of_its_answers():
+    """`shields` was computed and dropped by the MCP; `threats` and the
+    captain's effective ownership were computed and dropped by the export."""
+    r = M.call("get_league_strategy")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no strategy artifact")
+    for lg in r["leagues"]:
+        assert "shields" in lg, "the tool dropped shields entirely"
+        assert "differentials" in lg
+        assert "threats" in lg or lg.get("threats_unavailable"), \
+            "threats are neither published nor explained"
+        assert "my_captain_eo_pct" in lg or lg.get("my_captain_eo_pct_unavailable")
+
+
+def test_a_league_ownership_row_names_the_player_rather_than_only_numbering_him():
+    r = M.call("get_league_strategy")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no strategy artifact")
+    rows = [row for lg in r["leagues"]
+            for row in lg["shields"] + lg["differentials"] + lg.get("threats", [])]
+    if not rows:
+        pytest.skip("no rival picks are readable yet")
+    for row in rows:
+        assert row["player_id"] is not None
+        assert row["name"], f"row {row['player_id']} names nobody"
+        assert row["effective_ownership_pct"] is not None
+
+
+def _fake_data(tmp_path, strategy):
+    (tmp_path / "meta.json").write_text(json.dumps(
+        {"season": "2026-27", "generated_at": "2026-08-31T00:00:00+00:00",
+         "current_gw": 3}), encoding="utf-8")
+    (tmp_path / "strategy.json").write_text(json.dumps(strategy),
+                                            encoding="utf-8")
+    return tmp_path
+
+
+def test_a_strategy_without_threats_says_so_rather_than_publishing_an_empty_list(
+        tmp_path, monkeypatch):
+    """An empty list reads as 'your rivals own nothing you do not'."""
+    monkeypatch.setattr(M, "data_dir", lambda: _fake_data(tmp_path, {
+        "leagues": [{"league_id": 1, "name": "L", "shields": [],
+                     "differentials": []}]}))
+    lg = M.call("get_league_strategy")["leagues"][0]
+    assert "threats" not in lg
+    assert lg["threats_unavailable"]
+    assert lg["my_captain_eo_pct_unavailable"]
+
+
+def _row(pid):
+    return {"player_id": pid, "owners": 2, "n_rivals": 4, "ownership_pct": 50.0,
+            "effective_ownership_pct": 75.0, "captain_eo_pct": 25.0,
+            "player": {"id": pid, "name": f"Player {pid}", "team": "ARS",
+                       "pos": "MID", "price": 7.5, "next_gw_xp": 4.2}}
+
+
+def test_the_league_view_thins_its_rows_rather_than_exceeding_the_budget(
+        tmp_path, monkeypatch):
+    """Five leagues of thirty ownership rows is a payload a client refuses."""
+    leagues = [{"league_id": i, "name": f"L{i}",
+                "shields": [_row(p) for p in range(1, 11)],
+                "differentials": [_row(p) for p in range(11, 21)],
+                "threats": [_row(p) for p in range(21, 31)],
+                "my_captain_eo_pct": 50.0} for i in range(1, 6)]
+    monkeypatch.setattr(M, "data_dir",
+                        lambda: _fake_data(tmp_path, {"leagues": leagues}))
+    r = M.call("get_league_strategy")
+    assert r["status"] == M.STATUS_OK
+    assert M.serialized_bytes(r) <= M.MAX_RESULT_BYTES
+    assert r["ownership_rows_per_list"] < M.MAX_OWNERSHIP_ROWS
+    assert r["ownership_rows_thinned"], "it thinned silently"
+    assert all(lg["threats"] for lg in r["leagues"]), "a whole list was lost"
+
+
+# ---------------------------------------------------------------------------
+# B1 — the fields the feed computes and the conversation never saw
+# ---------------------------------------------------------------------------
+
+def test_the_outlook_publishes_the_defensive_contribution_against_its_threshold():
+    """Defensive contribution is a new scoring mechanic and the floor-versus-
+    spike test was being done by hand every session."""
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    dc = r["player"]["defensive_contribution"]
+    assert "per90" in dc
+    if dc["scored_by_position"]:
+        assert dc["threshold"] in (10, 12)
+    else:
+        assert dc["threshold"] is None and dc["unavailable_reason"]
+
+
+def test_a_goalkeeper_is_told_the_mechanic_does_not_apply():
+    """A null threshold with no reason is indistinguishable from a bug."""
+    keepers = M.call("find_players", position="GKP", limit=1)
+    if keepers["status"] != M.STATUS_OK:
+        pytest.skip("no goalkeepers in this artifact")
+    r = M.call("get_player_outlook", player=str(keepers["players"][0]["id"]))
+    dc = r["player"]["defensive_contribution"]
+    assert dc["scored_by_position"] is False
+    assert dc["unavailable_reason"] == M.DEFCON_NO_THRESHOLD
+
+
+def test_the_outlook_publishes_both_blend_components_as_the_artifact_recorded_them():
+    """`model_only`/`fpl_ep_next` come from the database; these come from the
+    same run as `next_gw_xp`, which is the point of carrying both."""
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    proj = r["player"]["projection"]
+    for field in ("model_xp", "ep_next_xp", "xp_window", "breakdown"):
+        assert field in proj, f"the outlook still drops {field}"
+    published = json.loads(
+        (config.DATA_DIR / "players.json").read_text(encoding="utf-8"))
+    row = next(p for p in published if p["id"] == 12)
+    assert proj["model_xp"] == row["model_xp"]
+    assert proj["ep_next_xp"] == row["ep_next_xp"]
+
+
+def test_the_projection_regime_travels_with_every_projection_claim():
+    """Whether the published number is a blend or the model alone is a fact
+    about the run, and a caller cannot read `model_xp` without it."""
+    for name, args in (("gaffer_status", {}),
+                       ("get_player_outlook", {"player": "12"}),
+                       ("compare_players", {"players": ["12", "426"]})):
+        r = M.call(name, **args)
+        if r["status"] != M.STATUS_OK:
+            continue
+        block = r["projection_regime"]
+        assert "regime" in block and "nominal_blend_weight" in block
+        assert block["blend_is_fitted"] is False
+
+
+def test_the_underlying_rates_are_fields_rather_than_prose():
+    """xGI/90, form and last season were reachable only inside `rationale`,
+    where they cannot be sorted or compared."""
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    for field in ("xgi90", "form", "ict", "last_season"):
+        assert field in r["player"]["underlying"]
+
+
+@pytest.mark.parametrize("note,expected", [
+    ("pens #1, FK #2, corners #1", (1, 2, 1)),
+    ("corners #2", (None, None, 2)),
+    ("", (None, None, None)),
+    ("nonsense", (None, None, None)),
+])
+def test_set_pieces_are_an_order_rather_than_a_label(note, expected):
+    got = M._set_piece_order(note)
+    assert (got["penalties"], got["free_kicks"], got["corners"]) == expected
+    assert got["on_any"] is any(v is not None for v in expected)
+    assert got["recorded"], "a null must say what it means"
+
+
+def test_the_price_signal_declares_that_it_is_an_estimate():
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    signal = r["player"]["price_signal"]
+    for field in ("change_this_gw", "net_transfers_this_gw", "direction",
+                  "progress_to_change"):
+        assert field in signal
+    assert "estimated" in signal["basis"]
+
+
+def test_a_component_stored_by_another_run_is_flagged_not_presented_as_this_one():
+    """`data/*.json` is refreshed on a schedule and `data/gaffer.db` only by a
+    local pipeline run, so the stored components can belong to an older run
+    than the `next_gw_xp` they are shown beside."""
+    stale = M._component_block(
+        {"exp_points": 4.7, "exp_points_model": 4.7, "exp_points_ep_next": 4.0},
+        have_db=True, published_next_gw_xp=10.38)
+    assert stale["same_run_as_published"] is False
+    assert stale["provenance"] == M.COMPONENTS_OTHER_RUN
+    assert stale["stored_blend"] == 4.7
+    text = " ".join(M._component_limitations([stale]))
+    assert "EARLIER pipeline run" in text and "model_xp" in text
+
+    fresh = M._component_block(
+        {"exp_points": 4.7, "exp_points_model": 4.7, "exp_points_ep_next": 4.0},
+        have_db=True, published_next_gw_xp=4.7)
+    assert fresh["same_run_as_published"] is True
+    assert "EARLIER pipeline run" not in " ".join(
+        M._component_limitations([fresh]))
+
+
+def test_the_blend_limitation_describes_what_the_code_actually_does():
+    """The weight is scaled by availability AND start probability, and is zero
+    for everyone when FPL's ep_next fails the degeneracy test."""
+    text = " ".join(M._component_limitations([M._component_block(
+        {"exp_points": 4.7, "exp_points_model": 4.7, "exp_points_ep_next": 4.0},
+        have_db=True)]))
+    assert "start probability" in text
+    assert "degeneracy" in text
+
+
+# ---------------------------------------------------------------------------
+# B4 — the derived quantities that existed and were never offered
+# ---------------------------------------------------------------------------
+
+def test_the_fixture_window_is_defined_over_gameweeks_not_over_fixtures():
+    """A blank must contribute nothing and a double must contribute twice."""
+    fixtures = [{"gw": 3, "difficulty": 2, "home": True},
+                {"gw": 3, "difficulty": 5, "home": False},
+                {"gw": 5, "difficulty": 1, "home": True}]
+    gw_xp = [{"gw": 3, "xp": 4.0}, {"gw": 5, "xp": 2.0}, {"gw": 9, "xp": 99.0}]
+    w = M._window(fixtures, gw_xp, 3, 3)
+    assert w["gameweeks"] == [3, 4, 5]
+    assert w["fixtures"] == 3
+    assert w["doubles"] == [3] and w["blanks"] == [4]
+    assert w["difficulty_sum"] == 8
+    assert w["xp_sum"] == 6.0, "a gameweek outside the window was counted"
+
+
+def test_a_fixture_window_without_a_gameweek_says_so():
+    w = M._window([], [], None, 3)
+    assert w["available"] is False and w["unavailable_reason"]
+
+
+def test_the_outlook_offers_the_three_gameweek_sum_that_orders_transfers():
+    r = M.call("get_player_outlook", player="12")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("player 12 absent")
+    windows = r["player"]["fixture_outlook"]
+    assert set(windows) == {f"next{n}" for n in M.FIXTURE_WINDOWS}
+    three = windows["next3"]
+    if three["available"] and three["fixtures"]:
+        assert three["difficulty_sum"] is not None
+        assert len(three["gameweeks"]) == 3
+
+
+def test_the_selling_price_is_purchase_plus_half_the_rise_rounded_down():
+    """FPL's rule, applied through the app's own function — a second
+    implementation of a rounding rule is how they start disagreeing by 0.1m."""
+    squad = {"rows": {}, "event": 1, "unavailable_reason": None}
+    risen = M._holding_block(
+        {"purchase_price": 60, "selling_price": 60, "price_source": "season_start",
+         "price_exact": 1, "gw": 1}, 6.5, squad)
+    assert risen["owned"] is True
+    assert risen["purchase_price"] == 6.0
+    assert risen["selling_price"] == 6.2
+    assert risen["locked_in"] == pytest.approx(0.3)
+    assert risen["stored_selling_price"] == 6.0
+    assert risen["stored_differs_because"]
+
+    fallen = M._holding_block(
+        {"purchase_price": 60, "selling_price": 57, "price_source": "transfer_in",
+         "price_exact": 1, "gw": 1}, 5.7, squad)
+    assert fallen["selling_price"] == 5.7, "a fall is taken in full"
+    assert fallen["locked_in"] == 0.0
+
+
+def test_a_player_you_do_not_own_is_not_owned_rather_than_unavailable():
+    squad = {"rows": {}, "event": 2, "unavailable_reason": None}
+    assert M._holding_block(None, 6.0, squad) == {
+        "owned": False, "squad_event": 2, "reason": M.SQUAD_NOT_OWNED}
+    unknown = M._holding_block(None, 6.0,
+                               {"rows": {}, "event": None,
+                                "unavailable_reason": M.SQUAD_NONE_STORED})
+    assert unknown["owned"] is None and unknown["unavailable_reason"]
+
+
+def test_status_publishes_the_budget_a_transfer_has_to_be_paid_from():
+    r = M.call("gaffer_status")
+    assert r["status"] == M.STATUS_OK
+    budget = r["budget"]
+    for field in ("bank", "team_value", "free_transfers",
+                  "squad_selling_value", "selling_price_confidence"):
+        assert field in budget, f"status still drops {field}"
+    if budget["squad_selling_value"] is None:
+        assert budget["squad_value_unavailable"]
+    else:
+        assert budget["squad_value_event"] is not None
+
+
+# ---------------------------------------------------------------------------
+# B1 — a search that can answer "who is about to rise" in one call
+# ---------------------------------------------------------------------------
+
+def test_a_search_can_rank_on_any_published_signal():
+    # A position keeps sort="next_gw_xp" — the default, and on its own not a
+    # criterion — a legal call, so this test is about ordering and nothing else.
+    for field in M.SORTABLE:
+        r = M.call("find_players", position="MID", sort=field, limit=5)
+        assert r["status"] in (M.STATUS_OK, M.STATUS_NOT_FOUND), field
+        values = [row[field] for row in r.get("players", [])
+                  if isinstance(row.get(field), (int, float))]
+        assert values == sorted(values, reverse=True), f"{field} came out unsorted"
+
+
+def test_a_search_refuses_a_sort_or_an_order_it_cannot_honour():
+    assert M.call("find_players", sort="vibes")["status"] == M.STATUS_INVALID
+    assert M.call("find_players", sort="price",
+                  order="sideways")["status"] == M.STATUS_INVALID
+    assert M.call("find_players", team="ARS",
+                  min_price="cheap")["status"] == M.STATUS_INVALID
+
+
+@pytest.mark.parametrize("order", ["desc", "asc"])
+def test_a_search_never_ranks_an_unknown_above_a_measured_value(order):
+    """Sorting nulls as zero puts 'we do not know' above a measured low value
+    in one direction and below it in the other."""
+    r = M.call("find_players", sort="defcon_p_hit", order=order, limit=25)
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no players artifact")
+    seen_unknown = False
+    for row in r["players"]:
+        if row["defcon_p_hit"] is None:
+            seen_unknown = True
+        else:
+            assert not seen_unknown, "a null outranked a measured value"
+
+
+def test_a_filter_is_applied_rather_than_only_described():
+    r = M.call("find_players", position="DEF", min_defcon90=3.0, limit=25)
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no defender clears that rate in this artifact")
+    assert all(p["pos"] == "DEF" for p in r["players"])
+    assert all(p["defcon90"] >= 3.0 for p in r["players"])
+    assert r["query"]["filters"]["min_defcon90"] == 3.0
+
+
+def test_who_is_about_to_rise_is_one_call():
+    r = M.call("find_players", price_direction="up", sort="price_progress",
+               limit=10)
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("nobody is rising in this artifact")
+    assert all(p["price_direction"] == "up" for p in r["players"])
+    progress = [p["price_progress"] for p in r["players"]
+                if p["price_progress"] is not None]
+    assert progress == sorted(progress, reverse=True)
+
+
+def test_a_search_with_no_criterion_at_all_is_refused():
+    r = M.call("find_players")
+    assert r["status"] == M.STATUS_INVALID
+    assert r["detail"]
+
+
+def test_a_search_result_carries_the_signal_it_was_ranked_on():
+    r = M.call("find_players", query="a", limit=5)
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no players artifact")
+    for row in r["players"]:
+        for field in ("defcon90", "xgi90", "form", "fdr3", "price_direction"):
+            assert field in row, f"a ranked row cannot be checked on {field}"
+
+
+# ---------------------------------------------------------------------------
+# B2 — the plan is argued in conversation, so its rows carry evidence
+# ---------------------------------------------------------------------------
+
+def test_the_plan_rows_carry_the_evidence_the_decision_is_argued_from():
+    r = M.call("get_transfer_plan")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no plan artifact")
+    captain = r["steps"][0].get("captain")
+    if not isinstance(captain, dict):
+        pytest.skip("this plan names no captain")
+    assert "next_gw_xp" in captain, "a plan row still says only who moved"
+    assert M.serialized_bytes(r) < M.MAX_RESULT_BYTES

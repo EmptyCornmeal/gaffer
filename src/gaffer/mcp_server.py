@@ -61,6 +61,27 @@ MAX_COMPARE = 4
 #: *returns*, never a blind truncation of what it built.
 MAX_RESULT_BYTES = 20_000
 
+#: How much of the budget a tool must leave spare. Being *just* under the cap is
+#: how the cap gets breached: one more player, one more limitation string.
+RESULT_HEADROOM_BYTES = 2_500
+
+#: What a comparison gives up first when four full cards do not fit, in order.
+#: Each is either spelled out by something that stays — `fixture_outlook` sums
+#: the same weeks `fixtures` lists one by one — or prose, or an identifier the
+#: `id` already carries. No number that exists nowhere else is ever dropped, and
+#: what went is named on the response.
+COMPARE_TRIM = ("tags", "rationale", "fixtures", "fixture_outlook",
+                "full_name", "code")
+
+#: Fixture-difficulty windows the tools offer, in gameweeks. Three is the span a
+#: transfer is argued over; five is as far as `players.json` publishes fixtures.
+FIXTURE_WINDOWS = (3, 5)
+
+#: Ownership rows per list per league in `get_league_strategy`. The artifact
+#: already caps at ten; this is what stops a third league making the tool
+#: unanswerable, and it is reported rather than applied silently.
+MAX_OWNERSHIP_ROWS = 10
+
 #: Detail levels for the transfer plan.
 DETAIL_SUMMARY = "summary"
 #: Detail level for `get_model_evidence`. Its full candidate block is evidence,
@@ -275,11 +296,76 @@ def read_only_db() -> sqlite3.Connection:
 # Tool implementations — plain functions, so tests do not need a transport
 # ---------------------------------------------------------------------------
 
+def projection_regime(meta: Any) -> dict[str, Any]:
+    """Which h=1 number was published, and the evidence for refusing the blend.
+
+    A property of the RUN rather than of a player, so it travels once per
+    response instead of on every card. `component_only` means the published
+    `next_gw_xp` is Gaffer's model alone: `ep_next` was measured to be a copy of
+    `form` for most blend-eligible players, and a second opinion that is the
+    same opinion is not one.
+    """
+    meta = meta if isinstance(meta, dict) else {}
+    return {
+        "regime": meta.get("projection_regime"),
+        "reason": meta.get("projection_regime_reason"),
+        "nominal_blend_weight": config.EP_NEXT_BLEND_WEIGHT,
+        "applied_blend_weight_mean": meta.get("ep_next_blend_weight_applied_mean"),
+        "ep_next_matched_form_pct": meta.get("ep_next_form_match"),
+        "ep_next_form_sample": meta.get("ep_next_form_sample"),
+        "blend_is_fitted": config.EP_NEXT_BLEND_IS_FITTED,
+    }
+
+
+def _tenths(raw: Any) -> float | None:
+    """FPL money as millions. `meta.json` stores it in tenths, as strings."""
+    try:
+        return round(int(str(raw).strip()) / 10, 1)
+    except (TypeError, ValueError):
+        return None
+
+
+def squad_value() -> dict[str, Any]:
+    """What the stored squad was bought for and sells for, **as stored**.
+
+    Summed from `my_squad`, which is where the purchase prices live: no
+    published artifact carries them, because `players.json` knows only today's
+    market price and what you paid is a fact about a past transfer.
+
+    The event is returned with the totals. A squad stored for GW1 beside a
+    projection for GW3 is a real and readable state, not something to smooth
+    over.
+    """
+    try:
+        conn = read_only_db()
+    except ToolError:
+        return {"available": False, "unavailable_reason": COMPONENTS_NO_DB}
+    try:
+        row = conn.execute(
+            "SELECT COUNT(*) AS n, SUM(selling_price) AS selling, "
+            "SUM(purchase_price) AS purchase, gw FROM my_squad "
+            "WHERE gw = (SELECT MAX(gw) FROM my_squad)").fetchone()
+    except sqlite3.Error:
+        return {"available": False, "unavailable_reason": COMPONENTS_NO_DB}
+    finally:
+        conn.close()
+    if row is None or not row["n"]:
+        return {"available": False, "unavailable_reason": SQUAD_NONE_STORED}
+    return {
+        "available": True,
+        "players": row["n"],
+        "squad_event": row["gw"],
+        "selling_value": _tenths(row["selling"]),
+        "purchase_value": _tenths(row["purchase"]),
+    }
+
+
 def gaffer_status() -> dict[str, Any]:
-    """Season, gameweek, deadline, freshness, build mode and squad state."""
+    """Season, gameweek, deadline, freshness, build mode, squad and budget."""
     meta = _meta()
     decision = load_artifact("decision.json", required=False) or {}
     squad = (decision.get("squad_state") or {})
+    held = squad_value()
     return envelope(
         "meta.json", meta, blob=meta,
         gameweek={
@@ -296,8 +382,34 @@ def gaffer_status() -> dict[str, Any]:
                "status": meta.get("squad_status"),
                "reason": meta.get("squad_status_reason"),
                "source_event": meta.get("squad_source_event")},
+        # What a transfer has to be paid for out of. Every one of these was
+        # already in `meta.json` or the stored squad and none of them reached a
+        # caller, so "can I afford him" could not be answered from this server.
+        budget={
+            "bank": _tenths(meta.get("bank")),
+            "bank_source": meta.get("bank_source"),
+            "team_value": _tenths(meta.get("team_value")),
+            "free_transfers": meta.get("free_transfers"),
+            "free_transfers_source": meta.get("free_transfers_source"),
+            "squad_selling_value": held.get("selling_value"),
+            "squad_value_event": held.get("squad_event"),
+            "squad_value_unavailable": held.get("unavailable_reason"),
+            "selling_price_confidence": meta.get("selling_price_confidence"),
+            "selling_prices_exact": meta.get("selling_prices_exact"),
+            "selling_prices_total": meta.get("selling_prices_total"),
+            "units": "millions",
+        },
+        projection_regime=projection_regime(meta),
         artifacts=sorted(p.name for p in data_dir().glob("*.json")),
+        limitations=[
+            "`bank`, `team_value` and `free_transfers` are FPL's own, as of the "
+            "last refresh. `squad_selling_value` is summed from the stored "
+            "squad, whose event is given beside it and is often an earlier "
+            "gameweek than the one being projected.",
+        ],
     )
+
+
 
 
 def get_weekly_decision() -> dict[str, Any]:
@@ -343,8 +455,21 @@ def get_weekly_decision() -> dict[str, Any]:
 
 #: Why a blend component is absent, as a stable code.
 COMPONENTS_NO_DB = "no_local_database"
+#: The local database and the published artifacts are refreshed by different
+#: things — `data/*.json` by the scheduled refresh, `data/gaffer.db` only by a
+#: pipeline run in this checkout — so a stored component can belong to an older
+#: run than the number it is shown beside. Saying so is the whole point.
+COMPONENTS_OTHER_RUN = "stored_by_a_different_run_than_the_published_projection"
+#: Squad states, kept apart from each other for the same reason.
+SQUAD_NOT_OWNED = "not in the stored squad"
+SQUAD_NONE_STORED = "no squad has been stored yet"
 COMPONENTS_NO_ROW = "no_projection_row_for_this_gameweek"
 COMPONENTS_NOT_STORED = "not_stored_in_this_record"
+#: Why a player carries no defensive-contribution block. A goalkeeper cannot
+#: score it at all; everyone else simply has not recorded one yet, and the two
+#: are not the same absence.
+DEFCON_NO_THRESHOLD = "this position has no defensive-contribution threshold"
+DEFCON_NONE_OBSERVED = "no defensive contribution observed yet this season"
 
 
 def stored_components(player_ids: list[int], gw: Any) -> dict[int, dict[str, Any]]:
@@ -384,12 +509,19 @@ def stored_components(player_ids: list[int], gw: Any) -> dict[int, dict[str, Any
     return {int(r["player_id"]): dict(r) for r in rows}
 
 
-def _component_block(row: dict[str, Any] | None, have_db: bool) -> dict[str, Any]:
+def _component_block(row: dict[str, Any] | None, have_db: bool,
+                     published_next_gw_xp: Any = None) -> dict[str, Any]:
     """`model_only` / `fpl_ep_next` plus an explicit availability statement.
 
     A stored `0.0` is a real value, not a missing one: the pipeline skips the
     blend when `ep_next` is zero, and forty-two players are in exactly that
     state right now.
+
+    Given `published_next_gw_xp`, the stored blend is compared against the
+    published one and the answer travels with the components. They come out of
+    the database while `next_gw_xp` comes out of the artifact, and the two are
+    refreshed by different things, so "these are the components of that number"
+    is a claim that has to be checked rather than assumed.
     """
     if not have_db:
         return {"model_only": None, "fpl_ep_next": None,
@@ -408,7 +540,209 @@ def _component_block(row: dict[str, Any] | None, have_db: bool) -> dict[str, Any
     out["unavailable_reason"] = COMPONENTS_NOT_STORED if missing else None
     if missing:
         out["missing_components"] = missing
+    if published_next_gw_xp is not None:
+        stored = row.get("exp_points")
+        agrees = (isinstance(stored, (int, float))
+                  and isinstance(published_next_gw_xp, (int, float))
+                  and abs(round(stored, 2) - published_next_gw_xp) <= 0.011)
+        out["same_run_as_published"] = bool(agrees)
+        if not agrees:
+            out["provenance"] = COMPONENTS_OTHER_RUN
+            out["stored_blend"] = (round(stored, 2)
+                                   if isinstance(stored, (int, float)) else None)
     return out
+
+
+def squad_holdings(player_ids: list[int]) -> dict[str, Any]:
+    """Purchase prices for players you hold, **as stored**, with their event.
+
+    `my_squad` records what you paid. No published artifact carries it, because
+    `players.json` knows only today's market price, and what you paid is a fact
+    about a past transfer rather than a property of the player. It is read here
+    and never inferred from the market price.
+    """
+    if not player_ids:
+        return {"rows": {}, "event": None, "unavailable_reason": None}
+    try:
+        conn = read_only_db()
+    except ToolError:
+        return {"rows": {}, "event": None, "unavailable_reason": COMPONENTS_NO_DB}
+    try:
+        marks = ",".join("?" for _ in player_ids)
+        rows = conn.execute(
+            f"SELECT player_id, purchase_price, selling_price, price_source, "
+            f"price_exact, gw FROM my_squad "
+            f"WHERE gw = (SELECT MAX(gw) FROM my_squad) "
+            f"AND player_id IN ({marks})", list(player_ids)).fetchall()
+        top = conn.execute("SELECT MAX(gw) AS gw FROM my_squad").fetchone()
+    except sqlite3.Error:
+        return {"rows": {}, "event": None, "unavailable_reason": COMPONENTS_NO_DB}
+    finally:
+        conn.close()
+    event = top["gw"] if top is not None else None
+    return {"rows": {int(r["player_id"]): dict(r) for r in rows},
+            "event": event,
+            "unavailable_reason": None if event is not None else SQUAD_NONE_STORED}
+
+
+def _holding_block(held: dict[str, Any] | None, market_price: Any,
+                   squad: dict[str, Any]) -> dict[str, Any]:
+    """What this player would sell for, and what that number rests on.
+
+    FPL pays the purchase price back plus half of any RISE, rounded down. That
+    rule lives in `config.fpl_selling_price` and is applied here through that
+    same function rather than written out a second time — two implementations of
+    a rounding rule is how they start disagreeing by 0.1m.
+
+    Its two inputs come from two places and both are named: the purchase price
+    from the stored squad, the market price from the published artifact.
+    """
+    if squad.get("unavailable_reason"):
+        return {"owned": None,
+                "unavailable_reason": squad["unavailable_reason"]}
+    if held is None:
+        return {"owned": False, "squad_event": squad.get("event"),
+                "reason": SQUAD_NOT_OWNED}
+    purchase = held.get("purchase_price")
+    now = (round(float(market_price) * 10)
+           if isinstance(market_price, (int, float)) else None)
+    out: dict[str, Any] = {
+        "owned": True,
+        "squad_event": held.get("gw"),
+        "purchase_price": None if purchase is None else round(purchase / 10, 1),
+        "purchase_price_source": held.get("price_source"),
+        "purchase_price_exact": bool(held.get("price_exact")),
+        "selling_price": None,
+        "selling_price_rule": "purchase + half of any rise, rounded down to 0.1m",
+    }
+    if purchase is None or now is None:
+        out["unavailable_reason"] = COMPONENTS_NOT_STORED
+        return out
+    sell = config.fpl_selling_price(int(purchase), now)
+    out["selling_price"] = round(sell / 10, 1)
+    out["locked_in"] = round((now - sell) / 10, 1)
+    stored = held.get("selling_price")
+    if stored is not None and int(stored) != sell:
+        out["stored_selling_price"] = round(int(stored) / 10, 1)
+        out["stored_differs_because"] = (
+            "the stored figure was computed at the market price of the run that "
+            "wrote it; this one uses the published price beside it")
+    return out
+
+
+
+
+def _set_piece_order(note: Any) -> dict[str, Any]:
+    """The set-piece note as an order per type, rather than a label to read.
+
+    `players.json` publishes a string — `"pens #1, corners #2"` — which the UI
+    renders as a tag and which a caller cannot sort, filter or compare on. The
+    orders behind it are integers, so they come back as integers.
+
+    That string is the whole record: ingest keeps only first and second choice,
+    so `null` here means "not first or second choice", which is NOT the same
+    statement as "does not take them".
+    """
+    text = str(note or "").strip()
+    out: dict[str, Any] = {"penalties": None, "free_kicks": None,
+                           "corners": None, "on_any": False, "note": text,
+                           "recorded": "first and second choice only"}
+    for part in text.split(","):
+        label, marker, num = part.strip().partition("#")
+        if not marker:
+            continue
+        key = {"pens": "penalties", "fk": "free_kicks",
+               "corners": "corners"}.get(label.strip().lower())
+        try:
+            order = int(num.strip())
+        except ValueError:
+            continue
+        if key:
+            out[key] = order
+    out["on_any"] = any(out[k] is not None
+                        for k in ("penalties", "free_kicks", "corners"))
+    return out
+
+
+def _window(fixtures: Any, gw_xp: Any, gameweek: Any, span: int) -> dict[str, Any]:
+    """Fixture difficulty and projected points summed over the next `span` GWs.
+
+    `fixtures[]` already carries a per-gameweek difficulty — Gaffer's own
+    xGC-based rating, 1 easiest to 5 hardest — and `gw_xp[]` a per-gameweek
+    projection. Neither is ever added up, and the sum over the next two or three
+    weeks is what decides which transfer goes first. This adds published
+    numbers. It is not a second difficulty model.
+
+    The window is defined over GAMEWEEKS rather than over the next N fixtures,
+    so a blank contributes nothing and a double contributes twice — which is
+    most of the reason the sum is worth having at all.
+    """
+    try:
+        first = int(gameweek)
+    except (TypeError, ValueError):
+        return {"available": False,
+                "unavailable_reason": "the published run names no gameweek"}
+    gws = list(range(first, first + span))
+    fx = [f for f in (fixtures or [])
+          if isinstance(f, dict) and f.get("gw") in gws]
+    diffs = [f["difficulty"] for f in fx
+             if isinstance(f.get("difficulty"), (int, float))]
+    xps = [x["xp"] for x in (gw_xp or [])
+           if isinstance(x, dict) and x.get("gw") in gws
+           and isinstance(x.get("xp"), (int, float))]
+    covered = [f.get("gw") for f in fx]
+    return {
+        "available": True,
+        "gameweeks": gws,
+        "fixtures": len(fx),
+        "blanks": [g for g in gws if g not in covered],
+        "doubles": sorted({g for g in covered if covered.count(g) > 1}),
+        "difficulty_sum": sum(diffs) if diffs else None,
+        "difficulty_mean": round(sum(diffs) / len(diffs), 2) if diffs else None,
+        "home_fixtures": sum(1 for f in fx if f.get("home")),
+        "xp_sum": round(sum(xps), 2) if xps else None,
+    }
+
+
+def _signals(row: dict[str, Any], gameweek: Any) -> dict[str, Any]:
+    """Every published number a search may rank or filter on, in one flat row.
+
+    Flat rather than grouped on purpose: this shape is repeated up to twenty-five
+    times in one response, and a caller comparing two of them should be able to
+    read down a column.
+    """
+    pp = row.get("price_pred") if isinstance(row.get("price_pred"), dict) else {}
+    dc = row.get("defcon") if isinstance(row.get("defcon"), dict) else {}
+    w = _window(row.get("fixtures"), row.get("gw_xp"), gameweek, 3)
+    return {
+        "next_gw_xp": row.get("next_gw_xp"),
+        "horizon_xp": row.get("horizon_xp"),
+        "xp_window": row.get("xp_window"),
+        "xp_next3": w.get("xp_sum"),
+        "fdr3": w.get("difficulty_sum"),
+        "defcon90": row.get("defcon90"),
+        "defcon_p_hit": dc.get("p_hit"),
+        "defcon_threshold": dc.get("threshold"),
+        "form": row.get("form"),
+        "ict": row.get("ict"),
+        "xgi90": row.get("xgi90"),
+        "price": row.get("price"),
+        "owned_by": row.get("owned_by"),
+        "net_transfers": row.get("net_transfers"),
+        "cost_change_event": row.get("cost_change_event"),
+        "price_direction": pp.get("dir"),
+        "price_progress": pp.get("progress"),
+        "set_pieces": row.get("set_pieces"),
+    }
+
+
+#: What `find_players` will sort on. Every one is a field `players.json`
+#: publishes or a sum of them; none is a new quantity, and none is an opinion.
+SORTABLE = ("next_gw_xp", "horizon_xp", "xp_window", "xp_next3", "fdr3",
+            "defcon90", "defcon_p_hit", "form", "ict", "xgi90", "price",
+            "owned_by", "net_transfers", "cost_change_event", "price_progress")
+ORDERS = ("desc", "asc")
+PRICE_DIRECTIONS = ("up", "down", "stable")
 
 
 def _players() -> list[dict[str, Any]]:
@@ -418,20 +752,77 @@ def _players() -> list[dict[str, Any]]:
     return blob
 
 
+def _number(value: Any, name: str) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        raise ToolError(STATUS_INVALID, f"{name} must be a number") from None
+
+
 def find_players(query: str = "", team: str = "", position: str = "",
-                 limit: int = 10) -> dict[str, Any]:
-    """Bounded name/team/position search over the published player list."""
-    if not any((query, team, position)):
+                 limit: int = 10, sort: str = "next_gw_xp", order: str = "desc",
+                 min_price: Any = None, max_price: Any = None,
+                 min_defcon90: Any = None, min_form: Any = None,
+                 min_xgi90: Any = None, max_fdr3: Any = None,
+                 price_direction: str = "", available_only: bool = False,
+                 ) -> dict[str, Any]:
+    """Bounded search over the published player list, ranked on any published signal.
+
+    Sortable: next_gw_xp, horizon_xp, xp_window, xp_next3, fdr3, defcon90,
+    defcon_p_hit, form, ict, xgi90, price, owned_by, net_transfers,
+    cost_change_event, price_progress. Filterable: price, defcon90, form, xgi90,
+    fdr3, price direction, availability, team, position, name.
+
+    `fdr3` is the three-gameweek fixture-difficulty SUM and `xp_next3` the
+    projection over the same window; on `fdr3` lower is better, so ask for
+    `order="asc"`. Every field is one `players.json` publishes or a sum of them.
+    A ranking is not a recommendation: this tool orders players, it does not
+    argue for one.
+    """
+    sort = (sort or "next_gw_xp").strip().lower()
+    order = (order or "desc").strip().lower()
+    if sort not in SORTABLE:
         raise ToolError(STATUS_INVALID,
-                        "give at least one of query, team or position")
+                        f"sort must be one of {list(SORTABLE)}")
+    if order not in ORDERS:
+        raise ToolError(STATUS_INVALID, f"order must be one of {list(ORDERS)}")
+    direction = (price_direction or "").strip().lower()
+    if direction and direction not in PRICE_DIRECTIONS:
+        raise ToolError(STATUS_INVALID,
+                        f"price_direction must be one of {list(PRICE_DIRECTIONS)}")
     if len(query) > MAX_QUERY_LENGTH:
         raise ToolError(STATUS_INVALID,
                         f"query is capped at {MAX_QUERY_LENGTH} characters")
-    limit = max(1, min(int(limit or 10), MAX_SEARCH_RESULTS))
+    bounds = {
+        "min_price": _number(min_price, "min_price"),
+        "max_price": _number(max_price, "max_price"),
+        "min_defcon90": _number(min_defcon90, "min_defcon90"),
+        "min_form": _number(min_form, "min_form"),
+        "min_xgi90": _number(min_xgi90, "min_xgi90"),
+        "max_fdr3": _number(max_fdr3, "max_fdr3"),
+    }
     q, t = query.strip().lower(), team.strip().upper()
     p = position.strip().upper()
     if p and p not in ("GKP", "DEF", "MID", "FWD"):
         raise ToolError(STATUS_INVALID, "position must be GKP, DEF, MID or FWD")
+    criteria = any((q, t, p, direction, available_only,
+                    sort != "next_gw_xp", order != "desc",
+                    *(v is not None for v in bounds.values())))
+    if not criteria:
+        raise ToolError(
+            STATUS_INVALID,
+            "give at least one of query, team, position, a filter, or a sort "
+            "other than the default next_gw_xp descending")
+    limit = max(1, min(int(limit or 10), MAX_SEARCH_RESULTS))
+    gameweek = (_meta() or {}).get("current_gw")
+
+    def under(value: Any, cap: float | None) -> bool:
+        return cap is None or (isinstance(value, (int, float)) and value <= cap)
+
+    def over(value: Any, floor: float | None) -> bool:
+        return floor is None or (isinstance(value, (int, float)) and value >= floor)
 
     hits = []
     for row in _players():
@@ -441,23 +832,71 @@ def find_players(query: str = "", team: str = "", position: str = "",
             continue
         if p and str(row.get("pos", "")).upper() != p:
             continue
-        hits.append({k: row.get(k) for k in
-                     ("id", "name", "team", "pos", "price", "next_gw_xp",
-                      "horizon_xp", "status", "owned_by")})
-    hits.sort(key=lambda r: -(r.get("next_gw_xp") or 0))
+        if available_only and str(row.get("status", "")) != "a":
+            continue
+        sig = _signals(row, gameweek)
+        if direction and sig["price_direction"] != direction:
+            continue
+        if not over(sig["price"], bounds["min_price"]):
+            continue
+        if not under(sig["price"], bounds["max_price"]):
+            continue
+        if not over(sig["defcon90"], bounds["min_defcon90"]):
+            continue
+        if not over(sig["form"], bounds["min_form"]):
+            continue
+        if not over(sig["xgi90"], bounds["min_xgi90"]):
+            continue
+        if not under(sig["fdr3"], bounds["max_fdr3"]):
+            continue
+        hits.append({"id": row.get("id"), "name": row.get("name"),
+                     "team": row.get("team"), "pos": row.get("pos"),
+                     "status": row.get("status"), **sig})
+
+    # A row with nothing stored for the sort field goes last in BOTH directions.
+    # Ordering nulls as if they were zero puts "we do not know" above a measured
+    # low value in one direction and below it in the other.
+    def rank(r: dict[str, Any]) -> tuple[int, float]:
+        v = r.get(sort)
+        if not isinstance(v, (int, float)):
+            return (1, 0.0)
+        return (0, -float(v) if order == "desc" else float(v))
+
+    hits.sort(key=rank)
+    applied = {k: v for k, v in bounds.items() if v is not None}
+    if direction:
+        applied["price_direction"] = direction
+    if available_only:
+        applied["available_only"] = True
     out = envelope(
         "players.json", _meta(),
         status=STATUS_OK if hits else STATUS_NOT_FOUND,
         matched=len(hits), truncated=len(hits) > limit,
         players=hits[:limit],
-        query={"query": query, "team": team, "position": position, "limit": limit},
+        query={"query": query, "team": team, "position": position,
+               "limit": limit, "sort": sort, "order": order, "filters": applied},
+        sortable=list(SORTABLE),
+        limitations=[
+            "`fdr3` sums the difficulties Gaffer published for the next three "
+            "gameweeks, so LOWER is better and a blank gameweek contributes "
+            "nothing rather than a hard fixture.",
+            "`defcon90` is the model's BELIEVED defensive-contribution rate, "
+            "shrunk toward a positional prior, not a raw count. Compare it "
+            "against `defcon_threshold` (10 for defenders, 12 otherwise); "
+            "`defcon_threshold` is null for goalkeepers, who cannot score it.",
+            "`price_progress` is a share of an ESTIMATED threshold — FPL does "
+            "not publish the real ones.",
+        ],
     )
     if not hits:
         out["detail"] = ("no player matched "
                          + ", ".join(f"{k}={v!r}" for k, v in
                                      (("query", query), ("team", team),
-                                      ("position", position)) if v))
+                                      ("position", position),
+                                      ("filters", applied)) if v))
     return out
+
+
 
 
 def _resolve(name_or_id: Any) -> dict[str, Any]:
@@ -489,16 +928,39 @@ def _resolve(name_or_id: Any) -> dict[str, Any]:
 
 
 def _outlook(row: dict[str, Any], components: dict[str, Any] | None = None,
+             *, gameweek: Any = None, holding: dict[str, Any] | None = None,
              ) -> dict[str, Any]:
     """The published projection, with the model's own number and FPL's apart.
 
     Every nullable field here is either a real stored value or accompanied by a
     reason. Nothing promises a separation it does not deliver.
+
+    `players.json` carries nineteen fields this used to leave behind, and the
+    ones that decide a transfer are here now: the defensive-contribution rate
+    against its positional threshold (a new scoring mechanic, and a floor-versus-
+    spike test that was being done by hand); the two blend components as the
+    ARTIFACT recorded them, beside the ones the database recorded; the
+    underlying rates that were previously reachable only as prose inside
+    `rationale`, where they could not be sorted or compared; the set-piece order
+    as an order; and the price-change signal. They are grouped rather than
+    flattened, because `compare_players` repeats this shape up to four times.
     """
     dist = row.get("dist") if isinstance(row.get("dist"), dict) else {}
+    defcon = row.get("defcon") if isinstance(row.get("defcon"), dict) else {}
+    pp = row.get("price_pred") if isinstance(row.get("price_pred"), dict) else {}
+    pos = str(row.get("pos") or "")
     proj: dict[str, Any] = {
         "next_gw_xp": row.get("next_gw_xp"),
         "horizon_xp": row.get("horizon_xp"),
+        "xp_window": row.get("xp_window"),
+        # The same two quantities as `model_only`/`fpl_ep_next` below, but as
+        # the ARTIFACT published them — which is the run `next_gw_xp` belongs
+        # to. The pair below comes out of the local database, which is
+        # refreshed by something else.
+        "model_xp": row.get("model_xp"),
+        "ep_next_xp": row.get("ep_next_xp"),
+        # Sums to `model_xp`, never to the blend.
+        "breakdown": row.get("breakdown"),
         "blend_weight_nominal": config.EP_NEXT_BLEND_WEIGHT,
         "blend_is_fitted": config.EP_NEXT_BLEND_IS_FITTED,
     }
@@ -510,8 +972,12 @@ def _outlook(row: dict[str, Any], components: dict[str, Any] | None = None,
     exp_minutes = block.pop("exp_minutes", None)
     proj.update(block)
     badge = row.get("xmins_badge")
+    threshold = config.DEFCON_THRESHOLD.get(pos)
     return {
-        "id": row.get("id"), "name": row.get("name"), "team": row.get("team"),
+        "id": row.get("id"), "name": row.get("name"),
+        "full_name": row.get("full_name"),
+        "team": row.get("team"), "team_id": row.get("team_id"),
+        "team_code": row.get("team_code"), "code": row.get("code"),
         "pos": row.get("pos"), "price": row.get("price"),
         "projection": proj,
         "minutes": {
@@ -532,53 +998,135 @@ def _outlook(row: dict[str, Any], components: dict[str, Any] | None = None,
                         "boom_pct": dist.get("boom"), "mean": dist.get("mean"),
                         "std": dist.get("std"),
                         "distribution_available": bool(dist)},
+        # Defensive contribution scores this season, so the rate against the
+        # positional threshold is a transfer test rather than trivia. `per90` is
+        # the BELIEVED rate; `p_hit` is a probability, and a player can clear
+        # the threshold routinely on a modest one.
+        "defensive_contribution": {
+            "per90": row.get("defcon90"),
+            "threshold": None if threshold is None or threshold > 90 else threshold,
+            "p_hit": defcon.get("p_hit"),
+            "near_hit": defcon.get("near_hit"),
+            "scored_by_position": bool(threshold is not None and threshold <= 90),
+            "unavailable_reason": None if defcon else (
+                DEFCON_NO_THRESHOLD if threshold is None or threshold > 90
+                else DEFCON_NONE_OBSERVED),
+        },
+        # Previously reachable only as prose inside `rationale`.
+        "underlying": {"xgi90": row.get("xgi90"), "form": row.get("form"),
+                       "ict": row.get("ict"),
+                       "last_season": row.get("last_season")},
+        "set_pieces": _set_piece_order(row.get("set_pieces")),
+        "price_signal": {
+            "now": row.get("price"),
+            "change_this_gw": row.get("cost_change_event"),
+            "net_transfers_this_gw": row.get("net_transfers"),
+            "direction": pp.get("dir"),
+            "progress_to_change": pp.get("progress"),
+            "threshold_estimate": pp.get("threshold"),
+            "basis": "estimated; FPL does not publish its real thresholds",
+        },
         "ownership": {"global_pct": row.get("owned_by")},
+        "holding": holding if holding is not None else {
+            "owned": None, "unavailable_reason": COMPONENTS_NO_DB},
         "rationale": row.get("rationale"),
         "tags": row.get("tags"),
         "fixtures": row.get("fixtures"),
+        "fixture_outlook": {
+            f"next{n}": _window(row.get("fixtures"), row.get("gw_xp"),
+                                gameweek, n)
+            for n in FIXTURE_WINDOWS
+        },
     }
+
+
 
 
 def _component_limitations(blocks: list[dict[str, Any]]) -> list[str]:
     """Say what the components are, or why they are not there. Never both."""
     have = [b for b in blocks if b.get("components_available")]
     if have and len(have) == len(blocks):
-        return [
+        out = [
             "`next_gw_xp` is a blend of Gaffer's own model (`model_only`) and "
             "FPL's `ep_next` (`fpl_ep_next`). Both are read from the stored "
             "projection, not reconstructed from the blend.",
-            f"The blend weight is a NOMINAL {config.EP_NEXT_BLEND_WEIGHT}, "
-            "scaled down by Gaffer's own availability read, and not applied at "
-            "all when `fpl_ep_next` is zero. It is UNFITTED — see "
+            f"The blend weight is a NOMINAL {config.EP_NEXT_BLEND_WEIGHT} and "
+            "UNFITTED — no backtest chose it. What is APPLIED is scaled by "
+            "Gaffer's availability read AND by start probability, is not "
+            "applied at all when `fpl_ep_next` is zero, and is zero across the "
+            "whole population when FPL's `ep_next` fails the degeneracy test. "
+            "See `projection_regime` on this response and get_model_evidence.",
+            "When the regime is `component_only` the published `next_gw_xp` IS "
+            "`model_xp` and no part of it is FPL's — `fpl_ep_next` is then what "
+            "was REJECTED, not an ingredient.",
+            "Beyond the next gameweek the projection is Gaffer's model alone, "
+            "and it is materially weaker there.",
+        ]
+    else:
+        reasons = sorted({b.get("unavailable_reason") or "" for b in blocks
+                          if not b.get("components_available")} - {""})
+        out = [
+            "`model_only` and `fpl_ep_next` are NOT available in this record "
+            f"({', '.join(reasons) or 'unknown'}), so `next_gw_xp` is reported "
+            "as a single blended number. They are never derived backwards from it.",
+            f"The blend weight is a NOMINAL {config.EP_NEXT_BLEND_WEIGHT} and is "
+            "UNFITTED. What is APPLIED is scaled by availability and start "
+            "probability, and is zero for everyone when FPL's `ep_next` fails "
+            "the degeneracy test — see `projection_regime` and "
             "get_model_evidence.",
             "Beyond the next gameweek the projection is Gaffer's model alone, "
             "and it is materially weaker there.",
         ]
-    reasons = sorted({b.get("unavailable_reason") for b in blocks
-                      if not b.get("components_available")} - {None})
+    if any(b.get("same_run_as_published") is False for b in blocks):
+        out.append(
+            "`model_only`/`fpl_ep_next` come from the local database, and the "
+            "blend stored there does NOT match the published `next_gw_xp`: they "
+            "were written by an EARLIER pipeline run. The artifacts are "
+            "refreshed on a schedule, the database only by a run in this "
+            "checkout. Use `projection.model_xp` and `projection.ep_next_xp` — "
+            "the same two quantities, published by the same run as "
+            "`next_gw_xp`.")
+    return out
+
+
+def _outlook_limitations() -> list[str]:
+    """What the new blocks are, and what they are not. One list, both tools."""
     return [
-        "`model_only` and `fpl_ep_next` are NOT available in this record "
-        f"({', '.join(reasons) or 'unknown'}), so `next_gw_xp` is reported "
-        "as a single blended number. They are never derived backwards from it.",
-        f"The blend weight is a NOMINAL {config.EP_NEXT_BLEND_WEIGHT} and is "
-        "UNFITTED — see get_model_evidence.",
-        "Beyond the next gameweek the projection is Gaffer's model alone, "
-        "and it is materially weaker there.",
+        "`defensive_contribution.per90` is the model's BELIEVED rate, shrunk "
+        "toward a positional prior — not a count of what has happened. The "
+        "floor-versus-spike test is that rate against `threshold` (10 for "
+        "defenders, 12 for midfielders and forwards).",
+        "`set_pieces` records first and second choice only, so a null is 'not "
+        "first or second choice', never 'does not take them'.",
+        "`price_signal` is an ESTIMATE: FPL does not publish its price-change "
+        "thresholds and `progress_to_change` is a share of an approximated one.",
+        "`fixture_outlook` adds up difficulties Gaffer already published; it is "
+        "not a projection. Two 2s and a 5 sum to the same 9 as three 3s.",
+        "`holding.purchase_price` comes from the stored squad in the local "
+        "database and `price` from the published artifact. `squad_event` says "
+        "which gameweek the squad was read for.",
     ]
 
 
 def get_player_outlook(player: str) -> dict[str, Any]:
-    """One player's current structured projection, fixtures and availability."""
+    """One player's projection, returns, set pieces, price, fixtures and holding."""
     row = _resolve(player)
     meta = _meta()
-    stored = stored_components([int(row["id"])], (meta or {}).get("current_gw"))
-    block = _component_block(stored.get(int(row["id"])), have_db=bool(stored))
-    if int(row["id"]) in stored:
-        block["exp_minutes"] = stored[int(row["id"])].get("exp_minutes")
-    out = _outlook(row, block)
+    pid = int(row["id"])
+    gameweek = (meta or {}).get("current_gw")
+    stored = stored_components([pid], gameweek)
+    block = _component_block(stored.get(pid), have_db=bool(stored),
+                             published_next_gw_xp=row.get("next_gw_xp"))
+    if pid in stored:
+        block["exp_minutes"] = stored[pid].get("exp_minutes")
+    squad = squad_holdings([pid])
+    out = _outlook(row, block, gameweek=gameweek,
+                   holding=_holding_block(squad["rows"].get(pid),
+                                          row.get("price"), squad))
     return envelope(
         "players.json", meta, player=out,
-        limitations=_component_limitations([block]))
+        projection_regime=projection_regime(meta),
+        limitations=_component_limitations([block]) + _outlook_limitations())
 
 
 def compare_players(players: list[str]) -> dict[str, Any]:
@@ -588,18 +1136,22 @@ def compare_players(players: list[str]) -> dict[str, Any]:
                         f"give between 2 and {MAX_COMPARE} players")
     rows = [_resolve(p) for p in players]
     meta = _meta()
+    gameweek = (meta or {}).get("current_gw")
     ids = [int(r["id"]) for r in rows]
-    stored = stored_components(ids, (meta or {}).get("current_gw"))
+    stored = stored_components(ids, gameweek)
+    squad = squad_holdings(ids)
     blocks = []
     out = []
     for r in rows:
         pid = int(r["id"])
-        block = _component_block(stored.get(pid), have_db=bool(stored))
+        block = _component_block(stored.get(pid), have_db=bool(stored),
+                                 published_next_gw_xp=r.get("next_gw_xp"))
         if pid in stored:
             block["exp_minutes"] = stored[pid].get("exp_minutes")
         blocks.append(block)
-        out.append(_outlook(r, block))
-
+        out.append(_outlook(r, block, gameweek=gameweek,
+                            holding=_holding_block(squad["rows"].get(pid),
+                                                   r.get("price"), squad)))
     deltas = {}
     for field in ("next_gw_xp", "horizon_xp", "price"):
         vals = [(o["name"], o["projection"].get(field) if field != "price"
@@ -610,22 +1162,85 @@ def compare_players(players: list[str]) -> dict[str, Any]:
             lo = min(known, key=lambda t: t[1])
             deltas[field] = {"highest": hi[0], "lowest": lo[0],
                              "spread": round(hi[1] - lo[1], 3)}
-    return envelope(
+    # The three-gameweek fixture sum is the quantity that usually decides which
+    # of two comparable players is bought FIRST, so it is differenced like the
+    # projections rather than left for the caller to add up per player.
+    fdr = [(o["name"], (o["fixture_outlook"].get("next3") or {}).get("difficulty_sum"))
+           for o in out]
+    known_fdr = [(n, v) for n, v in fdr if isinstance(v, (int, float))]
+    if len(known_fdr) >= 2:
+        deltas["fdr3"] = {
+            "easiest": min(known_fdr, key=lambda t: t[1])[0],
+            "hardest": max(known_fdr, key=lambda t: t[1])[0],
+            "spread": max(v for _, v in known_fdr) - min(v for _, v in known_fdr),
+            "note": "sum of the next three gameweeks' difficulty; lower is easier",
+        }
+    result = envelope(
         "players.json", meta, players=out, differences=deltas,
+        projection_regime=projection_regime(meta),
         limitations=[
             *_component_limitations(blocks),
+            *_outlook_limitations(),
             "Deterministic differences only. Which player to own depends on "
             "your squad, budget and league, which this tool does not read — "
             "use get_weekly_decision for advice.",
         ])
+    # Four full cards do not fit, and a response the client refuses is worse
+    # than one that says what it left out. `out` is the same list object the
+    # envelope holds, so trimming a card trims the result.
+    gone: list[str] = []
+    for key in COMPARE_TRIM:
+        if serialized_bytes(result) <= MAX_RESULT_BYTES - RESULT_HEADROOM_BYTES:
+            break
+        for card in out:
+            _trim_card(card, key)
+        gone.append(key)
+        # Written inside the loop, not after it: saying what was dropped costs
+        # bytes too, and a trim that stops 23 bytes short because it forgot to
+        # count its own explanation is the bug this budget exists to prevent.
+        result["projected"] = {
+            "dropped": gone,
+            "reason": f"{len(out)} full cards exceed the "
+                      f"{MAX_RESULT_BYTES:,}-byte response budget",
+            "still_available": "get_player_outlook returns any one of them whole",
+        }
+    return result
+
+
+
+
+def _trim_card(card: dict[str, Any], key: str) -> None:
+    """Take one thing off a comparison card.
+
+    `fixture_outlook` is THINNED rather than dropped: the five-gameweek window
+    is context and the three-gameweek one is what the transfer turns on, so the
+    sum that matters survives every level of trimming.
+    """
+    if key == "fixture_outlook":
+        window = card.get(key)
+        if isinstance(window, dict) and "next3" in window:
+            card[key] = {"next3": window["next3"]}
+        return
+    card.pop(key, None)
 
 
 def _mini(p: Any) -> Any:
-    """A player reduced to what a decision needs: who, where, how much."""
+    """A player reduced to what a decision needs: who, where, how much — and,
+    since the decision is now argued in conversation rather than settled by the
+    tool, the evidence the argument turns on.
+
+    `next_gw_xp`, `horizon_xp` and `owned_by` are already on the card
+    `plan.json` carries. The heavy parts of that card — rationale, tags,
+    fixtures, minutes badge — stay out: repeating them fifteen times per
+    gameweek is what made this tool return 74 KB and be refused outright.
+    """
     if not isinstance(p, dict):
         return p
-    return {k: p.get(k) for k in ("id", "name", "team", "pos", "price")
+    return {k: p.get(k) for k in ("id", "name", "team", "pos", "price",
+                                  "next_gw_xp", "horizon_xp", "owned_by")
             if p.get(k) is not None}
+
+
 
 
 def get_transfer_plan(detail: str = DETAIL_SUMMARY,
@@ -742,35 +1357,108 @@ def get_transfer_plan(detail: str = DETAIL_SUMMARY,
         ])
 
 
+def _ownership_row(row: Any) -> dict[str, Any]:
+    """One league-ownership row: who he is, and how much of the league has him.
+
+    The artifact carries a full player card per row. This keeps the name, the
+    price and the projection — enough to act on — and drops the shirt codes,
+    because there are up to thirty of these rows in one response.
+    """
+    if not isinstance(row, dict):
+        return {}
+    p = row.get("player") or {}
+    return {"player_id": row.get("player_id"), "name": p.get("name"),
+            "team": p.get("team"), "pos": p.get("pos"), "price": p.get("price"),
+            "next_gw_xp": p.get("next_gw_xp"),
+            "owners": row.get("owners"), "of_rivals": row.get("n_rivals"),
+            "ownership_pct": row.get("ownership_pct"),
+            "effective_ownership_pct": row.get("effective_ownership_pct"),
+            "captain_eo_pct": row.get("captain_eo_pct")}
+
+
 def get_league_strategy() -> dict[str, Any]:
-    """League-scoped ownership, placing probabilities and their data quality."""
+    """League-scoped ownership — shields, differentials and threats — with placing.
+
+    All four of the league layer's answers, not the one that used to fit:
+    `shields` (what protects your position), `differentials` (what can move it),
+    `threats` (what your rivals own and you do not — the only one that names a
+    move you have not made) and `my_captain_eo_pct` (how much of the league
+    captained who you captained, which is what decides whether a differential
+    captain pays for its variance).
+    """
     meta = _meta()
     strat = load_artifact("strategy.json", required=False)
     if strat is None:
         raise ToolError(STATUS_UNAVAILABLE,
                         "no strategy artifact — this run had no leagues "
                         "configured, or --skip-strategy was used")
-    leagues = []
-    for lg in strat.get("leagues") or []:
-        leagues.append({
-            "league_id": lg.get("league_id"), "name": lg.get("name"),
-            "size": lg.get("size"), "target_position": lg.get("target_position"),
-            "placing": lg.get("placing"),
-            "data_quality": lg.get("data_quality"),
-            "posture": lg.get("posture"),
-            "differentials": lg.get("differentials"),
-            "differs_from_neutral": lg.get("differs_from_neutral"),
-            "difference_reason": lg.get("difference_reason"),
-        })
-    return envelope(
-        "strategy.json", meta, blob=strat, leagues=leagues,
-        simulation=strat.get("simulation"), chips=strat.get("chips"),
-        resolution=strat.get("resolution"), errors=strat.get("league_errors"),
-        limitations=[
-            *(strat.get("limitations") or []),
-            "Ownership here is league-scoped (how many of YOUR rivals own a "
-            "player), never the global selected-by percentage.",
-        ])
+
+    def assemble(rows: int) -> dict[str, Any]:
+        leagues = []
+        for lg in strat.get("leagues") or []:
+            block: dict[str, Any] = {
+                "league_id": lg.get("league_id"), "name": lg.get("name"),
+                "size": lg.get("size"),
+                "target_position": lg.get("target_position"),
+                "placing": lg.get("placing"),
+                "data_quality": lg.get("data_quality"),
+                "posture": lg.get("posture"),
+                "shields": [_ownership_row(r)
+                            for r in (lg.get("shields") or [])[:rows]],
+                "differentials": [_ownership_row(r)
+                                  for r in (lg.get("differentials") or [])[:rows]],
+                "differentials_ranked_by": lg.get("differentials_ranked_by"),
+                "differs_from_neutral": lg.get("differs_from_neutral"),
+                "difference_reason": lg.get("difference_reason"),
+            }
+            # Absence stays absence. An empty `threats` list would read as "your
+            # rivals own nothing you do not", which is a different claim from
+            # "this build did not publish them".
+            if "threats" in lg:
+                block["threats"] = [_ownership_row(r)
+                                    for r in (lg.get("threats") or [])[:rows]]
+            else:
+                block["threats_unavailable"] = (
+                    "this strategy artifact predates the threats field")
+            if "my_captain_eo_pct" in lg:
+                block["my_captain_eo_pct"] = lg.get("my_captain_eo_pct")
+            else:
+                block["my_captain_eo_pct_unavailable"] = (
+                    "this strategy artifact predates the field")
+            leagues.append(block)
+        return envelope(
+            "strategy.json", meta, blob=strat, leagues=leagues,
+            ownership_rows_per_list=rows,
+            simulation=strat.get("simulation"), chips=strat.get("chips"),
+            resolution=strat.get("resolution"), errors=strat.get("league_errors"),
+            limitations=[
+                *(strat.get("limitations") or []),
+                "Ownership here is league-scoped (how many of YOUR rivals own a "
+                "player), never the global selected-by percentage.",
+                "`threats` are players your rivals own and you do not. They are "
+                "an exposure, not a shortlist: a threat you cannot afford and a "
+                "threat you should buy look identical here.",
+                "`effective_ownership_pct` counts a captain twice, so it can "
+                "exceed 100%. `my_captain_eo_pct` is the share of rivals who "
+                "captained YOUR captain — at 100% the armband cannot move you.",
+                "Differentials all have an effective ownership of exactly zero, "
+                "so ownership cannot rank them; they are ordered by projected "
+                "points, which `differentials_ranked_by` names.",
+            ])
+
+    rows = MAX_OWNERSHIP_ROWS
+    out = assemble(rows)
+    # One league fits comfortably; several do not. Thin the ownership lists
+    # rather than return a payload the client refuses, and say it was done.
+    while serialized_bytes(out) > MAX_RESULT_BYTES and rows > 2:
+        rows = max(2, rows - 2)
+        out = assemble(rows)
+        out["ownership_rows_thinned"] = (
+            f"the ownership lists were cut to {rows} rows each to fit the "
+            f"{MAX_RESULT_BYTES:,}-byte response budget")
+    return out
+
+
 
 
 def get_live_gameweek() -> dict[str, Any]:
@@ -1071,9 +1759,21 @@ def build_server() -> Any:
 
     @server.tool(name="find_players", description=find_players.__doc__)
     def players_search(query: str = "", team: str = "", position: str = "",
-                       limit: int = 10) -> dict[str, Any]:
+                       limit: int = 10, sort: str = "next_gw_xp",
+                       order: str = "desc", min_price: float | None = None,
+                       max_price: float | None = None,
+                       min_defcon90: float | None = None,
+                       min_form: float | None = None,
+                       min_xgi90: float | None = None,
+                       max_fdr3: float | None = None,
+                       price_direction: str = "",
+                       available_only: bool = False) -> dict[str, Any]:
         return call("find_players", query=query, team=team, position=position,
-                    limit=limit)
+                    limit=limit, sort=sort, order=order, min_price=min_price,
+                    max_price=max_price, min_defcon90=min_defcon90,
+                    min_form=min_form, min_xgi90=min_xgi90, max_fdr3=max_fdr3,
+                    price_direction=price_direction,
+                    available_only=available_only)
 
     @server.tool(name="get_player_outlook",
                  description=get_player_outlook.__doc__)

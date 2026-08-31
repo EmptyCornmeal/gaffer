@@ -129,6 +129,35 @@ def conn():
     return c
 
 
+def seed_projections(conn, gws, means, model="test-model"):
+    """One projection row per (player, gameweek) — the timing horizon's input."""
+    for gw in gws:
+        for pid, ep in means.items():
+            value = ep(gw) if callable(ep) else ep
+            conn.execute(
+                "INSERT OR REPLACE INTO projections "
+                "(player_id, gw, exp_points, confidence, model_version) "
+                "VALUES (?,?,?,?,?)", (pid, gw, float(value), 0.7, model))
+    conn.commit()
+
+
+def seed_fixtures(conn, per_gw):
+    """``{gameweek: [(home_team, away_team), ...]}`` plus the teams they name."""
+    teams = {t for pairs in per_gw.values() for pair in pairs for t in pair}
+    for t in sorted(teams):
+        conn.execute(
+            "INSERT OR REPLACE INTO teams (id, code, name, short) VALUES (?,?,?,?)",
+            (t, 100 + t, f"Team {t}", f"T{t}"))
+    fid = 1
+    for gw, pairs in per_gw.items():
+        for h, a in pairs:
+            conn.execute(
+                "INSERT INTO fixtures (id, gw, team_h, team_a) VALUES (?,?,?,?)",
+                (fid, gw, h, a))
+            fid += 1
+    conn.commit()
+
+
 def seed_squad(conn, starting, bench, captain, vice, gw=7):
     for pid in starting + bench:
         conn.execute(
@@ -322,14 +351,79 @@ def test_chip_block_survives_an_api_failure():
     assert block["available"] == []
 
 
-def test_a_strong_bench_boost_is_recommended_when_available():
+def test_a_strong_chip_is_a_candidate_until_its_timing_is_checked():
+    """The defect: the best available chip was fired in the CURRENT gameweek as
+    soon as it cleared a flat bar. Without a projection horizon there is no
+    later gameweek to compare against, so there is no WHEN — and a chip you can
+    play once is a WHEN decision."""
     scen = FakeScen({p: 6.0 for p in range(1, 16)}, n=4000)
     client = FakeClient(chips=LIVE_CHIPS)
     block = ST.chip_block(client, scen, 100, 7, list(range(1, 12)),
                           [12, 13, 14, 15], 1, None, 4)
     # Four bench players at 6.0 each is ~24 points: well past the bar.
-    assert block["recommendation"] == "bboost"
     assert block["expected_gain"] > 20
+    assert block["recommendation"] == "hold"
+    assert block["candidate"]["chip"] == "bboost"
+    assert block["timing"]["not_assessed"] == ["3xc", "bboost"]
+
+
+def test_a_strong_bench_boost_is_recommended_once_the_window_is_assessed(conn):
+    """Same 24-point bench, but now every gameweek left in the window is valued
+    and this one wins it."""
+    seed_projections(conn, range(7, 20),
+                     {p: (lambda gw, p=p: 6.0 if gw == 7 else 1.0)
+                      for p in range(1, 16)})
+    scen = FakeScen({p: 6.0 for p in range(1, 16)}, n=4000)
+    client = FakeClient(chips=LIVE_CHIPS)
+    block = ST.chip_block(client, scen, 100, 7, list(range(1, 12)),
+                          [12, 13, 14, 15], 1, None, 4, conn=conn)
+    assert block["recommendation"] == "bboost"
+    assert block["timing"]["by_chip"]["bboost"]["coverage"] == "full"
+    assert block["candidate"] is None
+
+
+def test_a_better_later_gameweek_holds_the_chip(conn):
+    seed_projections(conn, range(7, 20),
+                     {p: (lambda gw, p=p: 9.0 if gw == 12 else 1.0)
+                      for p in range(1, 16)})
+    scen = FakeScen({p: 6.0 for p in range(1, 16)}, n=4000)
+    client = FakeClient(chips=LIVE_CHIPS)
+    block = ST.chip_block(client, scen, 100, 7, list(range(1, 12)),
+                          [12, 13, 14, 15], 1, None, 4, conn=conn)
+    assert block["recommendation"] == "hold"
+    assert "GW12" in block["reason"]
+
+
+def test_the_timing_profile_reads_doubles_and_blanks_from_the_fixture_list(conn):
+    """A double stacks both fixtures into the gameweek's projection row and a
+    blank zeroes it, so fixture density reaches the chip layer as points — and
+    the counts are published rather than assumed."""
+    seed_fixtures(conn, {7: [(1, 2), (3, 4)],
+                         8: [(1, 2), (3, 4), (1, 3)],     # teams 1 and 3 double
+                         9: [(1, 2)]})                    # teams 3 and 4 blank
+    seed_projections(conn, range(7, 10), {p: 2.0 for p in range(1, 16)})
+    profiles, basis, through, fixtures = ST.chip_timing(
+        conn, 7, list(range(1, 12)), [12, 13, 14, 15])
+    assert through == 9
+    assert fixtures[8]["double_teams"] == 2
+    assert fixtures[9]["blank_teams"] == 2
+    assert "Doubles scheduled: [8]" in basis and "blanks: [9]" in basis
+    assert set(profiles) == {"3xc", "bboost"}
+
+
+def test_the_wildcard_and_free_hit_are_reported_as_un_timed(conn):
+    """Valuing either in a future gameweek needs a squad re-solve in that
+    gameweek, which the pipeline does not run. Saying so beats inventing one."""
+    seed_projections(conn, range(7, 20), {p: 2.0 for p in range(1, 16)})
+    profiles, _, _, _ = ST.chip_timing(conn, 7, list(range(1, 12)),
+                                       [12, 13, 14, 15])
+    assert "wildcard" not in profiles and "freehit" not in profiles
+
+
+def test_chip_timing_without_projections_says_so(conn):
+    profiles, basis, through, _ = ST.chip_timing(conn, 7, [1, 2], [3])
+    assert profiles == {} and through is None
+    assert "no projections" in basis
 
 
 # --------------------------------------------------------------------------
@@ -487,7 +581,12 @@ def test_a_total_league_outage_still_produces_the_chip_plan(conn, monkeypatch):
     strat = ST.build(conn, client, settings, from_gw=8, squad_event=7, sol=sol)
     assert strat["leagues"] == []
     assert strat["league_errors"]
-    assert strat["chips"]["recommendation"] == "bboost"
+    # The outage costs the run its league analysis and nothing else: every chip
+    # is still valued and ranked. Whether one is RECOMMENDED is a timing
+    # question, answered elsewhere.
+    assert strat["chips"]["alternatives"][0]["chip"] == "bboost"
+    assert strat["chips"]["reason"]
+    assert "timing" in strat["chips"]
 
 
 # --------------------------------------------------------------------------
@@ -571,3 +670,105 @@ def test_a_failed_strategy_build_is_publishable_only_if_it_says_so():
     bad = contract.Report(data_dir=".")
     contract._check_strategy({"error": "boom"}, bad)
     assert not bad.ok
+
+
+def test_the_artifact_states_which_chips_were_not_timed(conn, monkeypatch):
+    """This codebase states its assumptions in the artifact rather than burying
+    them, and an un-assessed WHEN is an assumption."""
+    scen = FakeScen({p: 6.0 for p in range(1, 31)})
+    monkeypatch.setattr(ST.SC, "simulate", lambda *a, **k: scen)
+    seed_squad(conn, list(range(1, 12)), [12, 13, 14, 15], 3, 4)
+    seed_projections(conn, range(8, 13), {p: 2.0 for p in range(1, 31)})
+    client = FakeClient(leagues={}, chips=LIVE_CHIPS)
+    settings = config.Settings(entry_id=100, league_ids=[])
+    sol = Solution(list(range(1, 16)), list(range(1, 12)), 3, 4,
+                   [12, 13, 14, 15], "4-4-2", 750, 40.0)
+    strat = ST.build(conn, client, settings, from_gw=8, squad_event=7, sol=sol)
+    limits = " ".join(strat["limitations"])
+    assert "Chip timing basis" in limits
+    # The window runs to GW19 and projections stop at GW12: say so.
+    assert "through GW12" in limits
+
+
+# --------------------------------------------------------------------------
+# A8/A9 — what the export publishes of the league layer's four answers
+# --------------------------------------------------------------------------
+
+def _ownership_row(pid, **over):
+    row = {"player_id": pid, "owners": 2, "n_rivals": 2, "ownership_pct": 100.0,
+           "effective_ownership_pct": 100.0, "captain_eo_pct": 0.0}
+    row.update(over)
+    return row
+
+
+def _league_block(**over):
+    base = {"league_id": 10, "name": "L", "league_type": "x",
+            "classification": "tiny_private", "size": 4, "target_position": 1,
+            "posture": {}, "placing": {}, "data_quality": {},
+            "shields": [_ownership_row(1)], "differentials": [],
+            "differs_from_neutral": False, "difference_reason": ""}
+    base.update(over)
+    return base
+
+
+def test_the_export_publishes_threats_and_the_captains_effective_ownership():
+    """Both are computed on every run; `strategy.json` carried neither."""
+    strat = {"leagues": [_league_block(
+        threats=[_ownership_row(5, effective_ownership_pct=150.0,
+                                captain_eo_pct=50.0)],
+        my_captain_eo_pct=50.0)]}
+    out = artifacts.build_strategy(strat, _players_index(),
+                                   generated_at="2026-08-06T12:00:00+00:00")
+    lg = out["leagues"][0]
+    assert lg["threats"][0]["player"]["id"] == 5
+    assert lg["threats"][0]["effective_ownership_pct"] == 150.0
+    assert lg["my_captain_eo_pct"] == 50.0
+
+
+def test_the_export_never_invents_an_empty_threat_list():
+    """An empty list reads as 'your rivals own nothing you do not', which is a
+    different statement from 'this build did not produce them'."""
+    out = artifacts.build_strategy({"leagues": [_league_block()]},
+                                   _players_index(),
+                                   generated_at="2026-08-06T12:00:00+00:00")
+    assert "threats" not in out["leagues"][0]
+
+
+def test_exported_differentials_are_ranked_by_projection_not_by_player_id():
+    idx = [{"id": p, "name": f"P{p}", "team": "ARS", "pos": "MID", "price": 5.0,
+            "code": p, "team_code": 3, "next_gw_xp": float(p)} for p in (1, 2, 3)]
+    diffs = [_ownership_row(p, owners=0, ownership_pct=0.0,
+                            effective_ownership_pct=0.0) for p in (1, 2, 3)]
+    out = artifacts.build_strategy({"leagues": [_league_block(differentials=diffs)]},
+                                   idx, generated_at="2026-08-06T12:00:00+00:00")
+    lg = out["leagues"][0]
+    assert [d["player_id"] for d in lg["differentials"]] == [3, 2, 1]
+    assert lg["differentials_ranked_by"] == "next_gw_xp"
+
+
+def test_the_whole_chain_carries_threats_to_the_artifact(conn, monkeypatch):
+    """league -> multileague -> strategy -> export. `threats` was computed at
+    the first step and dropped at the second; `my_captain_eo_pct` too."""
+    leagues = {20: standings(20, "B", [row(100, 1, 120), row(300, 2, 118)])}
+    scen = FakeScen({p: 5.0 for p in range(1, 31)})
+    monkeypatch.setattr(ST.SC, "simulate", lambda *a, **k: scen)
+    seed_squad(conn, list(range(1, 12)), [12, 13, 14, 15], 3, 4)
+    client = FakeClient(leagues=leagues,
+                        picks={(300, 7): picks(list(range(20, 31)), captain=20)},
+                        chips=LIVE_CHIPS)
+    settings = config.Settings(entry_id=100, league_ids=[20])
+    sol = Solution(list(range(1, 16)), list(range(1, 12)), 3, 4,
+                   [12, 13, 14, 15], "4-4-2", 750, 40.0)
+    strat = ST.build(conn, client, settings, from_gw=8, squad_event=7, sol=sol)
+    lg = strat["leagues"][0]
+    assert {t["player_id"] for t in lg["threats"]} <= set(range(20, 31))
+    assert len(lg["threats"]) == LG.OWNERSHIP_ROWS, "the cap is still applied"
+    # The rival captains 20; my captain is 3, whom nobody in the league owns.
+    assert lg["my_captain_eo_pct"] == 0.0
+
+    out = artifacts.build_strategy(strat, _players_index(),
+                                   generated_at="2026-08-06T12:00:00+00:00")
+    exported = out["leagues"][0]
+    assert exported["my_captain_eo_pct"] == 0.0
+    for threat in exported["threats"]:
+        assert threat["player"]["id"] == threat["player_id"]

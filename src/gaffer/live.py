@@ -86,8 +86,22 @@ class FixtureState:
 
     @property
     def bonus_final(self) -> bool:
-        """True once FPL has awarded the real bonus for this match."""
-        return bool(self.finished)
+        """True once this match's bonus is settled and inside ``total_points``.
+
+        Not ``finished`` alone. A1: FPL flips a fixture's ``finished`` only when
+        the WHOLE event is processed, so the flag is per-gameweek wearing a
+        per-fixture name. Read live on 2026-08-31: GW1's ten fixtures were all
+        ``(finished=True, finished_provisional=True)``, while GW2's nine played
+        fixtures were all ``(finished=False, finished_provisional=True)`` three
+        days after they were played, held there by one straggler still to come.
+
+        So matches sat in AWAITING_BONUS for days and ``provisional_bonus`` kept
+        computing a BPS award for bonus FPL had settled long before and had
+        already folded into the live row. ``finished_provisional`` is the flag
+        that is actually per-fixture: it says this match is done and its bonus is
+        decided, whatever the rest of the gameweek is still doing.
+        """
+        return bool(self.finished or self.finished_provisional)
 
     @property
     def in_play(self) -> bool:
@@ -767,6 +781,16 @@ def assemble(
     """
     names = names or {}
     rivals = rivals or []
+    # A5. A manager is a member of his own mini-league, so the rivals list he
+    # arrives with contains him. The table below prepends a synthetic "You" row,
+    # which listed him twice — and the duplicate is a rival at distance ZERO from
+    # himself, so ``largest_swing`` chose it as the closest, found ``edge == 0``
+    # for every player because both squads were his, and returned None on every
+    # single run. Filtered here rather than only in the callers: ``_live_rivals``
+    # in pipeline.py and ``gatherRivals`` in web/src/lib/live/source.ts both drop
+    # him too, and this is what stops a third caller quietly reintroducing it.
+    if entry_id is not None:
+        rivals = [r for r in rivals if r.get("entry_id") != entry_id]
     states = fixture_states(fixtures_payload or [], gw, now)
     base = {
         "live_version": LIVE_VERSION,
@@ -812,12 +836,13 @@ def assemble(
     ]
     swing = largest_swing(mine, rival_states, pl, names)
 
+    my_row = {"entry_id": mine.entry_id, "name": "You", "you": True,
+              "current": round(mine.baseline + mine.current, 2),
+              "projected": round(mine.baseline + mine.projected, 2),
+              "gw_points": round(mine.current, 2),
+              "yet_to_play": mine.players_yet_to_play}
     ranked = sorted(
-        [{"entry_id": mine.entry_id, "name": "You", "you": True,
-          "current": round(mine.baseline + mine.current, 2),
-          "projected": round(mine.baseline + mine.projected, 2),
-          "gw_points": round(mine.current, 2),
-          "yet_to_play": mine.players_yet_to_play}]
+        [my_row]
         + [{"entry_id": r.entry_id,
             "name": next((x.get("name") or str(r.entry_id) for x in rivals
                           if x.get("entry_id") == r.entry_id), str(r.entry_id)),
@@ -845,6 +870,20 @@ def assemble(
             if p in pl
         ],
         "rivals": ranked,
+        # A6. The manager's own row, lifted out of the table so a consumer does
+        # not have to hunt the league for ``you``. Nothing wrote this key, and
+        # ``mcp_server.publish`` reads ``live["me"]`` (and ``me.substitutions``,
+        # and ``me.yet_to_play``) directly — so every one of them published None
+        # while the numbers sat two lines away in ``rivals``.
+        "me": {
+            "entry_id": mine.entry_id,
+            "current": my_row["current"],
+            "projected": my_row["projected"],
+            "gw_points": my_row["gw_points"],
+            "yet_to_play": mine.players_yet_to_play,
+            "provisional_position": my_row["provisional_position"],
+            "substitutions": mine.autosubs.as_dict(),
+        },
         "largest_swing": swing,
         "separation": {
             "confirmed": mine.confirmed,

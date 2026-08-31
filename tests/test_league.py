@@ -389,3 +389,72 @@ def test_league_views_are_isolated():
 def test_no_options_is_handled():
     r = ML.resolve([], None, ["L1"])
     assert r["default"] is None and r["shortlist"] == []
+
+
+# --------------------------------------------------------------------------
+# A8/A9 — the two answers the league view used to compute and throw away
+# --------------------------------------------------------------------------
+
+def test_threats_are_the_players_a_rival_owns_and_you_do_not():
+    """The most actionable thing a mini-league view knows, computed every run
+    and dropped by every consumer."""
+    s = state([entry(ME, starting=[1, 2]),
+               entry(2, starting=[1, 7], captain=7),
+               entry(3, starting=[7, 8])])
+    sd = LG.shields_and_differentials(s, [1, 2], my_captain=1)
+    ids = [t["player_id"] for t in sd["threats"]]
+    assert 7 in ids and 8 in ids
+    assert 1 not in ids and 2 not in ids, "a player you own is not a threat"
+    # Ranked by effective ownership: 7 is owned twice and captained once.
+    assert ids[0] == 7
+
+
+def test_the_captains_effective_ownership_is_unknown_rather_than_zero():
+    """Zero is a real answer — nobody else captained him. Not knowing is not."""
+    s = state([entry(ME, starting=[1]), entry(2, starting=[1], captain=1)])
+    assert LG.shields_and_differentials(s, [1])["my_captain_eo_pct"] is None
+    got = LG.shields_and_differentials(s, [1], my_captain=1)
+    assert got["my_captain_eo_pct"] == 100.0
+
+
+def test_a_differential_list_is_never_cut_to_an_arbitrary_ten():
+    """Fifteen differentials under a ten-row cap kept the ten smallest ids."""
+    mine = list(range(1, 16))
+    s = state([entry(ME, starting=mine[:11]),
+               entry(2, starting=list(range(100, 111))),
+               entry(3, starting=list(range(100, 111)))])
+    sd = LG.shields_and_differentials(s, mine)
+    assert len(sd["differentials"]) == 15
+    assert {d["player_id"] for d in sd["differentials"]} == set(mine)
+
+
+def test_differentials_rank_by_what_they_are_projected_to_return():
+    """Every differential has an effective ownership of exactly zero, so
+    ownership cannot order them and `player_id` was standing in for a ranking."""
+    mine = [1, 2, 3]
+    s = state([entry(ME, starting=mine), entry(2, starting=[50, 51])])
+    ranked = LG.shields_and_differentials(s, mine, xp={1: 2.0, 2: 9.0, 3: 5.0})
+    assert [d["player_id"] for d in ranked["differentials"]] == [2, 3, 1]
+    # Without projections the list is complete and makes no ranking claim.
+    plain = LG.shields_and_differentials(s, mine)
+    assert {d["player_id"] for d in plain["differentials"]} == set(mine)
+
+
+def test_shields_and_threats_still_rank_by_effective_ownership():
+    s = state([entry(ME, starting=[1, 2]),
+               entry(2, starting=[1, 2, 7], captain=1),
+               entry(3, starting=[1, 7])])
+    sd = LG.shields_and_differentials(s, [1, 2], my_captain=1)
+    eo = [x["effective_ownership_pct"] for x in sd["shields"]]
+    assert eo == sorted(eo, reverse=True)
+
+
+def test_the_league_view_carries_all_four_answers():
+    """`build_view` used to keep two of the four and drop the other two."""
+    s = state([entry(ME, starting=[1, 2]), entry(2, starting=[1, 7], captain=7)])
+    placing = LG.PlacingResult(0.1, 0.2, 1, 2.0, 10, 0.01, "known", 100.0)
+    v = ML.build_view(s, [1, 2], 1, placing,
+                      gameweeks_remaining=5, target=1).as_dict()
+    assert [t["player_id"] for t in v["threats"]] == [7]
+    assert v["my_captain_eo_pct"] == 0.0
+    assert "shields" in v and "differentials" in v

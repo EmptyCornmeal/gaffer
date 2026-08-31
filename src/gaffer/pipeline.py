@@ -537,6 +537,13 @@ def _live_rivals(client, settings, gw) -> list[dict]:
 
     Bounded on purpose: a live view refreshes often, and walking every league's
     cohort would turn a scoreboard into a rate-limit problem.
+
+    A5. The manager is a member of his own mini-league, so his own entry comes
+    back in the standings and is dropped here. ``live.assemble`` prepends a "You"
+    row, so leaving him in listed him twice in the published table — and handed
+    ``largest_swing`` a rival at distance zero from himself, which is exactly the
+    thing it measures against. ``gatherRivals`` in web/src/lib/live/source.ts
+    drops him the same way; ``assemble`` now does it again, defensively.
     """
     if not (settings.entry_id and settings.league_ids):
         return []
@@ -561,7 +568,8 @@ def _live_rivals(client, settings, gw) -> list[dict]:
          # pair; the two must not drift.
          "total": e.total - e.event_total, "hits": e.hits,
          "active_chip": (e.chips_used or [None])[0]}
-        for e in state.entries if e.has_picks
+        for e in state.entries
+        if e.has_picks and e.entry_id != settings.entry_id
     ]
 
 

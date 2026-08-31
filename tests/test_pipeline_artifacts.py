@@ -444,3 +444,19 @@ def test_pipeline_labels_a_generic_build(stub_pipeline, monkeypatch):
     meta = json.loads((root / "data" / "meta.json").read_text(encoding="utf-8"))
     assert meta["build_mode"] == "generic"
     assert meta["entry_id"] is None
+
+
+def test_the_meta_export_carries_the_evidence_for_refusing_the_blend(conn):
+    """`build_meta` is an ALLOWLIST. A key the projection layer stamps and
+    this list does not name never reaches `meta.json` at all, so the evidence
+    for switching the h=1 regime would have stayed stranded in the database."""
+    stamped = {"projection_regime": "component_only",
+               "ep_next_form_match": "93.1",
+               "ep_next_form_sample": "355",
+               "ep_next_blend_weight_applied_mean": "0.0"}
+    for key, value in stamped.items():
+        conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+                     (key, value))
+    meta = artifacts.build_meta(conn, "test-1", settings=config.Settings())
+    for key, value in stamped.items():
+        assert meta[key] == value, f"{key} never reached the artifact"

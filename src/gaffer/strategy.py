@@ -203,13 +203,136 @@ def build_options(
 # Chips
 # ---------------------------------------------------------------------------
 
+def _projection_grid(
+    conn: sqlite3.Connection, from_gw: int,
+) -> dict[int, dict[int, float]]:
+    """``{gameweek: {player: expected points}}`` for the projected horizon.
+
+    ``projections`` holds one row per (player, gameweek) and the projector
+    already stacks a double gameweek's fixtures and zeroes a blank, so this grid
+    carries fixture density without the chip layer having to reason about
+    fixtures itself.
+    """
+    grid: dict[int, dict[int, float]] = {}
+    try:
+        rows = conn.execute(
+            "SELECT gw, player_id, exp_points FROM projections WHERE gw >= ?",
+            (from_gw,),
+        ).fetchall()
+    except sqlite3.Error:
+        return {}
+    for r in rows:
+        try:
+            grid.setdefault(int(r["gw"]), {})[int(r["player_id"])] = float(
+                r["exp_points"] or 0.0)
+        except (TypeError, ValueError):
+            continue
+    return grid
+
+
+def fixture_density(
+    conn: sqlite3.Connection, gws: list[int],
+) -> dict[int, dict[str, int]]:
+    """Doubles and blanks per gameweek, straight from the published fixture list.
+
+    FPL publishes the postponements that create doubles and blanks well before
+    they are played, and until it does every team has exactly one fixture.
+    Reporting the count rather than assuming it is what stops a chip plan from
+    claiming to know about a double that has not been scheduled.
+    """
+    if not gws:
+        return {}
+    counts: dict[int, dict[int, int]] = {}
+    try:
+        teams = [int(r["id"]) for r in conn.execute("SELECT id FROM teams")]
+        rows = conn.execute(
+            "SELECT gw, team_h, team_a FROM fixtures WHERE gw IS NOT NULL"
+        ).fetchall()
+    except sqlite3.Error:
+        return {}
+    for g in gws:
+        counts[int(g)] = dict.fromkeys(teams, 0)
+    for r in rows:
+        try:
+            g = int(r["gw"])
+        except (TypeError, ValueError):
+            continue
+        if g not in counts:
+            continue
+        for t in (r["team_h"], r["team_a"]):
+            if t in counts[g]:
+                counts[g][t] += 1
+    return {
+        g: {"double_teams": sum(1 for v in c.values() if v >= 2),
+            "blank_teams": sum(1 for v in c.values() if v == 0),
+            "fixtures": sum(c.values()) // 2}
+        for g, c in sorted(counts.items())
+    }
+
+
+def chip_timing(
+    conn: sqlite3.Connection | None, gw: int,
+    starting: list[int], bench: list[int],
+) -> tuple[dict[str, dict[int, float]], str, int | None,
+           dict[int, dict[str, int]]]:
+    """Per-gameweek chip values across the horizon Gaffer projects.
+
+    Returns ``(profiles, basis, projected_through, fixtures)``.
+
+    Only Bench Boost and Triple Captain are profiled, and that limit is real
+    rather than an oversight: valuing a Wildcard or Free Hit in a future
+    gameweek needs a full budget-legal squad re-solve *in* that gameweek, which
+    the pipeline does not run. Those two are reported as un-assessed instead of
+    being handed a made-up profile.
+
+    The profile is built from mean projections, NOT from the scenario set that
+    produces the gains — a different basis, said so, and used only to compare
+    gameweeks with each other.
+    """
+    if conn is None:
+        return {}, ("no database connection, so no gameweek beyond this one was "
+                    "valued"), None, {}
+    grid = _projection_grid(conn, gw)
+    gws = sorted(grid)
+    if not gws:
+        return {}, ("no projections are stored for this gameweek or later, so no "
+                    "gameweek beyond this one was valued"), None, {}
+    profiles: dict[str, dict[int, float]] = {}
+    if starting:
+        # The armband is chosen in the week it is played, so a future Triple
+        # Captain is profiled on that week's best starter, not today's captain.
+        profiles[CH.TRIPLE_CAPTAIN] = {
+            g: max((grid[g].get(p, 0.0) for p in starting), default=0.0)
+            for g in gws
+        }
+    if bench:
+        profiles[CH.BENCH_BOOST] = {
+            g: sum(grid[g].get(p, 0.0) for p in bench) for g in gws
+        }
+    fixtures = fixture_density(conn, gws)
+    doubles = sorted(g for g, f in fixtures.items() if f["double_teams"])
+    blanks = sorted(g for g, f in fixtures.items() if f["blank_teams"])
+    basis = (
+        f"mean projections for your own squad over GW{gws[0]}-GW{gws[-1]}, which "
+        "stack a double gameweek's fixtures and zero a blank. This is a "
+        "DIFFERENT basis from the scenario-simulated gains, and is used only to "
+        "compare gameweeks with each other. "
+        f"Doubles scheduled: {doubles or 'none'}; blanks: {blanks or 'none'}.")
+    return profiles, basis, gws[-1], fixtures
+
+
 def chip_block(
     client: Any, scen: SC.ScenarioSet, entry_id: int | None, gw: int,
     starting: list[int], bench: list[int], captain: int | None,
     free_sol: optimize.Solution | None, weeks_retained: int,
-    squad_known: bool = True,
+    squad_known: bool = True, conn: sqlite3.Connection | None = None,
 ) -> dict[str, Any]:
-    """Value every available chip in the same scenarios as the squad."""
+    """Value every available chip in the same scenarios as the squad.
+
+    ``conn`` supplies the projection horizon the timing check runs over. Without
+    it there is no later gameweek to compare against, so no chip is recommended:
+    the plan publishes a candidate and says the WHEN was not assessed.
+    """
     try:
         bootstrap = client.bootstrap()
     except Exception:  # noqa: BLE001
@@ -241,9 +364,13 @@ def chip_block(
             evaluations.append(CH.evaluate_wildcard(
                 scen, starting, captain, free_sol.starting, free_sol.captain, gw,
                 weeks_retained=weeks_retained))
+    profiles, basis, through, fixtures = chip_timing(conn, gw, starting, bench)
     plan = CH.plan_chips(evaluations, windows, used, gw, squad_known=squad_known,
-                         chip_state_known=chip_state_known)
-    return plan.as_dict()
+                         chip_state_known=chip_state_known, timing=profiles,
+                         timing_basis=basis, projected_through=through)
+    block = plan.as_dict()
+    block["timing"]["fixtures"] = {str(g): f for g, f in (fixtures or {}).items()}
+    return block
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +414,7 @@ def build(
     chips = chip_block(
         client, scen, settings.entry_id, from_gw, starting, bench, captain,
         free_sol, weeks_retained=min(4, gws_remaining),
-        squad_known=bool(held and held["starting"]),
+        squad_known=bool(held and held["starting"]), conn=conn,
     )
 
     states: list[LG.LeagueState] = []
@@ -341,13 +468,14 @@ def build(
         "options": [o.as_dict() for o in options],
         "resolution": resolution,
         "chips": chips,
-        "limitations": _limitations(scen, views, held is not None, gws_remaining),
+        "limitations": _limitations(scen, views, held is not None, gws_remaining,
+                                    chips),
     }
 
 
 def _limitations(
     scen: SC.ScenarioSet, views: list[ML.LeagueView], have_squad: bool,
-    gws_remaining: int,
+    gws_remaining: int, chips: dict[str, Any] | None = None,
 ) -> list[str]:
     out = [
         f"All probabilities come from {scen.n_sims} shared fixture scenarios "
@@ -369,4 +497,34 @@ def _limitations(
         out.append(
             "Gaffer's multi-week mean projections are materially weaker than its "
             "one-week ones, so anything beyond the next gameweek is directional.")
+    out.extend(_chip_limitations(chips))
+    return out
+
+
+def _chip_limitations(chips: dict[str, Any] | None) -> list[str]:
+    """What the chip layer did NOT check — in the artifact, not in a docstring."""
+    tim = (chips or {}).get("timing") or {}
+    if not tim:
+        return []
+    out: list[str] = []
+    unassessed = sorted(set(tim.get("not_assessed") or []))
+    if unassessed:
+        out.append(
+            "Chip timing is not assessed for " + ", ".join(unassessed) +
+            ": valuing those in a future gameweek needs a full budget-legal "
+            "squad re-solve in that gameweek, which Gaffer does not run. They "
+            "are published as candidates, never as advice to play one now.")
+    partly = sorted(set(tim.get("partly_assessed") or []))
+    through = tim.get("projected_through")
+    if partly and through:
+        ends = sorted({(tim.get("by_chip") or {}).get(c, {}).get("window_end")
+                       for c in partly} - {None})
+        out.append(
+            "Chip timing was compared only over the gameweeks Gaffer projects "
+            f"(through GW{through}); " + ", ".join(partly) +
+            (f" can still be played up to GW{max(ends)}" if ends else "") +
+            ", so the rest of the window is unassessed and nothing is "
+            "recommended on the strength of a partial comparison.")
+    if tim.get("basis"):
+        out.append("Chip timing basis: " + tim["basis"])
     return out
