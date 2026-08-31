@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
@@ -697,3 +698,38 @@ def test_a4_contract_requires_the_conflicting_horizon_plan_to_be_labelled():
     report = contract.Report("test")
     contract._check_decision(_a4_decision(candidate=False), report)
     assert "decision.candidate_move" in fields(report)
+
+
+def test_the_percentile_basis_check_reads_the_key_the_artifact_publishes():
+    """The gate must read `outcome_percentile_basis`, not the attribute name.
+
+    Reading `percentile_basis` matched nothing, so the check fired on every
+    review that carried a percentile -- including correct ones -- and blocked a
+    publish while proving nothing. A gate that cannot pass is not a gate.
+    """
+    from gaffer import review as R
+
+    good = R.assess(expected=None, realised=50, percentile=0.206,
+                    hold_expected=None, has_snapshot=True,
+                    missing_fields=["decision.comparison.move_expected"]).as_dict()
+    assert "outcome_percentile_basis" in good, (
+        "the artifact key changed; this contract check reads it by name")
+
+    rep = contract.Report(data_dir=Path("data"))
+    contract._check_review({"review_version": R.REVIEW_VERSION, "event": 1,
+                     "entry_id": 1, "generated_at": "2026-08-31T00:00:00+00:00",
+                     "comparison": {}, "attribution": {}, "quality": good,
+                     "has_snapshot": True,
+                     "snapshot_as_of": "2026-08-31T00:00:00+00:00"}, rep)
+    basis = [v for v in rep.violations if "percentile_basis" in v.field]
+    assert basis == [], f"a correctly-formed review was rejected: {basis}"
+
+    stripped = {k: v for k, v in good.items() if k != "outcome_percentile_basis"}
+    rep2 = contract.Report(data_dir=Path("data"))
+    contract._check_review({"review_version": R.REVIEW_VERSION, "event": 1,
+                     "entry_id": 1, "generated_at": "2026-08-31T00:00:00+00:00",
+                     "comparison": {}, "attribution": {}, "quality": stripped,
+                     "has_snapshot": True,
+                     "snapshot_as_of": "2026-08-31T00:00:00+00:00"}, rep2)
+    assert [v for v in rep2.violations if "percentile_basis" in v.field], (
+        "a published percentile with no stated reference class must be rejected")

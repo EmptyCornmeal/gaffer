@@ -1107,9 +1107,14 @@ def _check_review(review: Any, report: Report) -> None:
                       "missing field instead of denying the record"))
 
     # G1/A10c. A published percentile must say what it is a percentile OF.
-    if pct is not None and not str(q.get("percentile_basis") or "").strip():
+    # The published key is `outcome_percentile_basis`, matching
+    # `outcome_percentile`. Reading `percentile_basis` -- the dataclass attribute
+    # name -- made this fire on every review regardless of content, which is a
+    # gate that blocks publishing while proving nothing.
+    if pct is not None and not str(q.get("outcome_percentile_basis") or "").strip():
         report.violations.append(
-            Violation(name, "quality.percentile_basis", q.get("percentile_basis"),
+            Violation(name, "quality.outcome_percentile_basis",
+                      q.get("outcome_percentile_basis"),
                       "a stated reference class -- the number is a position in "
                       "the distribution of the squad Gaffer RECOMMENDED, not a "
                       "rank against other managers"))
