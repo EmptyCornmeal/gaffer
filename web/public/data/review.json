@@ -4,7 +4,7 @@
   "season": "2026-27",
   "entry_id": 1066421,
   "event": 1,
-  "generated_at": "2026-08-31T19:06:04+00:00",
+  "generated_at": "2026-08-31T20:54:07+00:00",
   "snapshot_as_of": "2026-08-21T16:23:24+00:00",
   "has_snapshot": true,
   "comparison": {
@@ -57,5 +57,272 @@
     "outcome_percentile": 0.206,
     "forecast_error": null,
     "summary": "0 blank starter(s), 1 on the bench"
+  },
+  "season_calibration": {
+    "schema_version": 1,
+    "calibration_version": "calibration-1.0",
+    "season": "2026-27",
+    "entry_id": 1066421,
+    "generated_at": "2026-08-31T20:53:45+00:00",
+    "status": "insufficient_data",
+    "headline": "n=1. Not enough to report. A KS test on 1 gameweek can only detect a shift of 1.0 in percentile units, which is not a miscalibration anybody would ship — so nothing here is a finding. 7 more finished gameweeks before this line changes, and see `gameweeks_for_a_moderate_shift` for what it takes to detect a miscalibration worth acting on. Per-player, n=600 player-gameweeks over GW1: mean absolute error 1.634 points against 1.873 for a pool-mean baseline. Not reportable: 600 player-gameweeks, but all of them from 1 gameweek (3 needed). Rows from one gameweek share a fixture list, one round of team news and one set of results, so they are not 600 independent observations. The numbers below are real and they are one week's numbers.",
+    "measures": "what Gaffer published before each deadline, scored against what happened. Nothing here is computed on an archive.",
+    "distribution": {
+      "status": "insufficient_data",
+      "reportable": false,
+      "reporting_floor_gameweeks": 8,
+      "gameweeks_short_of_the_floor": 7,
+      "verdict": "n=1. Not enough to report. A KS test on 1 gameweek can only detect a shift of 1.0 in percentile units, which is not a miscalibration anybody would ship — so nothing here is a finding. 7 more finished gameweeks before this line changes, and see `gameweeks_for_a_moderate_shift` for what it takes to detect a miscalibration worth acting on.",
+      "basis": "the realised gameweek total's position among the simulated outcomes of the squad Gaffer recommended, stored before the deadline — a percentile within your own squad's simulated range, NOT a rank against other managers",
+      "followed_the_advice": {
+        "n": 1,
+        "mean": 0.206,
+        "mean_ci95": [
+          -0.3598,
+          0.7718
+        ],
+        "median": 0.206,
+        "ks_d": 0.794,
+        "ks_critical_95": 1.36,
+        "rejects_uniform_at_95": false,
+        "below_0_15": 0,
+        "above_0_85": 0,
+        "smallest_detectable_shift": 1.0,
+        "direction": "no_detectable_bias"
+      },
+      "every_gameweek": {
+        "n": 1,
+        "mean": 0.206,
+        "mean_ci95": [
+          -0.3598,
+          0.7718
+        ],
+        "median": 0.206,
+        "ks_d": 0.794,
+        "ks_critical_95": 1.36,
+        "rejects_uniform_at_95": false,
+        "below_0_15": 0,
+        "above_0_85": 0,
+        "smallest_detectable_shift": 1.0,
+        "direction": "no_detectable_bias",
+        "caveat": "mixes reference classes. In a gameweek the manager did not follow the advice, the percentile places HIS total inside the distribution of the squad GAFFER recommended, so it measures the result against the advice rather than against the team he fielded. Reported for completeness; not the headline."
+      },
+      "interval_note": "`mean_ci95` is a normal approximation around the mean of n draws from U(0,1), standard error 1/sqrt(12n). At small n it runs outside [0, 1]; that is the interval telling you the sample is useless, and it is left unclamped on purpose.",
+      "gameweeks_followed": 1,
+      "gameweeks_diverged": 0,
+      "gameweeks_followed_unknown": 0,
+      "gameweeks_for_a_moderate_shift": 83,
+      "moderate_shift": 0.15,
+      "power_note": "detecting a 0.15 shift in percentile units at 95% needs about 83 gameweeks, which is more than a season. This check can catch a grossly wrong spread; it can never certify a nearly-right one.",
+      "per_gameweek": [
+        {
+          "event": 1,
+          "percentile": 0.206,
+          "realised": 50.0,
+          "followed_advice": true,
+          "distribution_size": 500,
+          "snapshot_as_of": "2026-08-21T16:23:24+00:00",
+          "snapshot_match": "named_by_the_review",
+          "published_percentile": 0.206,
+          "agrees_with_published": true
+        }
+      ],
+      "recomputation": {
+        "checked": 1,
+        "disagreed_with_the_published_percentile": [],
+        "note": "every percentile above is recomputed here from the stored distribution and compared with the one the review published. A disagreement means two of Gaffer's own artifacts describe the same gameweek differently."
+      }
+    },
+    "projection": {
+      "status": "insufficient_data",
+      "reportable": false,
+      "insufficient_reason": "600 player-gameweeks, but all of them from 1 gameweek (3 needed). Rows from one gameweek share a fixture list, one round of team news and one set of results, so they are not 600 independent observations. The numbers below are real and they are one week's numbers.",
+      "minimum_rows": 100,
+      "minimum_gameweeks": 3,
+      "unit": "one player-gameweek: the frozen pre-deadline `exp_points` against the points the player actually scored",
+      "snapshot": "data/state/projections.ndjson, is_pre_deadline = 1",
+      "gameweeks_measured": [
+        1
+      ],
+      "pooled": {
+        "n": 600,
+        "mae": 1.634,
+        "mean_predicted": 1.56,
+        "mean_actual": 1.577,
+        "bias": -0.016,
+        "bias_direction": "none",
+        "baseline_mae": 1.873,
+        "skill_vs_pool_mean": 0.128
+      },
+      "per_gameweek": [
+        {
+          "gameweek": 1,
+          "as_of": "2026-08-21T17:00:28.197538+00:00",
+          "n": 600,
+          "mae": 1.634,
+          "mean_predicted": 1.56,
+          "mean_actual": 1.577,
+          "bias": -0.016,
+          "bias_direction": "none",
+          "baseline_mae": 1.873,
+          "skill_vs_pool_mean": 0.128
+        }
+      ],
+      "curve": [
+        {
+          "pred": 0.0,
+          "actual": 0.0,
+          "haul_rate": 0.0,
+          "n": 75
+        },
+        {
+          "pred": 0.44,
+          "actual": 0.84,
+          "haul_rate": 0.0,
+          "n": 75
+        },
+        {
+          "pred": 0.95,
+          "actual": 1.47,
+          "haul_rate": 4.0,
+          "n": 75
+        },
+        {
+          "pred": 1.23,
+          "actual": 1.19,
+          "haul_rate": 0.0,
+          "n": 75
+        },
+        {
+          "pred": 1.47,
+          "actual": 1.49,
+          "haul_rate": 2.7,
+          "n": 75
+        },
+        {
+          "pred": 1.83,
+          "actual": 1.96,
+          "haul_rate": 5.3,
+          "n": 75
+        },
+        {
+          "pred": 2.52,
+          "actual": 2.4,
+          "haul_rate": 5.3,
+          "n": 75
+        },
+        {
+          "pred": 4.05,
+          "actual": 3.27,
+          "haul_rate": 8.0,
+          "n": 75
+        }
+      ],
+      "curve_summary": {
+        "top_bin": {
+          "pred": 4.05,
+          "actual": 3.27,
+          "haul_rate": 8.0,
+          "n": 75
+        },
+        "top_bin_gap": 0.78,
+        "top_bin_direction": "over",
+        "note": "the highest-predicted bin, where captains and the differential picks live. `top_bin_gap` is predicted minus realised, in points, over n=75 player-gameweeks."
+      },
+      "appeared": {
+        "n": 308,
+        "mae": 2.259,
+        "mean_predicted": 2.116,
+        "mean_actual": 3.071,
+        "bias": -0.956,
+        "bias_direction": "under",
+        "baseline_mae": 2.436,
+        "skill_vs_pool_mean": 0.073,
+        "curve": [
+          {
+            "pred": 0.66,
+            "actual": 3.18,
+            "haul_rate": 7.9,
+            "n": 38
+          },
+          {
+            "pred": 1.05,
+            "actual": 2.18,
+            "haul_rate": 0.0,
+            "n": 38
+          },
+          {
+            "pred": 1.31,
+            "actual": 2.34,
+            "haul_rate": 0.0,
+            "n": 38
+          },
+          {
+            "pred": 1.6,
+            "actual": 3.24,
+            "haul_rate": 7.9,
+            "n": 38
+          },
+          {
+            "pred": 1.95,
+            "actual": 3.32,
+            "haul_rate": 10.5,
+            "n": 38
+          },
+          {
+            "pred": 2.47,
+            "actual": 3.05,
+            "haul_rate": 5.3,
+            "n": 38
+          },
+          {
+            "pred": 3.11,
+            "actual": 3.45,
+            "haul_rate": 7.9,
+            "n": 38
+          },
+          {
+            "pred": 4.52,
+            "actual": 3.74,
+            "haul_rate": 9.5,
+            "n": 42
+          }
+        ],
+        "caveat": "conditioned on a POST-MATCH fact — that the player played at all. It is not an error rate the model could have been held to before the deadline, and the apparent under-prediction here is mostly that selection, not pessimism. Shown because the pooled row is dominated by players who never left the bench."
+      },
+      "baselines": {
+        "pool_mean": "predict every player the gameweek's own mean realised score. An ORACLE baseline — it already knows the mean it is predicting — so `skill_vs_pool_mean` understates the model rather than flattering it.",
+        "persistence": {
+          "n": 0,
+          "mae": null,
+          "gameweeks": [],
+          "unavailable_reason": "needs two measured gameweeks; there are 1"
+        }
+      },
+      "limitations": [
+        "FPL revises points after `data_checked` (bonus, appeals). This block is recomputed from the frozen snapshot on every run, so a revision propagates rather than being frozen into a published number.",
+        "Only gameweeks the caller supplied results for are measured; an in-progress gameweek must not be passed in, because a provisional total would be scored as if it were final."
+      ]
+    },
+    "awaiting_result": [
+      2,
+      3
+    ],
+    "sources": {
+      "decisions": "data/state/decisions.ndjson",
+      "reviews": "data/state/reviews.ndjson",
+      "projections": "data/state/projections.ndjson",
+      "unparseable_lines": {
+        "decisions.ndjson": 0,
+        "reviews.ndjson": 0,
+        "projections.ndjson": 0
+      }
+    },
+    "limitations": [
+      "Every figure is one manager's season. There is no cross-sectional sample to borrow strength from, and there will not be one.",
+      "A snapshot without `decision.comparison.move_expected` is correct, not corrupt: before the season's first deadline FPL exposes no picks, so there is no held squad to compare a move against.",
+      "The percentile's reference class is the RECOMMENDED squad's own simulated range. It is not a rank against other managers.",
+      "GW1 is a different regime from the rest of the season: no season-to-date history exists, so the projection behind it comes from prior-season rates and the price prior alone. A season whose only measured gameweek is GW1 has measured that regime, not this one."
+    ]
   }
 }
