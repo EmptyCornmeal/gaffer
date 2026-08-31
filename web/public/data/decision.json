@@ -1,7 +1,7 @@
 {
   "weekly_version": "weekly-1.0",
   "decision_version": "decision-1.0",
-  "generated_at": "2026-08-31T07:57:18+00:00",
+  "generated_at": "2026-08-31T09:37:35+00:00",
   "gameweek": 3,
   "horizon": 6,
   "squad_state": {
@@ -275,7 +275,7 @@
         "next_gw_xp": 1.26,
         "confidence": 0.58,
         "horizon_xp": 6.42,
-        "owned_by": 12.6,
+        "owned_by": 12.5,
         "rationale": "Rotation/bench defender with projected 1.3 pts next GW.",
         "tags": [
           {
@@ -699,7 +699,7 @@
         "next_gw_xp": 7.25,
         "confidence": 0.9,
         "horizon_xp": 13.2,
-        "owned_by": 4.8,
+        "owned_by": 4.9,
         "rationale": "Rotation/bench defender with in form (10.0).",
         "tags": [
           {
@@ -929,7 +929,7 @@
       "next_gw_xp": 10.38,
       "confidence": 0.91,
       "horizon_xp": 42.86,
-      "owned_by": 47.4,
+      "owned_by": 47.5,
       "rationale": "Nailed midfielder with real underlying threat (1.28 xGI/90), on pens #1, FK #1, corners #1 and in form (12.5).",
       "tags": [
         {
@@ -1088,7 +1088,7 @@
         "next_gw_xp": 3.63,
         "confidence": 0.92,
         "horizon_xp": 31.41,
-        "owned_by": 38.1,
+        "owned_by": 38.0,
         "rationale": "Nailed keeper with strong clean-sheet odds and a soft fixture run.",
         "tags": [
           {
@@ -1246,7 +1246,7 @@
         "next_gw_xp": 6.71,
         "confidence": 0.83,
         "horizon_xp": 19.12,
-        "owned_by": 11.7,
+        "owned_by": 11.8,
         "rationale": "Rotation/bench defender with a genuine attacking threat from the back and in form (8.5).",
         "tags": [
           {
@@ -1388,7 +1388,7 @@
         "next_gw_xp": 10.38,
         "confidence": 0.91,
         "horizon_xp": 42.86,
-        "owned_by": 47.4,
+        "owned_by": 47.5,
         "rationale": "Nailed midfielder with real underlying threat (1.28 xGI/90), on pens #1, FK #1, corners #1 and in form (12.5).",
         "tags": [
           {
@@ -1471,7 +1471,7 @@
         "next_gw_xp": 5.87,
         "confidence": 0.9,
         "horizon_xp": 32.5,
-        "owned_by": 32.5,
+        "owned_by": 32.4,
         "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (1.28 xGI/90), on pens #2, FK #2, corners #2 and in form (6.5).",
         "tags": [
           {
@@ -1625,7 +1625,7 @@
         "next_gw_xp": 7.5,
         "confidence": 0.91,
         "horizon_xp": 33.19,
-        "owned_by": 69.4,
+        "owned_by": 69.5,
         "rationale": "Nailed forward with real underlying threat (0.71 xGI/90), on pens #1 and in form (7.5).",
         "tags": [
           {
@@ -1775,7 +1775,7 @@
         "next_gw_xp": 2.78,
         "confidence": 0.91,
         "horizon_xp": 19.08,
-        "owned_by": 7.6,
+        "owned_by": 7.5,
         "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
         "tags": [
           {
@@ -2132,7 +2132,7 @@
         "next_gw_xp": 1.26,
         "confidence": 0.58,
         "horizon_xp": 6.42,
-        "owned_by": 12.6,
+        "owned_by": 12.5,
         "rationale": "Rotation/bench defender with projected 1.3 pts next GW.",
         "tags": [
           {
@@ -2193,19 +2193,19 @@
       "chips_version": "chips-1.0",
       "recommendation": "3xc",
       "gameweek": 3,
-      "expected_gain": 7.82,
+      "expected_gain": 7.88,
       "use_threshold": 4.0,
       "alternatives": [
         {
           "chip": "3xc",
           "gameweek": 3,
-          "expected_gain": 7.82,
+          "expected_gain": 7.88,
           "ci95": [
-            7.59,
-            8.06
+            7.64,
+            8.12
           ],
-          "baseline_points": 49.38,
-          "with_chip_points": 57.2,
+          "baseline_points": 49.67,
+          "with_chip_points": 57.55,
           "assumptions": [
             "Assumes the captain plays; a blank or an early injury forfeits the chip.",
             "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -2214,46 +2214,46 @@
         {
           "chip": "bboost",
           "gameweek": 3,
-          "expected_gain": 6.43,
+          "expected_gain": 6.46,
           "ci95": [
-            6.27,
-            6.58
+            6.31,
+            6.62
           ],
-          "baseline_points": 49.38,
-          "with_chip_points": 55.8,
+          "baseline_points": 49.67,
+          "with_chip_points": 56.13,
           "assumptions": [
             "Bench points are simulated under the same fixtures as the XI.",
             "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
           ]
         },
         {
-          "chip": "wildcard",
-          "gameweek": 3,
-          "expected_gain": 0.47,
-          "ci95": [
-            -1.99,
-            2.93
-          ],
-          "baseline_points": 49.38,
-          "with_chip_points": 49.49,
-          "assumptions": [
-            "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
-            "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
-          ]
-        },
-        {
           "chip": "freehit",
           "gameweek": 3,
-          "expected_gain": 0.12,
+          "expected_gain": -0.07,
           "ci95": [
-            -0.5,
-            0.73
+            -0.69,
+            0.55
           ],
-          "baseline_points": 49.38,
-          "with_chip_points": 49.49,
+          "baseline_points": 49.67,
+          "with_chip_points": 49.6,
           "assumptions": [
             "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
             "The comparison squad is a real budget-legal solve, not the strongest XI in the game."
+          ]
+        },
+        {
+          "chip": "wildcard",
+          "gameweek": 3,
+          "expected_gain": -0.29,
+          "ci95": [
+            -2.76,
+            2.18
+          ],
+          "baseline_points": 49.67,
+          "with_chip_points": 49.6,
+          "assumptions": [
+            "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
+            "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
           ]
         }
       ],
@@ -2289,7 +2289,7 @@
       ],
       "used": [],
       "state_known": true,
-      "reason": "3xc projects +7.8 points (95% CI 7.6 to 8.1) in GW3"
+      "reason": "3xc projects +7.9 points (95% CI 7.6 to 8.1) in GW3"
     },
     "league_note": "",
     "confidence": "high",
@@ -2301,16 +2301,16 @@
       "The bar for calling a move an action (1.0 points and 55% chance of beating the hold) is a conservative policy choice, not a fitted one. It becomes fittable once ~6 gameweeks of decision snapshots and reviews exist."
     ],
     "comparison": {
-      "move_expected": 43.65,
-      "hold_expected": 48.04,
-      "delta": -4.38,
+      "move_expected": 43.76,
+      "hold_expected": 48.34,
+      "delta": -4.58,
       "delta_ci95": [
-        -4.81,
-        -3.96
+        -4.99,
+        -4.17
       ],
-      "p_move_beats_hold": 0.2925,
+      "p_move_beats_hold": 0.2865,
       "simulations": 2000,
-      "short_term_delta": -4.38,
+      "short_term_delta": -4.58,
       "horizon_delta": 16.67,
       "hit_cost": 16
     },
@@ -2369,19 +2369,19 @@
     "chips_version": "chips-1.0",
     "recommendation": "3xc",
     "gameweek": 3,
-    "expected_gain": 7.82,
+    "expected_gain": 7.88,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "3xc",
         "gameweek": 3,
-        "expected_gain": 7.82,
+        "expected_gain": 7.88,
         "ci95": [
-          7.59,
-          8.06
+          7.64,
+          8.12
         ],
-        "baseline_points": 49.38,
-        "with_chip_points": 57.2,
+        "baseline_points": 49.67,
+        "with_chip_points": 57.55,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice."
@@ -2390,46 +2390,46 @@
       {
         "chip": "bboost",
         "gameweek": 3,
-        "expected_gain": 6.43,
+        "expected_gain": 6.46,
         "ci95": [
-          6.27,
-          6.58
+          6.31,
+          6.62
         ],
-        "baseline_points": 49.38,
-        "with_chip_points": 55.8,
+        "baseline_points": 49.67,
+        "with_chip_points": 56.13,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's."
         ]
       },
       {
-        "chip": "wildcard",
-        "gameweek": 3,
-        "expected_gain": 0.47,
-        "ci95": [
-          -1.99,
-          2.93
-        ],
-        "baseline_points": 49.38,
-        "with_chip_points": 49.49,
-        "assumptions": [
-          "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
-          "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
-        ]
-      },
-      {
         "chip": "freehit",
         "gameweek": 3,
-        "expected_gain": 0.12,
+        "expected_gain": -0.07,
         "ci95": [
-          -0.5,
-          0.73
+          -0.69,
+          0.55
         ],
-        "baseline_points": 49.38,
-        "with_chip_points": 49.49,
+        "baseline_points": 49.67,
+        "with_chip_points": 49.6,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game."
+        ]
+      },
+      {
+        "chip": "wildcard",
+        "gameweek": 3,
+        "expected_gain": -0.29,
+        "ci95": [
+          -2.76,
+          2.18
+        ],
+        "baseline_points": 49.67,
+        "with_chip_points": 49.6,
+        "assumptions": [
+          "The rebuilt squad is assumed to hold its edge for 4 gameweek(s); the per-week gain is simulated, the persistence is not.",
+          "Gaffer's multi-week projections are materially weaker than its one-week ones, so a long retention assumption is the dominant uncertainty here."
         ]
       }
     ],
@@ -2465,22 +2465,22 @@
     ],
     "used": [],
     "state_known": true,
-    "reason": "3xc projects +7.8 points (95% CI 7.6 to 8.1) in GW3"
+    "reason": "3xc projects +7.9 points (95% CI 7.6 to 8.1) in GW3"
   },
   "leagues": [
     {
       "league_id": 271619,
       "name": "Crouch Potatoes",
       "target_position": 1,
-      "p_first": 0.309,
-      "p_target": 0.309,
+      "p_first": 0.307,
+      "p_target": 0.307,
       "available": true,
       "stance": "neutral"
     }
   ],
   "freshness": {
-    "generated_at": "2026-08-31T07:57:18+00:00",
-    "squad_retrieved_at": "2026-08-31T07:58:22+00:00",
+    "generated_at": "2026-08-31T09:37:35+00:00",
+    "squad_retrieved_at": "2026-08-31T09:37:45+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "default",
     "selling_price_confidence": "exact"
