@@ -1,6 +1,6 @@
 {
   "schema_version": 8,
-  "model_version": "heuristic-0.5",
+  "model_version": "heuristic-0.6",
   "dataset": "vaastav/Fantasy-Premier-League merged_gw",
   "season": "2025-26",
   "season_split": {
@@ -9,7 +9,7 @@
     ],
     "select": "2024-25",
     "test": "2025-26",
-    "measured_at_model_version": "heuristic-0.5",
+    "measured_at_model_version": "heuristic-0.6",
     "excluded": {
       "2021-22": "Predates FPL's `expected_goals` / `expected_assists` / `starts` columns entirely. On disk only as 2022-23's prior source, which since G-Q has exactly one caller — `xp_leakage_diagnostic`.",
       "2022-23": "G-Q. Its `expected_goals` and `expected_assists` are identically ZERO for GW1-15: the first gameweek carrying any xG at all is 16, and the covered window holds 64.2% of the season's minutes. The season-wide goals/xG of 1.419 is entirely that gap — over GW16-38 alone it is 0.913, i.e. ordinary, and assists behave the same way (A/xA 2.111 season-wide, 1.357 over the covered window, against ~1.37 in every other season). So the column is not mis-scaled, it is 40% absent. Compounding it, the 2021-22 prior cannot report xG either, so `base_xg90 > 0` holds for 0.0% of 2022-23 players against 35-39% elsewhere. Measured end-to-end, the model scores h=1 rank correlation -0.050 on that season, a legal XI of 26.8 pts/gw against the naive baseline's 48.2, and 8.1% captain accuracy. That is not a weak season. It is the model running on inputs that are not there."
@@ -50,20 +50,20 @@
     "1": {
       "n": 29338,
       "mae": {
-        "gaffer": 1.539,
+        "gaffer": 1.114,
         "naive": 1.075
       },
       "rank_corr": {
-        "gaffer": 0.455,
+        "gaffer": 0.626,
         "naive": 0.692
       },
       "decisions": {
         "gaffer": {
           "gameweeks_scored": 38,
-          "xi_points_per_gw": 49.7,
-          "xi_regret_per_gw": 88.0,
+          "xi_points_per_gw": 50.1,
+          "xi_regret_per_gw": 87.6,
           "captain_points_per_gw": 5.89,
-          "captain_regret_per_gw": 6.0,
+          "captain_regret_per_gw": 6.05,
           "captain_accuracy_pct": 21.1
         },
         "naive": {
@@ -77,16 +77,16 @@
       },
       "transfers": {
         "gaffer": {
-          "with_transfers": 1137.0,
-          "hold_squad": 914.0,
-          "gain": 223.0,
+          "with_transfers": 1334.0,
+          "hold_squad": 928.0,
+          "gain": 406.0,
           "gameweeks": 36,
-          "transfers_made": 35,
+          "transfers_made": 34,
           "transfers_blocked": {
-            "budget": 250,
-            "club": 1
+            "budget": 159,
+            "club": 0
           },
-          "bank_remaining_tenths": 36.0,
+          "bank_remaining_tenths": 14.0,
           "basis": "one free transfer per gameweek, budget/club-limit/bank enforced, both arms scored only on gameweeks where both could field a legal XI; sell price is current value"
         },
         "naive": {
@@ -107,55 +107,55 @@
     "2": {
       "n": 28088,
       "mae": {
-        "gaffer": 1.553,
+        "gaffer": 1.131,
         "naive": 1.091
       },
       "rank_corr": {
-        "gaffer": 0.44,
+        "gaffer": 0.613,
         "naive": 0.677
       }
     },
     "3": {
       "n": 27249,
       "mae": {
-        "gaffer": 1.562,
+        "gaffer": 1.142,
         "naive": 1.104
       },
       "rank_corr": {
-        "gaffer": 0.428,
+        "gaffer": 0.602,
         "naive": 0.663
       }
     },
     "4": {
       "n": 26449,
       "mae": {
-        "gaffer": 1.577,
+        "gaffer": 1.159,
         "naive": 1.126
       },
       "rank_corr": {
-        "gaffer": 0.421,
+        "gaffer": 0.592,
         "naive": 0.653
       }
     },
     "5": {
       "n": 25579,
       "mae": {
-        "gaffer": 1.582,
+        "gaffer": 1.165,
         "naive": 1.133
       },
       "rank_corr": {
-        "gaffer": 0.414,
+        "gaffer": 0.587,
         "naive": 0.647
       }
     },
     "6": {
       "n": 24997,
       "mae": {
-        "gaffer": 1.587,
+        "gaffer": 1.172,
         "naive": 1.138
       },
       "rank_corr": {
-        "gaffer": 0.41,
+        "gaffer": 0.58,
         "naive": 0.64
       }
     }
@@ -187,87 +187,87 @@
   "calibration": {
     "overall": [
       {
-        "pred": 0.21,
-        "actual": 0.48,
-        "haul_rate": 0.4,
+        "pred": 0.02,
+        "actual": 0.05,
+        "haul_rate": 0.0,
         "n": 3668
       },
       {
-        "pred": 0.78,
-        "actual": 0.43,
-        "haul_rate": 0.5,
+        "pred": 0.07,
+        "actual": 0.1,
+        "haul_rate": 0.1,
         "n": 3667
       },
       {
-        "pred": 1.06,
-        "actual": 0.46,
-        "haul_rate": 0.6,
+        "pred": 0.1,
+        "actual": 0.08,
+        "haul_rate": 0.0,
+        "n": 3668
+      },
+      {
+        "pred": 0.27,
+        "actual": 0.42,
+        "haul_rate": 0.4,
+        "n": 3666
+      },
+      {
+        "pred": 1.05,
+        "actual": 1.14,
+        "haul_rate": 1.2,
         "n": 3667
       },
       {
-        "pred": 1.26,
-        "actual": 0.35,
-        "haul_rate": 0.2,
-        "n": 3667
-      },
-      {
-        "pred": 1.43,
-        "actual": 0.55,
-        "haul_rate": 0.6,
-        "n": 3667
-      },
-      {
-        "pred": 1.83,
-        "actual": 1.46,
+        "pred": 1.68,
+        "actual": 1.62,
         "haul_rate": 1.7,
         "n": 3667
       },
       {
-        "pred": 2.64,
-        "actual": 2.21,
-        "haul_rate": 3.2,
+        "pred": 2.56,
+        "actual": 2.4,
+        "haul_rate": 3.5,
         "n": 3667
       },
       {
-        "pred": 3.92,
-        "actual": 3.46,
-        "haul_rate": 7.3,
+        "pred": 3.9,
+        "actual": 3.56,
+        "haul_rate": 7.5,
         "n": 3668
       }
     ],
     "appeared": [
       {
-        "pred": 0.37,
-        "actual": 1.93,
-        "haul_rate": 1.9,
+        "pred": 0.29,
+        "actual": 1.83,
+        "haul_rate": 1.5,
         "n": 1421
       },
       {
-        "pred": 1.09,
-        "actual": 2.35,
-        "haul_rate": 2.3,
+        "pred": 1.05,
+        "actual": 2.41,
+        "haul_rate": 2.5,
         "n": 1420
       },
       {
-        "pred": 1.51,
-        "actual": 2.48,
+        "pred": 1.5,
+        "actual": 2.51,
         "haul_rate": 2.5,
         "n": 1420
       },
       {
         "pred": 1.96,
-        "actual": 2.88,
+        "actual": 2.9,
         "haul_rate": 3.9,
         "n": 1420
       },
       {
-        "pred": 2.47,
+        "pred": 2.46,
         "actual": 2.98,
-        "haul_rate": 3.7,
+        "haul_rate": 3.8,
         "n": 1420
       },
       {
-        "pred": 2.94,
+        "pred": 2.93,
         "actual": 3.24,
         "haul_rate": 5.3,
         "n": 1420
@@ -288,129 +288,129 @@
     "by_position": {
       "DEF": [
         {
-          "pred": 0.43,
-          "actual": 0.52,
-          "haul_rate": 0.7,
-          "n": 1921
+          "pred": 0.05,
+          "actual": 0.08,
+          "haul_rate": 0.0,
+          "n": 1922
         },
         {
-          "pred": 0.97,
-          "actual": 0.39,
-          "haul_rate": 0.6,
-          "n": 1923
+          "pred": 0.08,
+          "actual": 0.15,
+          "haul_rate": 0.3,
+          "n": 1919
         },
         {
-          "pred": 1.26,
-          "actual": 0.57,
-          "haul_rate": 0.5,
-          "n": 1917
-        },
-        {
-          "pred": 1.99,
-          "actual": 1.66,
-          "haul_rate": 1.7,
+          "pred": 0.88,
+          "actual": 1.02,
+          "haul_rate": 1.3,
           "n": 1920
         },
         {
-          "pred": 3.71,
-          "actual": 3.13,
+          "pred": 1.89,
+          "actual": 1.83,
+          "haul_rate": 1.8,
+          "n": 1920
+        },
+        {
+          "pred": 3.7,
+          "actual": 3.19,
           "haul_rate": 5.4,
           "n": 1920
         }
       ],
       "FWD": [
         {
-          "pred": 0.25,
-          "actual": 0.68,
-          "haul_rate": 0.6,
+          "pred": 0.1,
+          "actual": 0.14,
+          "haul_rate": 0.0,
           "n": 647
         },
         {
-          "pred": 1.13,
-          "actual": 0.7,
-          "haul_rate": 0.6,
+          "pred": 0.11,
+          "actual": 0.16,
+          "haul_rate": 0.0,
+          "n": 649
+        },
+        {
+          "pred": 0.58,
+          "actual": 1.05,
+          "haul_rate": 1.1,
+          "n": 645
+        },
+        {
+          "pred": 1.7,
+          "actual": 1.79,
+          "haul_rate": 2.0,
           "n": 647
         },
         {
-          "pred": 1.43,
-          "actual": 0.39,
-          "haul_rate": 0.3,
-          "n": 647
-        },
-        {
-          "pred": 1.9,
-          "actual": 1.57,
-          "haul_rate": 1.9,
-          "n": 647
-        },
-        {
-          "pred": 3.56,
-          "actual": 3.19,
-          "haul_rate": 7.3,
+          "pred": 3.45,
+          "actual": 3.41,
+          "haul_rate": 7.6,
           "n": 647
         }
       ],
       "GKP": [
         {
-          "pred": 0.57,
-          "actual": 0.19,
-          "haul_rate": 0.3,
-          "n": 677
-        },
-        {
-          "pred": 0.8,
-          "actual": 0.1,
+          "pred": 0.0,
+          "actual": 0.04,
           "haul_rate": 0.1,
+          "n": 679
+        },
+        {
+          "pred": 0.0,
+          "actual": 0.01,
+          "haul_rate": 0.0,
           "n": 677
         },
         {
-          "pred": 0.93,
-          "actual": 0.1,
+          "pred": 0.0,
+          "actual": 0.04,
           "haul_rate": 0.0,
-          "n": 678
+          "n": 675
         },
         {
-          "pred": 1.38,
-          "actual": 0.66,
-          "haul_rate": 0.7,
-          "n": 674
+          "pred": 0.83,
+          "actual": 0.75,
+          "haul_rate": 0.6,
+          "n": 675
         },
         {
-          "pred": 3.27,
-          "actual": 2.73,
-          "haul_rate": 3.4,
+          "pred": 3.19,
+          "actual": 2.94,
+          "haul_rate": 3.8,
           "n": 677
         }
       ],
       "MID": [
         {
-          "pred": 0.4,
-          "actual": 0.59,
-          "haul_rate": 0.4,
-          "n": 2624
+          "pred": 0.1,
+          "actual": 0.07,
+          "haul_rate": 0.0,
+          "n": 2631
         },
         {
-          "pred": 1.21,
-          "actual": 0.31,
-          "haul_rate": 0.3,
-          "n": 2624
+          "pred": 0.1,
+          "actual": 0.09,
+          "haul_rate": 0.0,
+          "n": 2617
         },
         {
-          "pred": 1.42,
-          "actual": 0.45,
-          "haul_rate": 0.6,
-          "n": 2623
+          "pred": 0.75,
+          "actual": 0.85,
+          "haul_rate": 0.8,
+          "n": 2625
         },
         {
-          "pred": 1.98,
-          "actual": 1.55,
-          "haul_rate": 2.2,
-          "n": 2624
+          "pred": 1.84,
+          "actual": 1.74,
+          "haul_rate": 2.4,
+          "n": 2622
         },
         {
-          "pred": 3.39,
-          "actual": 3.03,
-          "haul_rate": 6.6,
+          "pred": 3.36,
+          "actual": 3.18,
+          "haul_rate": 6.8,
           "n": 2624
         }
       ]
@@ -418,7 +418,7 @@
     "note": "`overall` includes player-gameweeks with zero minutes, which are the majority of the population. A player correctly projected at 1.3 who is then left out scores 0, so the middle of the curve measures whether we knew who would play, not whether we knew what they would score. `appeared` conditions on having played and is the like-for-like read of the points model."
   },
   "shipped_projection": {
-    "model_version": "heuristic-0.5",
+    "model_version": "heuristic-0.6",
     "next_gameweek": "blend of Gaffer and FPL ep_next at w=0.7, scaled by availability",
     "later_gameweeks": "Gaffer only — ep_next does not exist beyond h=1",
     "next_gameweek_status": "POLICY, NOT MEASURED. The blend weight cannot be fitted on this dataset because the archive has no faithful copy of the live ep_next."
@@ -759,27 +759,300 @@
       "the `ml` extra in pyproject.toml"
     ]
   },
+  "captaincy_candidate": {
+    "candidate": "captain_on_the_distribution",
+    "decision": "measured, REFUSED",
+    "question": "the armband doubles ONE player, so P(haul) should decide it rather than E[points]. Does any rule built on the published distribution beat expected points?",
+    "protocol": "squad and XI chosen on expected points in every arm, so only the armband varies. Rules selected on 2024-25 with 2023-24 as corroboration; 2025-26 reported once. Three Monte-Carlo configurations (n=3000 seed A, n=3000 seed B, n=20000) because a captaincy rule that changes two armbands a season can be moved by sampling noise alone.",
+    "rules_tried": 19,
+    "headroom": {
+      "shipped_captain_points_per_gw": {
+        "2023-24": 5.74,
+        "2024-25": 8.92,
+        "2025-26": 5.89
+      },
+      "perfect_hindsight_per_gw": {
+        "2023-24": 12.48,
+        "2024-25": 14.03,
+        "2025-26": 11.94
+      },
+      "note": "the ceiling is the best actual scorer in the XI, which is not attainable. It is the size of the prize, not a target."
+    },
+    "vs_expected_points_per_gw": {
+      "boom": {
+        "2023-24": -0.474,
+        "2024-25": -1.105,
+        "2025-26": -0.447
+      },
+      "ceiling": {
+        "2023-24": -0.237,
+        "2024-25": 0.395,
+        "2025-26": -0.026
+      },
+      "floor": {
+        "2023-24": -0.316,
+        "2024-25": -2.026,
+        "2025-26": -1.105
+      },
+      "std": {
+        "2023-24": -0.342,
+        "2024-25": -0.342,
+        "2025-26": -0.132
+      },
+      "sim_mean": {
+        "2023-24": 0.184,
+        "2024-25": -0.158,
+        "2025-26": 0.0
+      },
+      "blend_upside_0.1": {
+        "2023-24": 0.211,
+        "2024-25": 0.079,
+        "2025-26": 0.079
+      },
+      "blend_upside_1.5": {
+        "2023-24": -1.026,
+        "2024-25": 0.237,
+        "2025-26": -0.132
+      }
+    },
+    "seed_stability": "the only rule with a consistent sign across all three Monte-Carlo configurations is `boom`, and its sign is NEGATIVE in all nine season-configuration cells. Every rule that looked like a win changed sign with the seed: `blend_upside_0.1` runs +0.211 / -0.053 / -0.053 on the train season across the three configurations, and `blend_boom_0.1` runs +0.211 / -0.316 / +0.342 on the test season. The selection-season winner, `ceiling` at +0.395, decays to +0.132 at n=20000 while losing the train and test seasons in every configuration.",
+    "mechanism": "the distribution is a deterministic function of the SAME eleven rates the point estimate is built from, so inside an eleven-man XI it carries almost no ORDERING information the mean does not already have. On the test season the AUC for predicting an actual double-digit haul is 0.5876 for expected points and 0.5863 for `boom` — indistinguishable. `boom` does not know which player hauls, so doubling the player with the highest P(haul) cannot help. On the same season the simulated mean moves the armband in ZERO of 38 gameweeks.",
+    "haul_discrimination_auc": {
+      "note": "AUC against `actual >= 10`, over captain-eligible XI rows.",
+      "2023-24": {
+        "expected_points": 0.6291,
+        "boom": 0.6918,
+        "ceiling": 0.6833,
+        "std": 0.6734
+      },
+      "2024-25": {
+        "expected_points": 0.6947,
+        "boom": 0.6882,
+        "ceiling": 0.716,
+        "std": 0.7112
+      },
+      "2025-26": {
+        "expected_points": 0.5876,
+        "boom": 0.5863,
+        "ceiling": 0.5913,
+        "std": 0.5889
+      }
+    },
+    "armbands_moved_of_38": {
+      "note": "how many captains a rule changes at all. A rule worth a per-gameweek figure has to move more than one.",
+      "sim_mean": {
+        "2023-24": 3,
+        "2024-25": 2,
+        "2025-26": 0
+      },
+      "boom": {
+        "2023-24": 11,
+        "2024-25": 10,
+        "2025-26": 13
+      },
+      "ceiling": {
+        "2023-24": 8,
+        "2024-25": 4,
+        "2025-26": 11
+      },
+      "blend_upside_0.1": {
+        "2023-24": 3,
+        "2024-25": 2,
+        "2025-26": 1
+      }
+    },
+    "refused_because": "no rule beats expected points on the selection season with corroboration on the train season, and the one that wins the selection season alone (`ceiling`, +0.395/gw) loses the train and test seasons and shrinks as the Monte-Carlo error shrinks. That is the shape of a result fitted to one season, which this project has produced once before and shipped once too often.",
+    "reopen_if": "the distribution stops being a deterministic re-reading of the point estimate — a separate haul model, a bonus-point model, or minute-level variance that the rate bundle does not already contain. The blocker is not the decision rule, it is that `boom` and `exp_points` are the same information twice.",
+    "limitations": [
+      "The archive carries no bonus, card, own-goal or penalty rates, so the simulated distribution here is missing exactly the tail events that make a haul. The point estimate is missing them too, so the ARMS are comparable; the absolute `boom` level is not the live one.",
+      "Captains are chosen from an XI selected on expected points. A rule that also picked a different XI was not tried, and would not be a captaincy change.",
+      "Availability is pinned at 1.0, as everywhere in this harness."
+    ]
+  },
+  "clean_sheet_contradiction": {
+    "finding": "two estimates of one quantity, and `p_cs` reads the weaker one",
+    "decision": "measured, NOT fixed",
+    "unit": "fixture-side: 760 per season, 2280 in all",
+    "disagreement": {
+      "mean_abs_goals": {
+        "2023-24": 0.35,
+        "2024-25": 0.36,
+        "2025-26": 0.363
+      },
+      "max_abs_goals": {
+        "2023-24": 4.564,
+        "2024-25": 2.038,
+        "2025-26": 2.694
+      },
+      "correlation": {
+        "2023-24": 0.6845,
+        "2024-25": 0.7449,
+        "2025-26": 0.6392
+      },
+      "within_25_pct_of_each_other": "53.6% of fixture-sides. One lambda is more than double the other in 3.8%.",
+      "by_stage": {
+        "note": "the gap is WORST in the regime the live product occupies in early September, which is why this surfaced now.",
+        "GW1-3": {
+          "n": 178,
+          "mean_abs_gap": 0.67,
+          "correlation": 0.262,
+          "max_p_cs": 0.835
+        },
+        "GW4-8": {
+          "n": 302,
+          "mean_abs_gap": 0.434,
+          "correlation": 0.556,
+          "max_p_cs": 0.709
+        },
+        "GW9+": {
+          "n": 1800,
+          "mean_abs_gap": 0.314,
+          "correlation": 0.761,
+          "max_p_cs": 0.785
+        }
+      }
+    },
+    "which_is_right": {
+      "note": "clean sheets actually kept, scored against each lambda. The bottom-up one wins on every metric in every season, which is the opposite of the arm that ships.",
+      "brier_shipped_top_down": {
+        "2023-24": 0.1643,
+        "2024-25": 0.1794,
+        "2025-26": 0.1899
+      },
+      "brier_bottom_up": {
+        "2023-24": 0.1603,
+        "2024-25": 0.1714,
+        "2025-26": 0.1853
+      },
+      "brier_league_base_rate": {
+        "2023-24": 0.1639,
+        "2024-25": 0.1794,
+        "2025-26": 0.1901
+      },
+      "auc_shipped_top_down": {
+        "2023-24": 0.65,
+        "2024-25": 0.6345,
+        "2025-26": 0.6123
+      },
+      "auc_bottom_up": {
+        "2023-24": 0.6617,
+        "2024-25": 0.6586,
+        "2025-26": 0.6144
+      },
+      "goals_mae_shipped_top_down": {
+        "2023-24": 0.9854,
+        "2024-25": 0.9269,
+        "2025-26": 0.9121
+      },
+      "goals_mae_bottom_up": {
+        "2023-24": 0.9771,
+        "2024-25": 0.9583,
+        "2025-26": 0.9203
+      },
+      "reading": "on the clean sheet itself — which is what `p_cs` is for — the bottom-up lambda wins the Brier and the AUC in all three seasons. On raw goals conceded the top-down lambda wins two of three, so this is not a claim that one lambda is better at everything. What ships is barely distinguishable from quoting the league clean-sheet rate to every side: 0.1899 against a base rate of 0.1901 on the test season, a dead tie on the selection season, and WORSE than the base rate on the train season."
+    },
+    "calibration_of_the_shipped_p_cs": {
+      "note": "claimed -> realised, pooled over the three seasons. Honest below 0.35 and over-confident above it.",
+      "bands": [
+        {
+          "claimed": 0.1,
+          "realised": 0.098,
+          "n": 407
+        },
+        {
+          "claimed": 0.201,
+          "realised": 0.185,
+          "n": 567
+        },
+        {
+          "claimed": 0.298,
+          "realised": 0.251,
+          "n": 589
+        },
+        {
+          "claimed": 0.395,
+          "realised": 0.319,
+          "n": 420
+        },
+        {
+          "claimed": 0.49,
+          "realised": 0.286,
+          "n": 182
+        },
+        {
+          "claimed": 0.61,
+          "realised": 0.435,
+          "n": 115
+        }
+      ],
+      "at_or_above_0.70": {
+        "n": 10,
+        "claimed": 0.758,
+        "realised": 0.6
+      },
+      "bottom_up_equivalent": [
+        {
+          "claimed": 0.102,
+          "realised": 0.114,
+          "n": 536
+        },
+        {
+          "claimed": 0.198,
+          "realised": 0.204,
+          "n": 712
+        },
+        {
+          "claimed": 0.298,
+          "realised": 0.276,
+          "n": 562
+        },
+        {
+          "claimed": 0.395,
+          "realised": 0.352,
+          "n": 321
+        },
+        {
+          "claimed": 0.487,
+          "realised": 0.353,
+          "n": 119
+        },
+        {
+          "claimed": 0.59,
+          "realised": 0.433,
+          "n": 30
+        }
+      ],
+      "and_it_is_more_conservative": "the bottom-up lambda's largest clean-sheet probability over three seasons is 0.693, against 0.835 for the one that ships, and it puts 30 fixture-sides above 0.55 where the shipped arm puts 115."
+    },
+    "live_consequence": "the artifact published a 0.760 clean-sheet probability for one club at home after ONE finished gameweek. That is not a sampler artefact — it is what the projection says — and it sits above anything three seasons of archive validate: the ten fixture-sides that ever cleared 0.70 realised 0.60, and the whole 0.55+ band realises 0.435. Two players in the owner's real squad are priced on it.",
+    "not_fixed_because": "`fixture_rates` is per-player and cannot see the opposing team's squad, so reading the bottom-up lambda needs a two-pass projection: accumulate every team's attacking lambda, then project. That is a structural change to `projection.project`, it moves every defender and goalkeeper in the product, and it needs the points backtest run behind it the way A18 did. Characterised rather than rushed.",
+    "next_step": "two passes, then re-run the points backtest. The measurement above says which lambda to keep for `p_cs`; it does not say what that does to the legal XI, and a clean-sheet improvement that degrades the decision is not a win. Note also that the over-confidence above 0.35 is a calibration fault present in BOTH lambdas, so reconciling them is necessary and not sufficient.",
+    "exposed_as": "`model.scenarios.ScenarioSet.diagnostics['clean_sheet_contradiction']`, per run."
+  },
   "limitations": [
     "Team strength ratings are rebuilt each gameweek from matches already played (T-12). They are NOT the same construction the live pipeline uses, which reads FPL's published strength fields — so fixture-driven numbers here are indicative rather than exactly reproducible live.",
     "The dataset carries no status/chance-of-playing column, so every player resolves to the model's available branch; the availability path is exercised but never varied.",
     "DEFCON is measured here for the first time, and it carries most of the headline. 2025-26 is the only season in the archive with a `defensive_contribution` column, so every backtest before this one ran with `defcon90_td` identically zero. Ablated here (thresholds neutralised) it is worth +3.4 legal-XI points per gameweek (49.3 with, 45.9 without) and +0.90 captain points, while making MAE 0.014 WORSE — so ~72% of the model's 4.7-point margin over the naive baseline comes from the one component measurable for exactly one season. One season is one season; read the margin accordingly.",
     "Transfer regret is a one-free-transfer greedy sequence, not the shipped multi-period solver.",
+    "Captain regret is the largest addressable number on this page and it was attacked and not moved. Nineteen armband rules built on the published distribution — `boom`, `ceiling`, `floor`, `std` and blends — were scored with squad and XI held fixed, and none survived selection on 2024-25 with corroboration on 2023-24. `boom` is worse than expected points in every season at every Monte-Carlo seed. See `captaincy_candidate`: the reason is that the distribution is a re-reading of the same rates the point estimate uses, so it does not know which player hauls either.",
+    "The clean-sheet probability behind every defender and goalkeeper on this page is barely distinguishable from the league clean-sheet rate — Brier 0.1899 against a base rate of 0.1901 — and it is over-confident above 0.35: a claimed 0.49 realises 0.29. The projection additionally holds a SECOND, better-calibrated estimate of the same quantity that `p_cs` does not read. Measured and not fixed; see `clean_sheet_contradiction`.",
     "Squad selection maximises projected points under budget, quota and the club limit. It is close to, but not identical to, the shipped optimiser, which also carries a ceiling term and a goalkeeper spend penalty.",
     "The 'gaffer' column is the standalone component model. What ships for the NEXT gameweek is a blend of it with FPL's live ep_next, and that blend is unmeasurable here — see `withdrawn_baselines`. Beyond h=1 the shipped projection is exactly this column.",
     "An in-sample gain is never evidence. T-12's clamp sweep was fitted on 2023-24, and the two p_start corrections below were rejected on 2023-24 AND 2024-25 — now the train and select seasons. Nothing has ever been fitted, swept or rejected against 2025-26. That is a stronger claim than this line used to make: while 2024-25 was the reporting season, a rejection had already looked at it.",
     "`p_start` from a prior season is `starts / 38`, which cannot separate rotation from injury absence — the denominator assumes the player was available for all 38. Two price-prior corrections were measured and both were rejected: a symmetric blend degraded nailed cheap players, and an upward-only floor left XI points flat while worsening rank correlation and MAE at every weight on both 2023-24 and 2024-25 — which are now the train and select seasons, not this one. Absence appears to predict absence, so the conflation is crude rather than simply wrong. A real fix needs per-fixture history, not a constant.",
-    "The minutes model is measured for the first time in this schema version, and it LOSES to every naive baseline it was given. See `minutes_model`: at h=1 the shipped `p_start` scores a Brier of 0.150 against 0.099 for the share of a player's last three fixtures he started, and it is beaten at all six horizons. Because `p_start` multiplies through every rate in `fixture_rates`, that error is inside every point projection on this page, and none of the numbers above are corrected for it.",
-    "A third of every backtested row has its `p_start` set by the PRICE prior — the arm that fires when a player has no minutes this season and no usable prior season. Those rows are told they have a ~29% chance of starting and they start 2.3% of the time, in each of the three most recent seasons. It is the single largest source of minutes error and it is not a season artefact.",
-    "This artifact reports 2025-26; the one before it reported 2024-25. They are not two readings of one instrument. 2025-26 has a DEFCON column and 2024-25 has none, zero-minute share is 61.4% against 58.0%, and the results invert: the model WINS legal-XI points here (49.3 to 44.6, leading at all six horizons) while LOSING captaincy (5.87 to 5.97), where on 2024-25 it lost the XI (50.6 to 51.7) and won the captaincy (8.76 to 8.00). The naive baseline beats it on MAE and rank correlation in both. Only the season changed.",
+    "The minutes model was measured for the first time in this schema version and it LOST to every naive baseline it was given. A18 then acted on that: `p_start` no longer needs current-season minutes before it will believe a season-to-date zero. At h=1 it now scores a Brier of 0.114 where it scored 0.150, beats the three-game rolling start rate at h=2 through h=6, and is indistinguishable from two of the three baselines at h=1. It is still beaten by `start_rate_r3` at h=1. See `minutes_model` and `minutes_model.candidate_fix`.",
+    "Every number on this page moved with it, because `p_start` multiplies through every rate in `fixture_rates`. On this season at h=1, MAE went 1.539 -> 1.114 against the naive baseline's 1.075, and rank correlation 0.455 -> 0.626 against 0.692. The naive baseline still wins both; it used to win them by an order more.",
+    "The PRICE prior — the arm that fires when a player has no minutes this season and no usable prior season — was a third of every backtested row before A18. Those rows were told they had a ~29% chance of starting and started 2.3% of the time, in each of the three most recent seasons. It is now 4.1% of rows, and the rows left in it start 17.5% of the time. It was the single largest source of minutes error and it is no longer the largest anything.",
+    "This artifact reports 2025-26; the one before it reported 2024-25. They are not two readings of one instrument. 2025-26 has a DEFCON column and 2024-25 has none, and zero-minute share is 61.4% against 58.0%. At heuristic-0.6 the model wins legal-XI points on both (50.1 to 44.8 here, 53.6 to 51.3 there) and leads at all six horizons on both, while still losing captaincy on this season (5.89 to 5.97) and winning it on 2024-25 (8.92 to 8.00). The naive baseline still beats it on MAE and rank correlation in both. At heuristic-0.5 the XI result INVERTED between the two seasons; A18 is what removed that, and a finding this artifact once led on turning out to be one projection change deep is itself worth knowing.",
     "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-08-31T13:52:35+00:00",
+  "generated_at": "2026-08-31T20:46:54+00:00",
   "minutes_model": {
     "measured": true,
     "target": "FPL `starts` == 1, per player-fixture. A post-match column, legal here as the evaluation target and never as a feature.",
     "unit": "player-fixture. A double gameweek is two rows, because `p_start` is a per-match property and the projection takes the max across a double rather than summing it.",
     "season": "2025-26",
-    "model_version": "heuristic-0.5",
+    "model_version": "heuristic-0.6",
     "decision_gameweeks": "GW1-GW38",
     "why_these_metrics": "Brier because `p_start` is a multiplier, not a yes/no call, and a proper scoring rule is the only kind that cannot be gamed by shading the forecast. A skill score beside it because a raw Brier on a rare-event population is unreadable — 0.09 looks respectable until you notice that saying nothing scores 0.02. A calibration curve because it is the only form of the answer a reader can act on. The badge bands because the badge is the interface. Minutes MAE because `exp_minutes`, not `p_start`, is what multiplies through the rates.",
     "coverage": {
@@ -804,58 +1077,58 @@
         "n": 28913,
         "start_rate": 0.2812,
         "brier": {
-          "gaffer": 0.1502,
+          "gaffer": 0.1138,
           "start_rate_td": 0.11,
           "started_lag": 0.1121,
           "start_rate_r3": 0.0986
         },
         "brier_skill": {
-          "gaffer": 0.2569,
+          "gaffer": 0.4368,
           "start_rate_td": 0.4559,
           "started_lag": 0.4455,
           "start_rate_r3": 0.5123
         },
         "auc": {
-          "gaffer": 0.8284,
+          "gaffer": 0.9016,
           "start_rate_td": 0.9074,
           "started_lag": 0.8615,
           "start_rate_r3": 0.9038
         },
         "exp_minutes_mae": {
-          "gaffer": 27.17,
+          "gaffer": 17.11,
           "mins_avg_td": 14.89,
           "started_lag_x90": 11.54
         },
         "paired_vs_baseline": {
           "start_rate_td": {
             "gameweeks": 37,
-            "diff": 0.0406,
+            "diff": 0.0043,
             "ci95": [
-              0.0376,
-              0.0445
+              -0.0002,
+              0.0112
             ],
-            "gameweeks_model_better": 0,
-            "gameweeks_model_worse": 37
+            "gameweeks_model_better": 28,
+            "gameweeks_model_worse": 9
           },
           "started_lag": {
             "gameweeks": 37,
-            "diff": 0.0382,
+            "diff": 0.002,
             "ci95": [
-              0.0313,
-              0.0452
+              -0.0064,
+              0.0111
             ],
-            "gameweeks_model_better": 2,
-            "gameweeks_model_worse": 35
+            "gameweeks_model_better": 19,
+            "gameweeks_model_worse": 18
           },
           "start_rate_r3": {
             "gameweeks": 37,
-            "diff": 0.0517,
+            "diff": 0.0154,
             "ci95": [
-              0.0473,
-              0.0564
+              0.0096,
+              0.0223
             ],
-            "gameweeks_model_better": 0,
-            "gameweeks_model_worse": 37
+            "gameweeks_model_better": 6,
+            "gameweeks_model_worse": 31
           }
         }
       },
@@ -863,25 +1136,25 @@
         "n": 27662,
         "start_rate": 0.2811,
         "brier": {
-          "gaffer": 0.1566,
+          "gaffer": 0.1209,
           "start_rate_td": 0.1193,
           "started_lag": 0.1422,
           "start_rate_r3": 0.1216
         },
         "brier_skill": {
-          "gaffer": 0.2249,
+          "gaffer": 0.4018,
           "start_rate_td": 0.4099,
           "started_lag": 0.2963,
           "start_rate_r3": 0.3983
         },
         "auc": {
-          "gaffer": 0.8141,
+          "gaffer": 0.89,
           "start_rate_td": 0.8924,
           "started_lag": 0.8246,
           "start_rate_r3": 0.8712
         },
         "exp_minutes_mae": {
-          "gaffer": 27.67,
+          "gaffer": 17.68,
           "mins_avg_td": 15.62,
           "started_lag_x90": 13.92
         }
@@ -890,25 +1163,25 @@
         "n": 26746,
         "start_rate": 0.281,
         "brier": {
-          "gaffer": 0.1612,
+          "gaffer": 0.1259,
           "start_rate_td": 0.1252,
           "started_lag": 0.1625,
           "start_rate_r3": 0.137
         },
         "brier_skill": {
-          "gaffer": 0.2021,
+          "gaffer": 0.3768,
           "start_rate_td": 0.3801,
           "started_lag": 0.1957,
           "start_rate_r3": 0.3218
         },
         "auc": {
-          "gaffer": 0.8034,
+          "gaffer": 0.8814,
           "start_rate_td": 0.8827,
           "started_lag": 0.7999,
           "start_rate_r3": 0.8488
         },
         "exp_minutes_mae": {
-          "gaffer": 28.01,
+          "gaffer": 18.07,
           "mins_avg_td": 16.1,
           "started_lag_x90": 15.39
         }
@@ -917,25 +1190,25 @@
         "n": 26027,
         "start_rate": 0.2811,
         "brier": {
-          "gaffer": 0.1644,
+          "gaffer": 0.1294,
           "start_rate_td": 0.1298,
           "started_lag": 0.1775,
           "start_rate_r3": 0.1482
         },
         "brier_skill": {
-          "gaffer": 0.1863,
+          "gaffer": 0.3596,
           "start_rate_td": 0.3578,
           "started_lag": 0.1213,
           "start_rate_r3": 0.2666
         },
         "auc": {
-          "gaffer": 0.7961,
+          "gaffer": 0.8753,
           "start_rate_td": 0.8754,
           "started_lag": 0.7816,
           "start_rate_r3": 0.8333
         },
         "exp_minutes_mae": {
-          "gaffer": 28.24,
+          "gaffer": 18.34,
           "mins_avg_td": 16.48,
           "started_lag_x90": 16.6
         }
@@ -944,25 +1217,25 @@
         "n": 25157,
         "start_rate": 0.2811,
         "brier": {
-          "gaffer": 0.1668,
+          "gaffer": 0.1318,
           "start_rate_td": 0.1325,
           "started_lag": 0.1869,
           "start_rate_r3": 0.1547
         },
         "brier_skill": {
-          "gaffer": 0.1747,
+          "gaffer": 0.3477,
           "start_rate_td": 0.3445,
           "started_lag": 0.0749,
           "start_rate_r3": 0.2347
         },
         "auc": {
-          "gaffer": 0.79,
+          "gaffer": 0.8712,
           "start_rate_td": 0.8711,
           "started_lag": 0.7704,
           "start_rate_r3": 0.824
         },
         "exp_minutes_mae": {
-          "gaffer": 28.42,
+          "gaffer": 18.54,
           "mins_avg_td": 16.71,
           "started_lag_x90": 17.41
         }
@@ -971,25 +1244,25 @@
         "n": 24494,
         "start_rate": 0.281,
         "brier": {
-          "gaffer": 0.169,
+          "gaffer": 0.1344,
           "start_rate_td": 0.1353,
           "started_lag": 0.1938,
           "start_rate_r3": 0.1599
         },
         "brier_skill": {
-          "gaffer": 0.1634,
+          "gaffer": 0.3348,
           "start_rate_td": 0.3303,
           "started_lag": 0.041,
           "start_rate_r3": 0.2085
         },
         "auc": {
-          "gaffer": 0.7851,
+          "gaffer": 0.8669,
           "start_rate_td": 0.8666,
           "started_lag": 0.7622,
           "start_rate_r3": 0.817
         },
         "exp_minutes_mae": {
-          "gaffer": 28.62,
+          "gaffer": 18.78,
           "mins_avg_td": 16.97,
           "started_lag_x90": 18.0
         }
@@ -998,119 +1271,119 @@
     "calibration": {
       "overall": [
         {
-          "pred": 0.007,
-          "actual": 0.07,
-          "appear_rate": 0.265,
+          "pred": 0.0,
+          "actual": 0.035,
+          "appear_rate": 0.116,
           "n": 2907
         },
         {
-          "pred": 0.134,
-          "actual": 0.203,
-          "appear_rate": 0.393,
+          "pred": 0.0,
+          "actual": 0.012,
+          "appear_rate": 0.061,
           "n": 2906
         },
         {
-          "pred": 0.248,
-          "actual": 0.063,
-          "appear_rate": 0.108,
+          "pred": 0.0,
+          "actual": 0.011,
+          "appear_rate": 0.044,
           "n": 2907
         },
         {
-          "pred": 0.257,
-          "actual": 0.043,
-          "appear_rate": 0.078,
+          "pred": 0.0,
+          "actual": 0.006,
+          "appear_rate": 0.028,
           "n": 2906
         },
         {
-          "pred": 0.291,
-          "actual": 0.039,
-          "appear_rate": 0.078,
+          "pred": 0.026,
+          "actual": 0.06,
+          "appear_rate": 0.16,
           "n": 2907
         },
         {
-          "pred": 0.314,
-          "actual": 0.113,
-          "appear_rate": 0.193,
+          "pred": 0.195,
+          "actual": 0.269,
+          "appear_rate": 0.481,
           "n": 2906
         },
         {
-          "pred": 0.397,
-          "actual": 0.302,
-          "appear_rate": 0.465,
+          "pred": 0.351,
+          "actual": 0.359,
+          "appear_rate": 0.568,
           "n": 2906
         },
         {
-          "pred": 0.577,
-          "actual": 0.47,
-          "appear_rate": 0.635,
+          "pred": 0.544,
+          "actual": 0.5,
+          "appear_rate": 0.694,
           "n": 2907
         },
         {
-          "pred": 0.774,
-          "actual": 0.65,
-          "appear_rate": 0.753,
+          "pred": 0.765,
+          "actual": 0.681,
+          "appear_rate": 0.794,
           "n": 2906
         },
         {
-          "pred": 0.957,
-          "actual": 0.848,
-          "appear_rate": 0.886,
+          "pred": 0.956,
+          "actual": 0.869,
+          "appear_rate": 0.907,
           "n": 2907
         }
       ],
       "considered": [
         {
-          "pred": 0.1,
-          "actual": 0.22,
-          "appear_rate": 0.439,
+          "pred": 0.0,
+          "actual": 0.04,
+          "appear_rate": 0.123,
           "n": 940
         },
         {
-          "pred": 0.259,
-          "actual": 0.136,
-          "appear_rate": 0.202,
+          "pred": 0.144,
+          "actual": 0.257,
+          "appear_rate": 0.424,
           "n": 939
         },
         {
-          "pred": 0.345,
-          "actual": 0.386,
-          "appear_rate": 0.572,
+          "pred": 0.333,
+          "actual": 0.41,
+          "appear_rate": 0.623,
           "n": 940
         },
         {
-          "pred": 0.481,
-          "actual": 0.489,
-          "appear_rate": 0.72,
+          "pred": 0.471,
+          "actual": 0.494,
+          "appear_rate": 0.724,
           "n": 939
         },
         {
-          "pred": 0.608,
-          "actual": 0.549,
-          "appear_rate": 0.729,
+          "pred": 0.6,
+          "actual": 0.55,
+          "appear_rate": 0.73,
           "n": 940
         },
         {
-          "pred": 0.715,
-          "actual": 0.634,
-          "appear_rate": 0.76,
+          "pred": 0.712,
+          "actual": 0.647,
+          "appear_rate": 0.783,
           "n": 939
         },
         {
-          "pred": 0.81,
-          "actual": 0.734,
-          "appear_rate": 0.83,
+          "pred": 0.809,
+          "actual": 0.738,
+          "appear_rate": 0.836,
           "n": 939
         },
         {
           "pred": 0.898,
-          "actual": 0.79,
-          "appear_rate": 0.848,
+          "actual": 0.803,
+          "appear_rate": 0.859,
           "n": 940
         },
         {
           "pred": 0.969,
-          "actual": 0.88,
-          "appear_rate": 0.909,
+          "actual": 0.879,
+          "appear_rate": 0.908,
           "n": 939
         },
         {
@@ -1127,88 +1400,88 @@
       "overall": [
         {
           "band": "NAILED",
-          "n": 3398,
-          "claimed": 0.944,
-          "start_rate": 0.835,
-          "appear_rate": 0.876,
-          "exp_minutes": 77.7,
-          "actual_minutes": 73.3
+          "n": 3308,
+          "claimed": 0.945,
+          "start_rate": 0.858,
+          "appear_rate": 0.898,
+          "exp_minutes": 77.8,
+          "actual_minutes": 75.3
         },
         {
           "band": "ROTATION",
-          "n": 3824,
-          "claimed": 0.716,
-          "start_rate": 0.578,
-          "appear_rate": 0.7,
-          "exp_minutes": 60.8,
-          "actual_minutes": 50.6
+          "n": 3468,
+          "claimed": 0.721,
+          "start_rate": 0.637,
+          "appear_rate": 0.77,
+          "exp_minutes": 61.1,
+          "actual_minutes": 55.8
         },
         {
           "band": "CAMEO?",
-          "n": 22535,
-          "claimed": 0.259,
-          "start_rate": 0.147,
-          "appear_rate": 0.259,
-          "exp_minutes": 25.1,
-          "actual_minutes": 13.6
+          "n": 22981,
+          "claimed": 0.126,
+          "start_rate": 0.144,
+          "appear_rate": 0.255,
+          "exp_minutes": 12.8,
+          "actual_minutes": 13.3
         }
       ],
       "considered": [
         {
           "band": "NAILED",
-          "n": 2930,
+          "n": 2915,
           "claimed": 0.947,
-          "start_rate": 0.867,
-          "appear_rate": 0.9,
-          "exp_minutes": 77.9,
-          "actual_minutes": 76.1
+          "start_rate": 0.871,
+          "appear_rate": 0.904,
+          "exp_minutes": 78.0,
+          "actual_minutes": 76.4
         },
         {
           "band": "ROTATION",
-          "n": 2468,
-          "claimed": 0.728,
-          "start_rate": 0.649,
-          "appear_rate": 0.779,
+          "n": 2421,
+          "claimed": 0.729,
+          "start_rate": 0.661,
+          "appear_rate": 0.793,
           "exp_minutes": 61.6,
-          "actual_minutes": 56.8
+          "actual_minutes": 57.9
         },
         {
           "band": "CAMEO?",
-          "n": 4248,
-          "claimed": 0.32,
-          "start_rate": 0.331,
-          "appear_rate": 0.508,
-          "exp_minutes": 29.9,
-          "actual_minutes": 29.9
+          "n": 4310,
+          "claimed": 0.271,
+          "start_rate": 0.326,
+          "appear_rate": 0.502,
+          "exp_minutes": 25.5,
+          "actual_minutes": 29.5
         }
       ],
       "considered_400": [
         {
           "band": "NAILED",
-          "n": 3189,
-          "claimed": 0.945,
-          "start_rate": 0.853,
-          "appear_rate": 0.892,
+          "n": 3158,
+          "claimed": 0.946,
+          "start_rate": 0.861,
+          "appear_rate": 0.9,
           "exp_minutes": 77.8,
-          "actual_minutes": 75.0
+          "actual_minutes": 75.7
         },
         {
           "band": "ROTATION",
-          "n": 3084,
-          "claimed": 0.722,
-          "start_rate": 0.621,
-          "appear_rate": 0.747,
-          "exp_minutes": 61.2,
-          "actual_minutes": 54.3
+          "n": 2958,
+          "claimed": 0.726,
+          "start_rate": 0.647,
+          "appear_rate": 0.779,
+          "exp_minutes": 61.4,
+          "actual_minutes": 56.6
         },
         {
           "band": "CAMEO?",
-          "n": 9146,
-          "claimed": 0.279,
-          "start_rate": 0.239,
-          "appear_rate": 0.387,
-          "exp_minutes": 26.4,
-          "actual_minutes": 21.7
+          "n": 9303,
+          "claimed": 0.198,
+          "start_rate": 0.235,
+          "appear_rate": 0.381,
+          "exp_minutes": 19.0,
+          "actual_minutes": 21.4
         }
       ],
       "pre_season": [
@@ -1274,30 +1547,30 @@
     "branches": [
       {
         "branch": "current_season",
-        "n": 16781,
-        "share_pct": 56.4,
-        "mean_p_start": 0.457,
-        "start_rate": 0.456,
-        "brier": 0.179,
-        "brier_skill": 0.2786
+        "n": 27646,
+        "share_pct": 92.9,
+        "mean_p_start": 0.277,
+        "start_rate": 0.279,
+        "brier": 0.1104,
+        "brier_skill": 0.4508
       },
       {
         "branch": "price_prior",
-        "n": 10791,
-        "share_pct": 36.3,
-        "mean_p_start": 0.288,
-        "start_rate": 0.023,
-        "brier": 0.0916,
-        "brier_skill": -3.0939
+        "n": 1227,
+        "share_pct": 4.1,
+        "mean_p_start": 0.313,
+        "start_rate": 0.175,
+        "brier": 0.1513,
+        "brier_skill": -0.0467
       },
       {
         "branch": "prior_season",
-        "n": 2185,
-        "share_pct": 7.3,
-        "mean_p_start": 0.459,
-        "start_rate": 0.211,
-        "brier": 0.2281,
-        "brier_skill": -0.3704
+        "n": 884,
+        "share_pct": 3.0,
+        "mean_p_start": 0.538,
+        "start_rate": 0.503,
+        "brier": 0.2243,
+        "brier_skill": 0.1029
       }
     ],
     "branch_note": "Which arm of the shipped gate produced `p_start`. `price_prior` fires when a player has no minutes this season and no usable prior season, and it answers with a function of his PRICE. It is a third of the population and its skill score is deeply negative: not merely uninformative, but worse than quoting that group's own base rate to every one of them.",
@@ -1312,37 +1585,187 @@
     },
     "candidate_fix": {
       "candidate": "believe_a_current_season_zero",
-      "decision": "measured, not shipped",
-      "change": "in `projection.fixture_rates`, drop `cur_min` from the current-season gate so a player with a full team sample and zero starts scores 0 rather than falling through to the price prior.",
-      "rationale": "the prior-season arm already believes a zero, and says so in its own comment. The current-season arm does not. The same lesson was applied to one of the two.",
+      "decision": "SHIPPED at projection heuristic-0.6",
+      "change": "in `projection.fixture_rates`, `cur_min` was dropped from the current-season gate, so a player with a full team sample and zero starts scores 0 rather than falling through to the price prior. The `fixtures_played >= 3` sample requirement is unchanged.",
+      "rationale": "the prior-season arm already believed a zero, and said so in its own comment. The current-season arm did not. The same lesson had been applied to one of the two.",
       "brier_h1": {
         "2023-24": {
           "role": "train",
           "before": 0.1452,
-          "after": 0.1139
+          "after": 0.1185
         },
         "2024-25": {
           "role": "select",
           "before": 0.1495,
-          "after": 0.1161
+          "after": 0.1204
         },
         "2025-26": {
           "role": "test",
           "before": 0.1509,
-          "after": 0.1114
+          "after": 0.1154
         }
       },
-      "not_shipped_because": "`p_start` multiplies through every rate, so this moves every points number in this artifact and needs the points backtest re-run behind it. It also belongs in `projection.py`, which this module measures rather than owns.",
-      "caveat": "even after the fix the model would still lose to `start_rate_r3` (0.0986). This closes most of the gap to `start_rate_td`; it does not make the shipped gate the best available estimator."
+      "brier_h1_population": "every h=1 row, GW1 included — the population the unshipped record used, kept so the two are comparable. The `per_horizon` table drops GW1 and any row a baseline cannot score, so its figures differ in the fourth decimal: 0.1502 -> 0.1138 on the test season.",
+      "points_model_effect": {
+        "note": "a minutes improvement that degraded points would not be a win, so the points backtest was re-run behind it rather than assumed. h=1, before -> after.",
+        "mae": {
+          "2023-24": [
+            1.44,
+            1.082
+          ],
+          "2024-25": [
+            1.509,
+            1.184
+          ],
+          "2025-26": [
+            1.539,
+            1.114
+          ]
+        },
+        "mae_naive": {
+          "2023-24": 1.036,
+          "2024-25": 1.115,
+          "2025-26": 1.075
+        },
+        "rank_corr": {
+          "2023-24": [
+            0.436,
+            0.589
+          ],
+          "2024-25": [
+            0.451,
+            0.593
+          ],
+          "2025-26": [
+            0.455,
+            0.626
+          ]
+        },
+        "rank_corr_naive": {
+          "2023-24": 0.652,
+          "2024-25": 0.666,
+          "2025-26": 0.692
+        },
+        "xi_points_per_gw": {
+          "2023-24": [
+            46.6,
+            46.6
+          ],
+          "2024-25": [
+            51.8,
+            53.6
+          ],
+          "2025-26": [
+            49.7,
+            50.1
+          ]
+        },
+        "captain_points_per_gw": {
+          "2023-24": [
+            5.74,
+            5.74
+          ],
+          "2024-25": [
+            8.89,
+            8.92
+          ],
+          "2025-26": [
+            5.89,
+            5.89
+          ]
+        },
+        "verdict": "MAE and rank correlation improve by a wide margin in all three seasons, and the naive baseline's long-standing lead on both nearly closes — on the test season MAE goes from 0.464 behind to 0.039 behind. The decision metrics move less: the legal XI gains 1.8 points a gameweek on the selection season and 0.4 on the test season, and is unmoved on the train season. Captaincy is untouched to two decimal places on train and test. Nothing got worse."
+      },
+      "what_moved": {
+        "season": "2025-26",
+        "rows_h1": 29338,
+        "rows_moved": 10715,
+        "rows_moved_pct": 36.5,
+        "players_moved_at_least_once": "471 of 841",
+        "direction": "every single delta is NEGATIVE. The fix can only remove an invented start probability, never add one.",
+        "mean_delta_points": -1.19,
+        "median_delta_points": -1.15,
+        "largest_delta_points": -6.46,
+        "top20_names_changed_per_gw": 0.29,
+        "top20_gameweeks_with_any_change": "11 of 38",
+        "top50_names_changed_per_gw": 1.1,
+        "top200_names_changed_per_gw": 12.7,
+        "top20_actual_points_scored": [
+          4.19,
+          4.27
+        ],
+        "reading": "the leaderboard a manager reads is almost untouched — one name in twenty changes about once every three gameweeks, and the top 20 goes on to score slightly MORE afterwards. The change lands two hundred players deep, on absentees who were being projected at 4-6 points while recording zero minutes. That is where a transfer suggestion comes from, which is why a near-invisible leaderboard is not the same as a small change."
+      },
+      "branch_shift": {
+        "note": "share of h=1 rows by the arm that produced `p_start`, on the test season, before -> after.",
+        "current_season": [
+          56.4,
+          92.9
+        ],
+        "price_prior": [
+          36.3,
+          4.1
+        ],
+        "prior_season": [
+          7.3,
+          3.0
+        ],
+        "price_prior_start_rate": [
+          0.023,
+          0.175
+        ],
+        "price_prior_brier_skill": [
+          -3.0939,
+          -0.0467
+        ]
+      },
+      "residual": "0.5%-1.2% of the moved rows did start. They are now called at 0.00 instead of ~0.29, and that error is real and absolute. Before the fix the same population was called at ~0.29 and started 0.4%-1.2% of the time, so the model was wrong about 99% of it. The trade is a large error on a large population for a total error on a very small one.",
+      "superseded_figures": {
+        "recorded_while_unshipped": {
+          "2023-24": 0.1139,
+          "2024-25": 0.1161,
+          "2025-26": 0.1114
+        },
+        "belong_to": "believe_a_current_season_zero_from_one_fixture",
+        "note": "the record's prose described the shipped change and its numbers came from the refused one. Both were re-run; the refused variant reproduces those three figures exactly."
+      },
+      "refused_variant": {
+        "candidate": "believe_a_current_season_zero_from_one_fixture",
+        "decision": "measured, REFUSED",
+        "change": "as A18, and additionally drop the `fixtures_played >= 3` minimum, so the current-season arm fires as soon as a team has completed one fixture.",
+        "brier_h1": {
+          "2023-24": {
+            "role": "train",
+            "before": 0.1452,
+            "after": 0.1139
+          },
+          "2024-25": {
+            "role": "select",
+            "before": 0.1495,
+            "after": 0.1161
+          },
+          "2025-26": {
+            "role": "test",
+            "before": 0.1509,
+            "after": 0.1114
+          }
+        },
+        "better_than_shipped_on": "h=1 Brier in all three seasons, points MAE in all three, rank correlation in all three, and the legal XI on the selection season (54.9 against 53.6).",
+        "worse_than_shipped_on": "the legal XI on the train season (46.2 against 46.6) and captain points there (5.42 against 5.74). Mixed, on the metric that decides things.",
+        "refused_because": "it reads `starts / 1` as a start probability. Checked against the live game on the day A18 shipped — 2026-27 with one finished gameweek and every team on one or two completed fixtures — it sets `p_start` to exactly 0.00 for 267 of 626 players, including two of the most-owned forwards in the game, both flagged available and both merely absent for the opening weekend. A 38-gameweek Brier over a population that is 61% never-appears cannot price that: two gameweeks of catastrophically wrong calls on the players a manager actually owns is a rounding error in it. The `>= 3` guard exists precisely to require a sample, dropping it was not the change that was filed, and no rationale for dropping it was ever recorded.",
+        "reopen_if": "the minutes model gains a per-fixture availability signal (roadmap M6). The objection is to trusting a one-fixture sample, not to believing a zero, and a model that could tell an absence from a rotation would not need the sample guard to do that work."
+      },
+      "caveat": "even after the fix the model still loses to `start_rate_r3` at h=1 (0.1138 against 0.0986). It now BEATS it at h=2 through h=6, and it is no longer distinguishable from `start_rate_td` or `started_lag` at h=1 — the paired 95% interval against each now contains zero, where before it was a loss in 37 gameweeks out of 37. This closes the gap. It does not make the shipped gate the best available estimator of the next fixture."
     },
     "limitations": [
       "Availability is never varied. The archive carries no `status` or `chance_of_playing_next_round` column, so every historical player resolves to the model's available branch and `p_start` is measured with its availability multiplier pinned at 1.0. This is the interesting half of the error and it is NOT in these numbers: a player who is injured, suspended or unregistered is exactly the case the badge gets catastrophically wrong, and the archive cannot see it. The live audit below can, and does.",
       "`starts` is the target, so a player who was in the squad and did not make the matchday eighteen scores the same 0 as one who was omitted for rotation. The model does not distinguish them either, which is the point of the `price_prior` finding, but it means a 'wrong' call here can be an unavailability the model was never told about.",
       "Team strength ratings are rebuilt per gameweek from completed matches, which is not how the live pipeline builds them. `p_start` does not read them at all, so this affects `exp_minutes` only through nothing — it is recorded for consistency with the points block rather than because it bites here.",
       "One season, one league, 38 gameweeks. The branch decomposition reproduces on 2023-24 and 2024-25 (train and select) and the direction of every finding holds there, but the headline figures are 2025-26 alone.",
-      "Nothing here has been fixed. This block measures; it proposes no correction and no constant was moved on the strength of it. The obvious candidate — believing a season-to-date zero the way the prior-season arm already believes a `base_starts` zero — was measured on the train and select seasons and is recorded in `candidate_fix`, unshipped, because `projection.py` is where that decision belongs and it needs the full points backtest re-run behind it."
+      "This block measured, and A18 then acted on it — so unlike every earlier revision, these figures are NOT of the model the first measurement was taken from. `p_start` no longer requires current-season minutes before it will believe a season-to-date zero. See `candidate_fix`, which records the before and after, the points backtest run behind it, and the larger variant measured at the same time and refused.",
+      "The largest remaining error is the one this block can least see. Availability is pinned at 1.0 throughout, and `p_start` now answers exactly 0.00 for any player whose team has completed three fixtures he has not featured in. On the archive that is right about 99% of the time, but it is an absolute statement, so the ~1% it is wrong about are wrong by the whole probability. Live, a returning long-term absentee is exactly that case, and the status column the archive does not have is what should rescue him."
     ],
-    "verdict": "Measured for the first time, and it loses. At h=1 the shipped `p_start` scores a Brier of 0.150 where the share of a player's last three fixtures he started scores 0.099, and it is beaten at all six horizons by both recency baselines. It orders players less well too — AUC 0.83 against 0.90 — so this is not a calibration problem with a good ranking underneath it. Almost all of the gap is one branch: a third of every row gets its `p_start` from a PRICE prior, is told it has a ~29% chance of starting, and starts 2.3% of the time.",
+    "verdict": "Measured, and then fixed. The first reading of this block found the shipped `p_start` losing to every naive baseline at every horizon, with almost all of the gap in one branch: a third of every row got its `p_start` from a PRICE prior, was told it had a ~29% chance of starting, and started 2.3% of the time. A18 removed the gate that sent those rows there. That branch is now 4.1% of rows, the h=1 Brier is 0.114 where it was 0.150, the skill score is 0.44 where it was 0.26, and AUC is 0.90 where it was 0.83. The model now BEATS the three-game rolling start rate at h=2 through h=6, and at h=1 it is no longer distinguishable from `start_rate_td` or `started_lag` — paired over gameweeks the 95% interval against each contains zero, where before it lost in 37 gameweeks of 37. It still loses to `start_rate_r3` at h=1, 0.114 against 0.099, and `exp_minutes` MAE is still 17.1 against 11.5 for a lagged start times 90. A gate that had never been measured is now a gate beaten at one horizon by one baseline.",
     "live_audit": {
       "status": "measured",
       "season": "2026-27",

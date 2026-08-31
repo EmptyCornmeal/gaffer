@@ -78,11 +78,29 @@
 
     return { title: `Live · GW${gw}`, state: sentences.join(' ') || null }
   }
+
+  // ── B5 — a rival's total, said out loud ───────────────────────────────────
+  //
+  // The published rows exist so that a rival's score stops being a number you
+  // have to take on trust, and a table of numbers only half delivers that: the
+  // sentence is what makes the check obvious without doing it. Same arithmetic
+  // the artifact guarantees — `sum(product) - hits === gw_points` — stated
+  // rather than implied.
+  export function rivalArithmetic(
+    rival: { players: { product: number }[]; hits: number; gw_points: number },
+  ): string {
+    const products = rival.players.reduce((n, p) => n + p.product, 0)
+    const from = `${products} from his fifteen`
+    return rival.hits
+      ? `${from}, less ${rival.hits} for hits, is ${rival.gw_points}.`
+      : `${from} is ${rival.gw_points}.`
+  }
 </script>
 
 <script lang="ts">
   import type { Bundle } from '../lib/data'
   import { fetchLive, type LiveSourceName } from '../lib/live/source'
+  import type { RivalSquad } from '../lib/live/assemble'
   import {
     parseLive, FIXTURE_STATE_LABELS, LIVE_UNAVAILABLE_LABELS, signed,
     type LiveState,
@@ -114,6 +132,15 @@
   // Age of the DATA, not of the request that carried it. On the artifact
   // fallback those differ by hours.
   const dataAt = $derived(dataTimestamp(s?.as_of, lastSuccess))
+
+  // B5. `rival_squads` is produced by `assembleLive` and by `gaffer.live`, but
+  // `LiveState` is declared in ../lib/weekly.ts, which this change does not
+  // own. Read through a local widening rather than by loosening the shared type
+  // from here: the shape is defined once, in ./lib/live/assemble.ts, and this
+  // says which state carries it.
+  const rivalSquads = $derived<RivalSquad[]>(
+    (s as (LiveState & { rival_squads?: RivalSquad[] }) | null)?.rival_squads ?? [],
+  )
   const stale = $derived(isStale(dataAt, tick))
 
   // The one number worth interrupting a screen reader for. `aria-live` used to
@@ -387,6 +414,90 @@
         <p class="text-mini text-muted2 p-2">
           Positions are provisional: they include bonus that is not yet confirmed.
         </p>
+      </section>
+    {/if}
+
+    <!-- ── each rival's fifteen ───────────────────────────────────── -->
+    <!-- The table above answers "who is winning" and nothing else. It could
+         never answer "how are they doing", which is asked just as often: a
+         rival's total is meaningless until you know which of his men have not
+         kicked off, and whether the eleven scoring it is the eleven he
+         picked. Collapsed by default — seven squads open at once is a wall,
+         and the table stays the thing you read first. -->
+    {#if rivalSquads.length}
+      <section class="card p-3">
+        <h3 class="font-bold text-sm">Rival squads</h3>
+        <p class="text-mini text-muted2 mt-1">
+          Every manager's fifteen, each multiplied by his own armband. The
+          highlighted players are the ones scoring the two of you differently —
+          the only ones that can move the gap between you.
+        </p>
+        {#each rivalSquads as r (r.entry_id)}
+          {@const diff = new Set(r.differential)}
+          <details class="mt-2 rounded-lg bg-bg3 overflow-hidden">
+            <summary
+              class="min-h-11 flex items-center justify-between gap-2 px-3 py-2 cursor-pointer"
+            >
+              <span class="font-semibold text-sm">
+                {r.provisional_position}. {r.name}
+              </span>
+              <span class="text-mini text-muted2">
+                <b class="tabular-nums">{r.gw_points}</b> GW
+                {#if r.hits}· <span class="text-red">−{r.hits}</span>{/if}
+                {#if r.yet_to_play}· {r.yet_to_play} to play{/if}
+              </span>
+            </summary>
+            <div class="overflow-x-auto">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Player</th><th>Min</th><th>Conf</th><th>Prov</th>
+                    <th>×</th><th>=</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {#each r.players as p (p.element)}
+                    <tr class={p.multiplier ? '' : 'opacity-50'}>
+                      <td>
+                        <button
+                          class="min-h-11 text-left"
+                          onclick={() => onpick(p.element)}
+                        >
+                          {p.name}
+                          {#if diff.has(p.element)}
+                            <span class="chip chip-warn ml-1">differential</span>
+                          {/if}
+                          {#if p.yet_to_play}
+                            <span class="chip chip-info ml-1">to play</span>
+                          {/if}
+                        </button>
+                      </td>
+                      <td class="tabular-nums text-muted2">{p.minutes}</td>
+                      <td class="tabular-nums">{p.confirmed}</td>
+                      <td class="tabular-nums text-yellow">
+                        {p.provisional ? `+${p.provisional}` : '—'}
+                      </td>
+                      <td class="tabular-nums text-muted2">{p.multiplier}</td>
+                      <td class="tabular-nums font-semibold">{p.product}</td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+            <p class="text-mini text-muted2 px-3 py-2">
+              {rivalArithmetic(r)}
+              {#if r.autosubs.captain_source === 'vice'}
+                His armband passed to his vice-captain.
+              {:else if r.autosubs.captain_source === 'none'}
+                His captain and vice both blanked — nobody is multiplied.
+              {/if}
+              {#if r.autosubs.subs_in.length}
+                {r.autosubs.subs_in.length} substitution(s)
+                {r.autosubs.provisional ? 'projected' : 'applied'}.
+              {/if}
+            </p>
+          </details>
+        {/each}
       </section>
     {/if}
 

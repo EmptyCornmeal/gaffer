@@ -18,6 +18,7 @@ from gaffer import config, contract
 from gaffer import league as LG
 from gaffer import strategy as ST
 from gaffer.export import artifacts
+from gaffer.model import scenarios as SC
 from gaffer.solver.optimize import Solution
 
 # --------------------------------------------------------------------------
@@ -27,7 +28,9 @@ from gaffer.solver.optimize import Solution
 class FakeScen:
     """A ScenarioSet-shaped double with a known, controllable distribution."""
 
-    sim_version = "scenarios-1.0"
+    # Read from the module, not written out: a stub that hard-codes a
+    # version keeps claiming it after the construction it names has changed.
+    sim_version = SC.SIM_VERSION
 
     def __init__(self, means: dict[int, float], n=1000, seed=1):
         rng = np.random.default_rng(seed)

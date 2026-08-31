@@ -131,15 +131,20 @@ def test_the_branch_label_names_the_formula_that_produced_p_start():
 
 
 def test_the_price_prior_branch_reads_price_and_nothing_else():
-    """The finding this whole block turns on, stated as a test.
+    """The finding this block turned on, stated as a test.
 
-    A third of every backtested row takes this arm, and what it answers is a
-    function of PRICE. Two players with different histories get the same number
-    as long as they cost the same and neither has a usable sample.
+    What this arm answers is a function of PRICE: two players with different
+    histories get the same number as long as they cost the same and neither has
+    a usable sample. A18 shrank the population it fires on from a third of every
+    row to 4.1% — it now needs `starts` to be UNREADABLE, not merely zero — so
+    both players here carry `starts: None`, which is what a row predating the
+    column looks like.
     """
-    a = {**_BASE, "minutes": 0.0, "base_minutes": 0.0, "base_starts": 0.0}
-    b = {**_BASE, "minutes": 0.0, "base_minutes": 100.0, "base_starts": 0.0,
-         "starts": 0.0, "xg_per_90": 0.0, "xa_per_90": 0.0}
+    a = {**_BASE, "minutes": 0.0, "starts": None,
+         "base_minutes": 0.0, "base_starts": 0.0}
+    b = {**_BASE, "minutes": 0.0, "starts": None,
+         "base_minutes": 100.0, "base_starts": 0.0,
+         "xg_per_90": 0.0, "xa_per_90": 0.0}
     fx = F.Fixture(gw=5, opponent_id=2, at_home=True, fdr=3)
     ra = projection.fixture_rates(a, fx, _ctx(), 1.0, 8)
     rb = projection.fixture_rates(b, fx, _ctx(), 1.0, 8)
@@ -148,10 +153,22 @@ def test_the_price_prior_branch_reads_price_and_nothing_else():
     assert ra["p_start"] == pytest.approx(rb["p_start"])
 
 
-# ---------------------------------------------------------------------------
-# Leakage
-# ---------------------------------------------------------------------------
+def test_a_readable_zero_no_longer_reaches_the_price_prior():
+    """A18, from the measuring side.
 
+    The same player with `starts: 0` instead of `starts: None` is not a missing
+    column — it is eight fixtures of evidence that he does not start — and both
+    the projection and the branch label must now say so.
+    """
+    p = {**_BASE, "minutes": 0.0, "starts": 0.0,
+         "base_minutes": 2400.0, "base_starts": 28.0}
+    fx = F.Fixture(gw=5, opponent_id=2, at_home=True, fdr=3)
+    assert backtest._minutes_branch(p, 8) == "current_season"
+    assert projection.fixture_rates(p, fx, _ctx(), 1.0, 8)["p_start"] == 0.0
+    # ...and below the sample threshold it still is not evidence.
+    assert backtest._minutes_branch(p, 2) == "prior_season"
+    assert projection.fixture_rates(p, fx, _ctx(), 1.0, 2)["p_start"] == \
+        pytest.approx(28 / 38.0, abs=1e-12)
 
 def test_the_minutes_features_are_leak_free():
     assert leakage.check_features(backtest.MINUTES_FEATURE_COLUMNS) == []
@@ -359,20 +376,26 @@ def test_the_frozen_live_audit_agrees_with_itself():
 # ---------------------------------------------------------------------------
 
 
-def test_the_candidate_fix_is_recorded_as_measured_and_not_as_shipped():
-    """It improves the score in all three seasons. It is still not shipped.
+def test_the_candidate_fix_records_that_it_shipped():
+    """It improved the score in all three seasons, and it has now been made.
 
-    An unshipped improvement recorded honestly is a finding; an unshipped
-    improvement described as a fix is a false statement about a running system.
+    This test used to assert the opposite — `decision == "measured, not
+    shipped"` — because an unshipped improvement described as a fix is a false
+    statement about a running system. The inverse is just as false: a record
+    still reading "not shipped" beside a projection that has made the change
+    would be worse than no record at all, so the assertion flips rather than
+    being deleted.
     """
     fix = backtest.MINUTES_CANDIDATE_FIX
-    assert fix["decision"] == "measured, not shipped"
+    assert "SHIPPED" in fix["decision"]
+    assert projection.MODEL_VERSION in fix["decision"], (
+        "the record must name the projection version that carries the change, "
+        "or a reader cannot tell which artifacts predate it")
     seasons = fix["brier_h1"]
     assert {v["role"] for v in seasons.values()} == {"train", "select", "test"}
     for season, v in seasons.items():
         assert v["after"] < v["before"], f"{season} does not improve"
     assert fix["caveat"], "an improvement with no remaining gap named is a claim"
-
 
 def test_the_candidate_fix_was_not_measured_on_the_test_season_first():
     """Train and select must both be present.
@@ -544,27 +567,49 @@ def test_every_baseline_is_actually_scored(report):
         assert name in h1["brier"] and name in h1["auc"]
 
 
-def test_the_price_prior_branch_is_reported_as_worse_than_no_information(report):
-    """Its raw Brier looks respectable. The skill score is what says otherwise."""
+def test_the_price_prior_branch_is_no_longer_a_third_of_the_population(report):
+    """A18, from the reporting side.
+
+    This test used to assert `share_pct > 20` — "a minority branch could not
+    carry the headline" — because the arm was a third of every row, claimed ~29%
+    and realised 2.3%. The fix did not improve that arm; it stopped sending
+    players to it. Both halves are asserted, so a regression that reopens the
+    old gate fails here as well as in `test_projection.py`.
+    """
     branches = {b["branch"]: b for b in report["branches"]}
     pp = branches["price_prior"]
-    assert pp["share_pct"] > 20, "a minority branch could not carry the headline"
-    assert pp["brier_skill"] < 0, "worse than that group's own base rate"
-    assert pp["mean_p_start"] > 5 * pp["start_rate"]
-
+    assert pp["share_pct"] < 10, (
+        "A18 shrank this arm from ~36% of rows to ~4%; a third of the "
+        "population back on the price prior means the gate regressed")
+    assert branches["current_season"]["share_pct"] > 85
+    # Still the weakest arm, and still worse than quoting its own base rate. It
+    # is simply no longer the largest source of error in the model.
+    assert pp["brier_skill"] < 0
+    assert pp["brier_skill"] > -1.0, (
+        "before A18 this was -3.09, because the arm was answering ~0.29 to a "
+        "population that started 2.3% of the time")
 
 def test_the_badge_is_measured_on_the_pool_a_manager_picks_from(report):
     """Both populations must ship, because they disagree.
 
     Publishing only the pool-wide table is how the CAMEO? band came to look
-    calibrated while being wrong about every player anyone owns.
+    calibrated while being wrong about every player anyone owns. A18 flipped the
+    SIGN of the pool-wide error — CAMEO? claimed 0.259 against a realised 0.147
+    before it and claims 0.126 against 0.144 now — so the direction of the
+    overall gap is no longer the invariant. The disagreement is, and the owned
+    sub-population has been the under-called one throughout.
     """
     overall = {b["band"]: b for b in report["bands"]["overall"]}
     considered = {b["band"]: b for b in report["bands"]["considered"]}
     assert overall and considered
-    assert overall["CAMEO?"]["claimed"] > overall["CAMEO?"]["start_rate"]
     assert considered["CAMEO?"]["start_rate"] >= considered["CAMEO?"]["claimed"]
-
+    considered_gap = (considered["CAMEO?"]["start_rate"]
+                      - considered["CAMEO?"]["claimed"])
+    overall_gap = abs(overall["CAMEO?"]["start_rate"]
+                      - overall["CAMEO?"]["claimed"])
+    assert considered_gap > overall_gap, (
+        "the owned pool must remain the worse-called one, or this pair of "
+        "tables has stopped earning its place")
 
 def test_nailed_is_reported_as_over_confident_rather_than_rounded_up(report):
     """~0.94 claimed, ~0.84 realised. The gap is the number that matters."""
@@ -604,3 +649,159 @@ def test_this_module_moved_nothing_it_measures():
         projection.MODEL_VERSION, (
             "the minutes figures are stamped at the split's model version; a "
             "projection change invalidates them and this is the reminder")
+
+
+# ---------------------------------------------------------------------------
+# A18 — the recorded decision
+# ---------------------------------------------------------------------------
+
+
+def test_the_shipped_figures_are_not_the_ones_the_proposal_carried():
+    """The proposal's prose described the change that shipped and its numbers
+    came from a larger variant that did not. Both are kept, and they must stay
+    distinguishable — a later edit that quietly replaces one with the other
+    would restore exactly the fault this pair exists to record.
+    """
+    cf = backtest.MINUTES_CANDIDATE_FIX
+    superseded = cf["superseded_figures"]["recorded_while_unshipped"]
+    refused = backtest.MINUTES_REFUSED_FIX
+    assert cf["superseded_figures"]["belong_to"] == refused["candidate"]
+    for season, value in superseded.items():
+        assert refused["brier_h1"][season]["after"] == value
+        assert cf["brier_h1"][season]["after"] != value
+
+
+def test_the_refused_variant_ships_in_the_artifact_with_its_reason():
+    """`WITHDRAWN_BASELINES` set the precedent: a measurement that did not ship
+    is still a result, and it belongs in the artifact rather than in a commit
+    message nobody reads.
+    """
+    refused = backtest.MINUTES_CANDIDATE_FIX["refused_variant"]
+    assert refused is backtest.MINUTES_REFUSED_FIX
+    assert "REFUSED" in refused["decision"]
+    assert refused["refused_because"]
+    assert refused["reopen_if"]
+    # It scored BETTER and was refused anyway. If that ever stops being true the
+    # record has been rewritten to flatter the decision.
+    for season, block in refused["brier_h1"].items():
+        assert block["after"] < \
+            backtest.MINUTES_CANDIDATE_FIX["brier_h1"][season]["after"], season
+
+
+def test_the_points_effect_is_recorded_beside_the_minutes_effect():
+    """`p_start` gates every rate, so a minutes win that cost points would not be
+    a win. The artifact has to carry both or the claim is unfalsifiable.
+    """
+    eff = backtest.MINUTES_CANDIDATE_FIX["points_model_effect"]
+    for key in ("mae", "rank_corr", "xi_points_per_gw"):
+        assert set(eff[key]) == {"2023-24", "2024-25", "2025-26"}
+        for season, (before, after) in eff[key].items():
+            if key == "mae":
+                assert after < before, f"{key} {season}"
+            else:
+                assert after >= before, f"{key} {season}"
+
+
+# ---------------------------------------------------------------------------
+# C1 / A19 — measurements that did not become changes
+# ---------------------------------------------------------------------------
+
+
+def test_the_captaincy_refusal_is_recorded_with_its_numbers():
+    """A refusal nobody can read is indistinguishable from never having looked.
+
+    `WITHDRAWN_BASELINES` set the precedent and `MINUTES_CANDIDATE_FIX` followed
+    it. C1 measured nineteen armband rules against the shipped one and shipped
+    none of them, so the evidence has to be in the artifact rather than in a
+    commit message.
+    """
+    c = backtest.CAPTAINCY_CANDIDATE
+    assert "REFUSED" in c["decision"]
+    assert c["rules_tried"] >= 10
+    assert c["refused_because"] and c["reopen_if"] and c["limitations"]
+    # The headroom must be real, or the refusal is a refusal to solve nothing.
+    for season, shipped in c["headroom"]["shipped_captain_points_per_gw"].items():
+        assert c["headroom"]["perfect_hindsight_per_gw"][season] > shipped
+
+
+def test_the_captaincy_refusal_names_the_rule_that_lost_in_every_season():
+    """`boom` is the rule the whole idea rests on — P(haul) for a decision that
+    doubles one player — and it is the one rule with a consistent sign. If a
+    later edit ever records it as a win, this fails.
+    """
+    boom = backtest.CAPTAINCY_CANDIDATE["vs_expected_points_per_gw"]["boom"]
+    assert set(boom) == {"2023-24", "2024-25", "2025-26"}
+    for season, delta in boom.items():
+        assert delta < 0, f"{season}: boom is recorded as beating expected points"
+
+
+def test_the_captaincy_refusal_records_why_and_not_only_that():
+    """The mechanism is the part worth keeping: `boom` cannot beat expected
+    points at ordering captains because it does not order hauls any better.
+    Asserted on the numbers, so the sentence cannot drift from them.
+    """
+    auc = backtest.CAPTAINCY_CANDIDATE["haul_discrimination_auc"]
+    test = auc[backtest.SEASON_SPLIT["test"]]
+    assert abs(test["boom"] - test["expected_points"]) < 0.01, (
+        "the recorded mechanism is that the two are indistinguishable at "
+        "picking hauls; a real gap there would reopen the question")
+
+
+def test_the_clean_sheet_contradiction_is_recorded_as_measured_not_fixed():
+    """Two estimates of one quantity, and `p_cs` reads the one that loses.
+
+    Recorded rather than corrected, because reading the other one needs a
+    two-pass projection and moves every defender and goalkeeper in the product.
+    The record has to carry the direction AND the reason it was not acted on.
+    """
+    a = backtest.CLEAN_SHEET_CONTRADICTION
+    assert a["decision"] == "measured, NOT fixed"
+    assert a["not_fixed_because"] and a["next_step"]
+    w = a["which_is_right"]
+    for season in ("2023-24", "2024-25", "2025-26"):
+        assert w["brier_bottom_up"][season] < w["brier_shipped_top_down"][season], (
+            f"{season}: the record claims the unread lambda is better; if that "
+            "stops being true the finding has changed")
+        assert w["auc_bottom_up"][season] >= w["auc_shipped_top_down"][season]
+
+
+def test_the_shipped_clean_sheet_is_recorded_as_barely_beating_the_base_rate():
+    """The number that makes this worth a record rather than a footnote: on the
+    test season the shipped `p_cs` scores 0.1899 against a league base rate of
+    0.1901, and on the train season it is WORSE than the base rate.
+    """
+    w = backtest.CLEAN_SHEET_CONTRADICTION["which_is_right"]
+    test = backtest.SEASON_SPLIT["test"]
+    margin = w["brier_league_base_rate"][test] - w["brier_shipped_top_down"][test]
+    assert 0 <= margin < 0.005, (
+        "a shipped clean-sheet model that clearly beat the base rate would "
+        "make this a tuning question rather than a modelling one")
+    train = backtest.SEASON_SPLIT["train"][0]
+    assert w["brier_shipped_top_down"][train] > w["brier_league_base_rate"][train]
+
+
+def test_the_over_confident_clean_sheet_bands_are_published():
+    """Calibration is the actionable half. Below 0.35 the shipped `p_cs` is
+    honest; above it, it is not — and the live artifact prints numbers well
+    above 0.35."""
+    bands = backtest.CLEAN_SHEET_CONTRADICTION[
+        "calibration_of_the_shipped_p_cs"]["bands"]
+    assert len(bands) >= 5
+    low = [b for b in bands if b["claimed"] <= 0.25]
+    high = [b for b in bands if b["claimed"] >= 0.45]
+    assert low and high
+    assert all(abs(b["claimed"] - b["realised"]) < 0.05 for b in low)
+    assert all(b["claimed"] - b["realised"] > 0.15 for b in high), (
+        "the recorded fault is over-confidence at the top of the range")
+
+
+def test_both_refusals_reach_the_published_artifact(report):
+    """They are constants; what matters is that `run()` publishes them. The
+    minutes report is the cheap fixture here, so the artifact assembly is
+    checked directly rather than by re-running the whole backtest.
+    """
+    assert report  # the archive is present, so `run()` would produce a block
+    import inspect
+    src = inspect.getsource(backtest.run)
+    assert '"captaincy_candidate": CAPTAINCY_CANDIDATE' in src
+    assert '"clean_sheet_contradiction": CLEAN_SHEET_CONTRADICTION' in src

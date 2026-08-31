@@ -192,12 +192,16 @@ def test_model_version_reflects_the_scoring_change():
     (M3). 0.4 fixed the start-rate denominator to count fixtures rather than
     gameweeks (M3b). 0.5 shrank `defcon_per_90` against the minutes that
     generated it instead of reading it raw, and refitted the negative-binomial
-    dispersion behind it from a guessed 6.0 to a held-out 20.0 (G-L, G-M). Each
-    moves the projection for real players.
+    dispersion behind it from a guessed 6.0 to a held-out 20.0 (G-L, G-M). 0.6
+    dropped `cur_min` from the current-season minutes gate, so a season-to-date
+    zero is believed the way a prior-season zero already was (A18) — it moves
+    36.5% of backtested player-gameweeks. Each moves the projection for real
+    players.
     """
-    assert projection.MODEL_VERSION == "heuristic-0.5"
+    assert projection.MODEL_VERSION == "heuristic-0.6"
     assert projection.MODEL_VERSION not in (
-        "heuristic-0.1", "heuristic-0.2", "heuristic-0.3", "heuristic-0.4")
+        "heuristic-0.1", "heuristic-0.2", "heuristic-0.3", "heuristic-0.4",
+        "heuristic-0.5")
 
 
 def test_availability_path_is_the_real_one():

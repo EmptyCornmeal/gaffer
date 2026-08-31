@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from gaffer import config
+from gaffer import calibration, config
 from gaffer import mcp_server as M
 
 SRC = Path(M.__file__)
@@ -1247,15 +1247,24 @@ def test_the_scorecard_names_the_endpoints_and_when_they_were_read():
     assert "total_points" in prov["how_to_recompute"]
 
 
-def test_the_scorecard_cannot_show_a_rival_breakdown_and_says_so():
-    """Absence stays absence. An empty rival breakdown would read as 'your
-    rivals have no players', which is a different claim from 'no artifact this
-    server may read carries another entry's picks'."""
+def test_the_scorecard_says_which_kind_of_rival_gap_it_has():
+    """Absence stays absence, and the three absences are not the same absence.
+
+    `rival_squads` missing means this artifact predates the block; present and
+    empty means the league baseline could not be read on this run; present and
+    populated means a caller should pass `entry_id`. The one thing that must
+    never happen is any of them reading as "your rivals have no players".
+    """
     r = _scorecard()
     gap = r["rivals_per_player"]
-    assert gap["available"] is False
-    assert gap["unavailable_reason"] == M.RIVAL_ROWS_UNAVAILABLE
-    assert gap["how_to_get_it"]
+    if gap["available"]:
+        assert gap["entries"], "available with nobody to ask about"
+        assert "entry_id" in gap["detail"]
+    else:
+        assert gap["unavailable_reason"] in (
+            M.RIVAL_ROWS_UNAVAILABLE, M.RIVAL_ROWS_PREDATE,
+            M.RIVAL_ROWS_INCOMPLETE)
+        assert gap["how_to_get_it"]
     assert "{entry_id}" in r["provenance"]["rival_picks_url_template"]
     for row in r["rivals"]:
         assert "players_yet_to_play" in row, \
@@ -1481,3 +1490,397 @@ def test_the_scorecard_fits_the_budget_with_a_full_league(tmp_path, monkeypatch)
     assert len(r["players"]) == 15, "the arithmetic was trimmed"
     assert M.serialized_bytes(r) <= M.MAX_RESULT_BYTES
     assert len(r["rivals"]) <= M.MAX_RIVAL_ROWS
+
+
+# ---------------------------------------------------------------------------
+# E1 — in-season calibration, and the sample it is allowed to claim
+# ---------------------------------------------------------------------------
+
+def _meta_file(tmp_path, **extra):
+    (tmp_path / "meta.json").write_text(
+        json.dumps({"season": "2026-27",
+                    "generated_at": "2026-08-31T00:00:00+00:00", **extra}),
+        encoding="utf-8")
+
+
+def test_the_calibration_tool_answers_or_says_no_gameweek_has_finished():
+    r = M.call("get_calibration")
+    assert r["status"] in (M.STATUS_OK, M.STATUS_UNAVAILABLE)
+    if r["status"] == M.STATUS_UNAVAILABLE:
+        assert "finished result" in r["detail"]
+        return
+    assert r["source_artifact"] in (M.CALIBRATION_FROM_ARTIFACT,
+                                    M.CALIBRATION_FROM_STATE)
+    assert r["calibration"]["schema_version"] == calibration.SCHEMA_VERSION
+
+
+def test_no_calibration_figure_can_be_read_without_its_count():
+    """The whole feature is n. A statistic that loses it is the old failure."""
+    r = M.call("get_calibration")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no finished gameweek to calibrate against")
+    statistics = {"mean", "mae", "ks_d", "median", "baseline_mae",
+                  "skill_vs_pool_mean", "bias"}
+    offenders = []
+
+    def walk(node, path="$"):
+        if isinstance(node, dict):
+            if statistics & set(node) and "n" not in node:
+                offenders.append(path)
+            for k, v in node.items():
+                walk(v, f"{path}.{k}")
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                walk(v, f"{path}[{i}]")
+
+    walk(r["calibration"])
+    assert offenders == [], f"a statistic published without its n: {offenders}"
+
+
+def test_the_calibration_tool_publishes_the_reference_class():
+    r = M.call("get_calibration")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no finished gameweek to calibrate against")
+    basis = r["calibration"]["distribution"]["basis"]
+    assert "NOT a rank against other managers" in basis
+
+
+def test_the_calibration_tool_is_not_the_backtest():
+    """Two different questions. A caller must not read one as the other."""
+    r = M.call("get_calibration")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no finished gameweek to calibrate against")
+    assert any("get_model_evidence" in line for line in r["limitations"])
+    assert any("reportable" in line for line in r["limitations"])
+
+
+def test_an_unreportable_calibration_still_says_reportable_false():
+    r = M.call("get_calibration")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no finished gameweek to calibrate against")
+    dist = r["calibration"]["distribution"]
+    assert isinstance(dist["reportable"], bool)
+    assert dist["reporting_floor_gameweeks"] >= 1
+    if not dist["reportable"]:
+        assert "n=" in dist["verdict"]
+
+
+@pytest.mark.parametrize("bad", [-1, 1_000, "seven", True, [7]])
+def test_an_out_of_range_prediction_is_refused(bad):
+    assert M.call("get_calibration", prediction=bad)["status"] == M.STATUS_INVALID
+
+
+def test_a_prediction_off_the_measured_curve_is_told_so():
+    r = M.call("get_calibration", prediction=M.MAX_PREDICTION)
+    if r["status"] != M.STATUS_OK:
+        pytest.skip("no finished gameweek to calibrate against")
+    found = r["for_prediction"]
+    assert found["within_the_measured_range"] is False
+    assert found["caveat"]
+
+
+def test_a_future_calibration_schema_is_refused_rather_than_rendered(
+        tmp_path, monkeypatch):
+    _meta_file(tmp_path)
+    (tmp_path / "review.json").write_text(
+        json.dumps({"event": 1, "season_calibration": {"schema_version": 999}}),
+        encoding="utf-8")
+    monkeypatch.setattr(M, "data_dir", lambda: tmp_path)
+    r = M.call("get_calibration")
+    assert r["status"] == M.STATUS_UNSUPPORTED
+
+
+def test_a_data_directory_with_no_record_is_unavailable_not_an_empty_success(
+        tmp_path, monkeypatch):
+    _meta_file(tmp_path)
+    monkeypatch.setattr(M, "data_dir", lambda: tmp_path)
+    r = M.call("get_calibration")
+    assert r["status"] == M.STATUS_UNAVAILABLE
+    assert "frozen pre-deadline distribution" in r["detail"]
+
+
+def test_the_published_block_is_preferred_over_recomputing_it(tmp_path, monkeypatch):
+    _meta_file(tmp_path)
+    published = {
+        "schema_version": calibration.SCHEMA_VERSION,
+        "calibration_version": calibration.CALIBRATION_VERSION,
+        "headline": "published by the pipeline",
+        "distribution": {"reportable": False, "reporting_floor_gameweeks": 8,
+                         "basis": calibration.PIT_BASIS,
+                         "verdict": "n=2. Not enough to report.",
+                         "followed_the_advice": {"n": 2, "mean": 0.4},
+                         "every_gameweek": {"n": 2, "mean": 0.4}},
+        "projection": {"status": calibration.STATUS_UNAVAILABLE},
+        "limitations": ["one manager's season"],
+    }
+    (tmp_path / "review.json").write_text(
+        json.dumps({"event": 2, "season_calibration": published}), encoding="utf-8")
+    monkeypatch.setattr(M, "data_dir", lambda: tmp_path)
+    r = M.call("get_calibration")
+    assert r["status"] == M.STATUS_OK
+    assert r["source_artifact"] == M.CALIBRATION_FROM_ARTIFACT
+    assert r["headline"] == "published by the pipeline"
+
+
+def test_thinning_a_calibration_drops_rows_and_never_a_verdict():
+    block = {
+        "distribution": {
+            "verdict": "n=30. measured.", "reportable": True,
+            "followed_the_advice": {"n": 30, "mean": 0.51},
+            "per_gameweek": [{"event": i, "percentile": 0.5} for i in range(1, 31)],
+        },
+        "projection": {
+            "pooled": {"n": 9000, "mae": 1.5},
+            "per_gameweek": [{"gameweek": i, "n": 300} for i in range(1, 31)],
+            "appeared": {"n": 4000, "mae": 2.1, "curve": [{"pred": 1, "actual": 1}],
+                         "caveat": "POST-MATCH"},
+        },
+    }
+    thin = M._thin_calibration(block)
+    assert len(thin["distribution"]["per_gameweek"]) == M.CALIBRATION_ROWS
+    assert thin["distribution"]["per_gameweek"][-1]["event"] == 30
+    assert thin["distribution"]["verdict"] == "n=30. measured."
+    assert thin["distribution"]["followed_the_advice"]["n"] == 30
+    assert "per_gameweek_truncated" in thin["projection"]
+    assert "curve" not in thin["projection"]["appeared"]
+    assert thin["projection"]["appeared"]["caveat"] == "POST-MATCH"
+    assert thin["projection"]["appeared"]["n"] == 4000
+    # The caller's block is never mutated.
+    assert len(block["distribution"]["per_gameweek"]) == 30
+    assert "curve" in block["projection"]["appeared"]
+
+
+# ---------------------------------------------------------------------------
+# B3/B5 — a rival's fifteen rows, one manager at a time
+# ---------------------------------------------------------------------------
+
+def _rival_player(pid, mult, confirmed, provisional=0, predicted=0.0,
+                  yet_to_play=False):
+    return {"element": pid, "name": f"R{pid}", "pos": "MID", "minutes": 90,
+            "confirmed": confirmed, "provisional": provisional,
+            "predicted": predicted, "multiplier": mult,
+            "product": round((confirmed + provisional) * mult, 2),
+            "yet_to_play": yet_to_play}
+
+
+def _rival_squad(entry_id=42, hits=0, place=1, players=None, differential=None):
+    players = players if players is not None else (
+        [_rival_player(i, 1, 4) for i in range(1, 11)]
+        + [_rival_player(11, 2, 9)]
+        + [_rival_player(i, 0, 2) for i in range(12, 16)])
+    gw = round(sum(r["product"] for r in players) - hits, 2)
+    return {"entry_id": entry_id, "name": f"Manager {entry_id}",
+            "provisional_position": place, "gw_points": gw, "hits": hits,
+            "yet_to_play": 0,
+            "autosubs": {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+                         "subs_in": [], "subs_out": [], "captain": 11,
+                         "captain_source": "captain", "multiplier": 2,
+                         "provisional": False, "notes": []},
+            "players": players,
+            "differential": differential if differential is not None else [11, 900]}
+
+
+def _live_with_rivals(tmp_path, monkeypatch, **over):
+    players = [_live_row(i, f"P{i}", "MID", 90, 5) for i in range(1, 12)]
+    players += [_live_row(i, f"B{i}", "MID", 90, 1) for i in range(12, 16)]
+    subs = {"xi": list(range(1, 12)), "bench": list(range(12, 16)),
+            "subs_in": [], "subs_out": [], "captain": 3,
+            "captain_source": "captain", "multiplier": 2,
+            "provisional": False, "notes": []}
+    blob = _live_artifact(
+        players, _live_squad(subs, 60, current=60, projected=60),
+        me={"entry_id": 99, "current": 160, "projected": 160, "gw_points": 60,
+            "yet_to_play": 0, "provisional_position": 2},
+        rivals=[{"entry_id": 42, "name": "Manager 42", "gw_points": 51,
+                 "current": 151, "projected": 151, "yet_to_play": 0,
+                 "provisional_position": 1}],
+        rival_squads=[_rival_squad()])
+    blob.update(over)
+    (tmp_path / "meta.json").write_text(
+        json.dumps({"season": "2026-27", "entry_id": 99,
+                    "generated_at": "2026-10-04T16:00:00+00:00",
+                    "model_version": "heuristic-0.5"}), encoding="utf-8")
+    (tmp_path / "live.json").write_text(json.dumps(blob), encoding="utf-8")
+    monkeypatch.setattr(M, "data_dir", lambda: tmp_path)
+    return blob
+
+
+def test_a_rivals_fifteen_rows_add_up_to_his_published_total(tmp_path, monkeypatch):
+    """The same guarantee the manager's own scorecard gives, for a rival."""
+    _live_with_rivals(tmp_path, monkeypatch)
+    r = M.call("get_live_scorecard", entry_id=42)
+    assert r["status"] == M.STATUS_OK
+    assert r["entry_id"] == 42
+    assert len(r["players"]) == 15, "all fifteen, not the scoring eleven"
+    a = r["arithmetic"]
+    assert a["formula"] == "sum(product) - hits"
+    assert a["sum_of_products"] - a["hits"] == a["gameweek_points"]
+    assert a["reconciles_with_published_total"] is True
+    assert a["discrepancy"] == 0
+
+
+def test_a_rival_whose_rows_do_not_add_up_reports_the_discrepancy(tmp_path,
+                                                                  monkeypatch):
+    """A scorecard that does not reconcile must say so, not smooth it over."""
+    squad = _rival_squad()
+    squad["gw_points"] = squad["gw_points"] + 7
+    _live_with_rivals(tmp_path, monkeypatch, rival_squads=[squad])
+    a = M.call("get_live_scorecard", entry_id=42)["arithmetic"]
+    assert a["reconciles_with_published_total"] is False
+    assert a["discrepancy"] == -7
+
+
+def test_a_hit_is_subtracted_from_a_rivals_total_too(tmp_path, monkeypatch):
+    _live_with_rivals(tmp_path, monkeypatch, rival_squads=[_rival_squad(hits=8)])
+    a = M.call("get_live_scorecard", entry_id=42)["arithmetic"]
+    assert a["hits"] == 8
+    assert a["sum_of_products"] - 8 == a["gameweek_points"]
+    assert a["reconciles_with_published_total"] is True
+
+
+def test_the_rival_response_states_what_predicted_is_and_is_not(tmp_path,
+                                                               monkeypatch):
+    """`product` excludes `predicted` on purpose, and `predicted` is the
+    player's own share. A caller who adds the column raw understates a captain."""
+    _live_with_rivals(tmp_path, monkeypatch)
+    lims = " ".join(M.call("get_live_scorecard", entry_id=42)["limitations"])
+    assert "`predicted` is the player's OWN share" in lims
+    assert "multiplied" in lims
+
+
+def test_a_differential_with_no_row_is_reported_not_dropped(tmp_path, monkeypatch):
+    """Neither side has live state for him — he still separates the squads."""
+    _live_with_rivals(tmp_path, monkeypatch)
+    d = M.call("get_live_scorecard", entry_id=42)["differential"]
+    assert 900 in d["element_ids"]
+    assert d["without_a_row"] == [900]
+    assert 11 not in d["without_a_row"], "a player with a row is not missing"
+    assert "still separates you" in d["note"]
+
+
+def test_an_empty_rival_squads_list_is_never_read_as_no_rivals(tmp_path,
+                                                               monkeypatch):
+    _live_with_rivals(tmp_path, monkeypatch, rival_squads=[], rivals=[],
+                      incomplete="league baseline unreadable")
+    r = M.call("get_live_scorecard", entry_id=42)
+    assert r["status"] == M.STATUS_UNAVAILABLE
+    assert r["unavailable_reason"] == M.RIVAL_ROWS_INCOMPLETE
+    assert "NOT a league with no other managers" in r["detail"]
+    assert r["incomplete"]
+
+
+def test_an_artifact_without_the_block_is_distinguished_from_an_empty_one(
+        tmp_path, monkeypatch):
+    blob = _live_with_rivals(tmp_path, monkeypatch)
+    del blob["rival_squads"]
+    (tmp_path / "live.json").write_text(json.dumps(blob), encoding="utf-8")
+    r = M.call("get_live_scorecard", entry_id=42)
+    assert r["status"] == M.STATUS_UNAVAILABLE
+    assert r["unavailable_reason"] == M.RIVAL_ROWS_PREDATE
+
+
+def test_an_entry_that_was_not_scored_is_not_found_and_lists_who_was(tmp_path,
+                                                                    monkeypatch):
+    _live_with_rivals(tmp_path, monkeypatch)
+    r = M.call("get_live_scorecard", entry_id=7)
+    assert r["status"] == M.STATUS_NOT_FOUND
+    assert r["entries_scored"] == [42]
+
+
+@pytest.mark.parametrize("bad", [0, -3, "42", 4.5, True, [42]])
+def test_an_entry_id_that_is_not_an_entry_id_is_refused(bad):
+    assert M.call("get_live_scorecard", entry_id=bad)["status"] == M.STATUS_INVALID
+
+
+def test_the_default_scorecard_points_at_the_rival_rows_when_they_exist(
+        tmp_path, monkeypatch):
+    """A stale 'this cannot be done' teaches a caller to stop asking."""
+    _live_with_rivals(tmp_path, monkeypatch)
+    r = M.call("get_live_scorecard")
+    gap = r["rivals_per_player"]
+    assert gap["available"] is True
+    assert gap["entries"] == [42]
+    assert "entry_id" in gap["detail"]
+    assert any("pass `entry_id`" in lim for lim in r["limitations"])
+
+
+def test_one_rival_at_a_time_stays_inside_the_response_budget(tmp_path,
+                                                              monkeypatch):
+    """Six rivals is ~29 kB. One is the unit precisely because six is not."""
+    _live_with_rivals(tmp_path, monkeypatch)
+    n = M.serialized_bytes(M.call("get_live_scorecard", entry_id=42))
+    assert n <= M.MAX_RESULT_BYTES - MIN_HEADROOM_BYTES, f"{n:,} bytes"
+
+
+def test_a_rival_scorecard_never_claims_to_be_yours(tmp_path, monkeypatch):
+    _live_with_rivals(tmp_path, monkeypatch)
+    r = M.call("get_live_scorecard", entry_id=42)
+    assert "rival" in r["whose_scorecard"]
+    assert r["you"]["entry_id"] == 99
+    assert r["you"]["gameweek_points"] == 60
+    assert r["rival"]["entry_id"] == 42
+
+
+def test_the_brief_orients_without_advising():
+    """E3/E4. One relational call, and it must stay small and stay honest.
+
+    The composite "evidence pack" this replaced could not exist: its constituent
+    tools already serialise to ~50 KB against a 20,000-byte budget. So this one
+    orients and names where to look, and its value depends on staying far under
+    budget rather than creeping toward a bundle.
+    """
+    r = M.call("get_gameweek_brief")
+    assert r["status"] in {"ok", "data_unavailable"}
+    if r["status"] != "ok":
+        return
+    assert M.serialized_bytes(r) < 8_000, (
+        "the brief is an orientation, not a bundle; if it has grown past 8 KB "
+        "it is becoming the composite call that was measured as impossible")
+    assert "where_to_look" in r and r["where_to_look"], (
+        "a brief that does not say where the detail lives is a dead end")
+    # It must not quietly become a recommender.
+    for banned in ("recommendation", "transfers_in", "transfers_out", "action"):
+        assert banned not in r, f"the brief must not advise; found {banned!r}"
+    table = r.get("table") or []
+    if table:
+        assert sum(1 for row in table if row.get("you")) == 1, (
+            "exactly one row is the manager")
+        pos = [row["position"] for row in table]
+        assert pos == sorted(pos), "the table is ordered by provisional position"
+
+
+def test_internal_clashes_finds_players_on_both_sides_of_one_fixture():
+    """E5/8. Every projection treats the fifteen as independent; they are not.
+
+    Found by hand while producing a research digest: in GW3 nine of the fifteen
+    sat in three fixtures playing each other, so a Raya clean sheet is a Joao
+    Pedro blank. Reported per FIXTURE, because the fixture is what correlates
+    them -- one goal changes both sides of the row at once.
+    """
+    squad = [
+        {"name": "Raya", "team": "ARS"}, {"name": "Calafiori", "team": "ARS"},
+        {"name": "Joao Pedro", "team": "CHE"},
+        {"name": "Haaland", "team": "MCI"},
+        {"name": "Solo", "team": "NEW"},
+    ]
+    fixtures = {
+        "ARS": {"fixtures": [{"gw": 3, "opp": "CHE", "home": True}]},
+        "CHE": {"fixtures": [{"gw": 3, "opp": "ARS", "home": False}]},
+        "MCI": {"fixtures": [{"gw": 3, "opp": "COV", "home": True}]},
+        "NEW": {"fixtures": [{"gw": 3, "opp": "BOU", "home": True}]},
+    }
+    got = M.internal_clashes(squad, fixtures, 3)
+    assert len(got) == 1, "one fixture has players on both sides, not two rows"
+    assert got[0]["fixture"] == "ARS v CHE"
+    assert got[0]["players"] == 3
+    assert got[0]["yours"]["ARS"] == ["Calafiori", "Raya"]
+    assert got[0]["yours"]["CHE"] == ["Joao Pedro"]
+
+    # A team the squad only has one side of is not a clash.
+    assert all(c["fixture"] != "MCI v COV" for c in got)
+    # Wrong gameweek, no clash.
+    assert M.internal_clashes(squad, fixtures, 4) == []
+    # Degenerate inputs must not raise.
+    assert M.internal_clashes([], fixtures, 3) == []
+    assert M.internal_clashes(squad, None, 3) == []
+    assert M.internal_clashes(squad, fixtures, None) == []

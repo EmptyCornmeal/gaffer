@@ -93,10 +93,15 @@ league-scoped reasoning lives in §6.
 
 ## 5. Scenario engine — `gaffer.model.scenarios`
 
-`SIM_VERSION = "scenarios-1.0"`, 2000 correlated draws, fixed seed. A match is
-drawn **once** and every player in it is conditioned on that draw: teammates are
+`SIM_VERSION = "scenarios-1.1"`, 2000 correlated draws, fixed seed. A match is
+drawn **once** — one uniform per attacking side — and every player in it is
+conditioned on that draw: that side's goals, the opposing clean sheet and every
+conceded count are monotone reads of the same number, so teammates are
 positively correlated, an opponent's attack is negatively correlated with your
-clean sheet, and goals/clean sheets/goals conceded cannot contradict each other.
+clean sheet, and a clean sheet can never also carry a conceded deduction.
+A17: every term's mean is the matching term in `_project_one_fixture`, so this
+reading, the point estimate and `model.simulate` agree within sampling error —
+they used to differ by up to 2.5 points a player, worst on keepers and defenders.
 
 Exactly one `ScenarioSet` is built per pipeline run, and every probability
 downstream — chips, league placing, the hold-versus-move comparison — reads that

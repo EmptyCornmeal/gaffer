@@ -36,7 +36,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from gaffer import config
+from gaffer import calibration, config
 
 #: Result envelope. Bump when the shape of a tool result changes.
 MCP_SCHEMA_VERSION = "mcp-1.0"
@@ -100,6 +100,13 @@ MAX_RIVAL_ROWS = 12
 #: this server has no HTTP client by design. Saying so, with the join spelled
 #: out, is worth more than a silently absent key.
 RIVAL_ROWS_UNAVAILABLE = "no_rival_picks_in_any_artifact"
+
+#: `rival_squads` is absent from the artifact entirely — it was written before
+#: the block existed. Distinct from an EMPTY list, which means the run could not
+#: read the league's season baseline. Collapsing the two would turn "this build
+#: is old" into "you have no rivals", which is a different and wrong sentence.
+RIVAL_ROWS_PREDATE = "live_artifact_predates_rival_squads"
+RIVAL_ROWS_INCOMPLETE = "league_baseline_unreadable"
 
 #: Detail levels for the transfer plan.
 DETAIL_SUMMARY = "summary"
@@ -219,6 +226,11 @@ APPLICABLE: dict[str, tuple[str, ...]] = {
     "live.json": ("model_version",),
     "backtest.json": ("model_version",),
     "review.json": ("model_version",),
+    # The in-season calibration read straight from the persisted record. Every
+    # version field genuinely applies — the distributions came from the
+    # simulator, the per-player numbers from the model, both selected by the
+    # objective — so a missing one is `not_available`, never `not_applicable`.
+    "data/state": VERSION_FIELDS,
 }
 
 
@@ -1469,12 +1481,20 @@ def get_league_strategy() -> dict[str, Any]:
     out = assemble(rows)
     # One league fits comfortably; several do not. Thin the ownership lists
     # rather than return a payload the client refuses, and say it was done.
-    while serialized_bytes(out) > MAX_RESULT_BYTES and rows > 2:
+    #
+    # Thinned against the budget MINUS the headroom every other tool keeps, not
+    # against the raw cap. Targeting the cap meant this tool stopped shrinking at
+    # 19,673 of 20,000 bytes — technically inside it, 327 bytes from unusable,
+    # and one more league from breaching it. The cap is where the client refuses;
+    # the headroom is where a response is already too big to be safe.
+    budget = MAX_RESULT_BYTES - RESULT_HEADROOM_BYTES
+    while serialized_bytes(out) > budget and rows > 2:
         rows = max(2, rows - 2)
         out = assemble(rows)
         out["ownership_rows_thinned"] = (
             f"the ownership lists were cut to {rows} rows each to fit the "
-            f"{MAX_RESULT_BYTES:,}-byte response budget")
+            f"{budget:,}-byte working budget ({MAX_RESULT_BYTES:,} cap less "
+            f"{RESULT_HEADROOM_BYTES:,} bytes of headroom)")
     return out
 
 
@@ -1616,8 +1636,166 @@ def _live_provenance(live: dict[str, Any], meta: Any) -> dict[str, Any]:
     }
 
 
-def get_live_scorecard() -> dict[str, Any]:
-    """Your live score with the rows it is made of: points x multiplier, per player.
+def _rival_squads(live: Any) -> list[dict[str, Any]] | None:
+    """`rival_squads` as published, or None when the key is absent.
+
+    Absent and empty are different states and this function keeps them apart.
+    Absent: the artifact predates the block. Empty: the league's season baseline
+    could not be read on this run, which empties `rivals` too — so an empty list
+    never means "there are no other managers", and `incomplete` is the field that
+    says which it is.
+    """
+    squads = live.get("rival_squads") if isinstance(live, dict) else None
+    if not isinstance(squads, list):
+        return None
+    return [s for s in squads if isinstance(s, dict)]
+
+
+def _rival_scorecard(live: dict[str, Any], meta: Any, entry_id: int
+                     ) -> dict[str, Any]:
+    """One rival's fifteen rows, with the arithmetic that closes on his total.
+
+    Served one manager at a time rather than as a table: all six rivals' rows
+    together serialise to about 29 kB against a 20,000-byte budget, and the
+    alternative to picking one is truncating a scorecard until it no longer adds
+    up — which is the one thing a scorecard may not do.
+    """
+    squads = _rival_squads(live)
+    if squads is None:
+        raise ToolError(
+            STATUS_UNAVAILABLE,
+            "this live artifact carries no `rival_squads`, so no rival's "
+            "per-player rows exist in it. Call without `entry_id` for the "
+            "aggregates it does publish.",
+            unavailable_reason=RIVAL_ROWS_PREDATE)
+    if not squads:
+        incomplete = live.get("incomplete")
+        raise ToolError(
+            STATUS_UNAVAILABLE,
+            ("`rival_squads` is empty because this run could not read the "
+             "league's season baseline — `rivals` is empty for the same reason. "
+             "That is a gap in the data, NOT a league with no other managers."
+             if incomplete else
+             "`rival_squads` is present and empty: no rival squad was scored on "
+             "this run."),
+            unavailable_reason=(RIVAL_ROWS_INCOMPLETE if incomplete
+                                else RIVAL_ROWS_UNAVAILABLE),
+            incomplete=incomplete)
+
+    found = next((s for s in squads if s.get("entry_id") == entry_id), None)
+    if found is None:
+        raise ToolError(
+            STATUS_NOT_FOUND,
+            f"entry {entry_id} was not scored in this gameweek's league",
+            entries_scored=[s.get("entry_id") for s in squads])
+
+    players = [r for r in (found.get("players") or []) if isinstance(r, dict)]
+    hits = int(found.get("hits") or 0)
+    products = round(sum(float(r.get("product") or 0.0) for r in players), 2)
+    published = found.get("gw_points")
+    reconciles = (published is None
+                  or abs(products - hits - float(published)) < 0.005)
+
+    fx = live.get("fixture_summary") or {}
+    subs = found.get("autosubs") or {}
+    blockers = []
+    if not fx.get("all_finished"):
+        blockers.append("not every fixture in this gameweek has finished")
+    if not fx.get("bonus_final"):
+        blockers.append("bonus is not final in every played fixture")
+    if subs.get("provisional"):
+        blockers.append("his substitutions are projected rather than applied")
+
+    # A differential id with no row is a real state, not a dropped player: it is
+    # a player NEITHER side has live state for, kept in the list because he still
+    # separates the two squads. Silently dropping him would understate the gap.
+    mine_ids = {r.get("id") for r in (live.get("players") or [])
+                if isinstance(r, dict)}
+    his_ids = {r.get("element") for r in players}
+    diff = [int(d) for d in (found.get("differential") or [])
+            if isinstance(d, int)]
+    unrowed = [d for d in diff if d not in mine_ids and d not in his_ids]
+
+    me = live.get("me") or {}
+    return envelope(
+        "live.json", meta, blob=live, available=True,
+        gameweek=live.get("gameweek"), active_chip=live.get("active_chip"),
+        entry_id=entry_id,
+        whose_scorecard="a rival, not you — call without `entry_id` for yours",
+        provenance=_live_provenance(live, meta),
+        rival={
+            "entry_id": found.get("entry_id"),
+            "name": found.get("name"),
+            "provisional_position": found.get("provisional_position"),
+            "gameweek_points": published,
+            "hits": hits,
+            "players_yet_to_play": found.get("yet_to_play"),
+            "autosubs": subs,
+        },
+        players=players,
+        arithmetic={
+            "formula": "sum(product) - hits",
+            "sum_of_products": products,
+            "hits": hits,
+            "gameweek_points": published,
+            "reconciles_with_published_total": reconciles,
+            "discrepancy": (None if published is None
+                            else round(products - hits - float(published), 2)),
+            "is_final": not blockers,
+            "not_final_because": blockers,
+        },
+        you={
+            "entry_id": me.get("entry_id") or (live.get("squad") or {}).get("entry_id"),
+            "gameweek_points": me.get("gw_points"),
+            "provisional_position": me.get("provisional_position"),
+            "players_yet_to_play": me.get("yet_to_play"),
+        },
+        differential={
+            "element_ids": diff,
+            "without_a_row": unrowed,
+            "note": ("players whose multiplier differs between the two squads — "
+                     "the ones who can actually move the gap. An id in "
+                     "`without_a_row` is one neither side has live state for; he "
+                     "is listed because he still separates you, not because a "
+                     "row went missing."),
+        },
+        rivals_per_player={
+            "available": True,
+            "detail": "this response IS a rival's per-player breakdown",
+            "entries_scored": [s.get("entry_id") for s in squads],
+        },
+        limitations=[
+            "`product` is `(confirmed + provisional) * multiplier` — his "
+            "contribution to the CURRENT score. `predicted` is deliberately NOT "
+            "in it: `predicted` is the player's OWN share and must be multiplied "
+            "by `multiplier` to reach his contribution to the projected total. "
+            "The scoreline and the projection are two different sums.",
+            "`confirmed` is FPL's own live figure and already contains any bonus "
+            "FPL has published; `provisional` is Gaffer's BPS-derived award for a "
+            "fixture whose bonus FPL has not published. Adding a bonus column of "
+            "your own on top would double-count.",
+            "All fifteen rows are here, not the scoring eleven: a benched player "
+            "carries multiplier 0 and contributes nothing, but a bench player yet "
+            "to play is exactly how an autosub arrives.",
+            "A `differential` id may legitimately have no row, when neither side "
+            "has live state for that player. Check `differential.without_a_row` "
+            "before concluding a player is missing.",
+            "When the league's season baseline cannot be read, `rival_squads` is "
+            "`[]` alongside `rivals`. Check `incomplete`; an empty list is not "
+            "the claim that there are no rivals.",
+            "Nothing here is final while `arithmetic.is_final` is false.",
+        ])
+
+
+def get_live_scorecard(entry_id: int | None = None) -> dict[str, Any]:
+    """A live score with the rows it is made of: points x multiplier, per player.
+
+    Yours by default. Pass a rival's `entry_id` — the ids are listed in
+    `rivals[].entry_id` and in `rivals_per_player.entries` — for HIS fifteen
+    rows, scored by the same pass over the same live payload, so the two sides
+    of a mini-league can never disagree about a goal that has just gone in. One
+    manager at a time: every rival's rows together are about 29 kB against a
+    20,000-byte budget.
 
     An aggregate is the one thing a careful reader is told not to trust while a
     fixture is in play, so `get_live_gameweek` on its own always ended in a
@@ -1632,6 +1810,13 @@ def get_live_scorecard() -> dict[str, Any]:
     multiplier, and the sum of the products is reconciled against the published
     total so a disagreement is reported rather than hidden.
     """
+    if entry_id is not None:
+        if isinstance(entry_id, bool) or not isinstance(entry_id, int):
+            raise ToolError(STATUS_INVALID,
+                            "entry_id must be an integer FPL entry id")
+        if entry_id <= 0:
+            raise ToolError(STATUS_INVALID, "entry_id must be a positive integer")
+
     meta = _meta()
     live = load_artifact("live.json", required=False)
     if live is None:
@@ -1642,6 +1827,9 @@ def get_live_scorecard() -> dict[str, Any]:
                         unavailable_reason=live.get("unavailable_reason"),
                         detail=live.get("note") or "no live data to score",
                         gameweek=live.get("gameweek"))
+
+    if entry_id is not None:
+        return _rival_scorecard(live, meta, entry_id)
 
     rows_in = live.get("players") or []
     squad = live.get("squad") or {}
@@ -1748,12 +1936,53 @@ def get_live_scorecard() -> dict[str, Any]:
         "`gameweek_points_confirmed`, `plus_provisional_bonus` and "
         "`plus_predicted_remaining` are three separate numbers and must not be "
         "added into one total that reads as settled.",
-        "Per-player rows exist for your squad only. Rival totals are aggregates "
-        "Gaffer scored from the same live payload at the same instant; their "
-        "arithmetic is not shown because no artifact carries a rival's picks, "
-        "and a rival total without `players_yet_to_play` beside it is not "
-        "comparable to yours.",
+        ("Rival totals in `rivals` are aggregates. Their arithmetic is one "
+         "call away: pass `entry_id` for that manager's fifteen rows."
+         if _rival_squads(live) else
+         "Per-player rows exist for your squad only. Rival totals are "
+         "aggregates Gaffer scored from the same live payload at the same "
+         "instant; their arithmetic is not shown because this artifact carries "
+         "no rival's picks, and a rival total without `players_yet_to_play` "
+         "beside it is not comparable to yours."),
     ]
+
+    # What used to be an unconditional "this cannot be done". It can now, for any
+    # artifact carrying `rival_squads`, and a stale impossibility claim is worse
+    # than a missing key: it teaches a caller to stop asking.
+    squads = _rival_squads(live)
+    if squads:
+        per_player: dict[str, Any] = {
+            "available": True,
+            "detail": "call this tool again with `entry_id` set to one of "
+                      "`entries` for that manager's fifteen rows, scored by the "
+                      "same pass over the same live payload as yours.",
+            "entries": [s.get("entry_id") for s in squads],
+            "one_at_a_time": "every rival's rows in one response is about 29 kB "
+                             f"against the {MAX_RESULT_BYTES:,}-byte budget, so "
+                             "they are served per manager rather than truncated "
+                             "into a table that no longer adds up.",
+        }
+    else:
+        per_player = {
+            "available": False,
+            "unavailable_reason": (
+                RIVAL_ROWS_PREDATE if squads is None else
+                RIVAL_ROWS_INCOMPLETE if live.get("incomplete")
+                else RIVAL_ROWS_UNAVAILABLE),
+            "detail": ("this live artifact carries no `rival_squads` block"
+                       if squads is None else
+                       "`rival_squads` is empty because the league's season "
+                       "baseline could not be read on this run — `rivals` is "
+                       "empty for the same reason, and neither means you have "
+                       "no rivals"
+                       if live.get("incomplete") else
+                       "`rival_squads` is present and empty on this run"),
+            "how_to_get_it": "GET provenance.rival_picks_url_template with "
+                             "the entry id, then join picks[].element to "
+                             "event/{gw}/live/ "
+                             "elements[].stats.total_points and multiply by "
+                             "picks[].multiplier",
+        }
 
     def build(n_rivals: int) -> dict[str, Any]:
         return envelope(
@@ -1777,19 +2006,7 @@ def get_live_scorecard() -> dict[str, Any]:
                 "xi_and_bench_omitted": "spelled out by players[].role",
             },
             rivals=rival_rows[:n_rivals],
-            rivals_per_player={
-                "available": False,
-                "unavailable_reason": RIVAL_ROWS_UNAVAILABLE,
-                "detail": "the live artifact publishes per-player rows for your "
-                          "squad only, and no artifact or read-only table holds "
-                          "another entry's picks. This server has no HTTP "
-                          "client by design, so it cannot fetch them.",
-                "how_to_get_it": "GET provenance.rival_picks_url_template with "
-                                 "the entry id, then join picks[].element to "
-                                 "event/{gw}/live/ "
-                                 "elements[].stats.total_points and multiply by "
-                                 "picks[].multiplier",
-            },
+            rivals_per_player=per_player,
             data_warnings=warnings,
             limitations=limitations)
 
@@ -1915,7 +2132,9 @@ def _summarise_minutes(mm: Any) -> Any:
         "baselines": mm.get("baselines"),
         "branches": mm.get("branches"),
         "candidate_fix": mm.get("candidate_fix"),
-        "limitations": mm.get("limitations"),
+        # `limitations` is published at the envelope level, where this module
+        # puts every other tool's. Carrying it here as well duplicated 2.3 KB of
+        # prose and cost more budget than the whole projection saved.
         "projected": ("decile calibration curves, the remaining band "
                       "populations and horizons 2-6 are omitted here; call "
                       "again with detail='full'"),
@@ -2105,9 +2324,262 @@ def get_minutes_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
         limitations=mm.get("limitations"))
 
 
+#: `season_calibration` rides on the review artifact; when a build predates it,
+#: the distributional half is computed here from the same persisted record the
+#: pipeline would have used. Named so a caller can tell the two apart.
+CALIBRATION_FROM_ARTIFACT = "review.json"
+CALIBRATION_FROM_STATE = "data/state"
+
+#: Per-gameweek rows kept in a calibration response. The tables grow one row a
+#: week for a whole season; the verdict, the counts and the caveats never give
+#: way, and the oldest rows do.
+CALIBRATION_ROWS = 12
+
+#: A projection this large has never been shipped. Rejecting it is cheaper than
+#: explaining which bin a 900-point forecast falls into.
+MAX_PREDICTION = 100.0
+
+
+def _thin_calibration(block: Any) -> Any:
+    """Cap the two per-gameweek tables. Never a verdict, a count or a caveat.
+
+    The whole point of this block is that no figure can be read without its `n`,
+    so the projection here may only ever drop rows a caller can get elsewhere —
+    the site renders the full tables from `review.json`.
+    """
+    if not isinstance(block, dict):
+        return block
+    out = dict(block)
+    for key in ("distribution", "projection"):
+        section = out.get(key)
+        if not isinstance(section, dict):
+            continue
+        section = dict(section)
+        rows = section.get("per_gameweek")
+        if isinstance(rows, list) and len(rows) > CALIBRATION_ROWS:
+            section["per_gameweek"] = rows[-CALIBRATION_ROWS:]
+            section["per_gameweek_truncated"] = (
+                f"showing the {CALIBRATION_ROWS} most recent of {len(rows)} "
+                "gameweeks to fit the response budget; every aggregate above is "
+                "computed on all of them")
+        out[key] = section
+    proj = out.get("projection")
+    if isinstance(proj, dict) and isinstance(proj.get("appeared"), dict):
+        appeared = {k: v for k, v in proj["appeared"].items() if k != "curve"}
+        appeared["curve_omitted"] = (
+            "the appeared-only curve is conditioned on a post-match fact and is "
+            "not the one to read; the pooled `curve` above is")
+        out["projection"] = {**proj, "appeared": appeared}
+    return out
+
+
+def get_calibration(prediction: float | None = None) -> dict[str, Any]:
+    """How far Gaffer's own published numbers have held up this season, with n.
+
+    Measured from the record the pipeline froze before each deadline — the stored
+    outcome distributions and per-player projections — against what happened.
+    Distinct from `get_model_evidence`, which grades the model on an archive of
+    finished seasons that nothing was ever published against.
+
+    Pass `prediction` to locate a specific projected score on the measured curve.
+    Every figure carries its own `n`, and `distribution.reportable` is false until
+    the sample can support a claim; that is a real answer, not a placeholder.
+    """
+    if prediction is not None:
+        if isinstance(prediction, bool) or not isinstance(prediction, (int, float)):
+            raise ToolError(STATUS_INVALID, "prediction must be a number")
+        if not (0.0 <= float(prediction) <= MAX_PREDICTION):
+            raise ToolError(
+                STATUS_INVALID,
+                f"prediction must be between 0 and {MAX_PREDICTION:g} points")
+
+    meta = _meta()
+    rev = load_artifact("review.json", required=False)
+    stored = rev.get("season_calibration") if isinstance(rev, dict) else None
+    if isinstance(stored, dict):
+        source, blob, block = CALIBRATION_FROM_ARTIFACT, rev, stored
+        if block.get("schema_version") != calibration.SCHEMA_VERSION:
+            raise ToolError(
+                STATUS_UNSUPPORTED,
+                f"review.json carries calibration schema "
+                f"{block.get('schema_version')}, this build reads "
+                f"{calibration.SCHEMA_VERSION}", artifact="review.json")
+    else:
+        # A build that predates the block, or a season with no review yet. The
+        # persisted record is the same evidence the pipeline would have read, so
+        # the distributional half is still answerable; the per-player half needs
+        # realised results this server has no way to fetch, by design.
+        source, blob = CALIBRATION_FROM_STATE, None
+        block = calibration.build_from_state(data_dir() / "state")
+
+    dist = block.get("distribution") or {}
+    if int((dist.get("followed_the_advice") or {}).get("n") or 0) == 0 \
+            and int((dist.get("every_gameweek") or {}).get("n") or 0) == 0 \
+            and (block.get("projection") or {}).get("status") != calibration.STATUS_MEASURED:
+        raise ToolError(
+            STATUS_UNAVAILABLE,
+            "no gameweek has both a frozen pre-deadline distribution and a "
+            "finished result yet, so nothing Gaffer published this season can be "
+            "scored. This measures the live record only; "
+            "`get_model_evidence` reports the historical backtest.")
+
+    curve = ((block.get("projection") or {}).get("curve")) or []
+    for_prediction: Any = None
+    if prediction is not None:
+        found = calibration.lookup_bin(float(prediction), curve)
+        for_prediction = found or {
+            "prediction": round(float(prediction), 2),
+            "nearest_bin": None,
+            "within_the_measured_range": False,
+            "caveat": ("no per-player calibration curve has been measured this "
+                       "season, so there is nothing to place this number on"),
+        }
+
+    return envelope(
+        source, meta, blob=blob,
+        computed_from=("the published review artifact" if blob is not None
+                       else "the persisted pre-deadline record, read at call time"),
+        headline=block.get("headline"),
+        calibration=_thin_calibration(block),
+        for_prediction=for_prediction,
+        limitations=[
+            *(block.get("limitations") or []),
+            "This is the live season, not the backtest. `get_model_evidence` "
+            "and `get_minutes_evidence` report the archive; they answer a "
+            "different question and their sample is far larger.",
+            "A figure here is only a finding when its block says `reportable`. "
+            "Quote the `n` beside anything you repeat.",
+        ])
+
+
+def internal_clashes(squad: list[dict], fixtures: Any, gw: Any) -> list[dict]:
+    """Fixtures in ``gw`` where the squad holds players on both sides.
+
+    Returned per fixture, not per player, because the fixture is the thing that
+    correlates them: one goal changes both sides of the row at once.
+    """
+    if not squad or not isinstance(fixtures, dict) or gw is None:
+        return []
+    try:
+        gw = int(gw)
+    except (TypeError, ValueError):
+        return []
+    mine: dict[str, list[str]] = {}
+    for pl in squad:
+        if isinstance(pl, dict) and pl.get("team"):
+            mine.setdefault(str(pl["team"]), []).append(
+                str(pl.get("name") or pl.get("id")))
+    out, seen = [], set()
+    for team in mine:
+        for fx in ((fixtures.get(team) or {}).get("fixtures") or []):
+            if not isinstance(fx, dict) or fx.get("gw") != gw:
+                continue
+            opp = str(fx.get("opp") or "")
+            if opp not in mine:
+                continue
+            key = tuple(sorted((team, opp)))
+            if key in seen:
+                continue
+            seen.add(key)
+            home, away = (team, opp) if fx.get("home") else (opp, team)
+            out.append({
+                "fixture": f"{home} v {away}",
+                "yours": {home: sorted(mine[home]), away: sorted(mine[away])},
+                "players": len(mine[home]) + len(mine[away]),
+            })
+    return sorted(out, key=lambda c: -c["players"])
+
+
+def get_gameweek_brief() -> dict[str, Any]:
+    """Where you stand against your league right now, and what is deciding it.
+
+    One call for the question actually asked first -- how am I doing, and how are
+    they doing -- rather than six. Deliberately small: it orients, then names the
+    tool to call for depth. It does not recommend a move.
+    """
+    meta = _meta()
+    live = load_artifact("live.json", required=False) or {}
+    strat = load_artifact("strategy.json", required=False) or {}
+    rivals = [r for r in (live.get("rivals") or []) if isinstance(r, dict)]
+    me = next((r for r in rivals if r.get("you")), None)
+    others = [r for r in rivals if not r.get("you")]
+
+    closest = None
+    if me and others:
+        near = min(others, key=lambda r: abs((r.get("current") or 0)
+                                             - (me.get("current") or 0)))
+        gap = round((me.get("current") or 0) - (near.get("current") or 0), 2)
+        closest = {
+            "name": near.get("name"), "entry_id": near.get("entry_id"),
+            "their_total": near.get("current"), "gap": gap,
+            "you_are": "ahead" if gap > 0 else "behind" if gap < 0 else "level",
+            "their_players_yet_to_play": near.get("yet_to_play"),
+        }
+
+    lg = (strat.get("leagues") or [{}])[0] if strat.get("leagues") else {}
+    top = lambda k, n=3: [  # noqa: E731
+        {"name": (r.get("player") or {}).get("name", r.get("player_id")),
+         "owners": r.get("owners"), "of_rivals": r.get("n_rivals")}
+        for r in (lg.get(k) or [])[:n]]
+
+    return envelope(
+        "live.json", meta, blob=live,
+        gameweek={"number": live.get("gameweek"),
+                  "deadline": meta.get("deadline"),
+                  "projecting": meta.get("current_gw"),
+                  # `fixtures` is the per-fixture LIST; the counts live in
+                  # `fixture_summary`.
+                  "fixtures": (live.get("fixture_summary") or {}).get("by_state"),
+                  "bonus_final": (live.get("fixture_summary") or {}).get(
+                      "bonus_final")},
+        you=({"position": me.get("provisional_position"),
+              "gameweek_points": me.get("gw_points"),
+              "season_total": me.get("current"),
+              "players_yet_to_play": me.get("yet_to_play")} if me else None),
+        closest_rival=closest,
+        deciding_player=live.get("largest_swing"),
+        table=[{"position": r.get("provisional_position"), "name": r.get("name"),
+                "gw": r.get("gw_points"), "total": r.get("current"),
+                "left": r.get("yet_to_play"), "you": bool(r.get("you"))}
+               for r in rivals],
+        league={"name": lg.get("name"), "size": lg.get("size"),
+                "placing": lg.get("placing"),
+                "posture": lg.get("posture")} if lg else None,
+        # E5/8. Every projection treats the fifteen as independent. They are
+        # not when they are playing each other.
+        internal_clashes=internal_clashes(
+            (load_artifact("my_team.json", required=False) or {}).get("players")
+            or [],
+            load_artifact("fixtures.json", required=False),
+            meta.get("projection_event") or meta.get("current_gw")),
+        threats=top("threats"),
+        differentials=top("differentials"),
+        where_to_look={
+            "the arithmetic behind any total": "get_live_scorecard",
+            "a rival's fifteen": "get_live_scorecard(entry_id=...)",
+            "this week's single action": "get_weekly_decision",
+            "ownership, shields and placing": "get_league_strategy",
+            "what moved since the last snapshot": "what_changed",
+            "how much to trust a projection": "get_calibration",
+        },
+        limitations=[
+            "Positions are provisional while any fixture is unfinished, and this "
+            "is an orientation, not a recommendation.",
+            "`gap` is against the CLOSEST rival by season total, which is not "
+            "necessarily the one above you.",
+            "`internal_clashes` lists fixtures where you hold players on both "
+            "sides. Their outcomes are anti-correlated, so a projected total is "
+            "more certain than the week will be. It is context, not a signal to "
+            "act on.",
+            "Recompute any total you intend to act on: get_live_scorecard "
+            "publishes the per-player products this is summarised from.",
+        ])
+
+
 #: name -> (callable, one-line description)
 TOOLS: dict[str, Any] = {
     "gaffer_status": gaffer_status,
+    "get_gameweek_brief": get_gameweek_brief,
     "get_weekly_decision": get_weekly_decision,
     "find_players": find_players,
     "get_player_outlook": get_player_outlook,
@@ -2119,6 +2591,7 @@ TOOLS: dict[str, Any] = {
     "get_decision_review": get_decision_review,
     "get_model_evidence": get_model_evidence,
     "get_minutes_evidence": get_minutes_evidence,
+    "get_calibration": get_calibration,
     "what_changed": what_changed,
 }
 
@@ -2222,8 +2695,8 @@ def build_server() -> Any:
 
     @server.tool(name="get_live_scorecard",
                  description=get_live_scorecard.__doc__)
-    def live_scorecard() -> dict[str, Any]:
-        return call("get_live_scorecard")
+    def live_scorecard(entry_id: int | None = None) -> dict[str, Any]:
+        return call("get_live_scorecard", entry_id=entry_id)
 
     @server.tool(name="get_decision_review",
                  description=get_decision_review.__doc__)
@@ -2239,6 +2712,15 @@ def build_server() -> Any:
                  description=get_minutes_evidence.__doc__)
     def minutes_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
         return call("get_minutes_evidence", detail=detail)
+
+    @server.tool(name="get_calibration", description=get_calibration.__doc__)
+    def in_season_calibration(prediction: float | None = None) -> dict[str, Any]:
+        return call("get_calibration", prediction=prediction)
+
+    @server.tool(name="get_gameweek_brief",
+                 description=get_gameweek_brief.__doc__)
+    def gameweek_brief() -> dict[str, Any]:
+        return call("get_gameweek_brief")
 
     @server.tool(name="what_changed", description=what_changed.__doc__)
     def changed() -> dict[str, Any]:

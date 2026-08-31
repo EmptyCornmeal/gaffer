@@ -319,6 +319,107 @@ def build_cases() -> list[dict]:
                 predictions={str(p): 4.0 for p in range(1, 16)},
             ),
         },
+        {
+            # B5. Aggregates were all `assemble` ever published about a rival:
+            # `rivals` is a table of totals, `strategy.json`'s `owners` is a
+            # count rather than a roster, and no table anywhere holds a rival's
+            # picks. So "how are they doing" — asked as often as "how am I
+            # doing" — could only be answered with a number nobody could check,
+            # and with no way to see whose players had not kicked off.
+            #
+            # Three rivals at once, because the multiplier on a published row is
+            # a fact about the MANAGER and not about the player. All three own
+            # the same fifteen as each other and as you, and player 9 is the
+            # only one with real points, so each row's `product` is visibly that
+            # manager's own multiple of the very same football: 21 captains
+            # someone else, 22 plays Bench Boost (all fifteen score and nothing
+            # is substituted), 23 plays Triple Captain.
+            "name": "every rival's fifteen are published with the multiplier "
+                    "that scores them",
+            "input": base(
+                fixtures_payload=[fixture(1, started=True, minutes=70,
+                                          bps={5: 40, 6: 30})],
+                live_payload={"elements": [
+                    element(p, 90, 12 if p == 9 else 2) for p in range(1, 16)]},
+                rivals=[
+                    {"entry_id": 21, "name": "Other armband",
+                     "starting": list(XI), "bench": list(BENCH),
+                     "captain": 10, "vice": 11, "total": 40, "hits": 0,
+                     "active_chip": None},
+                    {"entry_id": 22, "name": "Bench Boost",
+                     "starting": list(XI), "bench": list(BENCH),
+                     "captain": 9, "vice": 10, "total": 38, "hits": 4,
+                     "active_chip": "bboost"},
+                    {"entry_id": 23, "name": "Triple Captain",
+                     "starting": list(XI), "bench": list(BENCH),
+                     "captain": 9, "vice": 10, "total": 36, "hits": 0,
+                     "active_chip": "3xc"},
+                ],
+                baseline=50, hits=4,
+            ),
+        },
+        {
+            # B5. A rival's eleven is not his PICKED eleven once a starter
+            # blanks, and neither his substitutions nor a moved armband can be
+            # derived from anything else the artifact publishes. Player 2 (DEF)
+            # and the captain, player 9, both finished on zero minutes: 13 comes
+            # on for one, 14 for the other, and the armband passes to the vice.
+            # Every one of those is legible from his own `autosubs` block and
+            # from which of his rows carries a multiplier above one.
+            "name": "a rival's autosubs and moved armband reach his published rows",
+            "input": base(
+                fixtures_payload=[FINISHED_FIXTURE,
+                                  fixture(2, team_h=2, team_a=3, started=True,
+                                          minutes=90, finished=True)],
+                live_payload={"elements": blanked(2, blanked(9, live_els))},
+                rivals=[{"entry_id": 31, "name": "Autosubbed",
+                         "starting": list(XI), "bench": list(BENCH),
+                         "captain": 9, "vice": 10, "total": 30, "hits": 0,
+                         "active_chip": None}],
+                baseline=50, hits=0,
+            ),
+        },
+        {
+            # B5. The question this whole block exists for. A rival's total
+            # means nothing on its own: nine points behind with three of his men
+            # still to kick off is a different afternoon from nine behind with
+            # none, and until now the artifact could only ever say how MANY of
+            # his were left, never which. Team 2 has not kicked off, so seven of
+            # his fifteen are still to come and each carries his share of the
+            # projection.
+            "name": "a rival's players still to kick off are named, not just counted",
+            "input": base(
+                fixtures_payload=[fixture(1, started=True, minutes=60),
+                                  fixture(2, team_h=2, team_a=3, kickoff=KO)],
+                live_payload={"elements": [element(p, 90, 2) for p in range(1, 9)]
+                              + [element(p, 0, 0) for p in range(9, 16)]},
+                predictions={str(p): 3.5 for p in range(9, 16)},
+                rivals=[{"entry_id": 51, "name": "Seven still to come",
+                         "starting": list(XI), "bench": list(BENCH),
+                         "captain": 9, "vice": 10, "total": 40, "hits": 0,
+                         "active_chip": None}],
+                baseline=50, hits=0,
+            ),
+        },
+        {
+            # B5. A rival can hold a player this build knows nothing about — an
+            # id the live endpoint never carried, or a signing the ingest has
+            # not seen. He has no live state, so no row is published for him and
+            # none is invented. An unknown player arriving as a zero would read
+            # as a man who played and scored nothing, which is a different and
+            # wrong claim; his absence from the rows against a squad of fifteen
+            # is the honest one.
+            "name": "a rival's unknown player produces no row rather than a zero",
+            "input": base(
+                fixtures_payload=[fixture(1, started=True, minutes=70)],
+                live_payload={"elements": live_els},
+                rivals=[{"entry_id": 41, "name": "Holds a stranger",
+                         "starting": [p for p in XI if p != 11] + [99],
+                         "bench": list(BENCH), "captain": 9, "vice": 10,
+                         "total": 30, "hits": 0, "active_chip": None}],
+                baseline=50, hits=0,
+            ),
+        },
     ]
 
 
@@ -385,7 +486,9 @@ def test_the_case_file_covers_the_behaviour_that_matters():
     names = {c["name"] for c in cases}
     for needle in ("kicked off", "provisional bonus", "armband", "triple captain",
                    "bench boost", "swing", "yet to kick off",
-                   "in the live row", "provisionally finished", "own entry"):
+                   "in the live row", "provisionally finished", "own entry",
+                   "multiplier that scores them", "moved armband",
+                   "no row rather than a zero", "still to kick off are named"):
         assert any(needle in n for n in names), f"no case covers {needle!r}"
 
 
@@ -427,3 +530,51 @@ def test_python_still_produces_the_agreed_output(case):
     """The reference implementation has not drifted from the shared contract."""
     got = _stable(live.assemble(**_to_python(case["input"])))
     assert got == case["expected"]
+
+
+def _rival_rows(cases):
+    return [r for c in cases for r in (c["expected"].get("rival_squads") or [])]
+
+
+def test_every_published_rival_row_reconciles_to_his_total():
+    """B5. A rival's total stops being a number you have to take on trust.
+
+    The whole reason to spend bytes on 105 rows is that they add up: multiply
+    each of a manager's players by the multiplier that scores him, sum, subtract
+    the hits, and you must land exactly on the total published beside his name.
+    An `owners` count could never do this, and neither could a rival total read
+    off the standings — which is how a live tool ends up asserting a score
+    nobody, including it, can check.
+
+    Asserted over the generated file rather than inside the code that generates
+    it, so a change to either implementation has to survive it.
+    """
+    rows = _rival_rows(_load())
+    assert rows, "no case publishes a rival's fifteen"
+    for rival in rows:
+        products = sum(p["product"] for p in rival["players"])
+        assert round(products - rival["hits"], 2) == rival["gw_points"], (
+            rival["name"], products, rival["hits"], rival["gw_points"])
+
+
+def test_the_case_file_covers_the_ways_a_rival_row_can_differ():
+    """B5. The multiplier on a row is a fact about the manager, not the player.
+
+    Three managers can own one player and score him three different ways, and a
+    case file where every rival plays a plain captain would pin none of it.
+    """
+    rows = _rival_rows(_load())
+    mults = {p["multiplier"] for r in rows for p in r["players"]}
+    assert {0, 1, 2, 3} <= mults, f"no rival row carries every multiplier: {mults}"
+    assert any(r["autosubs"]["captain_source"] == "vice" for r in rows), \
+        "no rival case moves the armband"
+    assert any(r["autosubs"]["subs_in"] for r in rows), \
+        "no rival case makes a substitution"
+    assert any(len(r["players"]) < 15 for r in rows), \
+        "no rival case holds a player with no live state"
+    assert any(r["differential"] for r in rows), \
+        "no rival case differs from you at all"
+    assert any(p["yet_to_play"] for r in rows for p in r["players"]), \
+        "no rival case names a player who has not kicked off — the whole point"
+    assert any(p["predicted"] for r in rows for p in r["players"]), \
+        "no rival row carries a projection for football still to be played"

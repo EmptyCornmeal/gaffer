@@ -68,9 +68,16 @@ from gaffer.model import projection
 #:       every rate, discounts `ep_next` through `rotation_scale`, drives the
 #:       autosubs and the solver, and is what the NAILED / ROTATION / CAMEO?
 #:       badge reports — and until this version it was the one major component
-#:       with no measured error rate at all. It has one now, and it loses to a
-#:       three-game rolling start rate at every horizon. Additive: nothing that
-#:       reads a version-7 artifact changes meaning.
+#:       with no measured error rate at all. It has one now, and when this
+#:       version was cut it lost to a three-game rolling start rate at every
+#:       horizon. Additive: nothing that reads a version-7 artifact changes
+#:       meaning.
+#:
+#:       A18 then acted on that measurement — see `MINUTES_CANDIDATE_FIX`, which
+#:       records the fix as SHIPPED — so a version-8 artifact generated before
+#:       and after it are two different models. The SHAPE is unchanged, which is
+#:       why the number is not bumped: `model_version` is the field that
+#:       separates them, and it moved from heuristic-0.5 to heuristic-0.6.
 SCHEMA_VERSION = 8
 
 #: The chronological split. Disjoint, ordered, and no season used twice.
@@ -105,17 +112,32 @@ SCHEMA_VERSION = 8
 #:    `SEASON_SPLIT["excluded"]` — the reason is a measurement, not a preference.
 #:
 #: What the move does NOT buy, recorded here because a season change is exactly
-#: where a project starts quoting only the half that improved. At h=1, legal XI,
-#: model against the naive baseline: 2024-25 was 50.6 vs 51.7, a LOSS by 1.1;
-#: 2025-26 is 49.3 vs 44.6, a WIN by 4.7, and the model leads at all six
-#: horizons (+4.7, +2.5, +5.1, +6.9, +3.0, +0.8). But captaincy flips the other
-#: way — 5.87 vs 5.97 here, where 2024-25 was 8.76 vs 8.00 — the naive baseline
-#: still beats the model on MAE and rank correlation in both seasons by a wide
-#: margin, and the absolute level FELL: 49.3 is below 2024-25's 50.6. This is a
-#: better season to be measured on. It is not a better score.
+#: where a project starts quoting only the half that improved. RE-MEASURED at
+#: heuristic-0.6 (A18), which is why these are not the figures earlier revisions
+#: of this comment carried. At h=1, legal XI, model against the naive baseline:
+#: 2024-25 is 53.6 vs 51.3, a win by 2.3; 2025-26 is 50.1 vs 44.8, a win by 5.3,
+#: and the model leads at all six horizons on both seasons (2025-26: +5.3, +2.8,
+#: +3.9, +6.3, +2.3, +1.8). Captaincy still flips the other way on the test
+#: season — 5.89 vs 5.97 — where 2024-25 is 8.92 vs 8.00. The naive baseline
+#: STILL beats the model on MAE (1.114 vs 1.075) and rank correlation (0.626 vs
+#: 0.692) on the test season, though A18 closed most of that gap: before it the
+#: same comparison was 1.539 vs 1.075 and 0.455 vs 0.692.
 #:
-#: Every figure in this block was measured at `projection.MODEL_VERSION ==
-#: "heuristic-0.5"` and is stamped as such below. G-L/G-M/G-P was landing DEFCON
+#: At heuristic-0.5 this paragraph read 50.6 vs 51.7 on 2024-25 (a LOSS by 1.1)
+#: and 49.3 vs 44.6 on 2025-26. Two things moved between then and now and only
+#: one of them is A18: re-running the identical harness at HEAD before A18 gives
+#: 51.8 and 49.7, not 50.6 and 49.3. That ~1-point drift is NOT explained here
+#: and is the honest reason to distrust the last decimal of any figure in this
+#: block; the A18 deltas above are before-and-after of the SAME run and do not
+#: inherit it.
+#:
+#: NOT re-measured at heuristic-0.6: the DEFCON ablation figures in point 1
+#: below, and the heuristic-0.4 comparison two paragraphs down. Both are carried
+#: forward from heuristic-0.5 and are stamped as such rather than silently
+#: reprinted as current.
+#:
+#: The DEFCON and split figures in this block were measured at
+#: `projection.MODEL_VERSION == "heuristic-0.5"`. G-L/G-M/G-P was landing DEFCON
 #: shrinkage and xA calibration into that same version while this was measured:
 #: under heuristic-0.4 the identical run gave 48.9 / 5.47 / rank corr 0.450 /
 #: MAE 1.600. The direction of every conclusion survived the bump; the third
@@ -133,8 +155,10 @@ SEASON_SPLIT = {
     "select": "2024-25",
     "test": "2025-26",
     #: The projection these figures were taken from. Anything that moves
-    #: `projection.MODEL_VERSION` invalidates them.
-    "measured_at_model_version": "heuristic-0.5",
+    #: `projection.MODEL_VERSION` invalidates them, and
+    #: `test_this_module_moved_nothing_it_measures` is the forcing function that
+    #: makes a version bump re-open this block rather than quietly outdate it.
+    "measured_at_model_version": "heuristic-0.6",
     "excluded": {
         "2021-22": "Predates FPL's `expected_goals` / `expected_assists` / "
                    "`starts` columns entirely. On disk only as 2022-23's prior "
@@ -477,75 +501,215 @@ MINUTES_LIMITATIONS = [
     "One season, one league, 38 gameweeks. The branch decomposition reproduces "
     "on 2023-24 and 2024-25 (train and select) and the direction of every "
     "finding holds there, but the headline figures are 2025-26 alone.",
-    "Nothing here has been fixed. This block measures; it proposes no "
-    "correction and no constant was moved on the strength of it. The obvious "
-    "candidate — believing a season-to-date zero the way the prior-season arm "
-    "already believes a `base_starts` zero — was measured on the train and "
-    "select seasons and is recorded in `candidate_fix`, unshipped, because "
-    "`projection.py` is where that decision belongs and it needs the full "
-    "points backtest re-run behind it.",
+    "This block measured, and A18 then acted on it — so unlike every earlier "
+    "revision, these figures are NOT of the model the first measurement was "
+    "taken from. `p_start` no longer requires current-season minutes before it "
+    "will believe a season-to-date zero. See `candidate_fix`, which records "
+    "the before and after, the points backtest run behind it, and the larger "
+    "variant measured at the same time and refused.",
+    "The largest remaining error is the one this block can least see. "
+    "Availability is pinned at 1.0 throughout, and `p_start` now answers "
+    "exactly 0.00 for any player whose team has completed three fixtures he "
+    "has not featured in. On the archive that is right about 99% of the time, "
+    "but it is an absolute statement, so the ~1% it is wrong about are wrong "
+    "by the whole probability. Live, a returning long-term absentee is exactly "
+    "that case, and the status column the archive does not have is what should "
+    "rescue him.",
 ]
 
 MINUTES_VERDICT = (
-    "Measured for the first time, and it loses. At h=1 the shipped `p_start` "
-    "scores a Brier of 0.150 where the share of a player's last three fixtures "
-    "he started scores 0.099, and it is beaten at all six horizons by both "
-    "recency baselines. It orders players less well too — AUC 0.83 against 0.90 "
-    "— so this is not a calibration problem with a good ranking underneath it. "
-    "Almost all of the gap is one branch: a third of every row gets its "
-    "`p_start` from a PRICE prior, is told it has a ~29% chance of starting, "
-    "and starts 2.3% of the time."
+    "Measured, and then fixed. The first reading of this block found the "
+    "shipped `p_start` losing to every naive baseline at every horizon, with "
+    "almost all of the gap in one branch: a third of every row got its "
+    "`p_start` from a PRICE prior, was told it had a ~29% chance of starting, "
+    "and started 2.3% of the time. A18 removed the gate that sent those rows "
+    "there. That branch is now 4.1% of rows, the h=1 Brier is 0.114 where it "
+    "was 0.150, the skill score is 0.44 where it was 0.26, and AUC is 0.90 "
+    "where it was 0.83. The model now BEATS the three-game rolling start rate "
+    "at h=2 through h=6, and at h=1 it is no longer distinguishable from "
+    "`start_rate_td` or `started_lag` — paired over gameweeks the 95% interval "
+    "against each contains zero, where before it lost in 37 gameweeks of 37. "
+    "It still loses to `start_rate_r3` at h=1, 0.114 against 0.099, and "
+    "`exp_minutes` MAE is still 17.1 against 11.5 for a lagged start times 90. "
+    "A gate that had never been measured is now a gate beaten at one horizon "
+    "by one baseline."
 )
 
-#: The obvious correction, measured on the train and select seasons FIRST, and
-#: deliberately not shipped from here.
-#:
-#: `fixture_rates` already knows that a zero can be evidence. Its prior-season
-#: arm says so at length — "zero starts off a full sample is the strongest bench
-#: evidence there is" — and believes a `base_starts` of 0. The current-season arm
-#: does the opposite: its gate is `fixtures_played >= 3 and cur_min and ...`, so
-#: a player whose team has played eight and who has played none of them fails on
-#: `cur_min` and falls through to a price prior that reads an expensive squad
-#: player as a probable starter. The lesson was learned once and applied to one
-#: of the two arms.
-#:
-#: Replacing the fallback with the season-to-date rate for exactly those rows —
-#: i.e. believing the current-season zero on the same terms the prior-season zero
-#: is believed — cuts the h=1 Brier by about a fifth, in all three seasons:
-#:
-#:     2023-24  (train)   0.1452 -> 0.1139
-#:     2024-25  (select)  0.1495 -> 0.1161
-#:     2025-26  (test)    0.1509 -> 0.1114
-#:
-#: Measured on train and select before the test season was looked at, and the
-#: test figure is confirmation rather than the finding. It is still NOT shipped,
-#: for two reasons that are not squeamishness. `p_start` multiplies through every
-#: rate, so changing it moves every published points number and needs the full
-#: points backtest re-run behind it; and the change belongs in `projection.py`,
-#: which this module measures and does not own. Recorded so the next person has
-#: the measurement rather than the intuition.
-MINUTES_CANDIDATE_FIX = {
-    "candidate": "believe_a_current_season_zero",
-    "decision": "measured, not shipped",
-    "change": "in `projection.fixture_rates`, drop `cur_min` from the "
-              "current-season gate so a player with a full team sample and zero "
-              "starts scores 0 rather than falling through to the price prior.",
-    "rationale": "the prior-season arm already believes a zero, and says so in "
-                 "its own comment. The current-season arm does not. The same "
-                 "lesson was applied to one of the two.",
+#: A18 — the variant that was measured alongside the shipped fix and REFUSED.
+#: Recorded the way `WITHDRAWN_BASELINES` is: a measurement that did not ship is
+#: still a result, and the next person should find the reason rather than the
+#: intuition. Defined first because `MINUTES_CANDIDATE_FIX` carries it.
+MINUTES_REFUSED_FIX = {
+    "candidate": "believe_a_current_season_zero_from_one_fixture",
+    "decision": "measured, REFUSED",
+    "change": "as A18, and additionally drop the `fixtures_played >= 3` "
+              "minimum, so the current-season arm fires as soon as a team has "
+              "completed one fixture.",
     "brier_h1": {
         "2023-24": {"role": "train", "before": 0.1452, "after": 0.1139},
         "2024-25": {"role": "select", "before": 0.1495, "after": 0.1161},
         "2025-26": {"role": "test", "before": 0.1509, "after": 0.1114},
     },
-    "not_shipped_because": "`p_start` multiplies through every rate, so this "
-                           "moves every points number in this artifact and "
-                           "needs the points backtest re-run behind it. It also "
-                           "belongs in `projection.py`, which this module "
-                           "measures rather than owns.",
-    "caveat": "even after the fix the model would still lose to `start_rate_r3` "
-              "(0.0986). This closes most of the gap to `start_rate_td`; it does "
-              "not make the shipped gate the best available estimator.",
+    "better_than_shipped_on": "h=1 Brier in all three seasons, points MAE in "
+                              "all three, rank correlation in all three, and "
+                              "the legal XI on the selection season (54.9 "
+                              "against 53.6).",
+    "worse_than_shipped_on": "the legal XI on the train season (46.2 against "
+                             "46.6) and captain points there (5.42 against "
+                             "5.74). Mixed, on the metric that decides things.",
+    "refused_because": "it reads `starts / 1` as a start probability. Checked "
+                       "against the live game on the day A18 shipped — 2026-27 "
+                       "with one finished gameweek and every team on one or "
+                       "two completed fixtures — it sets `p_start` to exactly "
+                       "0.00 for 267 of 626 players, including two of the "
+                       "most-owned forwards in the game, both flagged "
+                       "available and both merely absent for the opening "
+                       "weekend. A 38-gameweek Brier over a population that is "
+                       "61% never-appears cannot price that: two gameweeks of "
+                       "catastrophically wrong calls on the players a manager "
+                       "actually owns is a rounding error in it. The `>= 3` "
+                       "guard exists precisely to require a sample, dropping "
+                       "it was not the change that was filed, and no rationale "
+                       "for dropping it was ever recorded.",
+    "reopen_if": "the minutes model gains a per-fixture availability signal "
+                 "(roadmap M6). The objection is to trusting a one-fixture "
+                 "sample, not to believing a zero, and a model that could tell "
+                 "an absence from a rotation would not need the sample guard "
+                 "to do that work.",
+}
+#: A18 — SHIPPED. The correction below was measured in this module, recorded as
+#: "measured, not shipped", and has since been made in `projection.fixture_rates`
+#: at heuristic-0.6. This block is now the before-and-after record rather than a
+#: proposal.
+#:
+#: `fixture_rates` already knew that a zero can be evidence. Its prior-season arm
+#: says so at length — "zero starts off a full sample is the strongest bench
+#: evidence there is" — and believes a `base_starts` of 0. The current-season arm
+#: did the opposite: its gate was `fixtures_played >= 3 and cur_min and ...`, so
+#: a player whose team had played eight and who had played none of them failed on
+#: `cur_min` and fell through to a price prior that reads an expensive squad
+#: player as a probable starter. The lesson had been learned once and applied to
+#: one of the two arms. `cur_min` is gone; the three-fixture sample requirement
+#: is not.
+#:
+#: TWO variants were measured and only the smaller one shipped, which matters
+#: because the figures this record carried while it was a proposal — 0.1139 /
+#: 0.1161 / 0.1114 — are NOT the figures the change it described produces. They
+#: belong to the larger variant. Reproduced to four decimal places on all three
+#: seasons, so this was a transcription fault in the record and not a difference
+#: of opinion about it:
+#:
+#:                        train             select            test
+#:     shipped  (>= 3)    0.1452 -> 0.1185  0.1495 -> 0.1204  0.1509 -> 0.1154
+#:     refused  (>= 1)    0.1452 -> 0.1139  0.1495 -> 0.1161  0.1509 -> 0.1114
+#:
+#: Measured on train and select before the test season was looked at; the test
+#: figure is confirmation rather than the finding. See `MINUTES_REFUSED_FIX` for
+#: why the better-scoring variant is the one that did not ship.
+MINUTES_CANDIDATE_FIX = {
+    "candidate": "believe_a_current_season_zero",
+    "decision": "SHIPPED at projection heuristic-0.6",
+    "change": "in `projection.fixture_rates`, `cur_min` was dropped from the "
+              "current-season gate, so a player with a full team sample and "
+              "zero starts scores 0 rather than falling through to the price "
+              "prior. The `fixtures_played >= 3` sample requirement is "
+              "unchanged.",
+    "rationale": "the prior-season arm already believed a zero, and said so in "
+                 "its own comment. The current-season arm did not. The same "
+                 "lesson had been applied to one of the two.",
+    #: What actually shipped, measured before and after with one harness.
+    "brier_h1": {
+        "2023-24": {"role": "train", "before": 0.1452, "after": 0.1185},
+        "2024-25": {"role": "select", "before": 0.1495, "after": 0.1204},
+        "2025-26": {"role": "test", "before": 0.1509, "after": 0.1154},
+    },
+    "brier_h1_population": "every h=1 row, GW1 included — the population the "
+                           "unshipped record used, kept so the two are "
+                           "comparable. The `per_horizon` table drops GW1 and "
+                           "any row a baseline cannot score, so its figures "
+                           "differ in the fourth decimal: 0.1502 -> 0.1138 on "
+                           "the test season.",
+    "points_model_effect": {
+        "note": "a minutes improvement that degraded points would not be a "
+                "win, so the points backtest was re-run behind it rather than "
+                "assumed. h=1, before -> after.",
+        "mae": {"2023-24": [1.44, 1.082], "2024-25": [1.509, 1.184],
+                "2025-26": [1.539, 1.114]},
+        "mae_naive": {"2023-24": 1.036, "2024-25": 1.115, "2025-26": 1.075},
+        "rank_corr": {"2023-24": [0.436, 0.589], "2024-25": [0.451, 0.593],
+                      "2025-26": [0.455, 0.626]},
+        "rank_corr_naive": {"2023-24": 0.652, "2024-25": 0.666,
+                            "2025-26": 0.692},
+        "xi_points_per_gw": {"2023-24": [46.6, 46.6], "2024-25": [51.8, 53.6],
+                             "2025-26": [49.7, 50.1]},
+        "captain_points_per_gw": {"2023-24": [5.74, 5.74],
+                                  "2024-25": [8.89, 8.92],
+                                  "2025-26": [5.89, 5.89]},
+        "verdict": "MAE and rank correlation improve by a wide margin in all "
+                   "three seasons, and the naive baseline's long-standing lead "
+                   "on both nearly closes — on the test season MAE goes from "
+                   "0.464 behind to 0.039 behind. The decision metrics move "
+                   "less: the legal XI gains 1.8 points a gameweek on the "
+                   "selection season and 0.4 on the test season, and is "
+                   "unmoved on the train season. Captaincy is untouched to two "
+                   "decimal places on train and test. Nothing got worse.",
+    },
+    "what_moved": {
+        "season": "2025-26",
+        "rows_h1": 29338,
+        "rows_moved": 10715,
+        "rows_moved_pct": 36.5,
+        "players_moved_at_least_once": "471 of 841",
+        "direction": "every single delta is NEGATIVE. The fix can only remove "
+                     "an invented start probability, never add one.",
+        "mean_delta_points": -1.19,
+        "median_delta_points": -1.15,
+        "largest_delta_points": -6.46,
+        "top20_names_changed_per_gw": 0.29,
+        "top20_gameweeks_with_any_change": "11 of 38",
+        "top50_names_changed_per_gw": 1.1,
+        "top200_names_changed_per_gw": 12.7,
+        "top20_actual_points_scored": [4.19, 4.27],
+        "reading": "the leaderboard a manager reads is almost untouched — one "
+                   "name in twenty changes about once every three gameweeks, "
+                   "and the top 20 goes on to score slightly MORE afterwards. "
+                   "The change lands two hundred players deep, on absentees "
+                   "who were being projected at 4-6 points while recording "
+                   "zero minutes. That is where a transfer suggestion comes "
+                   "from, which is why a near-invisible leaderboard is not the "
+                   "same as a small change.",
+    },
+    "branch_shift": {
+        "note": "share of h=1 rows by the arm that produced `p_start`, on the "
+                "test season, before -> after.",
+        "current_season": [56.4, 92.9],
+        "price_prior": [36.3, 4.1],
+        "prior_season": [7.3, 3.0],
+        "price_prior_start_rate": [0.023, 0.175],
+        "price_prior_brier_skill": [-3.0939, -0.0467],
+    },
+    "residual": "0.5%-1.2% of the moved rows did start. They are now called at "
+                "0.00 instead of ~0.29, and that error is real and absolute. "
+                "Before the fix the same population was called at ~0.29 and "
+                "started 0.4%-1.2% of the time, so the model was wrong about "
+                "99% of it. The trade is a large error on a large population "
+                "for a total error on a very small one.",
+    "superseded_figures": {
+        "recorded_while_unshipped": {"2023-24": 0.1139, "2024-25": 0.1161,
+                                     "2025-26": 0.1114},
+        "belong_to": "believe_a_current_season_zero_from_one_fixture",
+        "note": "the record's prose described the shipped change and its "
+                "numbers came from the refused one. Both were re-run; the "
+                "refused variant reproduces those three figures exactly.",
+    },
+    "refused_variant": MINUTES_REFUSED_FIX,
+    "caveat": "even after the fix the model still loses to `start_rate_r3` at "
+              "h=1 (0.1138 against 0.0986). It now BEATS it at h=2 through "
+              "h=6, and it is no longer distinguishable from `start_rate_td` "
+              "or `started_lag` at h=1 — the paired 95% interval against each "
+              "now contains zero, where before it was a loss in 37 gameweeks "
+              "out of 37. This closes the gap. It does not make the shipped "
+              "gate the best available estimator of the next fixture.",
 }
 
 
@@ -643,14 +807,14 @@ def _minutes_branch(player: Mapping[str, Any], fixtures_played: int) -> str:
     all three arms over a grid of synthetic players and asserts the label names
     the one `p_start` actually equals.
     """
-    cur_min = player["minutes"] or 0
     base_min = player["base_minutes"] or 0
     base_starts = player.get("base_starts") or 0
     have_base = base_min >= config.BASE_SAMPLE_MINUTES
     zero_is_evidence = config.season_reports_advanced_stats(
         player.get("base_season")) is not False
     zero_starts_possible = base_min <= projection._MAX_UNSTARTED_MINUTES
-    if fixtures_played >= 3 and cur_min and player.get("starts") is not None:
+    # A18. `cur_min` is deliberately absent, mirroring the gate it transcribes.
+    if fixtures_played >= 3 and player.get("starts") is not None:
         return "current_season"
     if have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
         return "prior_season"
@@ -1661,6 +1825,238 @@ MODEL_CANDIDATES = {
 }
 
 
+#: C1 — captaincy on the distribution. MEASURED, REFUSED.
+#:
+#: `solver/optimize.py` decided the armband on expected points and justified it
+#: as UI consistency: "so every surface agrees on it". That is a reason to keep a
+#: rule and not a reason to have chosen one, and captaincy is the largest
+#: addressable number in this artifact — 6.05 points of regret per gameweek at
+#: h=1 against a perfect-hindsight ceiling of 11.94, with the model BELOW the
+#: naive baseline on captain accuracy (21.1% against 26.3%).
+#:
+#: Captaincy is a max-order-statistic problem — you double ONE player — so the
+#: quantity that should decide it is P(haul), not E[points], and `model.simulate`
+#: already publishes `boom`, `ceiling`, `floor` and `std` per player. Nineteen
+#: rules were scored with squad and XI selection held fixed on expected points,
+#: so that the armband was the only thing that varied.
+#:
+#: The simulation IS reconstructible on the archive, which had been flagged as
+#: the thing that might stop this being measurable at all: `_sample_fixture`
+#: takes the rate bundle `projection.fixture_rates` returns, and the backtest
+#: already builds that bundle. Parity was checked rather than assumed — the
+#: simulated mean correlates with the point estimate at 0.9998.
+CAPTAINCY_CANDIDATE = {
+    "candidate": "captain_on_the_distribution",
+    "decision": "measured, REFUSED",
+    "question": "the armband doubles ONE player, so P(haul) should decide it "
+                "rather than E[points]. Does any rule built on the published "
+                "distribution beat expected points?",
+    "protocol": "squad and XI chosen on expected points in every arm, so only "
+                "the armband varies. Rules selected on 2024-25 with 2023-24 as "
+                "corroboration; 2025-26 reported once. Three Monte-Carlo "
+                "configurations (n=3000 seed A, n=3000 seed B, n=20000) because "
+                "a captaincy rule that changes two armbands a season can be "
+                "moved by sampling noise alone.",
+    "rules_tried": 19,
+    "headroom": {
+        "shipped_captain_points_per_gw": {"2023-24": 5.74, "2024-25": 8.92,
+                                          "2025-26": 5.89},
+        "perfect_hindsight_per_gw": {"2023-24": 12.48, "2024-25": 14.03,
+                                     "2025-26": 11.94},
+        "note": "the ceiling is the best actual scorer in the XI, which is not "
+                "attainable. It is the size of the prize, not a target.",
+    },
+    #: Points per gameweek MINUS the shipped rule. Positive is the challenger
+    #: winning. n=3000 at the first seed; see `seed_stability`.
+    "vs_expected_points_per_gw": {
+        "boom": {"2023-24": -0.474, "2024-25": -1.105, "2025-26": -0.447},
+        "ceiling": {"2023-24": -0.237, "2024-25": 0.395, "2025-26": -0.026},
+        "floor": {"2023-24": -0.316, "2024-25": -2.026, "2025-26": -1.105},
+        "std": {"2023-24": -0.342, "2024-25": -0.342, "2025-26": -0.132},
+        "sim_mean": {"2023-24": 0.184, "2024-25": -0.158, "2025-26": 0.0},
+        "blend_upside_0.1": {"2023-24": 0.211, "2024-25": 0.079,
+                             "2025-26": 0.079},
+        "blend_upside_1.5": {"2023-24": -1.026, "2024-25": 0.237,
+                             "2025-26": -0.132},
+    },
+    "seed_stability": "the only rule with a consistent sign across all three "
+                      "Monte-Carlo configurations is `boom`, and its sign is "
+                      "NEGATIVE in all nine season-configuration cells. Every "
+                      "rule that looked like a win changed sign with the seed: "
+                      "`blend_upside_0.1` runs +0.211 / -0.053 / -0.053 on the "
+                      "train season across the three configurations, and "
+                      "`blend_boom_0.1` runs +0.211 / -0.316 / +0.342 on the "
+                      "test season. The selection-season winner, `ceiling` at "
+                      "+0.395, decays to +0.132 at n=20000 while losing the "
+                      "train and test seasons in every configuration.",
+    "mechanism": "the distribution is a deterministic function of the SAME "
+                 "eleven rates the point estimate is built from, so inside an "
+                 "eleven-man XI it carries almost no ORDERING information the "
+                 "mean does not already have. On the test season the AUC for "
+                 "predicting an actual double-digit haul is 0.5876 for expected "
+                 "points and 0.5863 for `boom` — indistinguishable. `boom` does "
+                 "not know which player hauls, so doubling the player with the "
+                 "highest P(haul) cannot help. On the same season the simulated "
+                 "mean moves the armband in ZERO of 38 gameweeks.",
+    "haul_discrimination_auc": {
+        "note": "AUC against `actual >= 10`, over captain-eligible XI rows.",
+        "2023-24": {"expected_points": 0.6291, "boom": 0.6918,
+                    "ceiling": 0.6833, "std": 0.6734},
+        "2024-25": {"expected_points": 0.6947, "boom": 0.6882,
+                    "ceiling": 0.7160, "std": 0.7112},
+        "2025-26": {"expected_points": 0.5876, "boom": 0.5863,
+                    "ceiling": 0.5913, "std": 0.5889},
+    },
+    "armbands_moved_of_38": {
+        "note": "how many captains a rule changes at all. A rule worth a "
+                "per-gameweek figure has to move more than one.",
+        "sim_mean": {"2023-24": 3, "2024-25": 2, "2025-26": 0},
+        "boom": {"2023-24": 11, "2024-25": 10, "2025-26": 13},
+        "ceiling": {"2023-24": 8, "2024-25": 4, "2025-26": 11},
+        "blend_upside_0.1": {"2023-24": 3, "2024-25": 2, "2025-26": 1},
+    },
+    "refused_because": "no rule beats expected points on the selection season "
+                       "with corroboration on the train season, and the one "
+                       "that wins the selection season alone (`ceiling`, "
+                       "+0.395/gw) loses the train and test seasons and shrinks "
+                       "as the Monte-Carlo error shrinks. That is the shape of "
+                       "a result fitted to one season, which this project has "
+                       "produced once before and shipped once too often.",
+    "reopen_if": "the distribution stops being a deterministic re-reading of "
+                 "the point estimate — a separate haul model, a bonus-point "
+                 "model, or minute-level variance that the rate bundle does not "
+                 "already contain. The blocker is not the decision rule, it is "
+                 "that `boom` and `exp_points` are the same information twice.",
+    "limitations": [
+        "The archive carries no bonus, card, own-goal or penalty rates, so the "
+        "simulated distribution here is missing exactly the tail events that "
+        "make a haul. The point estimate is missing them too, so the ARMS are "
+        "comparable; the absolute `boom` level is not the live one.",
+        "Captains are chosen from an XI selected on expected points. A rule "
+        "that also picked a different XI was not tried, and would not be a "
+        "captaincy change.",
+        "Availability is pinned at 1.0, as everywhere in this harness.",
+    ],
+}
+
+#: A19 — the projection contradicts itself about one number. MEASURED, NOT FIXED.
+#:
+#: Found by `model.scenarios` while making the sampler agree with the projection:
+#: having removed the sampler's own divergence, the projection still disagreed
+#: with itself. `projection.fixture_rates` carries two estimates of "how many
+#: goals does the opposition score in this fixture" — the top-down
+#: `ctx.expected_conceded`, which is the only one `p_cs` reads, and the bottom-up
+#: sum of the opposing side's players' `exp_goals`, which is what every attacking
+#: projection is built from.
+#:
+#: Measured end-to-end on all three split seasons, one row per fixture-side.
+CLEAN_SHEET_CONTRADICTION = {
+    "finding": "two estimates of one quantity, and `p_cs` reads the weaker one",
+    "decision": "measured, NOT fixed",
+    "unit": "fixture-side: 760 per season, 2280 in all",
+    "disagreement": {
+        "mean_abs_goals": {"2023-24": 0.350, "2024-25": 0.360,
+                           "2025-26": 0.363},
+        "max_abs_goals": {"2023-24": 4.564, "2024-25": 2.038,
+                          "2025-26": 2.694},
+        "correlation": {"2023-24": 0.6845, "2024-25": 0.7449,
+                        "2025-26": 0.6392},
+        "within_25_pct_of_each_other": "53.6% of fixture-sides. One lambda is "
+                                       "more than double the other in 3.8%.",
+        "by_stage": {
+            "note": "the gap is WORST in the regime the live product occupies "
+                    "in early September, which is why this surfaced now.",
+            "GW1-3": {"n": 178, "mean_abs_gap": 0.670, "correlation": 0.262,
+                      "max_p_cs": 0.835},
+            "GW4-8": {"n": 302, "mean_abs_gap": 0.434, "correlation": 0.556,
+                      "max_p_cs": 0.709},
+            "GW9+": {"n": 1800, "mean_abs_gap": 0.314, "correlation": 0.761,
+                     "max_p_cs": 0.785},
+        },
+    },
+    "which_is_right": {
+        "note": "clean sheets actually kept, scored against each lambda. The "
+                "bottom-up one wins on every metric in every season, which is "
+                "the opposite of the arm that ships.",
+        "brier_shipped_top_down": {"2023-24": 0.1643, "2024-25": 0.1794,
+                                   "2025-26": 0.1899},
+        "brier_bottom_up": {"2023-24": 0.1603, "2024-25": 0.1714,
+                            "2025-26": 0.1853},
+        "brier_league_base_rate": {"2023-24": 0.1639, "2024-25": 0.1794,
+                                   "2025-26": 0.1901},
+        "auc_shipped_top_down": {"2023-24": 0.6500, "2024-25": 0.6345,
+                                 "2025-26": 0.6123},
+        "auc_bottom_up": {"2023-24": 0.6617, "2024-25": 0.6586,
+                          "2025-26": 0.6144},
+        "goals_mae_shipped_top_down": {"2023-24": 0.9854, "2024-25": 0.9269,
+                                       "2025-26": 0.9121},
+        "goals_mae_bottom_up": {"2023-24": 0.9771, "2024-25": 0.9583,
+                                "2025-26": 0.9203},
+        "reading": "on the clean sheet itself — which is what `p_cs` is for — "
+                   "the bottom-up lambda wins the Brier and the AUC in all "
+                   "three seasons. On raw goals conceded the top-down lambda "
+                   "wins two of three, so this is not a claim that one lambda "
+                   "is better at everything. What ships is barely "
+                   "distinguishable from quoting the league clean-sheet rate "
+                   "to every side: 0.1899 against a base rate of 0.1901 on the "
+                   "test season, a dead tie on the selection season, and WORSE "
+                   "than the base rate on the train season.",
+    },
+    "calibration_of_the_shipped_p_cs": {
+        "note": "claimed -> realised, pooled over the three seasons. Honest "
+                "below 0.35 and over-confident above it.",
+        "bands": [
+            {"claimed": 0.100, "realised": 0.098, "n": 407},
+            {"claimed": 0.201, "realised": 0.185, "n": 567},
+            {"claimed": 0.298, "realised": 0.251, "n": 589},
+            {"claimed": 0.395, "realised": 0.319, "n": 420},
+            {"claimed": 0.490, "realised": 0.286, "n": 182},
+            {"claimed": 0.610, "realised": 0.435, "n": 115},
+        ],
+        "at_or_above_0.70": {"n": 10, "claimed": 0.758, "realised": 0.600},
+        "bottom_up_equivalent": [
+            {"claimed": 0.102, "realised": 0.114, "n": 536},
+            {"claimed": 0.198, "realised": 0.204, "n": 712},
+            {"claimed": 0.298, "realised": 0.276, "n": 562},
+            {"claimed": 0.395, "realised": 0.352, "n": 321},
+            {"claimed": 0.487, "realised": 0.353, "n": 119},
+            {"claimed": 0.590, "realised": 0.433, "n": 30},
+        ],
+        "and_it_is_more_conservative": "the bottom-up lambda's largest clean-"
+                                       "sheet probability over three seasons is "
+                                       "0.693, against 0.835 for the one that "
+                                       "ships, and it puts 30 fixture-sides "
+                                       "above 0.55 where the shipped arm puts "
+                                       "115.",
+    },
+    "live_consequence": "the artifact published a 0.760 clean-sheet probability "
+                        "for one club at home after ONE finished gameweek. That "
+                        "is not a sampler artefact — it is what the projection "
+                        "says — and it sits above anything three seasons of "
+                        "archive validate: the ten fixture-sides that ever "
+                        "cleared 0.70 realised 0.60, and the whole 0.55+ band "
+                        "realises 0.435. Two players in the owner's real squad "
+                        "are priced on it.",
+    "not_fixed_because": "`fixture_rates` is per-player and cannot see the "
+                         "opposing team's squad, so reading the bottom-up "
+                         "lambda needs a two-pass projection: accumulate every "
+                         "team's attacking lambda, then project. That is a "
+                         "structural change to `projection.project`, it moves "
+                         "every defender and goalkeeper in the product, and it "
+                         "needs the points backtest run behind it the way A18 "
+                         "did. Characterised rather than rushed.",
+    "next_step": "two passes, then re-run the points backtest. The measurement "
+                 "above says which lambda to keep for `p_cs`; it does not say "
+                 "what that does to the legal XI, and a clean-sheet improvement "
+                 "that degrades the decision is not a win. Note also that the "
+                 "over-confidence above 0.35 is a calibration fault present in "
+                 "BOTH lambdas, so reconciling them is necessary and not "
+                 "sufficient.",
+    "exposed_as": "`model.scenarios.ScenarioSet.diagnostics"
+                  "['clean_sheet_contradiction']`, per run.",
+}
+
+
 def candidate(name: str) -> dict[str, Any]:
     """One candidate's record. Raises rather than returning a silent default."""
     for c in MODEL_CANDIDATES["candidates"]:
@@ -1941,6 +2337,11 @@ def run(
         },
         "withdrawn_baselines": WITHDRAWN_BASELINES,
         "model_candidates": MODEL_CANDIDATES,
+        # Two measurements that did not become changes. Published for the same
+        # reason `withdrawn_baselines` is: a refusal nobody can read is
+        # indistinguishable from never having looked.
+        "captaincy_candidate": CAPTAINCY_CANDIDATE,
+        "clean_sheet_contradiction": CLEAN_SHEET_CONTRADICTION,
         "limitations": [
             "Team strength ratings are rebuilt each gameweek from matches already "
             "played (T-12). They are NOT the same construction the live pipeline "
@@ -1960,6 +2361,22 @@ def run(
             "one season. One season is one season; read the margin accordingly.",
             "Transfer regret is a one-free-transfer greedy sequence, not the "
             "shipped multi-period solver.",
+            "Captain regret is the largest addressable number on this page and "
+            "it was attacked and not moved. Nineteen armband rules built on "
+            "the published distribution — `boom`, `ceiling`, `floor`, `std` "
+            "and blends — were scored with squad and XI held fixed, and none "
+            "survived selection on 2024-25 with corroboration on 2023-24. "
+            "`boom` is worse than expected points in every season at every "
+            "Monte-Carlo seed. See `captaincy_candidate`: the reason is that "
+            "the distribution is a re-reading of the same rates the point "
+            "estimate uses, so it does not know which player hauls either.",
+            "The clean-sheet probability behind every defender and goalkeeper "
+            "on this page is barely distinguishable from the league clean-"
+            "sheet rate — Brier 0.1899 against a base rate of 0.1901 — and it "
+            "is over-confident above 0.35: a claimed 0.49 realises 0.29. The "
+            "projection additionally holds a SECOND, better-calibrated "
+            "estimate of the same quantity that `p_cs` does not read. Measured "
+            "and not fixed; see `clean_sheet_contradiction`.",
             "Squad selection maximises projected points under budget, quota and "
             "the club limit. It is close to, but not identical to, the shipped "
             "optimiser, which also carries a ceiling term and a goalkeeper "
@@ -1984,28 +2401,40 @@ def run(
             "not this one. Absence appears to predict absence, so the conflation is "
             "crude rather than simply wrong. A real fix needs per-fixture "
             "history, not a constant.",
-            "The minutes model is measured for the first time in this schema "
-            "version, and it LOSES to every naive baseline it was given. See "
-            "`minutes_model`: at h=1 the shipped `p_start` scores a Brier of "
-            "0.150 against 0.099 for the share of a player's last three "
-            "fixtures he started, and it is beaten at all six horizons. Because "
-            "`p_start` multiplies through every rate in `fixture_rates`, that "
-            "error is inside every point projection on this page, and none of "
-            "the numbers above are corrected for it.",
-            "A third of every backtested row has its `p_start` set by the PRICE "
-            "prior — the arm that fires when a player has no minutes this "
-            "season and no usable prior season. Those rows are told they have a "
-            "~29% chance of starting and they start 2.3% of the time, in each "
-            "of the three most recent seasons. It is the single largest source "
-            "of minutes error and it is not a season artefact.",
+            "The minutes model was measured for the first time in this "
+            "schema version and it LOST to every naive baseline it was given. "
+            "A18 then acted on that: `p_start` no longer needs current-season "
+            "minutes before it will believe a season-to-date zero. At h=1 it "
+            "now scores a Brier of 0.114 where it scored 0.150, beats the "
+            "three-game rolling start rate at h=2 through h=6, and is "
+            "indistinguishable from two of the three baselines at h=1. It is "
+            "still beaten by `start_rate_r3` at h=1. See `minutes_model` and "
+            "`minutes_model.candidate_fix`.",
+            "Every number on this page moved with it, because `p_start` "
+            "multiplies through every rate in `fixture_rates`. On this season "
+            "at h=1, MAE went 1.539 -> 1.114 against the naive baseline's "
+            "1.075, and rank correlation 0.455 -> 0.626 against 0.692. The "
+            "naive baseline still wins both; it used to win them by an order "
+            "more.",
+            "The PRICE prior — the arm that fires when a player has no minutes "
+            "this season and no usable prior season — was a third of every "
+            "backtested row before A18. Those rows were told they had a ~29% "
+            "chance of starting and started 2.3% of the time, in each of the "
+            "three most recent seasons. It is now 4.1% of rows, and the rows "
+            "left in it start 17.5% of the time. It was the single largest "
+            "source of minutes error and it is no longer the largest anything.",
             "This artifact reports 2025-26; the one before it reported 2024-25. "
             "They are not two readings of one instrument. 2025-26 has a DEFCON "
-            "column and 2024-25 has none, zero-minute share is 61.4% against "
-            "58.0%, and the results invert: the model WINS legal-XI points here "
-            "(49.3 to 44.6, leading at all six horizons) while LOSING captaincy "
-            "(5.87 to 5.97), where on 2024-25 it lost the XI (50.6 to 51.7) and "
-            "won the captaincy (8.76 to 8.00). The naive baseline beats it on "
-            "MAE and rank correlation in both. Only the season changed.",
+            "column and 2024-25 has none, and zero-minute share is 61.4% "
+            "against 58.0%. At heuristic-0.6 the model wins legal-XI points on "
+            "both (50.1 to 44.8 here, 53.6 to 51.3 there) and leads at all six "
+            "horizons on both, while still losing captaincy on this season "
+            "(5.89 to 5.97) and winning it on 2024-25 (8.92 to 8.00). The "
+            "naive baseline still beats it on MAE and rank correlation in "
+            "both. At heuristic-0.5 the XI result INVERTED between the two "
+            "seasons; A18 is what removed that, and a finding this artifact "
+            "once led on turning out to be one projection change deep is "
+            "itself worth knowing.",
             "GW1 is included, and the naive baseline does not exist there: it is "
             "cumulative season-to-date points-per-game, which is 0 for everyone "
             "before a ball is kicked. `rank_corr` skips zero-variance "

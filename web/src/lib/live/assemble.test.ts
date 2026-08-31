@@ -141,3 +141,104 @@ describe('the published view carries the manager own row', () => {
     expect(state.me).toBeUndefined()
   })
 })
+
+// B5. `rivals` was aggregates and nothing else, and no table anywhere holds a
+// rival's picks — so "how are they doing", asked as often as "how am I doing",
+// could only ever be answered with a number nobody could check. These mirror
+// tests/test_live.py; whole-view agreement lives in ./parity.test.ts.
+describe('every rival is published with the fifteen his total is made of', () => {
+  it('carries a row per player, in the shape the artifact promises', () => {
+    const squads = assembled().rival_squads as Record<string, any>[]
+    expect(squads.map((s) => s.entry_id)).toEqual([THEIRS])
+    expect(squads[0].players).toHaveLength(15)
+    expect(Object.keys(squads[0].players[0]).sort()).toEqual([
+      'confirmed', 'element', 'minutes', 'multiplier', 'name', 'pos',
+      'predicted', 'product', 'provisional', 'yet_to_play',
+    ])
+  })
+
+  it('adds up to the total published beside his name', () => {
+    // The whole reason to spend the bytes: multiply, sum, subtract the hits,
+    // and land exactly on the number in the league table.
+    const state = assembled()
+    const row = (state.rivals as Record<string, any>[]).find((r) => !r.you)!
+    const rival = (state.rival_squads as Record<string, any>[])
+      .find((s) => s.entry_id === row.entry_id)!
+    const products = rival.players.reduce(
+      (n: number, p: Record<string, any>) => n + p.product, 0)
+    expect(products - rival.hits).toBe(rival.gw_points)
+    expect(rival.gw_points).toBe(row.gw_points)
+    expect(rival.yet_to_play).toBe(row.yet_to_play)
+    expect(rival.provisional_position).toBe(row.provisional_position)
+  })
+
+  it('multiplies his captain and not yours', () => {
+    // The multiplier is a fact about the MANAGER, not about the player: one
+    // piece of football, two different contributions.
+    const state = assembled()
+    const rival = (state.rival_squads as Record<string, any>[])[0]
+    const nine = rival.players.find((p: Record<string, any>) => p.element === 9)
+    expect(nine.multiplier).toBe(0)
+    expect(nine.product).toBe(0)
+    const one = rival.players.find((p: Record<string, any>) => p.element === 1)
+    expect(one.multiplier).toBe(2)
+    const mine = (state.players as Record<string, any>[]).find((p) => p.id === 9)!
+    expect(mine.is_captain).toBe(true)
+  })
+
+  it('publishes fifteen scoring rows for a rival on Bench Boost', () => {
+    // `SquadLive.scoring` already knows, which is why the rows are built from
+    // it rather than from the XI — the chip needs no case of its own.
+    const rival = (assembled({ rivals: [{ ...RIVAL, active_chip: 'bboost' }] })
+      .rival_squads as Record<string, any>[])[0]
+    expect(rival.players.every((p: Record<string, any>) => p.multiplier >= 1))
+      .toBe(true)
+    const products = rival.players.reduce(
+      (n: number, p: Record<string, any>) => n + p.product, 0)
+    expect(products - rival.hits).toBe(rival.gw_points)
+  })
+
+  it('names only the players who score the two of you differently', () => {
+    const rival = (assembled().rival_squads as Record<string, any>[])[0]
+    expect(rival.differential).toContain(9)     // you captain him, he benched him
+    expect(rival.differential).toContain(15)    // he starts him, you do not
+    expect(rival.differential).not.toContain(2) // both of you, uncaptained
+  })
+
+  it('prices the swing player exactly as the rows price him', () => {
+    // One rulebook, not two: `largestSwing` and the rows both go through
+    // `effectiveMultiplier`, so a swing can never name a player the rows
+    // disagree about.
+    const state = assembled()
+    const swing = state.largest_swing as Record<string, any>
+    const rival = (state.rival_squads as Record<string, any>[])
+      .find((s) => s.entry_id === swing.against)!
+    const theirs = rival.players.find(
+      (p: Record<string, any>) => p.element === swing.player_id)
+    const mine = (state.players as Record<string, any>[])
+      .find((p) => p.id === swing.player_id)!
+    const myMult = mine.is_captain
+      ? state.squad.autosubs.multiplier
+      : (mine.in_xi ? 1 : 0)
+    expect(swing.swing).toBe(
+      (mine.confirmed + mine.provisional) * (myMult - (theirs?.multiplier ?? 0)))
+  })
+
+  it('is ordered by the table it takes its positions from', () => {
+    const state = assembled({
+      rivals: [RIVAL, { ...SELF_AS_RIVAL, entry_id: 999, name: 'Third', total: 1 }],
+    })
+    const squads = state.rival_squads as Record<string, any>[]
+    const places = squads.map((s) => s.provisional_position)
+    expect(places).toEqual([...places].sort((a, b) => a - b))
+    const table = new Map((state.rivals as Record<string, any>[])
+      .map((r) => [r.entry_id, r.provisional_position]))
+    for (const s of squads) {
+      expect(s.provisional_position).toBe(table.get(s.entry_id))
+    }
+  })
+
+  it('is absent when the view has no scores to publish', () => {
+    expect(assembled({ squad: null }).rival_squads).toBeUndefined()
+  })
+})

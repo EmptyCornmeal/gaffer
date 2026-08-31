@@ -677,6 +677,143 @@ def score_squad(
 
 
 # ---------------------------------------------------------------------------
+# Rivals: effective ownership, published rows
+# ---------------------------------------------------------------------------
+
+def effective_multiplier(pid: int, squad: SquadLive) -> int:
+    """How many copies of ``pid``'s points land in ``squad``'s total.
+
+    Zero when he does not score for this manager at all — benched without Bench
+    Boost, or simply not owned. One when he scores once. The armband multiplier
+    when he is the captain, which is 3 under Triple Captain and 1 when captain
+    and vice both blanked.
+
+    This is *effective* ownership, and it is the only quantity that matters when
+    two managers are compared: owning a player is one way to differ, and both
+    owning him while only one of you captained him is the other, commoner one.
+
+    Lifted out of ``largest_swing``, where it lived as a closure, so the
+    published rival rows multiply by the same rule the swing measures with.
+    Restating it would have been a second reading of one rulebook, which is the
+    exact class of bug this project keeps finding.
+    """
+    if pid not in set(squad.scoring):
+        return 0
+    return squad.autosubs.multiplier if pid == squad.autosubs.captain else 1
+
+
+def differential_ids(mine: SquadLive, theirs: SquadLive) -> list[int]:
+    """The players that separate these two managers, ascending.
+
+    A player who scores identically for both of you cannot move the gap between
+    you however many points he takes, so he is not here. Everyone else is,
+    whichever squad he is in: the list spans BOTH sides, so it contains players
+    of yours the rival does not have as well as his that you do not.
+
+    Published as bare ids because both squads are already published in full —
+    yours in ``players``, his in his own ``rival_squads`` entry — so this is a
+    pointer into data the artifact carries, not a third copy of it. Six rivals
+    cost about 350 bytes. One caveat follows from that: an id here has no row
+    when neither side can publish one — a player this build has no live state
+    for at all — because he still separates you, and silently dropping him would
+    understate the difference rather than report a gap.
+    """
+    ids = set(mine.scoring) | set(theirs.scoring)
+    return [p for p in sorted(ids)
+            if effective_multiplier(p, mine) != effective_multiplier(p, theirs)]
+
+
+def rival_player_row(
+    pid: int, squad: SquadLive, live: dict[int, PlayerLive],
+    names: dict[int, str], positions: dict[int, str],
+) -> dict[str, Any] | None:
+    """One published row of a rival's fifteen, or None if he has no live state.
+
+    Deliberately NOT ``PlayerLive.as_dict()`` with a name bolted on, which is
+    what the manager's own ``players`` block publishes. Seven rivals times
+    fifteen is 105 rows in an artifact the browser re-reads whenever the live
+    proxy cannot answer, and measured against real GW2 data the full-fat row
+    costs 258 bytes against this one's 151 — 23.2 kB of rival rows against
+    13.6 kB, on a file that is 7.2 kB without them. ``played``, ``finished`` and
+    ``fixture_states`` are the fields dropped: all three are properties of the
+    FOOTBALL rather than of the manager, identical for every rival who owns the
+    player, and none of them is needed to answer either question this block
+    exists for — what is his score, and who has not kicked off yet.
+
+    What is kept is what cannot be recovered from anywhere else: the three kinds
+    of points, which never merge (see this module's header); the multiplier,
+    which is a fact about this manager and not about the player; and the
+    product, which is what that player actually contributes.
+
+    ``product`` is ``(confirmed + provisional) * multiplier`` — the contribution
+    to the manager's CURRENT score, so ``sum(product) - hits == gw_points``
+    exactly, and a rival's total arrives checkable in the same way the manager's
+    own does. ``predicted`` is left out of it on purpose: it is a projection,
+    and folding a projection into a scoreline is the thing this module exists
+    not to do — which does mean ``predicted`` is this player's OWN share and has
+    to be multiplied by ``multiplier`` to reach his contribution to the
+    manager's projected total. The scoreline and the projection are two
+    different sums and they are kept looking like it.
+    """
+    st = live.get(pid)
+    if st is None:
+        return None
+    mult = effective_multiplier(pid, squad)
+    return {
+        "element": pid,
+        "name": names.get(pid, str(pid)),
+        "pos": positions.get(pid),
+        "minutes": st.minutes,
+        "confirmed": st.confirmed,
+        "provisional": st.provisional,
+        "predicted": round(st.predicted, 2),
+        "multiplier": mult,
+        "product": round((st.confirmed + st.provisional) * mult, 2),
+        "yet_to_play": st.yet_to_play,
+    }
+
+
+def rival_squad_dict(
+    squad: SquadLive, mine: SquadLive, live: dict[int, PlayerLive],
+    names: dict[int, str], positions: dict[int, str], *,
+    name: str, place: int,
+) -> dict[str, Any]:
+    """One rival, scored, with the fifteen rows his total is made of.
+
+    All fifteen, not the scoring eleven. The eleven would have been 2.8 kB
+    cheaper and the arithmetic would still have closed — a benched player
+    carries ``multiplier`` 0 and contributes nothing — but "how are they doing"
+    is asked alongside "which of their players have not kicked off", and a bench
+    player who is yet to play is one of them: his starter blanking is exactly
+    how he comes on. Publishing eleven would also have left this block's row
+    count disagreeing with ``rivals[].yet_to_play``, which counts all fifteen.
+    Under Bench Boost the same fifteen rows simply all carry a multiplier,
+    because ``SquadLive.scoring`` already knows, so the chip needs no case here.
+
+    The autosub block is ``Autosubs.as_dict()`` verbatim rather than a chosen
+    subset of it: a subset is a second shape of the same thing and drifts. It
+    costs about 220 bytes a rival and it is what says whether the substitutions
+    below are settled or still projected.
+    """
+    return {
+        "entry_id": squad.entry_id,
+        "name": name,
+        "provisional_position": place,
+        "gw_points": round(squad.current, 2),
+        "hits": squad.hits,
+        "yet_to_play": squad.players_yet_to_play,
+        "autosubs": squad.autosubs.as_dict(),
+        "players": [
+            row for row in (
+                rival_player_row(p, squad, live, names, positions)
+                for p in list(squad.autosubs.xi) + list(squad.autosubs.bench))
+            if row is not None
+        ],
+        "differential": differential_ids(mine, squad),
+    }
+
+
+# ---------------------------------------------------------------------------
 # League swing
 # ---------------------------------------------------------------------------
 
@@ -710,13 +847,6 @@ def largest_swing(
         key=lambda r: abs((r.baseline + r.current) - (mine.baseline + mine.current)))
     my_ids = set(mine.scoring)
     their_ids = set(closest.scoring)
-
-    def weight(pid: int, squad: SquadLive, ids: set[int]) -> int:
-        """How many copies of this player's points land in ``squad``'s total."""
-        if pid not in ids:
-            return 0
-        return squad.autosubs.multiplier if pid == squad.autosubs.captain else 1
-
     best_pid, best_delta = None, 0.0
     # Iterated in ascending id, so an exact tie resolves to the lowest id in both
     # implementations. Set iteration order would not: CPython lays small ints out
@@ -726,7 +856,7 @@ def largest_swing(
         st = live.get(pid)
         if st is None or not (st.confirmed or st.provisional):
             continue
-        edge = weight(pid, mine, my_ids) - weight(pid, closest, their_ids)
+        edge = effective_multiplier(pid, mine) - effective_multiplier(pid, closest)
         if edge == 0:                     # he scores identically for both of you
             continue
         delta = (st.confirmed + st.provisional) * edge
@@ -836,6 +966,10 @@ def assemble(
     ]
     swing = largest_swing(mine, rival_states, pl, names)
 
+    def rival_name(eid: int | None) -> str:
+        return next((x.get("name") or str(eid) for x in rivals
+                     if x.get("entry_id") == eid), str(eid))
+
     my_row = {"entry_id": mine.entry_id, "name": "You", "you": True,
               "current": round(mine.baseline + mine.current, 2),
               "projected": round(mine.baseline + mine.projected, 2),
@@ -844,8 +978,7 @@ def assemble(
     ranked = sorted(
         [my_row]
         + [{"entry_id": r.entry_id,
-            "name": next((x.get("name") or str(r.entry_id) for x in rivals
-                          if x.get("entry_id") == r.entry_id), str(r.entry_id)),
+            "name": rival_name(r.entry_id),
             "you": False,
             "current": round(r.baseline + r.current, 2),
             "projected": round(r.baseline + r.projected, 2),
@@ -855,6 +988,7 @@ def assemble(
         key=lambda e: -e["projected"])
     for i, row in enumerate(ranked, start=1):
         row["provisional_position"] = i
+    place_of = {row["entry_id"]: row["provisional_position"] for row in ranked}
 
     return {
         **base,
@@ -870,6 +1004,25 @@ def assemble(
             if p in pl
         ],
         "rivals": ranked,
+        # B5. Every rival's fifteen, with the multiplier that scores each of
+        # them and the product it produces. `rivals` above is aggregates only,
+        # `strategy.json`'s `owners` is a count rather than a roster, and no
+        # table in the database holds a rival's picks — so "how are they doing",
+        # which is asked as often as "how am I doing", could only be answered
+        # with a number nobody could check and no way to see whose players had
+        # not kicked off. The detail was already in memory here and was thrown
+        # away one line before the artifact.
+        #
+        # `sum(product) - hits == gw_points` holds for every entry, which is the
+        # same guarantee the manager's own scorecard gives, computed by the same
+        # scorer over the same `pl` — never a second fetch, or the two halves of
+        # the league could disagree about a goal that had just gone in.
+        "rival_squads": sorted(
+            (rival_squad_dict(r, mine, pl, names, positions,
+                              name=rival_name(r.entry_id),
+                              place=place_of.get(r.entry_id, 0))
+             for r in rival_states),
+            key=lambda d: d["provisional_position"]),
         # A6. The manager's own row, lifted out of the table so a consumer does
         # not have to hunt the league for ``you``. Nothing wrote this key, and
         # ``mcp_server.publish`` reads ``live["me"]`` (and ``me.substitutions``,

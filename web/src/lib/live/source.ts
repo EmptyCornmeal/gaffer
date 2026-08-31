@@ -286,6 +286,7 @@ interface AnnotatedLiveState {
   squad?: { season_total_before: number | null
             season_total_projected: number | null }
   rivals?: unknown[]
+  rival_squads?: unknown[]
   largest_swing?: unknown
   baseline_source?: string
   missing_players?: number[]
@@ -326,6 +327,12 @@ export function markLiveGaps(
       // place and hands `largestSwing` the wrong "closest" manager.
       state.rivals = []
       state.largest_swing = null
+      // B5. And the per-rival rows go with it. Each carries the
+      // `provisional_position` that table gave it, and a `differential`
+      // measured against a squad whose season total is unreadable — so leaving
+      // them would publish a standing nothing else on the page still claims.
+      // `_mark_live_gaps` in pipeline.py drops the same key.
+      state.rival_squads = []
       gaps.push('the league table, which needs it')
     }
   }

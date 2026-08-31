@@ -804,6 +804,113 @@ def db_get_meta(conn: sqlite3.Connection, key: str) -> Any:
     return None if v in (None, "", "None") else v
 
 
+# ---------------------------------------------------------------------------
+# In-season calibration (E1)
+# ---------------------------------------------------------------------------
+#
+# `backtest.json` grades the model on an archive of finished seasons. Nothing in
+# it was ever published to anybody before a kickoff, so it cannot answer "how
+# much should I trust this week's number?". These three functions answer that
+# from Gaffer's own record: the distributions and per-player projections it
+# froze before each deadline this season, joined to what happened.
+
+
+def finished_events(conn: sqlite3.Connection) -> list[int]:
+    """Gameweeks whose results may be scored against a projection.
+
+    `meta.last_finished_gw` is FPL's own `finished` flag, written during ingest.
+    A gameweek in progress is excluded on purpose: scoring a provisional total as
+    though it were final is the same error as quoting a live aggregate.
+    """
+    raw = db_get_meta(conn, "last_finished_gw")
+    try:
+        last = int(raw)
+    except (TypeError, ValueError):
+        return []
+    return list(range(1, last + 1)) if last >= 1 else []
+
+
+def realised_outcomes(
+    conn: sqlite3.Connection, events: list[int], season: str | None = None,
+) -> dict[int, dict[int, dict[str, Any]]]:
+    """Per-player results for the given gameweeks, from `player_gw`.
+
+    Summed over fixtures rather than read per row. `player_gw` is keyed by
+    fixture, so a double gameweek is two rows, while `exp_points` is made for the
+    gameweek — comparing one fixture's points against a two-fixture projection
+    would score the model as having promised half of what it did.
+    """
+    events = [int(e) for e in events]
+    if not events:
+        return {}
+    season = season or db.get_meta(conn, "season") or config.SEASON
+    marks = ",".join("?" for _ in events)
+    out: dict[int, dict[int, dict[str, Any]]] = {}
+    try:
+        rows = conn.execute(
+            "SELECT gw, player_id, SUM(COALESCE(total_points, 0)) AS pts, "
+            "SUM(COALESCE(minutes, 0)) AS mins FROM player_gw "
+            f"WHERE season = ? AND gw IN ({marks}) GROUP BY gw, player_id",
+            (season, *events),
+        ).fetchall()
+    except sqlite3.Error:
+        # No `player_gw` table, or a schema older than this query. The block
+        # degrades to its distributional half rather than losing the run.
+        return {}
+    for r in rows:
+        out.setdefault(int(r["gw"]), {})[int(r["player_id"])] = {
+            "total_points": int(r["pts"] or 0),
+            "minutes": int(r["mins"] or 0),
+        }
+    return out
+
+
+def build_season_calibration(
+    conn: sqlite3.Connection, *, state_dir: Path | str,
+    review: dict[str, Any] | None = None, generated_at: str | None = None,
+    season: str | None = None,
+) -> dict[str, Any]:
+    """How far the numbers Gaffer shipped this season have actually held up.
+
+    Reads the frozen record in `data/state/*.ndjson` and the realised results in
+    `player_gw`; makes no network call. ``review`` is the review being published
+    in this same run, which is not in the NDJSON yet — without it the block would
+    be exactly one gameweek behind the artifact carrying it.
+    """
+    from gaffer import calibration
+
+    season = season or db.get_meta(conn, "season") or config.SEASON
+    outcomes = realised_outcomes(conn, finished_events(conn), season=season)
+    extra = ([calibration.as_review_row(review, season=season,
+                                        generated_at=generated_at)]
+             if isinstance(review, dict) and review.get("event") is not None else [])
+    return calibration.build_from_state(
+        state_dir, outcomes=outcomes, season=season,
+        generated_at=generated_at, extra_review_rows=extra)
+
+
+def _season_calibration_or_reason(
+    conn: sqlite3.Connection, state_dir: Path | str,
+    review: dict[str, Any] | None, generated_at: str | None,
+) -> dict[str, Any]:
+    """Never lose a review over a calibration. A failure is a stated state."""
+    from gaffer import calibration
+
+    try:
+        return build_season_calibration(
+            conn, state_dir=state_dir, review=review, generated_at=generated_at)
+    except Exception as exc:                                  # noqa: BLE001
+        # The class name only. An exception message can carry a path or an
+        # echoed value, and this file is published.
+        return {
+            "schema_version": calibration.SCHEMA_VERSION,
+            "calibration_version": calibration.CALIBRATION_VERSION,
+            "status": calibration.STATUS_UNAVAILABLE,
+            "unavailable_reason": type(exc).__name__,
+            "headline": "In-season calibration could not be computed on this run.",
+        }
+
+
 def write_all(
     conn: sqlite3.Connection, sol: Solution, from_gw: int,
     horizon: int, model_version: str, out_dir: Path | None = None,
@@ -897,8 +1004,19 @@ def write_all(
     if live is not None:
         artifacts["live.json"] = {**live, "generated_at": generated_at}
     if review is not None:
-        artifacts["review.json"] = {**review, "generated_at":
-                                    review.get("generated_at") or generated_at}
+        artifacts["review.json"] = {
+            **review,
+            "generated_at": review.get("generated_at") or generated_at,
+            # E1. The review grades ONE gameweek. `season_calibration` grades the
+            # numbers themselves: every distribution and every per-player
+            # projection this season shipped before a deadline, scored against
+            # what happened, with the sample size attached to every figure. It
+            # rides on `review.json` because that artifact already exists, is
+            # already validated and is already loaded by the site; a new file
+            # would be published ahead of any contract that checks it.
+            "season_calibration": _season_calibration_or_reason(
+                conn, Path(out_dir) / "state", review, generated_at),
+        }
     if notifications is not None:
         artifacts["notifications.json"] = {**notifications,
                                            "generated_at": generated_at}

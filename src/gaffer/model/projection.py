@@ -31,7 +31,12 @@ from gaffer.model.features import TeamContext, clamp
 #       fitted rather than guessed, and xA is calibrated to FPL's assist
 #       definition per position. Every projected DEFCON and assist number moves,
 #       so the version moves with them.
-MODEL_VERSION = "heuristic-0.5"
+# 0.6 = A18: the current-season minutes gate stopped requiring `cur_min`, so a
+#       season-to-date zero is believed on the same terms the prior-season arm
+#       already believed a `base_starts` zero. It moves 36.5% of backtested
+#       player-gameweeks, all of them downward, by a mean of 1.19 points — the
+#       largest single change to the projection since it was written.
+MODEL_VERSION = "heuristic-0.6"
 
 # Availability status -> baseline multiplier on the chance of featuring.
 _STATUS_MULT = {"a": 1.0, "d": 0.5, "i": 0.0, "s": 0.0, "u": 0.0, "n": 0.0}
@@ -543,7 +548,42 @@ def fixture_rates(
     # `starts` counts FIXTURES, so the denominator counts fixtures too — the
     # team's own completed fixtures, not the number of gameweeks that have
     # elapsed. See `features.played_fixtures_by_team`.
-    if fixtures_played >= 3 and cur_min and player["starts"] is not None:
+    #
+    # A18. The gate used to read `fixtures_played >= 3 and cur_min and ...`, and
+    # that `cur_min` was the same truthiness mistake the prior-season arm above
+    # had already had corrected out of it. A player whose team had completed
+    # eight fixtures and who had played none of them failed on `cur_min` and
+    # fell through to a PRICE prior — which reads an expensive squad player as a
+    # probable starter. The lesson had been learned once and applied to one of
+    # the two arms.
+    #
+    # It is dropped. A season-to-date zero is now believed exactly the way a
+    # `base_starts` zero is, and the sample requirement carries the whole guard:
+    # three completed team fixtures, `starts` readable, and then the arithmetic
+    # says what it says. Every row this moves has `starts == 0` and therefore
+    # goes to precisely 0.00, which is the correct reading of "his team has
+    # played and he has not".
+    #
+    # Measured on the train and select seasons before the test season was
+    # looked at, then confirmed once on test. h=1 Brier on `starts`:
+    #
+    #     2023-24  (train)   0.1452 -> 0.1185
+    #     2024-25  (select)  0.1495 -> 0.1204
+    #     2025-26  (test)    0.1509 -> 0.1154
+    #
+    # and it pays through to the points model rather than only to its own
+    # metric: h=1 MAE on the test season 1.539 -> 1.114, rank correlation 0.455
+    # -> 0.626, legal-XI points 49.7 -> 50.1 per gameweek. The `price_prior`
+    # arm — a third of every backtested row, told it had a ~29% chance of
+    # starting while starting 2.3% of the time — falls to 4.1% of rows.
+    # `backtest.MINUTES_CANDIDATE_FIX` carries the full record, including the
+    # larger variant that was measured alongside this one and REFUSED.
+    #
+    # The residual is real and is not hidden: 0.5%-1.2% of the moved rows did
+    # start, and the model now calls them at 0.00 rather than at 0.29. It was
+    # wrong about 99.5% of that population before and is wrong about 0.6% of it
+    # now, which is the trade being made.
+    if fixtures_played >= 3 and player["starts"] is not None:
         base_start = clamp(player["starts"] / fixtures_played, 0.0, 0.98)
     elif have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
         # `base_starts / 38` — and the denominator really is 38, which is known
@@ -613,6 +653,43 @@ def fixture_rates(
     exp_assists = xa90 * mins_frac * att_mult
 
     # --- clean sheet ----------------------------------------------------
+    # A19 — MEASURED, NOT FIXED. This module carries TWO estimates of one
+    # quantity, "how many goals does the opposition score in this fixture":
+    #
+    #   top-down    `ctx.expected_conceded(...)`, from team strength and xGC.
+    #               It is the only one `p_cs` reads.
+    #   bottom-up   the sum of the opposing side's players' `exp_goals`, each
+    #               of which is `xg90 * mins_frac * ctx.attack_multiplier(...)`.
+    #               It is what every attacking projection is built from.
+    #
+    # They disagree, by a mean 0.36 goals per fixture-side and up to 4.6 over
+    # three seasons of archive, and the disagreement is WORST in exactly the
+    # regime the live product occupies in early September: at GW1-3 the mean gap
+    # is 0.670 and the two lambdas correlate at 0.26, against 0.314 and 0.76
+    # from GW9 on. No sampler can be exact against both, which is how
+    # `model.scenarios` found this.
+    #
+    # Measured against outcomes, the bottom-up lambda is the better clean-sheet
+    # forecaster in all three split seasons — Brier 0.1603/0.1714/0.1853 against
+    # this one's 0.1643/0.1794/0.1899, AUC 0.662/0.659/0.614 against
+    # 0.650/0.635/0.612 — and it is better calibrated at every level above 0.35.
+    # What ships here is barely distinguishable from quoting the league clean-
+    # sheet rate to everybody: 0.1899 against a base rate of 0.1901 on the test
+    # season, and WORSE than the base rate on the train season.
+    #
+    # And it is over-confident where it matters. Claimed 0.49 realises 0.29;
+    # claimed 0.61 realises 0.44; the ten fixture-sides that ever cleared 0.70
+    # realised 0.60. The live artifact currently prints 0.760 for one club at
+    # home after one finished gameweek, which is above anything three seasons of
+    # archive support.
+    #
+    # It is NOT changed here, and the reason is structural rather than nerve:
+    # `fixture_rates` is per-player and cannot see the opposing team's squad, so
+    # deriving `p_cs` from the bottom-up lambda needs a two-pass projection —
+    # accumulate every team's attacking lambda, then project. That moves every
+    # defender and every goalkeeper in the product and needs the points backtest
+    # behind it, the way A18 did. `backtest.CLEAN_SHEET_CONTRADICTION` carries
+    # the measurement so the next person starts from it.
     p_cs = 0.0
     if config.CS_POINTS[pos] > 0:
         lam = ctx.expected_conceded(player["team_id"], fx.opponent_id, fx.at_home)

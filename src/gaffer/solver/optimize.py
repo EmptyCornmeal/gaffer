@@ -467,8 +467,42 @@ def _build_model(
     # so the term was inflated by exactly the blend gap — largest for precisely
     # the players the blend hit hardest.
     #
-    # The captain carries no upside term: the armband is decided on expected
-    # points alone, so every surface agrees on it.
+    # The captain carries no upside term. That used to be justified here as UI
+    # consistency — "so every surface agrees on it" — which is a reason to keep
+    # a rule, never a reason to have chosen it. C1 measured the choice instead.
+    #
+    # Captaincy is a max-order-statistic problem: you double ONE player, so the
+    # quantity that ought to matter is P(haul), not E[points]. `model.simulate`
+    # already publishes `boom` (P >= 10), `ceiling` (P90), `floor` and `std` per
+    # player, and captain regret is the largest addressable number in the
+    # backtest — 6.05 points a gameweek at h=1 on the test season, against a
+    # perfect-hindsight ceiling of 11.94.
+    #
+    # Nineteen armband rules were scored on the archive, holding squad and XI
+    # selection fixed on expected points so the armband was the only thing that
+    # varied: `boom`, `ceiling`, `floor`, `std`, the simulated mean, and blends
+    # of expected points with the upside term above and with `boom`. Selected on
+    # 2024-25 with 2023-24 as corroboration, reported once on 2025-26.
+    #
+    # Not one of them survived. Pure `boom` is WORSE than expected points in
+    # every season and at every Monte-Carlo seed tried (-0.47, -1.11, -0.45
+    # points per gameweek). `ceiling` won the selection season by 0.40 and lost
+    # the train season by 0.24 and the test season by 0.03. Every blend that
+    # looked positive changed sign when the simulation seed changed.
+    #
+    # The mechanism, which is the part worth keeping: the distribution is a
+    # deterministic function of the SAME rate bundle the point estimate is built
+    # from, so within an eleven-man XI it carries almost no ordering information
+    # the mean does not already have. Correlation between the point estimate and
+    # the simulated mean over captain-eligible rows is 0.9998; on the test season
+    # the AUC for predicting an actual double-digit haul is 0.5876 for expected
+    # points and 0.5863 for `boom`. `boom` does not know which player hauls.
+    # Doubling the one with the highest P(haul) therefore cannot help, and a
+    # rule that moves one captain in a season is not a rule.
+    #
+    # So the armband stays on expected points — now because that was measured,
+    # and every surface agreeing on it is the bonus rather than the argument.
+    # `backtest.CAPTAINCY_CANDIDATE` carries the full record.
     upside = {i: max(0.0, players[i].ceiling - players[i].sim_mean) for i in ids}
     if any(upside.values()):
         obj += CEILING_WEIGHT * horizon_factor * pulp.lpSum(

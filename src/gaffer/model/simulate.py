@@ -253,8 +253,10 @@ def simulate_next_gw(
     ctx = TeamContext.build(conn)
     fixtures = F.upcoming_fixtures_by_team(conn, from_gw, 1)
     players = conn.execute("SELECT * FROM players").fetchall()
-    lf = conn.execute("SELECT value FROM meta WHERE key='last_finished_gw'").fetchone()
-    games_played = int(lf["value"]) if lf and str(lf["value"]).isdigit() else 0
+    # Per TEAM, how many fixtures it has completed -- the same quantity
+    # `projection.project` passes. `meta.last_finished_gw` counts EVENTS, and the
+    # two part company at the first double gameweek or blank.
+    played_by_team = F.played_fixtures_by_team(conn)
     rng = np.random.default_rng(_SEED)
     out: dict[int, dict[str, float]] = {}
     for p in players:
@@ -265,7 +267,8 @@ def simulate_next_gw(
         avail = projection._availability(p["status"], p["chance_playing"])
         totals = np.zeros(n)
         for fx in gw_fx:
-            r = projection.fixture_rates(p, fx, ctx, avail, games_played)
+            r = projection.fixture_rates(
+                p, fx, ctx, avail, played_by_team.get(p["team_id"], 0))
             totals = totals + _sample_fixture(r, n, rng)
         out[p["id"]] = _summarise(totals)
     return out

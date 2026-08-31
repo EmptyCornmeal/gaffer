@@ -1008,3 +1008,147 @@ def test_an_unavailable_view_publishes_no_scores_to_read():
     """The early returns stay early: no squad means no `me` to be believed."""
     state = assembled(squad=None)
     assert state["available"] is False and "me" not in state
+
+
+# ==========================================================================
+# B5: the rivals' own fifteen
+# ==========================================================================
+#
+# `rivals` was aggregates and nothing else, `strategy.json`'s `owners` is a
+# count rather than a roster, and no table holds a rival's picks — so "how are
+# they doing", asked as often as "how am I doing", could only ever be answered
+# with a number nobody could check.
+
+
+def test_every_rival_is_published_with_the_fifteen_his_total_is_made_of():
+    state = assembled()
+    squads = state["rival_squads"]
+    assert [s["entry_id"] for s in squads] == [THEIRS], \
+        "his own entry is not a rival to himself here either"
+    rival = squads[0]
+    assert len(rival["players"]) == 15
+    assert {"element", "name", "pos", "minutes", "confirmed", "provisional",
+            "predicted", "multiplier", "product", "yet_to_play"} == \
+        set(rival["players"][0])
+
+
+def test_a_rivals_published_rows_add_up_to_his_published_total():
+    """The whole reason to spend the bytes.
+
+    An `owners` count can never be checked and neither can a total read off the
+    standings. These rows can: multiply, sum, subtract the hits, and land on the
+    number printed beside his name.
+    """
+    for rival in assembled()["rival_squads"]:
+        products = sum(p["product"] for p in rival["players"])
+        assert products - rival["hits"] == rival["gw_points"]
+    row = next(r for r in assembled()["rivals"] if not r["you"])
+    published = next(s for s in assembled()["rival_squads"]
+                     if s["entry_id"] == row["entry_id"])
+    assert published["gw_points"] == row["gw_points"], \
+        "the detail block and the league table must not disagree"
+    assert published["yet_to_play"] == row["yet_to_play"]
+    assert published["provisional_position"] == row["provisional_position"]
+
+
+def test_a_rivals_captain_is_multiplied_in_his_rows_and_not_in_yours():
+    """The multiplier is a fact about the MANAGER, not about the player.
+
+    Player 9 hauls 12 and you captain him; the rival benched him. One piece of
+    football, two different contributions, and only a per-manager multiplier can
+    say so.
+    """
+    rival = assembled()["rival_squads"][0]
+    nine = next(p for p in rival["players"] if p["element"] == 9)
+    assert nine["multiplier"] == 0 and nine["product"] == 0, "benched for him"
+    mine = next(p for p in assembled()["players"] if p["id"] == 9)
+    assert mine["is_captain"] is True
+    one = next(p for p in rival["players"] if p["element"] == 1)
+    assert one["multiplier"] == 2, "he wears the armband for the rival"
+
+
+def test_a_rival_on_bench_boost_publishes_fifteen_scoring_rows():
+    """`SquadLive.scoring` already knows, so the chip needs no case of its own —
+    which is exactly why the rows are built from it rather than from the XI."""
+    boosted = dict(RIVAL, active_chip="bboost")
+    rival = assembled(rivals=[boosted])["rival_squads"][0]
+    assert all(p["multiplier"] >= 1 for p in rival["players"])
+    assert sum(p["product"] for p in rival["players"]) - rival["hits"] \
+        == rival["gw_points"]
+
+
+def test_the_differential_is_only_the_players_who_score_you_differently():
+    """A player who scores identically for both of you cannot move the gap."""
+    state = assembled()
+    rival = state["rival_squads"][0]
+    assert 9 in rival["differential"], "you captain him, he benched him"
+    assert 15 in rival["differential"], "he starts him, you do not"
+    assert 2 not in rival["differential"], "you both start him, uncaptained"
+    # Nobody outside the two scoring sets can be in it: a benched player of
+    # yours who is also benched by him separates nothing.
+    scoring = {p["id"] for p in state["players"] if p["in_xi"]} | {
+        p["element"] for p in rival["players"] if p["multiplier"]}
+    assert set(rival["differential"]) <= scoring
+
+
+def test_the_swing_and_the_rows_multiply_by_the_same_rule():
+    """One rulebook, not two. `largest_swing` and the published rows both go
+    through `effective_multiplier`, so a swing can never name a player the rows
+    price differently."""
+    state = assembled()
+    swing = state["largest_swing"]
+    rival = next(s for s in state["rival_squads"]
+                 if s["entry_id"] == swing["against"])
+    theirs = next((p for p in rival["players"]
+                   if p["element"] == swing["player_id"]), None)
+    mine = next(p for p in state["players"] if p["id"] == swing["player_id"])
+    my_mult = state["squad"]["autosubs"]["multiplier"] if mine["is_captain"] \
+        else (1 if mine["in_xi"] else 0)
+    their_mult = theirs["multiplier"] if theirs else 0
+    points = mine["confirmed"] + mine["provisional"]
+    assert swing["swing"] == points * (my_mult - their_mult)
+
+
+def test_rival_rows_are_ordered_by_the_table_they_are_positioned_by():
+    state = assembled(rivals=[RIVAL, dict(SELF_AS_RIVAL, entry_id=999,
+                                          name="Third", total=1)])
+    places = [s["provisional_position"] for s in state["rival_squads"]]
+    assert places == sorted(places)
+    table = {r["entry_id"]: r["provisional_position"] for r in state["rivals"]}
+    for s in state["rival_squads"]:
+        assert s["provisional_position"] == table[s["entry_id"]]
+
+
+def test_an_unavailable_view_publishes_no_rival_rows_either():
+    assert "rival_squads" not in assembled(squad=None)
+
+
+def test_an_unreadable_baseline_withholds_the_rival_rows_with_the_table():
+    """The rows carry a `provisional_position` from a table that is being
+    withheld, and a `differential` measured against a squad whose season total
+    could not be read. Publishing them with the table gone would leave a
+    standing on the page that nothing else on it still claims.
+
+    Both halves of the system must withhold the same things: `markLiveGaps` in
+    web/src/lib/live/source.ts drops the same key, and which one answered is not
+    supposed to change how honest the page is.
+    """
+    from gaffer import pipeline
+
+    state = assembled()
+    assert state["rivals"] and state["rival_squads"], "something to withhold"
+    pipeline._mark_live_gaps(state, {"starting": XI, "bench": BENCH},
+                             {"elements": []}, None)
+    assert state["rivals"] == []
+    assert state["rival_squads"] == []
+    assert state["largest_swing"] is None
+    assert "the league table" in state["incomplete"]
+
+
+def test_a_readable_baseline_keeps_the_rival_rows():
+    from gaffer import pipeline
+
+    state = assembled()
+    pipeline._mark_live_gaps(state, {"starting": XI, "bench": BENCH},
+                             {"elements": []}, 100)
+    assert len(state["rival_squads"]) == 1

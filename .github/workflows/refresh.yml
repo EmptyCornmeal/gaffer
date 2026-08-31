@@ -39,7 +39,15 @@ env:
   # pipeline resolves entry_id=None and publishes a generic build that looks
   # personalised.
   GAFFER_ENTRY_ID: '1066421'
-  GAFFER_LEAGUE_IDS: '271619'
+  # 271619 is the 7-man mini-league; 733241 is Dale Fantasy Football (25
+  # members). Added 2026-08-31 on an explicit decision: it switches on
+  # multileague.py, which quantifies each league's stake in a move and
+  # surfaces the conflict when they disagree, and which could never fire
+  # with a single league. It also means colleagues' entry names and scores
+  # appear on the public site -- that was the trade, and it was accepted.
+  # strategy.MAX_LEAGUES caps analysis at 6; league.COHORT_LIMIT caps rival
+  # picks at 50 per league, so 25 members is fetched whole.
+  GAFFER_LEAGUE_IDS: '271619,733241'
   PYTHONUTF8: '1'
   # Paid AI narration is OPT-IN. The ANTHROPIC_API_KEY secret below is passed to
   # the pipeline, but a key is not consent to spend: without this flag the

@@ -414,9 +414,13 @@ def test_parse_iso_utc_accepts_z_suffix():
 
 def _valid_backtest(**over):
     from gaffer import backtest as bt_mod
+    from gaffer.model import projection as proj_mod
     d = {
         "schema_version": bt_mod.SCHEMA_VERSION,
-        "model_version": "heuristic-0.1", "season": "2024-25",
+        # Read from the module for the same reason `schema_version` is: the
+        # published artifact must describe the model that is actually running,
+        # and a frozen string here would let that drift pass the fixture.
+        "model_version": proj_mod.MODEL_VERSION, "season": "2024-25",
         "per_horizon": {"1": {"n": 10, "mae": {}, "rank_corr": {}}},
         "coverage": {"rows_evaluated": 10},
         "leakage_check": {"enforced": True, "post_match_fields_in_features": []},
@@ -485,8 +489,10 @@ def test_legacy_backtest_is_rejected(art):
     (art / "backtest.json").write_text(json.dumps(legacy), encoding="utf-8")
     r = validate(art)
     assert not r.ok
-    v = next(v for v in r.violations if v.artifact == "backtest.json")
-    assert v.field == "schema_version"
+    # Find the violation by field rather than by position: a legacy artifact
+    # now trips several checks at once, and which comes first is not the point.
+    v = next(v for v in r.violations
+             if v.artifact == "backtest.json" and v.field == "schema_version")
     assert "never shipped" in v.expected
 
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gameweekHeading } from './Live.svelte'
+import { gameweekHeading, rivalArithmetic } from './Live.svelte'
 
 // ---------------------------------------------------------------------------
 // A14 — the Live page names its gameweek and its state
@@ -92,5 +92,37 @@ describe('gameweekHeading', () => {
       { current_gw: '2', squad_source_event: 2 },
     )
     expect(h.state).toBe("GW2's deadline has passed and 1 of its 1 fixture is still to kick off.")
+  })
+})
+
+
+// ---------------------------------------------------------------------------
+// B5 — a rival's total, said out loud
+//
+// The rows are published so a rival's score stops being a number you take on
+// trust. A table of numbers only half delivers that; the sentence is what makes
+// the check obvious without making you do it.
+// ---------------------------------------------------------------------------
+
+const rows = (...products: number[]) => products.map((product) => ({ product }))
+
+describe('rivalArithmetic', () => {
+  it('states the sum a reader would otherwise have to do', () => {
+    expect(rivalArithmetic({ players: rows(4, 2, 2), hits: 0, gw_points: 8 }))
+      .toBe('8 from his fifteen is 8.')
+  })
+
+  it('names the hit rather than quietly netting it off', () => {
+    // A -4 week read four points better than it was for exactly this reason,
+    // one layer down, and the fix does not survive being presented as a total.
+    expect(rivalArithmetic({ players: rows(4, 2, 2), hits: 4, gw_points: 4 }))
+      .toBe('8 from his fifteen, less 4 for hits, is 4.')
+  })
+
+  it('says nothing about a bench that scored nothing for him', () => {
+    // A benched player carries multiplier 0, so his row contributes 0 and the
+    // sum is unchanged by how many of them there are.
+    expect(rivalArithmetic({ players: rows(4, 0, 0, 0, 0), hits: 0, gw_points: 4 }))
+      .toBe('4 from his fifteen is 4.')
   })
 })

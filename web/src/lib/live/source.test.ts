@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Player } from '../types'
 import {
-  baselineAndHits, baselineFromRow, fetchLive, gatherRivals, MAX_RIVALS,
+  baselineAndHits, baselineFromRow, fetchLive, gatherRivals, markLiveGaps,
+  MAX_RIVALS,
   resetLiveCache, retryDelay,
 } from './source'
 
@@ -461,5 +462,43 @@ describe('a failed read is not cached for the gameweek (C14)', () => {
     } finally {
       clock.mockRestore()
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B5 — what is withheld is withheld on both halves
+//
+// The per-rival rows carry a `provisional_position` from a table that is being
+// withheld, and a `differential` measured against a squad whose season total
+// could not be read. Leaving them would publish a standing nothing else on the
+// page still claims. `_mark_live_gaps` in src/gaffer/pipeline.py drops the same
+// key, and which half answered is not supposed to change how honest the page is.
+// ---------------------------------------------------------------------------
+
+describe('markLiveGaps and the rival rows', () => {
+  const withRivals = () => ({
+    squad: { season_total_before: 100, season_total_projected: 140 },
+    rivals: [{ entry_id: 2 }],
+    rival_squads: [{ entry_id: 2, players: [] }],
+    largest_swing: { player_id: 9 },
+  })
+
+  it('withholds the rows with the table they are positioned by', () => {
+    const state = withRivals()
+    const gaps = markLiveGaps(
+      state, { baseline: null, baselineSource: 'unavailable', missing: [] }, [])
+    expect(state.rivals).toEqual([])
+    expect(state.rival_squads).toEqual([])
+    expect(state.largest_swing).toBeNull()
+    expect(state.squad.season_total_before).toBeNull()
+    expect(gaps).toContain('the league table')
+  })
+
+  it('keeps them when the baseline is readable', () => {
+    const state = withRivals()
+    markLiveGaps(
+      state, { baseline: 100, baselineSource: 'entry_history', missing: [] }, [])
+    expect(state.rival_squads).toHaveLength(1)
+    expect(state.rivals).toHaveLength(1)
   })
 })

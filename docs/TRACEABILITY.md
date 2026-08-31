@@ -83,7 +83,7 @@ Counts as of Batch 7: **1059 backend tests**, **158 front-end tests**.
 |---|---|---|---|---|---|
 | **B7-1** evidence reconciliation | complete | `leakage.py`, `backtest.py`, `config.py`, `decision.py`, `contract.py`, `docs/` | `test_model_evidence.py` (22) | Accuracy page, `decision.json.threshold_status` | The `xP` exclusion rests on provenance; the correlation is corroborating, and Gaffer cannot observe when FPL wrote the field |
 | **B7-2** AI envelope + claim grounding | complete | `ai/grounding.py`, `ai/news.py`, `ai/verdict.py`, `contract.py`, `News.svelte` | `test_ai_grounding.py` (52), `test_contract.py` | News page renders each claim beside its source links | Quarantine is pattern-based and deliberately blunt: a false positive costs one dropped headline |
-| **B7-3** read-only MCP | complete | `gaffer/mcp_server.py` (13 tools) | `test_mcp_server.py` (57), `test_mcp_evals.py` (17) | `python -m gaffer.mcp_server` | Local stdio only. Verified against live GW2 data 2026-08-31: `get_live_scorecard` reconciles element-for-element with `entry/{id}/event/{gw}/picks/` joined to `event/{gw}/live/`, and with FPL's own `entry_history.points` |
+| **B7-3** read-only MCP | complete | `gaffer/mcp_server.py` (15 tools) | `test_mcp_server.py` (57), `test_mcp_evals.py` (17) | `python -m gaffer.mcp_server` | Local stdio only. Verified against live GW2 data 2026-08-31: `get_live_scorecard` reconciles element-for-element with `entry/{id}/event/{gw}/picks/` joined to `event/{gw}/live/`, and with FPL's own `entry_history.points` |
 | **B7-4** pull-request CI | complete | `.github/workflows/ci.yml` | `test_schedule.py` (34) | GitHub checks on every PR | Runs for the first time on this release PR |
 
 ---

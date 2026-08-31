@@ -490,3 +490,253 @@ export function withdrawalConsequence(bt: BacktestV6): string | null {
   const c = bt.withdrawn_baselines?.consequence
   return typeof c === 'string' ? c : null
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// E1 — in-season calibration
+//
+// Everything above grades the model on an archive of finished seasons. This
+// grades what Gaffer actually SHIPPED: the outcome distributions and per-player
+// projections it froze before each deadline this season, scored against what
+// happened. It arrives on `review.json` rather than `backtest.json` because that
+// artifact is already validated by `gaffer.contract` and already loaded by the
+// bundle; a new file would be published ahead of anything that checks it.
+//
+// The whole point of the block is the sample size, so the types below make `n`
+// non-optional everywhere it exists, and the page must never render a figure
+// without it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Calibration-block schema versions this build can render.
+ *
+ * One entry today because there has only ever been one. When it bumps, ADD the
+ * new version beside the old rather than replacing it — the artifact is written
+ * by the pipeline and the page is deployed separately, so between a deploy and
+ * the next refresh the published block is still the previous version, and a
+ * single-version list blanks the section for that window. Same rule, and the
+ * same reason, as `SUPPORTED_SCHEMA_VERSIONS` above.
+ */
+export const SUPPORTED_CALIBRATION_VERSIONS = [1] as const
+
+export type PitDirection = 'runs_hot' | 'runs_cold' | 'no_detectable_bias'
+
+/** Uniformity of a set of PIT values. `n` is not optional, by design. */
+export interface PitStats {
+  n: number
+  mean: number | null
+  mean_ci95: [number, number] | null
+  median: number | null
+  ks_d: number | null
+  ks_critical_95: number | null
+  rejects_uniform_at_95: boolean | null
+  below_0_15: number
+  above_0_85: number
+  smallest_detectable_shift: number | null
+  direction: PitDirection | null
+  /** Present on the pooled population, which mixes reference classes. */
+  caveat?: string
+}
+
+export interface PitGameweek {
+  event: number
+  percentile: number | null
+  realised: number | null
+  followed_advice: boolean | null
+  distribution_size: number
+  snapshot_as_of?: string | null
+  snapshot_match?: string
+  published_percentile?: number | null
+  agrees_with_published?: boolean | null
+  note?: string
+}
+
+export interface DistributionCalibration {
+  status: string
+  reportable: boolean
+  reporting_floor_gameweeks: number
+  gameweeks_short_of_the_floor: number
+  verdict: string
+  basis: string
+  followed_the_advice: PitStats
+  every_gameweek: PitStats
+  gameweeks_followed: number
+  gameweeks_diverged: number
+  gameweeks_followed_unknown: number
+  gameweeks_for_a_moderate_shift: number
+  moderate_shift: number
+  power_note: string
+  interval_note?: string
+  per_gameweek: PitGameweek[]
+  recomputation?: {
+    checked: number
+    disagreed_with_the_published_percentile: number[]
+    note: string
+  }
+}
+
+export interface ProjectionErrorStats {
+  n: number
+  mae: number | null
+  mean_predicted: number | null
+  mean_actual: number | null
+  bias: number | null
+  bias_direction: 'over' | 'under' | 'none' | null
+  baseline_mae: number | null
+  skill_vs_pool_mean: number | null
+}
+
+export interface ProjectionCalibration {
+  status: string
+  reportable: boolean
+  insufficient_reason?: string | null
+  unavailable_reason?: string
+  minimum_rows?: number
+  minimum_gameweeks?: number
+  unit?: string
+  snapshot?: string
+  gameweeks_measured?: number[]
+  pooled?: ProjectionErrorStats
+  per_gameweek?: Array<ProjectionErrorStats & { gameweek: number; as_of: string | null }>
+  curve?: CalBin[]
+  curve_summary?: {
+    top_bin: CalBin
+    top_bin_gap: number
+    top_bin_direction: 'over' | 'under' | 'none'
+    note: string
+  } | null
+  appeared?: ProjectionErrorStats & { curve?: CalBin[]; caveat: string }
+  baselines?: {
+    pool_mean: string
+    persistence: {
+      n: number
+      mae: number | null
+      gameweeks: number[]
+      unavailable_reason?: string
+    }
+  }
+  limitations?: string[]
+}
+
+export interface SeasonCalibration {
+  schema_version: number
+  calibration_version: string
+  season: string | null
+  entry_id: number | null
+  generated_at: string
+  status: 'measured' | 'insufficient_data' | 'unavailable'
+  headline: string
+  measures?: string
+  distribution: DistributionCalibration
+  projection: ProjectionCalibration
+  awaiting_result?: number[]
+  sources?: Record<string, unknown>
+  limitations: string[]
+}
+
+export type CalibrationState =
+  | { kind: 'missing' }
+  | { kind: 'malformed'; detail: string }
+  | { kind: 'unsupported'; version: unknown; detail: string }
+  | { kind: 'ok'; data: SeasonCalibration }
+
+/** The calibration block carried by a review artifact, or null. */
+export function seasonCalibrationBlock(review: unknown): unknown {
+  if (review == null || typeof review !== 'object' || Array.isArray(review)) return null
+  return (review as Record<string, unknown>).season_calibration ?? null
+}
+
+/**
+ * Validate an in-season calibration block.
+ *
+ * Strict for the same reason `parseBacktest` is, and for one more: a block that
+ * lost its `n` fields still renders a mean, and a mean without its count is the
+ * exact failure this feature was built to stop. So `distribution` and its two
+ * populations are required, and each population must carry a numeric `n`.
+ */
+export function parseSeasonCalibration(raw: unknown): CalibrationState {
+  if (raw == null) return { kind: 'missing' }
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    return {
+      kind: 'malformed',
+      detail: `expected an object, got ${Array.isArray(raw) ? 'an array' : typeof raw}`,
+    }
+  }
+  const obj = raw as Record<string, unknown>
+  const version = obj.schema_version
+  if (typeof version !== 'number'
+      || !(SUPPORTED_CALIBRATION_VERSIONS as readonly number[]).includes(version)) {
+    return {
+      kind: 'unsupported',
+      version,
+      detail: `calibration schema_version ${JSON.stringify(version)} is not renderable ` +
+        `by this build (supported: ${SUPPORTED_CALIBRATION_VERSIONS.join(', ')}).`,
+    }
+  }
+  const dist = obj.distribution as Record<string, unknown> | undefined
+  if (!dist || typeof dist !== 'object') {
+    return { kind: 'malformed', detail: "'distribution' must be an object" }
+  }
+  for (const pop of ['followed_the_advice', 'every_gameweek'] as const) {
+    const stats = dist[pop] as Record<string, unknown> | undefined
+    if (!stats || typeof stats.n !== 'number') {
+      return {
+        kind: 'malformed',
+        detail: `'distribution.${pop}.n' must be a number — a calibration figure ` +
+          'may not be rendered without the sample behind it',
+      }
+    }
+  }
+  if (typeof dist.reportable !== 'boolean') {
+    return { kind: 'malformed', detail: "'distribution.reportable' must be a boolean" }
+  }
+  if (typeof obj.headline !== 'string') {
+    return { kind: 'malformed', detail: "'headline' must be a string" }
+  }
+  if (!Array.isArray(obj.limitations)) {
+    return { kind: 'malformed', detail: "'limitations' must be an array" }
+  }
+  return { kind: 'ok', data: obj as unknown as SeasonCalibration }
+}
+
+/** Read a calibration block straight off a review artifact. */
+export function parseReviewCalibration(review: unknown): CalibrationState {
+  return parseSeasonCalibration(seasonCalibrationBlock(review))
+}
+
+/**
+ * "n = 3 gameweeks", ready to sit beside a figure.
+ *
+ * A function rather than a template literal at each call site, because there are
+ * a dozen call sites and every one of them has to be right.
+ */
+export function sampleLabel(n: number, unit = 'gameweek'): string {
+  return `n = ${n.toLocaleString()} ${unit}${n === 1 ? '' : 's'}`
+}
+
+export const PIT_DIRECTION_LABELS: Record<PitDirection, string> = {
+  runs_hot: 'Simulation runs hot — results land low in it',
+  runs_cold: 'Simulation runs cold — results land high in it',
+  no_detectable_bias: 'No detectable bias',
+}
+
+/**
+ * The gameweeks that can be plotted: a percentile, and the advice followed.
+ *
+ * The divergent ones are deliberately not filtered out of the artifact — they
+ * are shown in the table, labelled — but they must not be drawn as though they
+ * measured the same thing.
+ */
+export function pitPoints(d: DistributionCalibration): PitGameweek[] {
+  return (d.per_gameweek ?? []).filter((g) => typeof g.percentile === 'number')
+}
+
+/**
+ * True when a figure in this block may be quoted as a finding.
+ *
+ * One place, so "is this reportable?" cannot be answered differently in two
+ * parts of the page.
+ */
+export function calibrationReportable(c: SeasonCalibration): boolean {
+  return c.distribution.reportable === true || c.projection.reportable === true
+}

@@ -3,7 +3,9 @@ import {
   horizonKeys, leakageClean, methodsIn, parseBacktest, SUPPORTED_SCHEMA_VERSIONS,
   withdrawalConsequence, withdrawn, modelCandidates, DECISION_LABELS,
   minutesModel, minutesUnmeasured, minutesBaselineSweeps, minutesHorizonKeys,
-  MINUTES_METHOD_LABELS,
+  MINUTES_METHOD_LABELS, calibrationReportable, parseReviewCalibration,
+  parseSeasonCalibration, PIT_DIRECTION_LABELS, pitPoints, sampleLabel,
+  seasonCalibrationBlock, SUPPORTED_CALIBRATION_VERSIONS,
 } from './backtest'
 
 const valid = {
@@ -372,5 +374,148 @@ describe('helpers', () => {
     })
     if (unenforced.kind !== 'ok') throw new Error('expected ok')
     expect(leakageClean(unenforced.data)).toBe(false)
+  })
+})
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// E1 — in-season calibration
+// ─────────────────────────────────────────────────────────────────────────────
+
+const stats = (n: number, mean: number | null) => ({
+  n,
+  mean,
+  mean_ci95: [0.1, 0.9] as [number, number],
+  median: mean,
+  ks_d: 0.2,
+  ks_critical_95: 1.36 / Math.sqrt(Math.max(n, 1)),
+  rejects_uniform_at_95: false,
+  below_0_15: 0,
+  above_0_85: 0,
+  smallest_detectable_shift: 1,
+  direction: 'no_detectable_bias' as const,
+})
+
+const cal = {
+  schema_version: 1,
+  calibration_version: 'calibration-1.0',
+  season: '2026-27',
+  entry_id: 1066421,
+  generated_at: '2026-08-31T20:00:00+00:00',
+  status: 'insufficient_data' as const,
+  headline: 'n=1. Not enough to report.',
+  distribution: {
+    status: 'insufficient_data',
+    reportable: false,
+    reporting_floor_gameweeks: 8,
+    gameweeks_short_of_the_floor: 7,
+    verdict: 'n=1. Not enough to report.',
+    basis: 'a percentile within your own squad\'s simulated range, NOT a rank against other managers',
+    followed_the_advice: stats(1, 0.206),
+    every_gameweek: { ...stats(2, 0.31), caveat: 'mixes reference classes' },
+    gameweeks_followed: 1,
+    gameweeks_diverged: 1,
+    gameweeks_followed_unknown: 0,
+    gameweeks_for_a_moderate_shift: 83,
+    moderate_shift: 0.15,
+    power_note: 'more than a season',
+    per_gameweek: [
+      { event: 1, percentile: 0.206, realised: 50, followed_advice: true, distribution_size: 500 },
+      { event: 2, percentile: 0.41, realised: 62, followed_advice: false, distribution_size: 500 },
+      { event: 3, percentile: null, realised: null, followed_advice: null, distribution_size: 0 },
+    ],
+  },
+  projection: { status: 'unavailable', reportable: false, unavailable_reason: 'no results supplied' },
+  limitations: ["one manager's season"],
+}
+
+describe('in-season calibration', () => {
+  it('reads the block off a review artifact', () => {
+    const state = parseReviewCalibration({ event: 1, season_calibration: cal })
+    if (state.kind !== 'ok') throw new Error(`expected ok, got ${state.kind}`)
+    expect(state.data.distribution.followed_the_advice.n).toBe(1)
+    expect(seasonCalibrationBlock({ event: 1 })).toBeNull()
+    expect(seasonCalibrationBlock(null)).toBeNull()
+    expect(seasonCalibrationBlock([1, 2])).toBeNull()
+  })
+
+  it('treats an absent block as missing, not as a zero', () => {
+    expect(parseReviewCalibration({ event: 1 }).kind).toBe('missing')
+    expect(parseSeasonCalibration(null).kind).toBe('missing')
+  })
+
+  it('refuses a schema it does not know rather than rendering it', () => {
+    const state = parseSeasonCalibration({ ...cal, schema_version: 99 })
+    if (state.kind !== 'unsupported') throw new Error('expected unsupported')
+    expect(state.detail).toContain('99')
+    expect(state.detail).toContain(SUPPORTED_CALIBRATION_VERSIONS.join(', '))
+    expect(parseSeasonCalibration({ ...cal, schema_version: undefined }).kind)
+      .toBe('unsupported')
+  })
+
+  it('keeps its supported list so a version can be ADDED, never swapped', () => {
+    // The artifact ships from the pipeline and this page deploys separately, so
+    // a bump must keep the previous version alongside the new one for the window
+    // between the two. A single-element list is only correct while there has
+    // only ever been one version.
+    expect(SUPPORTED_CALIBRATION_VERSIONS.length).toBeGreaterThanOrEqual(1)
+    expect([...SUPPORTED_CALIBRATION_VERSIONS]).toContain(1)
+  })
+
+  it('refuses a block whose statistics have lost their sample size', () => {
+    const noN = {
+      ...cal,
+      distribution: {
+        ...cal.distribution,
+        followed_the_advice: { mean: 0.206 },
+      },
+    }
+    const state = parseSeasonCalibration(noN)
+    if (state.kind !== 'malformed') throw new Error('expected malformed')
+    expect(state.detail).toContain('followed_the_advice.n')
+  })
+
+  it('refuses a block with no distribution, headline or limitations', () => {
+    expect(parseSeasonCalibration({ ...cal, distribution: undefined }).kind).toBe('malformed')
+    expect(parseSeasonCalibration({ ...cal, headline: 3 }).kind).toBe('malformed')
+    expect(parseSeasonCalibration({ ...cal, limitations: 'none' }).kind).toBe('malformed')
+    expect(parseSeasonCalibration({
+      ...cal,
+      distribution: { ...cal.distribution, reportable: 'no' },
+    }).kind).toBe('malformed')
+    expect(parseSeasonCalibration([]).kind).toBe('malformed')
+    expect(parseSeasonCalibration('x').kind).toBe('malformed')
+  })
+
+  it('plots only the gameweeks that have a percentile', () => {
+    const state = parseSeasonCalibration(cal)
+    if (state.kind !== 'ok') throw new Error('expected ok')
+    expect(pitPoints(state.data.distribution).map((g) => g.event)).toEqual([1, 2])
+  })
+
+  it('never says a figure is reportable when neither half is', () => {
+    const state = parseSeasonCalibration(cal)
+    if (state.kind !== 'ok') throw new Error('expected ok')
+    expect(calibrationReportable(state.data)).toBe(false)
+
+    const measured = parseSeasonCalibration({
+      ...cal,
+      distribution: { ...cal.distribution, reportable: true },
+    })
+    if (measured.kind !== 'ok') throw new Error('expected ok')
+    expect(calibrationReportable(measured.data)).toBe(true)
+  })
+
+  it('labels a sample so a number cannot be shown without one', () => {
+    expect(sampleLabel(1)).toBe('n = 1 gameweek')
+    expect(sampleLabel(12)).toBe('n = 12 gameweeks')
+    expect(sampleLabel(600, 'player-gameweek')).toBe('n = 600 player-gameweeks')
+  })
+
+  it('names every direction it can report', () => {
+    for (const key of ['runs_hot', 'runs_cold', 'no_detectable_bias'] as const) {
+      expect(PIT_DIRECTION_LABELS[key]).toBeTruthy()
+    }
+    expect(PIT_DIRECTION_LABELS.runs_hot).toContain('hot')
   })
 })

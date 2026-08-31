@@ -524,6 +524,15 @@ def _mark_live_gaps(state, squad, live_payload, baseline) -> None:
             # place and hands the swing the wrong "closest" manager.
             state["rivals"] = []
             state["largest_swing"] = None
+            # B5. And the per-rival rows go with it. Each one carries the
+            # `provisional_position` it was given by that same table, and the
+            # `differential` it carries is measured against a squad whose season
+            # total is unreadable — so leaving them would publish a standing
+            # nothing else on the page still claims. Withheld together or not at
+            # all: `markLiveGaps` in web/src/lib/live/source.ts drops the same
+            # key, and the page's honesty must not depend on which half of the
+            # system answered.
+            state["rival_squads"] = []
             gaps.append("the league table, which needs it")
     absent = _live_missing_players(squad, live_payload)
     if absent:

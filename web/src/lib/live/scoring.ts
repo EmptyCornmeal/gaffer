@@ -414,6 +414,49 @@ export function scoreSquad(
 }
 
 /**
+ * How many copies of `pid`'s points land in `squad`'s total.
+ *
+ * Zero when he does not score for this manager at all — benched without Bench
+ * Boost, or simply not owned. One when he scores once. The armband multiplier
+ * when he is the captain, which is 3 under Triple Captain and 1 when captain and
+ * vice both blanked.
+ *
+ * This is EFFECTIVE ownership, and it is the only quantity that matters when two
+ * managers are compared: owning a player is one way to differ, and both owning
+ * him while only one of you captained him is the other, commoner one.
+ *
+ * Lifted out of `largestSwing`, where it lived as a closure, so the published
+ * rival rows multiply by the same rule the swing measures with. Mirrors
+ * `effective_multiplier` in src/gaffer/live.py.
+ */
+export function effectiveMultiplier(pid: number, squad: SquadLive): number {
+  if (!squad.scoring.includes(pid)) return 0
+  return pid === squad.autosubs.captain ? squad.autosubs.multiplier : 1
+}
+
+/**
+ * The players that separate these two managers, ascending.
+ *
+ * A player who scores identically for both of you cannot move the gap between
+ * you however many points he takes, so he is not here. Everyone else is,
+ * whichever squad he is in: the list spans BOTH sides, so it contains players of
+ * yours the rival does not have as well as his that you do not.
+ *
+ * Published as bare ids because both squads are already published in full —
+ * yours in `players`, his in his own `rival_squads` entry — so this is a pointer
+ * into data the artifact carries, not a third copy of it. One caveat follows:
+ * an id here has no row when neither side can publish one — a player this build
+ * has no live state for at all — because he still separates you, and silently
+ * dropping him would understate the difference rather than report a gap.
+ *
+ * Mirrors `differential_ids` in src/gaffer/live.py.
+ */
+export function differentialIds(mine: SquadLive, theirs: SquadLive): number[] {
+  const ids = [...new Set([...mine.scoring, ...theirs.scoring])].sort((a, b) => a - b)
+  return ids.filter((p) => effectiveMultiplier(p, mine) !== effectiveMultiplier(p, theirs))
+}
+
+/**
  * Which live player has moved the league most, and by how much.
  *
  * What moves a mini-league is not ownership but EFFECTIVE ownership: how many
@@ -451,12 +494,6 @@ export function largestSwing(
   const mineIds = new Set(mine.scoring)
   const theirIds = new Set(closest.scoring)
 
-  /** How many copies of this player's points land in `squad`'s total. */
-  const weight = (pid: number, squad: SquadLive, ids: Set<number>): number => {
-    if (!ids.has(pid)) return 0
-    return pid === squad.autosubs.captain ? squad.autosubs.multiplier : 1
-  }
-
   // Ascending id, so an exact tie resolves to the lowest id in both
   // implementations. Set iteration order does not do that on either side:
   // CPython lays small ints out by value modulo the table size, so
@@ -468,7 +505,7 @@ export function largestSwing(
   for (const pid of candidates) {
     const st = live.get(pid)
     if (!st || !(st.confirmed || st.provisional)) continue
-    const edge = weight(pid, mine, mineIds) - weight(pid, closest, theirIds)
+    const edge = effectiveMultiplier(pid, mine) - effectiveMultiplier(pid, closest)
     if (edge === 0) continue          // he scores identically for both of you
     const delta = (st.confirmed + st.provisional) * edge
     if (Math.abs(delta) > Math.abs(bestDelta)) {

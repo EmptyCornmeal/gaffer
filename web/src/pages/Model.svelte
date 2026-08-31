@@ -4,6 +4,7 @@
     DECISION_LABELS, horizonKeys, leakageClean, METHOD_LABELS, methodsIn,
     MINUTES_METHOD_LABELS, minutesBaselineSweeps, minutesHorizonKeys,
     minutesModel, minutesUnmeasured, modelCandidates, parseBacktest,
+    parseReviewCalibration, PIT_DIRECTION_LABELS, sampleLabel,
     withdrawalConsequence, withdrawn,
   } from '../lib/backtest'
   import type { StartBand } from '../lib/backtest'
@@ -18,6 +19,21 @@
   ] as const
 
   const parsed = $derived(parseBacktest(bundle.backtest as unknown))
+
+  // E1 — how the numbers Gaffer actually SHIPPED this season have held up.
+  // Read off `review.json`, parsed separately from the backtest, and rendered
+  // outside the backtest branches on purpose: a stale or unrenderable archive
+  // must not take the live measurement down with it. They answer different
+  // questions and they fail independently.
+  const calState = $derived(parseReviewCalibration(bundle.review as unknown))
+  const seasonCal = $derived(calState.kind === 'ok' ? calState.data : null)
+  const pit = $derived(seasonCal?.distribution ?? null)
+  const pitRows = $derived(pit?.per_gameweek ?? [])
+  const proj = $derived(seasonCal?.projection ?? null)
+  const projCurve = $derived(proj?.curve ?? [])
+  // Amber is this page's "cannot be read as a result either way", which is
+  // exactly what a statistic below its reporting floor is.
+  const UNREPORTABLE = 'text-amber'
   const bt = $derived(parsed.kind === 'ok' ? parsed.data : null)
   const hs = $derived(bt ? horizonKeys(bt) : [])
   const methods = $derived(bt ? methodsIn(bt) : [])
@@ -155,6 +171,7 @@
   // would rewrite location.hash and navigate off the page.
   const sections = $derived(
     [
+      { id: 'acc-inseason', label: 'This season, so far', on: !!seasonCal },
       { id: 'acc-measured', label: 'What was measured', on: true },
       { id: 'acc-gw1', label: 'GW1 on its own', on: !!pre },
       { id: 'acc-horizon', label: 'Accuracy by horizon', on: true },
@@ -212,6 +229,204 @@
       same code the live pipeline runs.
     </p>
   </div>
+
+  <!-- ── E1: this season, so far ──────────────────────────────────────────
+       Rendered above the archive and outside its branches. Everything below
+       this block grades the model on seasons that were already over; this
+       block grades what was published, before the deadline, to this manager.
+       The sample size leads, because on a two-gameweek season the sample IS
+       the finding. -->
+  {#if calState.kind === 'unsupported'}
+    <div class="card p-4 border border-red/40 bg-red/5">
+      <h2 class="font-bold text-red">In-season calibration not shown</h2>
+      <p class="text-sm mt-1">{calState.detail}</p>
+    </div>
+  {:else if calState.kind === 'malformed'}
+    <div class="card p-4 border border-red/40 bg-red/5">
+      <h2 class="font-bold text-red">In-season calibration is malformed</h2>
+      <p class="text-sm mt-1">{calState.detail}</p>
+    </div>
+  {:else if seasonCal && pit && proj}
+    <section id="acc-inseason" tabindex="-1" class="card p-3 scroll-mt-3 space-y-3">
+      <div>
+        <h2 class="font-bold">{num('acc-inseason')} · This season, so far</h2>
+        <p class="text-mini text-muted2 mt-0.5 leading-relaxed">
+          Not the backtest. This is what Gaffer published <b>before</b> each
+          deadline this season — the simulated range for the squad it
+          recommended, and the per-player numbers behind it — scored against
+          what actually happened. Every figure carries the sample it came from.
+        </p>
+      </div>
+
+      <!-- The sample first, and at headline size. A calibration statistic on a
+           two-gameweek season that does not lead with the two is worse than no
+           statistic. -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div class="tile flex flex-col justify-center">
+          <div class="tile-label">Gameweeks scored</div>
+          <div class="tile-value text-xl mt-1 {pit.reportable ? '' : UNREPORTABLE}">
+            {pit.followed_the_advice.n}
+          </div>
+          <div class="text-mini text-muted2">
+            of {pit.reporting_floor_gameweeks} needed to report
+          </div>
+        </div>
+        <div class="tile flex flex-col justify-center">
+          <div class="tile-label">Where results landed</div>
+          <div class="tile-value text-xl mt-1 {pit.reportable ? '' : UNREPORTABLE}">
+            {fmt(pit.followed_the_advice.mean, 2)}
+          </div>
+          <div class="text-mini text-muted2">
+            0.50 if the spread is honest · {sampleLabel(pit.followed_the_advice.n)}
+          </div>
+        </div>
+        <div class="tile flex flex-col justify-center">
+          <div class="tile-label">Player forecasts scored</div>
+          <div class="tile-value text-xl mt-1 {proj.reportable ? '' : UNREPORTABLE}">
+            {(proj.pooled?.n ?? 0).toLocaleString()}
+          </div>
+          <div class="text-mini text-muted2">
+            over {(proj.gameweeks_measured ?? []).length} gameweek{(proj.gameweeks_measured ?? []).length === 1 ? '' : 's'}
+          </div>
+        </div>
+        <div class="tile flex flex-col justify-center">
+          <div class="tile-label">Error vs baseline</div>
+          <div class="tile-value text-xl mt-1 {proj.reportable ? '' : UNREPORTABLE}">
+            {fmt(proj.pooled?.mae, 2)}
+          </div>
+          <div class="text-mini text-muted2">
+            baseline {fmt(proj.pooled?.baseline_mae, 2)} · points per forecast
+          </div>
+        </div>
+      </div>
+
+      <!-- The verdict, in the page's own amber when it is not a result. -->
+      <div class="rounded-lg border p-3 {pit.reportable
+        ? 'border-line2 bg-card2'
+        : 'border-amber/30 bg-amber/5'}">
+        <p class="text-sm leading-relaxed {pit.reportable ? '' : 'text-amber'}">
+          {pit.verdict}
+        </p>
+        <p class="text-mini text-muted2 mt-2 leading-relaxed">{pit.power_note}</p>
+        {#if pit.followed_the_advice.direction}
+          <p class="text-mini text-muted2 mt-1">
+            {PIT_DIRECTION_LABELS[pit.followed_the_advice.direction]} ·
+            KS D {fmt(pit.followed_the_advice.ks_d, 2)} against a 95% critical
+            value of {fmt(pit.followed_the_advice.ks_critical_95, 2)} ·
+            {sampleLabel(pit.followed_the_advice.n)}
+          </p>
+        {/if}
+      </div>
+
+      <p class="text-mini text-muted2 leading-relaxed">
+        <b class="text-muted">What the percentile is a percentile of.</b>
+        {pit.basis}
+        {#if pit.gameweeks_diverged > 0}
+          {' '}{pit.gameweeks_diverged} gameweek{pit.gameweeks_diverged === 1 ? '' : 's'}
+          did not follow the recommendation and {pit.gameweeks_diverged === 1 ? 'is' : 'are'}
+          kept out of the figure above.
+        {/if}
+      </p>
+
+      {#if pitRows.length}
+        <div class="overflow-x-auto">
+          <table class="data w-full text-sm">
+            <thead>
+              <tr>
+                <th class="text-left">GW</th>
+                <th class="text-right">Scored</th>
+                <th class="text-right">Percentile</th>
+                <th class="text-right">Simulations</th>
+                <th class="text-left">Followed advice</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each pitRows as g (g.event)}
+                <tr>
+                  <td class="text-left tabular-nums">GW{g.event}</td>
+                  <td class="text-right tabular-nums">{fmt(g.realised, 0)}</td>
+                  <td class="text-right tabular-nums">{fmt(g.percentile, 2)}</td>
+                  <td class="text-right tabular-nums text-muted2">{g.distribution_size}</td>
+                  <td class="text-left {g.followed_advice === false ? 'text-amber' : 'text-muted'}">
+                    {g.followed_advice === null ? 'unknown' : g.followed_advice ? 'yes' : 'no'}
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {/if}
+
+      {#if projCurve.length}
+        <details class="rounded-lg border border-line2">
+          <summary class="p-3 cursor-pointer">
+            <span class="font-bold text-sm">Per-player forecasts, binned</span>
+            <span class="block text-mini text-muted2 mt-0.5">
+              The frozen pre-deadline projection against what the player scored.
+              {sampleLabel(proj.pooled?.n ?? 0, 'player-gameweek')}.
+              {#if !proj.reportable && proj.insufficient_reason}
+                <span class="text-amber">{proj.insufficient_reason}</span>
+              {/if}
+            </span>
+          </summary>
+          <div class="px-3 pb-3 overflow-x-auto">
+            <table class="data w-full text-sm">
+              <thead>
+                <tr>
+                  <th class="text-right">Predicted</th>
+                  <th class="text-right">Actual</th>
+                  <th class="text-right">Haul rate</th>
+                  <th class="text-right">n</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each projCurve as b, i (i)}
+                  <tr>
+                    <td class="text-right tabular-nums">{fmt(b.pred, 2)}</td>
+                    <td class="text-right tabular-nums">{fmt(b.actual, 2)}</td>
+                    <td class="text-right tabular-nums text-muted">{fmt(b.haul_rate, 1)}%</td>
+                    <td class="text-right tabular-nums text-muted2">{b.n}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+            {#if proj.curve_summary}
+              <p class="text-mini text-muted2 mt-2 leading-relaxed">
+                Highest bin: predicted {fmt(proj.curve_summary.top_bin.pred, 2)},
+                realised {fmt(proj.curve_summary.top_bin.actual, 2)} —
+                {fmt(Math.abs(proj.curve_summary.top_bin_gap), 2)} points
+                {proj.curve_summary.top_bin_direction === 'over' ? 'optimistic' : 'pessimistic'},
+                {sampleLabel(proj.curve_summary.top_bin.n, 'player-gameweek')}.
+                That is the end of the curve captains come from.
+              </p>
+            {/if}
+            {#if proj.appeared}
+              <p class="text-mini text-muted2 mt-2 leading-relaxed">
+                <b class="text-amber">Players who appeared:</b>
+                {proj.appeared.caveat}
+                ({sampleLabel(proj.appeared.n, 'player-gameweek')})
+              </p>
+            {/if}
+          </div>
+        </details>
+      {:else if proj.unavailable_reason}
+        <p class="text-mini text-muted2">{proj.unavailable_reason}</p>
+      {/if}
+
+      <ul class="text-mini text-muted2 space-y-1 leading-relaxed">
+        {#each seasonCal.limitations as lim (lim)}
+          <li class="flex gap-2"><span class="text-amber shrink-0">·</span><span>{lim}</span></li>
+        {/each}
+      </ul>
+      <p class="text-mini text-muted2">
+        {seasonCal.season ?? ''} · generated {seasonCal.generated_at} ·
+        calibration schema v{seasonCal.schema_version}
+        {#if (seasonCal.awaiting_result ?? []).length}
+          · GW{(seasonCal.awaiting_result ?? []).join(', GW')} frozen and awaiting a result
+        {/if}
+      </p>
+    </section>
+  {/if}
 
   {#if parsed.kind === 'missing'}
     <div class="card p-4">

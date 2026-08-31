@@ -30,7 +30,10 @@ env:
   # Public FPL identifiers, so the contract checks the entry the artifacts were
   # built for. Deliberately not secrets — both are readable from the site.
   GAFFER_ENTRY_ID: '1066421'
-  GAFFER_LEAGUE_IDS: '271619'
+  # Must match refresh.yml: the contract checks the artifacts against the
+  # entry and leagues they were built for, so a mismatch here fails CI on
+  # data that is perfectly correct.
+  GAFFER_LEAGUE_IDS: '271619,733241'
 
 jobs:
   backend:

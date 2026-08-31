@@ -496,3 +496,81 @@ def test_the_xa_factors_are_not_applied_to_the_projection():
         r = _rates(position=pos, base_minutes=2500, base_starts=30,
                    base_season="2025/26", base_xg90=0.20, base_xa90=0.20)
         assert r["exp_goals"] == pytest.approx(r["exp_assists"], rel=1e-9)
+
+
+# --------------------------------------------------------------------------
+# A18 — a season-to-date zero is evidence, on the same terms as a prior-season
+# zero. The gate used to read `fixtures_played >= 3 and cur_min and ...`, and
+# that `cur_min` sent every player with a full team sample and no minutes to a
+# price prior which reads an expensive squad player as a probable starter.
+#
+# Measured before it shipped: h=1 Brier on `starts` 0.1452 -> 0.1185 (train),
+# 0.1495 -> 0.1204 (select), 0.1509 -> 0.1154 (test), and h=1 points MAE on the
+# test season 1.539 -> 1.114. `backtest.MINUTES_CANDIDATE_FIX` is the record.
+# --------------------------------------------------------------------------
+
+
+def test_a_full_team_sample_with_no_minutes_is_believed():
+    """Eight completed fixtures and no appearance in any of them is the
+    strongest bench evidence there is, and it now scores 0 — not a number
+    invented from price."""
+    assert _rates(minutes=0, starts=0, fixtures_played=8)["p_start"] == 0.0
+
+
+def test_a_current_season_zero_outranks_a_prior_season_of_starting():
+    """The precedence question, which is the half of A18 that is not obvious.
+
+    A player who started 30 of last season's 38 and has not featured in his
+    team's first eight is not a 79% starter. The current season is the more
+    recent sample and it wins.
+    """
+    r = _rates(minutes=0, starts=0, fixtures_played=8,
+               base_minutes=2700, base_starts=30, base_season="2024/25")
+    assert r["p_start"] == 0.0
+
+
+def test_the_zero_is_not_a_zero_projection():
+    """`p_start` 0 must not switch the player off entirely: the cameo arm is a
+    separate probability and a benched player can still come on. A hard zero
+    here would hand the autosubs and the solver a certainty the model does not
+    have.
+    """
+    r = _rates(minutes=0, starts=0, fixtures_played=8)
+    assert r["p_start"] == 0.0
+    assert 0.0 < r["p_play"] < 0.5
+    assert r["exp_minutes"] > 0.0
+
+
+def test_the_three_fixture_sample_requirement_survived_the_fix():
+    """The variant that ALSO dropped `fixtures_played >= 3` scored better on
+    every aggregate in the backtest and was refused: it reads `starts / 1` as a
+    start probability, so two gameweeks into a live season it calls every player
+    who missed the opener a certainty not to start. Two fixtures is not a
+    sample, and last season keeps doing the work.
+    """
+    r = _rates(minutes=0, starts=0, fixtures_played=2,
+               base_minutes=2700, base_starts=30, base_season="2024/25")
+    assert r["p_start"] == pytest.approx(30 / 38.0, abs=1e-9)
+    # With no prior season either, it is the price prior and not a zero.
+    bare = _rates(minutes=0, starts=0, fixtures_played=2)
+    assert bare["p_start"] == pytest.approx(
+        projection._start_prior("MID", 90), abs=1e-9)
+
+
+def test_an_unreadable_starts_column_is_still_not_a_zero():
+    """`starts is None` means the column was never read, which is the one case
+    the price prior is still for. Absence and zero must not converge — the same
+    distinction the prior-season arm draws for seasons that predate `starts`.
+    """
+    r = _rates(minutes=0, starts=None, fixtures_played=8)
+    assert r["p_start"] == pytest.approx(
+        projection._start_prior("MID", 90), abs=1e-9)
+
+
+def test_a_player_who_has_featured_is_completely_unaffected():
+    """A18 can only move rows whose `starts` is zero, and it can only move them
+    down. Anyone with minutes took the current-season arm before the change and
+    takes it afterwards, at the same number.
+    """
+    assert _rates(minutes=720, starts=8, fixtures_played=11)["p_start"] == \
+        pytest.approx(8 / 11, abs=1e-9)

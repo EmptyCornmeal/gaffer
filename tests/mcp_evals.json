@@ -3,6 +3,36 @@
   "note": "Realistic questions, the tool route that should answer each, and the exact structured facts the answer must rest on. Deliberately not a prose judge: 'reads well' is not a property, and an eval that grades style will pass a confident invention.",
   "cases": [
     {
+      "id": "gameweek-brief",
+      "question": "How am I doing, and how are the others doing?",
+      "expect_tools": [
+        "get_gameweek_brief"
+      ],
+      "require_fields": [
+        "you",
+        "closest_rival",
+        "table",
+        "where_to_look",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "require_facts": {
+        "you.position": "present",
+        "you.players_yet_to_play": "present",
+        "closest_rival.gap": "present",
+        "closest_rival.their_players_yet_to_play": "present",
+        "gameweek.deadline": "present"
+      },
+      "must_not_invent": [
+        "a final position while any fixture is unfinished -- the table is provisional",
+        "a recommendation; this tool orients and does not advise",
+        "a total taken on trust -- get_live_scorecard publishes the per-player products it is summarised from"
+      ]
+    },
+    {
       "id": "what-should-i-do",
       "question": "What should I do this week?",
       "expect_tools": [
@@ -309,6 +339,36 @@
       "allowed_statuses": [
         "ok",
         "data_unavailable"
+      ]
+    },
+    {
+      "id": "in-season-calibration",
+      "question": "How much should I trust Gaffer's numbers this season? Has anything it published actually been checked against a result?",
+      "expect_tools": [
+        "get_calibration"
+      ],
+      "require_fields": [
+        "calibration",
+        "headline",
+        "limitations"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "require_facts": {
+        "calibration.schema_version": 1,
+        "calibration.distribution.reportable": "present",
+        "calibration.distribution.followed_the_advice.n": "present",
+        "calibration.distribution.reporting_floor_gameweeks": "present",
+        "calibration.distribution.basis": "present",
+        "calibration.distribution.gameweeks_for_a_moderate_shift": 83,
+        "calibration.projection.status": "present"
+      },
+      "must_not_invent": [
+        "a percentile presented as a rank against other managers",
+        "a calibration figure quoted without the number of observations behind it",
+        "a verdict drawn from a block whose `reportable` is false"
       ]
     }
   ]
