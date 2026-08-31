@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 2,
-  "as_of": "2026-08-31T16:59:27+00:00",
+  "as_of": "2026-08-31T19:05:43+00:00",
   "fixtures": [
     {
       "id": 11,
@@ -11,7 +11,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-28T19:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 12,
@@ -21,7 +21,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-29T14:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 13,
@@ -31,7 +31,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-29T14:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 14,
@@ -41,7 +41,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-29T11:30:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 15,
@@ -51,7 +51,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-29T16:30:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 16,
@@ -61,7 +61,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-30T13:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 17,
@@ -71,7 +71,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-30T13:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 18,
@@ -81,7 +81,7 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-30T15:30:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 19,
@@ -91,15 +91,15 @@
       "state": "awaiting_bonus",
       "minutes": 90,
       "kickoff": "2026-08-30T13:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 20,
       "event": 2,
       "team_h": 2,
       "team_a": 1,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "live",
+      "minutes": 1,
       "kickoff": "2026-08-31T19:00:00+00:00",
       "bonus_final": false
     }
@@ -108,7 +108,7 @@
     "total": 10,
     "by_state": {
       "awaiting_bonus": 9,
-      "scheduled": 1
+      "live": 1
     },
     "all_finished": false,
     "bonus_final": false
@@ -118,17 +118,17 @@
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 84,
-    "provisional_bonus": 0,
+    "confirmed": 87,
+    "provisional_bonus": 9,
     "predicted_remaining": 0.0,
-    "current": 84,
-    "projected": 84.0,
+    "current": 96,
+    "projected": 96.0,
     "bench_points": 2,
-    "players_played": 10,
-    "players_yet_to_play": 3,
+    "players_played": 13,
+    "players_yet_to_play": 0,
     "hits": 0,
     "season_total_before": 50,
-    "season_total_projected": 134.0,
+    "season_total_projected": 146.0,
     "autosubs": {
       "xi": [
         1,
@@ -161,16 +161,16 @@
   "players": [
     {
       "id": 1,
-      "minutes": 0,
-      "confirmed": 0,
-      "provisional": 0,
+      "minutes": 1,
+      "confirmed": 1,
+      "provisional": 3,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
+      "total": 4.0,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "live"
       ],
       "name": "Raya",
       "pos": "GKP",
@@ -179,16 +179,16 @@
     },
     {
       "id": 8,
-      "minutes": 0,
-      "confirmed": 0,
-      "provisional": 0,
+      "minutes": 1,
+      "confirmed": 1,
+      "provisional": 3,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
+      "total": 4.0,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "live"
       ],
       "name": "Calafiori",
       "pos": "DEF",
@@ -341,16 +341,16 @@
     },
     {
       "id": 557,
-      "minutes": 0,
-      "confirmed": 0,
-      "provisional": 0,
+      "minutes": 1,
+      "confirmed": 1,
+      "provisional": 3,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
+      "total": 4.0,
+      "played": true,
       "finished": false,
-      "yet_to_play": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "live"
       ],
       "name": "Tzolis",
       "pos": "MID",
@@ -432,14 +432,24 @@
   ],
   "rivals": [
     {
+      "entry_id": 1066421,
+      "name": "You",
+      "you": true,
+      "current": 146,
+      "projected": 146.0,
+      "gw_points": 96,
+      "yet_to_play": 0,
+      "provisional_position": 1
+    },
+    {
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 138,
-      "projected": 138.0,
-      "gw_points": 61,
-      "yet_to_play": 2,
-      "provisional_position": 1
+      "current": 146,
+      "projected": 146.0,
+      "gw_points": 69,
+      "yet_to_play": 0,
+      "provisional_position": 2
     },
     {
       "entry_id": 3557534,
@@ -449,27 +459,27 @@
       "projected": 137.0,
       "gw_points": 76,
       "yet_to_play": 0,
-      "provisional_position": 2
-    },
-    {
-      "entry_id": 1066421,
-      "name": "You",
-      "you": true,
-      "current": 134,
-      "projected": 134.0,
-      "gw_points": 84,
-      "yet_to_play": 3,
       "provisional_position": 3
     },
     {
-      "entry_id": 1066421,
-      "name": "Myles Colling",
+      "entry_id": 1711764,
+      "name": "Hakan Duzel",
       "you": false,
-      "current": 134,
-      "projected": 134.0,
-      "gw_points": 84,
-      "yet_to_play": 3,
+      "current": 125,
+      "projected": 125.0,
+      "gw_points": 79,
+      "yet_to_play": 0,
       "provisional_position": 4
+    },
+    {
+      "entry_id": 1094262,
+      "name": "Kevin Colling",
+      "you": false,
+      "current": 123,
+      "projected": 123.0,
+      "gw_points": 76,
+      "yet_to_play": 0,
+      "provisional_position": 5
     },
     {
       "entry_id": 8346723,
@@ -479,48 +489,71 @@
       "projected": 122.0,
       "gw_points": 77,
       "yet_to_play": 0,
-      "provisional_position": 5
-    },
-    {
-      "entry_id": 1711764,
-      "name": "Hakan Duzel",
-      "you": false,
-      "current": 113,
-      "projected": 113.0,
-      "gw_points": 67,
-      "yet_to_play": 3,
       "provisional_position": 6
-    },
-    {
-      "entry_id": 1094262,
-      "name": "Kevin Colling",
-      "you": false,
-      "current": 111,
-      "projected": 111.0,
-      "gw_points": 64,
-      "yet_to_play": 3,
-      "provisional_position": 7
     },
     {
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 99,
-      "projected": 99.0,
-      "gw_points": 62,
-      "yet_to_play": 3,
-      "provisional_position": 8
+      "current": 111,
+      "projected": 111.0,
+      "gw_points": 74,
+      "yet_to_play": 0,
+      "provisional_position": 7
     }
   ],
-  "largest_swing": null,
+  "me": {
+    "entry_id": 1066421,
+    "current": 146,
+    "projected": 146.0,
+    "gw_points": 96,
+    "yet_to_play": 0,
+    "provisional_position": 1,
+    "substitutions": {
+      "xi": [
+        1,
+        8,
+        115,
+        165,
+        346,
+        411,
+        418,
+        426,
+        427,
+        542,
+        557
+      ],
+      "bench": [
+        175,
+        212,
+        497,
+        504
+      ],
+      "subs_in": [],
+      "subs_out": [],
+      "captain": 411,
+      "captain_source": "captain",
+      "multiplier": 2,
+      "provisional": true,
+      "notes": []
+    }
+  },
+  "largest_swing": {
+    "player_id": 426,
+    "name": "B.Fernandes",
+    "swing": 23,
+    "in_your_xi": true,
+    "against": 408467,
+    "note": "a differential you own"
+  },
   "separation": {
-    "confirmed": 84,
-    "provisional_bonus": 0,
+    "confirmed": 87,
+    "provisional_bonus": 9,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-31T16:59:27+00:00",
+  "generated_at": "2026-08-31T19:05:43+00:00",
   "season": "2026-27"
 }

@@ -4,7 +4,7 @@
   "season": "2026-27",
   "entry_id": 1066421,
   "event": 1,
-  "generated_at": "2026-08-31T17:01:08+00:00",
+  "generated_at": "2026-08-31T19:06:04+00:00",
   "snapshot_as_of": "2026-08-21T16:23:24+00:00",
   "has_snapshot": true,
   "comparison": {
@@ -29,9 +29,13 @@
     "expected_at_decision": null,
     "realised": 50,
     "outcome_percentile": 0.206,
+    "outcome_percentile_basis": "the realised gameweek total's position among the simulated outcomes of the squad Gaffer recommended, stored before the deadline — a percentile within your own squad's simulated range, NOT a rank against other managers",
     "positive_ev": null,
     "verdict": "not_assessable",
-    "explanation": "No pre-deadline record exists for this gameweek, so the decision cannot be assessed — only the result is known."
+    "explanation": "A pre-deadline record exists for this gameweek, but it is missing `decision.comparison.move_expected`, so the decision's expected value — and therefore its quality — cannot be scored. What the record does support is reported: the result was close to what your own squad's distribution predicted, so luck is not the story.",
+    "missing_fields": [
+      "decision.comparison.move_expected"
+    ]
   },
   "lesson": {
     "key": "no_pattern_yet",
@@ -41,6 +45,8 @@
   },
   "league": [],
   "limitations": [
+    "The pre-deadline snapshot exists but recorded no `decision.comparison.move_expected`, so the decision's expected value is unknown and its quality is not scored. Everything else in the snapshot — the recommended squad and its stored outcome distribution — is present and is used. Gaffer omits the comparison when there is no held squad to compare a move against, which is every snapshot taken before the season's first deadline.",
+    "outcome_percentile is the realised gameweek total's position among the simulated outcomes of the squad Gaffer recommended, stored before the deadline — a percentile within your own squad's simulated range, NOT a rank against other managers.",
     "The hindsight column is the best XI available with the benefit of the results; it was not knowable before the deadline and is never used to score a decision."
   ],
   "facts": {
@@ -48,7 +54,7 @@
     "bench_points": 1.0,
     "hits": 0,
     "transfer_delta": 0.0,
-    "captain_percentile": 0.206,
+    "outcome_percentile": 0.206,
     "forecast_error": null,
     "summary": "0 blank starter(s), 1 on the bench"
   }

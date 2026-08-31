@@ -773,7 +773,7 @@
     "This artifact reports 2025-26; the one before it reported 2024-25. They are not two readings of one instrument. 2025-26 has a DEFCON column and 2024-25 has none, zero-minute share is 61.4% against 58.0%, and the results invert: the model WINS legal-XI points here (49.3 to 44.6, leading at all six horizons) while LOSING captaincy (5.87 to 5.97), where on 2024-25 it lost the XI (50.6 to 51.7) and won the captaincy (8.76 to 8.00). The naive baseline beats it on MAE and rank correlation in both. Only the season changed.",
     "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-08-31T13:52:52+00:00",
+  "generated_at": "2026-08-31T13:52:35+00:00",
   "minutes_model": {
     "measured": true,
     "target": "FPL `starts` == 1, per player-fixture. A post-match column, legal here as the evaluation target and never as a feature.",
