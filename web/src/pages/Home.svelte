@@ -4,7 +4,7 @@
     parseDecision, ACTION_LABELS, ACTION_TONE, signed, pctOf, money,
     confidenceLabel, type Card,
   } from '../lib/weekly'
-  import { classifyFreshness } from '../lib/freshness'
+  import { classifyFreshness, FALLBACK_POLICY } from '../lib/freshness'
   import { deadlineState } from '../lib/data'
   import Icon from '../components/Icon.svelte'
   import Crest from '../components/Crest.svelte'
@@ -29,7 +29,10 @@
   const meta = $derived(bundle.meta)
   // Deadline-aware: near a deadline, and after one, plain age is the wrong
   // question. See lib/freshness.ts.
-  const fresh = $derived(classifyFreshness(meta?.generated_at, now, meta?.deadline))
+  const fresh = $derived(
+    classifyFreshness(meta?.generated_at, now, meta?.deadline,
+                      meta?.freshness_policy ?? FALLBACK_POLICY),
+  )
   const dl = $derived(meta?.deadline ? deadlineState(meta.deadline, now) : null)
   const cmp = $derived(body?.comparison ?? null)
   const exe = $derived(body?.executability ?? null)

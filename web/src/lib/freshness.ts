@@ -5,7 +5,13 @@
 // first-class UI state now, and the arithmetic lives here so no component can
 // quietly disagree about what "stale" means.
 
-export type FreshnessState = 'fresh' | 'stale' | 'critical' | 'expired' | 'unknown'
+export type FreshnessState =
+  | 'fresh'
+  | 'lagging'
+  | 'stale'
+  | 'critical'
+  | 'expired'
+  | 'unknown'
 
 export interface Freshness {
   state: FreshnessState
@@ -16,6 +22,57 @@ export interface Freshness {
   /** Full precision for a tooltip / accessible name. */
   title: string
 }
+
+/**
+ * P0.6 -- the staleness bars, as published by the pipeline.
+ *
+ * These used to be flat constants in this file: 12 hours "fresh", 36 hours
+ * "critical". With a refresh asked for every 15 minutes that made 48 missed
+ * cycles read as green, and on 2026-09-01 twenty-six hours of consecutive
+ * publish failures rendered as a mild amber chip beside a live recommendation.
+ *
+ * `gaffer.schedule` already knew better and always had: a per-window bar,
+ * tightened as a deadline closes in. One product was holding two disagreeing
+ * definitions of "stale" -- a cardinality problem -- and the browser's was the
+ * wrong one by two orders of magnitude.
+ *
+ * So the numbers now arrive on `meta.freshness_policy` and this module only
+ * EVALUATES them. `FALLBACK_POLICY` exists for an artifact published before
+ * this field did; it mirrors the Python values and must never drift from them.
+ */
+export interface FreshnessPolicy {
+  pre_deadline_open_min: number
+  final_approach_min: number
+  max_age_min: Record<string, number>
+}
+
+export const FALLBACK_POLICY: FreshnessPolicy = {
+  pre_deadline_open_min: 360,
+  final_approach_min: 120,
+  max_age_min: { final_approach: 20, pre_deadline: 90, live: 60, idle: 360 },
+}
+
+/** Which window a reader is in, from the deadline alone. */
+export function freshnessWindow(
+  now: number,
+  deadline: number | null,
+  policy: FreshnessPolicy,
+): 'final_approach' | 'pre_deadline' | 'idle' {
+  if (deadline == null || Number.isNaN(deadline)) return 'idle'
+  const until = deadline - now
+  if (until <= 0) return 'idle'
+  if (until <= policy.final_approach_min * 60_000) return 'final_approach'
+  if (until <= policy.pre_deadline_open_min * 60_000) return 'pre_deadline'
+  return 'idle'
+}
+
+/**
+ * Tiers, expressed as multiples of the window's own bar rather than as wall
+ * clock. One bar late is drift; six bars late is a broken pipeline.
+ */
+export const LAGGING_BARS = 1
+export const STALE_BARS = 2
+export const CRITICAL_BARS = 6
 
 /** Below this, data is current. */
 export const FRESH_MS = 12 * 60 * 60 * 1000
@@ -59,6 +116,7 @@ export function classifyFreshness(
   generatedAt: string | null | undefined,
   now: number = Date.now(),
   deadline?: string | null,
+  policy: FreshnessPolicy = FALLBACK_POLICY,
 ): Freshness {
   const unknown = (title: string): Freshness => ({
     state: 'unknown',
@@ -91,10 +149,22 @@ export function classifyFreshness(
   }
 
   const clamped = Math.max(0, ageMs)
+  const dlMs = deadline == null ? null : Date.parse(deadline)
+  const win = freshnessWindow(now, dlMs, policy)
+  const barMs = (policy.max_age_min[win] ?? FALLBACK_POLICY.max_age_min.idle) * 60_000
   let state: FreshnessState =
-    clamped < FRESH_MS ? 'fresh' : clamped < STALE_MS ? 'stale' : 'critical'
+    clamped <= barMs * LAGGING_BARS
+      ? 'fresh'
+      : clamped <= barMs * STALE_BARS
+        ? 'lagging'
+        : clamped <= barMs * CRITICAL_BARS
+          ? 'stale'
+          : 'critical'
   let label = `Updated ${humanAge(clamped)}`
-  let title = `Data generated ${iso} (${humanAge(clamped)})`
+  let title =
+    `Data generated ${iso} (${humanAge(clamped)}). ` +
+    `The bar in the ${win.replace('_', ' ')} window is ${humanAge(barMs)
+      .replace(' ago', '')}.`
 
   const dl = deadline == null ? NaN : Date.parse(deadline)
   if (!Number.isNaN(dl)) {
@@ -112,16 +182,17 @@ export function classifyFreshness(
       }
     }
     const untilDeadline = dl - now
-    if (
-      state === 'fresh' &&
-      untilDeadline <= DEADLINE_SOON_MS &&
-      clamped > DEADLINE_MAX_AGE_MS
-    ) {
-      state = 'stale'
-      label = `${humanAge(clamped)} · pre-deadline`
+    // Near a deadline the window bar above is already tight (20 or 90 minutes),
+    // so anything past `fresh` here is not merely old -- it predates the last
+    // team-news window and is not safe to decide on. Say that, rather than
+    // showing the same amber chip as a quiet Tuesday.
+    if (state !== 'fresh' && untilDeadline <= DEADLINE_SOON_MS) {
+      label = `${humanAge(clamped)} · do not act`
       title =
         `Deadline in ${humanAge(untilDeadline)} but this data is ${humanAge(clamped)} old ` +
-        `(generated ${iso}), so it predates the last team-news window. Refresh before deciding.`
+        `(generated ${iso}), over the ${humanAge(barMs).replace(' ago', '')} bar for the ` +
+        `${win.replace('_', ' ')} window. It predates the last team-news window. ` +
+        `Refresh before deciding.`
     }
   }
 

@@ -65,6 +65,23 @@ DISPATCH_COOLDOWN_MINUTES = 60
 # is the only thing worth waking someone for.
 ALERT_SCHEDULE_SILENT_MINUTES = 240
 
+# P0.3 -- the health question this job got WRONG.
+#
+# Every predicate above measures whether a run STARTED. None measured whether
+# one SUCCEEDED, even though `conclusion` was already being fetched and thrown
+# away. On 2026-09-01 that gap cost 26 hours: `refresh.yml` failed 22 times in
+# a row on an advisory assertion, this watchdog logged "scheduler healthy (last
+# run 20m ago)" throughout, and seven of those failures were its own dispatches
+# feeding the failure it was reporting as fine. The site served a GW2-in-play
+# snapshot as current analysis, three days before a deadline.
+#
+# A run that fires and fails is not health. It is a louder kind of silence.
+#
+# This clock is deliberately tighter than the others: a stalled SCHEDULER is
+# survivable because the watchdog rescues it, but a failing PIPELINE cannot be
+# rescued by dispatching more of it, so it needs a person.
+ALERT_NO_SUCCESS_MINUTES = 150
+
 
 def log(msg):
     line = f"{datetime.now(UTC).isoformat(timespec='seconds')} {msg}"
@@ -139,6 +156,55 @@ def last_run_age_minutes(event=None):
         return None
     started = datetime.fromisoformat(runs[0]["createdAt"].replace("Z", "+00:00"))
     return (datetime.now(UTC) - started).total_seconds() / 60.0
+
+
+def last_success_age_minutes():
+    """Minutes since refresh.yml last SUCCEEDED, or None if unknown.
+
+    ``inf`` means: within the window we can see, it has not succeeded once.
+    That is a real answer and the caller must alert on it, not shrug.
+    """
+    proc = run(
+        "gh", "run", "list",
+        "--workflow=refresh.yml", "--limit", "50",
+        "--json", "createdAt,status,conclusion",
+    )
+    if proc.returncode != 0:
+        log(f"gh run list failed rc={proc.returncode}: {proc.stderr.strip()[:200]}")
+        return None
+    try:
+        runs = json.loads(proc.stdout)
+    except ValueError:
+        log("gh run list returned unparseable JSON")
+        return None
+    ok = [r for r in runs if r.get("conclusion") == "success"]
+    if not ok:
+        return float("inf")
+    started = datetime.fromisoformat(ok[0]["createdAt"].replace("Z", "+00:00"))
+    return (datetime.now(UTC) - started).total_seconds() / 60.0
+
+
+def consecutive_failures():
+    """How many runs have failed since the last success. 0 if the newest ran OK."""
+    proc = run(
+        "gh", "run", "list",
+        "--workflow=refresh.yml", "--limit", "50",
+        "--json", "status,conclusion",
+    )
+    if proc.returncode != 0:
+        return None
+    try:
+        runs = json.loads(proc.stdout)
+    except ValueError:
+        return None
+    n = 0
+    for r in runs:
+        if r.get("status") != "completed":
+            continue
+        if r.get("conclusion") == "success":
+            break
+        n += 1
+    return n
 
 
 def sync_checkout():
@@ -222,7 +288,36 @@ def main():
                          "Watchdog standing down.")
                 state["alerted"] = False
         if age is not None:
-            log(f"scheduler healthy (last run {age:.0f}m ago)")
+            log(f"scheduler firing (last run {age:.0f}m ago)")
+
+    # --- P0.3: is it actually PUBLISHING? -----------------------------------
+    #
+    # Asked on every pass, stalled or not, because a failing pipeline and a
+    # stalled scheduler are independent faults and the dangerous one is the
+    # fault that dispatching more runs cannot fix.
+    ok_age = last_success_age_minutes()
+    fails = consecutive_failures()
+    if ok_age is None:
+        log("publish health: UNKNOWN (could not read run conclusions)")
+    else:
+        shown = "never in the last 50 runs" if ok_age == float("inf") else f"{ok_age:.0f}m ago"
+        log(f"publish health: last SUCCESS {shown}"
+            + (f", {fails} consecutive failures" if fails else ""))
+        if ok_age > ALERT_NO_SUCCESS_MINUTES:
+            if not state.get("publish_alerted"):
+                hours = ("more than 12" if ok_age == float("inf")
+                         else f"{ok_age / 60.0:.1f}")
+                announce(
+                    f"Gaffer: refresh.yml has not SUCCEEDED for {hours} hours"
+                    + (f" ({fails} consecutive failures)" if fails else "")
+                    + ". The site is serving stale artifacts and dispatching "
+                      "more runs will not fix it. This needs a person."
+                )
+                state["publish_alerted"] = True
+        elif state.get("publish_alerted"):
+            announce("Gaffer: refresh.yml is publishing again. "
+                     "Stale-data alert cleared.")
+            state["publish_alerted"] = False
 
     # Sync after the dispatch decision: a run dispatched just now is still in
     # flight, so this pass collects the PREVIOUS one and the next wake-up

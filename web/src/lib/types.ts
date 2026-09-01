@@ -118,6 +118,16 @@ export interface Meta {
   current_gw: string
   gw_name: string
   deadline: string
+  /**
+   * P0.6 -- the staleness bars, published by `gaffer.schedule` so the browser
+   * evaluates them instead of inventing its own. Optional: an artifact
+   * published before this field existed falls back to FALLBACK_POLICY.
+   */
+  freshness_policy?: {
+    pre_deadline_open_min: number
+    final_approach_min: number
+    max_age_min: Record<string, number>
+  }
   last_finished_gw: string
   /** Machine-readable squad state — see `lib/squadStatus.ts`. Never infer it from a date. */
   squad_status: string

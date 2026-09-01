@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  classifyFreshness, DEADLINE_MAX_AGE_MS, FRESH_MS, SKEW_MS, STALE_MS,
+  CRITICAL_BARS, classifyFreshness, DEADLINE_MAX_AGE_MS, FALLBACK_POLICY,
+  freshnessWindow, LAGGING_BARS, SKEW_MS, STALE_BARS,
 } from './freshness'
 
 // Fixed reference time — never Date.now(), so these can't go green/red with the
@@ -10,32 +11,67 @@ const at = (msAgo: number) => new Date(NOW - msAgo).toISOString()
 
 const HOUR = 3_600_000
 
-describe('classifyFreshness boundaries', () => {
-  it('is fresh just under 12h', () => {
-    const f = classifyFreshness(at(11 * HOUR + 59 * 60_000), NOW)
+// P0.6 -- the bands are multiples of the window's own bar, published by the
+// pipeline, not flat wall-clock hours. The old model called 12 hours "fresh"
+// with a refresh asked for every 15 minutes: 48 missed cycles, green. On
+// 2026-09-01 that rendered 26 hours of consecutive publish failures as a mild
+// amber chip beside a live recommendation.
+const IDLE_BAR = FALLBACK_POLICY.max_age_min.idle * 60_000 // 6h
+
+describe('classifyFreshness bands are multiples of the published bar', () => {
+  it('is fresh inside one bar', () => {
+    const f = classifyFreshness(at(IDLE_BAR - 60_000), NOW)
     expect(f.state).toBe('fresh')
-    expect(f.label).toBe('Updated 11h ago')
   })
 
-  it('flips to stale at exactly 12h', () => {
-    expect(classifyFreshness(at(FRESH_MS), NOW).state).toBe('stale')
+  it('is lagging just past one bar', () => {
+    expect(classifyFreshness(at(IDLE_BAR * LAGGING_BARS + 60_000), NOW).state)
+      .toBe('lagging')
   })
 
-  it('is still stale just under 36h', () => {
-    const f = classifyFreshness(at(35 * HOUR + 59 * 60_000), NOW)
-    expect(f.state).toBe('stale')
+  it('is stale past two bars', () => {
+    expect(classifyFreshness(at(IDLE_BAR * STALE_BARS + 60_000), NOW).state)
+      .toBe('stale')
   })
 
-  it('flips to critical at exactly 36h', () => {
-    expect(classifyFreshness(at(STALE_MS), NOW).state).toBe('critical')
+  it('is critical past six bars', () => {
+    expect(classifyFreshness(at(IDLE_BAR * CRITICAL_BARS + 60_000), NOW).state)
+      .toBe('critical')
   })
 
   it('reports the real outage as critical', () => {
-    // The shipped meta.json timestamp, against the audit date: 10d 20h.
     const f = classifyFreshness('2026-07-26T15:53:50+00:00', NOW)
     expect(f.state).toBe('critical')
     expect(f.label).toBe('Updated 10d ago')
     expect(f.title).toContain('2026-07-26')
+  })
+
+  it('would NOT have called the 2026-09-01 outage merely stale', () => {
+    // 26 hours, no deadline nearby: four idle bars.
+    const f = classifyFreshness(at(26 * HOUR), NOW)
+    expect(f.state).toBe('stale')
+    // ...and the same age one hour before a deadline is not survivable.
+    const f2 = classifyFreshness(at(26 * HOUR), NOW,
+      new Date(NOW + HOUR).toISOString())
+    expect(f2.state).toBe('critical')
+    expect(f2.label).toMatch(/do not act/i)
+  })
+
+  it('names the window it judged against', () => {
+    expect(classifyFreshness(at(HOUR), NOW).title).toMatch(/idle window/i)
+  })
+})
+
+describe('freshnessWindow', () => {
+  it('is idle with no deadline, or a passed one', () => {
+    expect(freshnessWindow(NOW, null, FALLBACK_POLICY)).toBe('idle')
+    expect(freshnessWindow(NOW, NOW - HOUR, FALLBACK_POLICY)).toBe('idle')
+  })
+
+  it('tightens as the deadline closes in', () => {
+    expect(freshnessWindow(NOW, NOW + 72 * HOUR, FALLBACK_POLICY)).toBe('idle')
+    expect(freshnessWindow(NOW, NOW + 5 * HOUR, FALLBACK_POLICY)).toBe('pre_deadline')
+    expect(freshnessWindow(NOW, NOW + HOUR, FALLBACK_POLICY)).toBe('final_approach')
   })
 })
 
@@ -80,28 +116,44 @@ describe('deadline awareness', () => {
   const inHours = (h: number) => new Date(NOW + h * HOUR).toISOString()
 
   it('does not call five-hour-old data fresh half an hour before a deadline', () => {
+    // final_approach bar is 20 minutes, so 5.75h is seventeen bars late.
     const f = classifyFreshness(at(5.75 * HOUR), NOW, inHours(0.5))
-    expect(f.state).not.toBe('fresh')
-    expect(f.state).toBe('stale')
+    expect(f.state).toBe('critical')
     expect(f.title).toMatch(/team-news/i)
+    expect(f.label).toMatch(/do not act/i)
   })
 
   it('still calls recent data fresh near a deadline', () => {
-    const f = classifyFreshness(at(0.5 * HOUR), NOW, inHours(0.5))
-    expect(f.state).toBe('fresh')
+    // Inside the 20-minute final-approach bar.
+    expect(classifyFreshness(at(15 * 60_000), NOW, inHours(0.5)).state)
+      .toBe('fresh')
   })
 
-  it('applies the tighter bar exactly at the decision-safe boundary', () => {
+  it('calls half-hour-old data lagging in the final approach, not fresh', () => {
+    // The pipeline targets a 20-minute bar here and runs every 15 minutes, so
+    // 30 minutes IS late by the system's own standard. The old flat model
+    // called this fresh because 30 minutes is nothing against a 12-hour band.
+    // It is one and a half bars, and it reads quietly rather than in amber.
+    const f = classifyFreshness(at(0.5 * HOUR), NOW, inHours(0.5))
+    expect(f.state).toBe('lagging')
+    expect(f.label).toMatch(/do not act/i)
+  })
+
+  it('applies the final-approach bar, not the idle one', () => {
     const soon = inHours(1)
-    expect(classifyFreshness(at(DEADLINE_MAX_AGE_MS - 60_000), NOW, soon).state)
-      .toBe('fresh')
-    expect(classifyFreshness(at(DEADLINE_MAX_AGE_MS + 60_000), NOW, soon).state)
-      .toBe('stale')
+    const bar = FALLBACK_POLICY.max_age_min.final_approach * 60_000 // 20m
+    expect(classifyFreshness(at(bar - 60_000), NOW, soon).state).toBe('fresh')
+    expect(classifyFreshness(at(bar + 60_000), NOW, soon).state).toBe('lagging')
+    // The old flat model called anything under DEADLINE_MAX_AGE_MS (3h) fresh
+    // here. Three hours is nine final-approach bars.
+    expect(classifyFreshness(at(DEADLINE_MAX_AGE_MS), NOW, soon).state)
+      .toBe('critical')
   })
 
   it('leaves the ordinary bands alone when the deadline is far away', () => {
     const f = classifyFreshness(at(5.75 * HOUR), NOW, inHours(72))
     expect(f.state).toBe('fresh')
+    expect(f.label).not.toMatch(/do not act/i)
   })
 
   it('marks advice for a deadline that has already passed as expired', () => {

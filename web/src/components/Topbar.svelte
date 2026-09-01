@@ -2,7 +2,7 @@
   import type { Meta, Player } from '../lib/types'
   import { deadlineState } from '../lib/data'
   import { getTheme, setTheme } from '../lib/config'
-  import { classifyFreshness } from '../lib/freshness'
+  import { classifyFreshness, FALLBACK_POLICY } from '../lib/freshness'
   import { matches } from '../lib/search'
   import { MORE_TABS, PRIMARY_TABS } from '../lib/nav'
   import Icon from './Icon.svelte'
@@ -138,10 +138,17 @@
   // projections are, so freshness gets its own always-visible state.
   // The deadline is passed in on purpose: near one, and after one, plain age is
   // the wrong question. See lib/freshness.ts.
-  const freshness = $derived(classifyFreshness(meta?.generated_at, now, meta?.deadline))
+  const freshness = $derived(
+    classifyFreshness(meta?.generated_at, now, meta?.deadline,
+                      meta?.freshness_policy ?? FALLBACK_POLICY),
+  )
   const freshTone = $derived(
     {
       fresh: 'text-muted border-line',
+      // P0.6 -- one bar late is drift and reads quietly; two bars is amber;
+      // beyond that it is red, because a pipeline that has missed six windows
+      // is broken rather than slow.
+      lagging: 'text-muted border-yellow/30',
       stale: 'text-yellow border-yellow/40 bg-yellow/10',
       critical: 'text-red border-red/40 bg-red/10',
       expired: 'text-red border-red/40 bg-red/10',

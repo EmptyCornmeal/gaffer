@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from gaffer import config
+from gaffer import config, schedule
 from gaffer.io import write_json_atomic
 from gaffer.model.projection import shrunk_defcon90
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
@@ -162,6 +162,25 @@ def build_meta(
     meta["build_mode"] = settings.build_mode
     meta["entry_id"] = settings.entry_id
     meta["league_ids"] = list(settings.league_ids)
+    # P0.6 -- publish the freshness POLICY, so the site stops inventing its own.
+    #
+    # `gaffer.schedule` already knows how old a publish may be, per window, and
+    # tightens the bar as a deadline closes in. The web app independently
+    # invented a flat 12h/36h model, so one product held two disagreeing
+    # definitions of "stale" -- a cardinality problem -- and the browser's was
+    # 48 missed refresh cycles wide. On 2026-09-01 that let 26 hours of failure
+    # render as an amber chip beside a live recommendation.
+    #
+    # The numbers live HERE, in Python, once. The browser evaluates them; it
+    # does not get to choose them.
+    meta["freshness_policy"] = {
+        "pre_deadline_open_min": int(
+            schedule.PRE_DEADLINE_OPEN.total_seconds() // 60),
+        "final_approach_min": int(
+            schedule.FINAL_APPROACH.total_seconds() // 60),
+        "max_age_min": {k: int(v.total_seconds() // 60)
+                        for k, v in schedule.MAX_AGE.items()},
+    }
     return meta
 
 

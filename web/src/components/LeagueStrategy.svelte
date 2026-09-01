@@ -5,7 +5,7 @@
     CHIP_LABELS, STANCE_LABELS, CLASS_LABELS, describeCoverage,
     type Coverage, type LeagueView,
   } from '../lib/strategy'
-  import { classifyFreshness } from '../lib/freshness'
+  import { classifyFreshness, FALLBACK_POLICY } from '../lib/freshness'
   import Icon from './Icon.svelte'
   import Crest from './Crest.svelte'
 
@@ -14,7 +14,12 @@
 
   const parsed = $derived(parseStrategy(bundle.strategy))
   const s = $derived(parsed.kind === 'ok' ? parsed.data : null)
-  const fresh = $derived(s ? classifyFreshness(s.generated_at, now) : null)
+  const fresh = $derived(
+    // No `meta` in this component's scope, and the league panel is not a
+    // deadline surface, so the idle bar is the right one. The topbar carries
+    // the authoritative chip.
+    s ? classifyFreshness(s.generated_at, now, null, FALLBACK_POLICY) : null,
+  )
 
   // Progressive disclosure: one league open at a time on a phone.
   let openLeague = $state<number | null>(null)
