@@ -1,14 +1,14 @@
 {
   "live_version": "live-1.0",
   "gameweek": 2,
-  "as_of": "2026-08-31T20:53:45+00:00",
+  "as_of": "2026-09-01T20:03:02+00:00",
   "fixtures": [
     {
       "id": 11,
       "event": 2,
       "team_h": 8,
       "team_a": 15,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-28T19:00:00+00:00",
       "bonus_final": true
@@ -18,7 +18,7 @@
       "event": 2,
       "team_h": 3,
       "team_a": 9,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-29T14:00:00+00:00",
       "bonus_final": true
@@ -28,7 +28,7 @@
       "event": 2,
       "team_h": 7,
       "team_a": 11,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-29T14:00:00+00:00",
       "bonus_final": true
@@ -38,7 +38,7 @@
       "event": 2,
       "team_h": 14,
       "team_a": 18,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-29T11:30:00+00:00",
       "bonus_final": true
@@ -48,7 +48,7 @@
       "event": 2,
       "team_h": 19,
       "team_a": 17,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-29T16:30:00+00:00",
       "bonus_final": true
@@ -58,7 +58,7 @@
       "event": 2,
       "team_h": 6,
       "team_a": 5,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-30T13:00:00+00:00",
       "bonus_final": true
@@ -68,7 +68,7 @@
       "event": 2,
       "team_h": 13,
       "team_a": 4,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-30T13:00:00+00:00",
       "bonus_final": true
@@ -78,7 +78,7 @@
       "event": 2,
       "team_h": 16,
       "team_a": 12,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-30T15:30:00+00:00",
       "bonus_final": true
@@ -88,7 +88,7 @@
       "event": 2,
       "team_h": 20,
       "team_a": 10,
-      "state": "awaiting_bonus",
+      "state": "finished",
       "minutes": 90,
       "kickoff": "2026-08-30T13:00:00+00:00",
       "bonus_final": true
@@ -98,20 +98,19 @@
       "event": 2,
       "team_h": 2,
       "team_a": 1,
-      "state": "live",
-      "minutes": 88,
+      "state": "finished",
+      "minutes": 90,
       "kickoff": "2026-08-31T19:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     }
   ],
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 9,
-      "live": 1
+      "finished": 10
     },
-    "all_finished": false,
-    "bonus_final": false
+    "all_finished": true,
+    "bonus_final": true
   },
   "available": true,
   "unavailable_reason": null,
@@ -154,7 +153,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -167,10 +166,10 @@
       "predicted": 0.0,
       "total": 6.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "finished"
       ],
       "name": "Raya",
       "pos": "GKP",
@@ -185,10 +184,10 @@
       "predicted": 0.0,
       "total": 11.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "finished"
       ],
       "name": "Calafiori",
       "pos": "DEF",
@@ -206,7 +205,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "De Cuyper",
       "pos": "DEF",
@@ -224,7 +223,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "João Pedro",
       "pos": "FWD",
@@ -242,7 +241,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Calvert-Lewin",
       "pos": "FWD",
@@ -260,7 +259,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Haaland",
       "pos": "FWD",
@@ -278,7 +277,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Maguire",
       "pos": "DEF",
@@ -296,7 +295,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "B.Fernandes",
       "pos": "MID",
@@ -314,7 +313,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Mbeumo",
       "pos": "MID",
@@ -332,7 +331,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "E.Le Fée",
       "pos": "MID",
@@ -347,10 +346,10 @@
       "predicted": 0.0,
       "total": 0.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "finished"
       ],
       "name": "Tzolis",
       "pos": "MID",
@@ -368,7 +367,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "van Ewijk",
       "pos": "DEF",
@@ -386,7 +385,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Hughes",
       "pos": "MID",
@@ -404,7 +403,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Dubravka",
       "pos": "GKP",
@@ -422,7 +421,7 @@
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "awaiting_bonus"
+        "finished"
       ],
       "name": "Vuskovic",
       "pos": "DEF",
@@ -465,9 +464,9 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 134,
-      "projected": 134.0,
-      "gw_points": 87,
+      "current": 136,
+      "projected": 136.0,
+      "gw_points": 89,
       "yet_to_play": 0,
       "provisional_position": 4
     },
@@ -475,9 +474,9 @@
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "you": false,
-      "current": 125,
-      "projected": 125.0,
-      "gw_points": 79,
+      "current": 127,
+      "projected": 127.0,
+      "gw_points": 81,
       "yet_to_play": 0,
       "provisional_position": 5
     },
@@ -535,7 +534,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -749,10 +748,10 @@
           329,
           282,
           304,
+          279,
           426,
           154,
           260,
-          279,
           411,
           106
         ],
@@ -762,12 +761,8 @@
           289,
           165
         ],
-        "subs_in": [
-          279
-        ],
-        "subs_out": [
-          192
-        ],
+        "subs_in": [],
+        "subs_out": [],
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
@@ -836,6 +831,18 @@
           "yet_to_play": false
         },
         {
+          "element": 279,
+          "name": "Ajayi",
+          "pos": "DEF",
+          "minutes": 90,
+          "confirmed": 6,
+          "provisional": 0,
+          "predicted": 0.0,
+          "multiplier": 1,
+          "product": 6,
+          "yet_to_play": false
+        },
+        {
           "element": 426,
           "name": "B.Fernandes",
           "pos": "MID",
@@ -869,18 +876,6 @@
           "predicted": 0.0,
           "multiplier": 1,
           "product": 1,
-          "yet_to_play": false
-        },
-        {
-          "element": 279,
-          "name": "Ajayi",
-          "pos": "DEF",
-          "minutes": 90,
-          "confirmed": 6,
-          "provisional": 0,
-          "predicted": 0.0,
-          "multiplier": 1,
-          "product": 6,
           "yet_to_play": false
         },
         {
@@ -981,7 +976,7 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "provisional_position": 4,
-      "gw_points": 87,
+      "gw_points": 89,
       "hits": 0,
       "yet_to_play": 0,
       "autosubs": {
@@ -1009,7 +1004,7 @@
         "captain": 165,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1030,11 +1025,11 @@
           "name": "Gabriel",
           "pos": "DEF",
           "minutes": 90,
-          "confirmed": 6,
+          "confirmed": 8,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 6,
+          "product": 8,
           "yet_to_play": false
         },
         {
@@ -1216,7 +1211,7 @@
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "provisional_position": 5,
-      "gw_points": 79,
+      "gw_points": 81,
       "hits": 0,
       "yet_to_play": 0,
       "autosubs": {
@@ -1244,7 +1239,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1265,11 +1260,11 @@
           "name": "Gabriel",
           "pos": "DEF",
           "minutes": 90,
-          "confirmed": 6,
+          "confirmed": 8,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 6,
+          "product": 8,
           "yet_to_play": false
         },
         {
@@ -1461,11 +1456,11 @@
           329,
           427,
           366,
-          68,
           70,
-          165,
+          68,
           411,
-          379
+          379,
+          165
         ],
         "bench": [
           496,
@@ -1473,12 +1468,8 @@
           152,
           61
         ],
-        "subs_in": [
-          173
-        ],
-        "subs_out": [
-          152
-        ],
+        "subs_in": [],
+        "subs_out": [],
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
@@ -1559,18 +1550,6 @@
           "yet_to_play": false
         },
         {
-          "element": 68,
-          "name": "Tavernier",
-          "pos": "MID",
-          "minutes": 90,
-          "confirmed": 1,
-          "provisional": 0,
-          "predicted": 0.0,
-          "multiplier": 1,
-          "product": 1,
-          "yet_to_play": false
-        },
-        {
           "element": 70,
           "name": "Kluivert",
           "pos": "MID",
@@ -1583,15 +1562,15 @@
           "yet_to_play": false
         },
         {
-          "element": 165,
-          "name": "João Pedro",
-          "pos": "FWD",
+          "element": 68,
+          "name": "Tavernier",
+          "pos": "MID",
           "minutes": 90,
-          "confirmed": 9,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 9,
+          "product": 1,
           "yet_to_play": false
         },
         {
@@ -1616,6 +1595,18 @@
           "predicted": 0.0,
           "multiplier": 1,
           "product": 8,
+          "yet_to_play": false
+        },
+        {
+          "element": 165,
+          "name": "João Pedro",
+          "pos": "FWD",
+          "minutes": 90,
+          "confirmed": 9,
+          "provisional": 0,
+          "predicted": 0.0,
+          "multiplier": 1,
+          "product": 9,
           "yet_to_play": false
         },
         {
@@ -1716,7 +1707,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1949,7 +1940,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -1969,6 +1960,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-08-31T20:53:45+00:00",
+  "generated_at": "2026-09-01T20:03:02+00:00",
   "season": "2026-27"
 }

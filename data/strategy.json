@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-08-31T20:53:45+00:00",
+  "generated_at": "2026-09-01T20:03:02+00:00",
   "gameweek": 3,
   "gameweeks_remaining": 36,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.6",
     "gameweek": 3,
     "fixtures": 20,
-    "players": 516,
+    "players": 510,
     "assumptions": [
       "One uniform per attacking side: its goals, the opposing clean sheet and every conceded count are monotone reads of one draw.",
       "Every term's mean is the projection's own term, so the scenario mean IS the published expected points up to sampling error.",
@@ -33,7 +33,7 @@
         "price": 6.0,
         "code": 154561,
         "team_code": 3,
-        "next_gw_xp": 4.79
+        "next_gw_xp": 4.78
       },
       {
         "id": 8,
@@ -43,14 +43,14 @@
         "price": 5.6,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 3.43
+        "next_gw_xp": 3.41
       },
       {
         "id": 115,
         "name": "De Cuyper",
         "team": "BHA",
         "pos": "DEF",
-        "price": 4.6,
+        "price": 4.7,
         "code": 465730,
         "team_code": 36,
         "next_gw_xp": 2.53
@@ -204,12 +204,12 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.6225,
-        "p_target": 0.6225,
+        "p_first": 0.5755,
+        "p_target": 0.5755,
         "target_position": 1,
-        "expected_position": 1.51,
+        "expected_position": 1.62,
         "simulations": 2000,
-        "ci95_halfwidth": 0.0212,
+        "ci95_halfwidth": 0.0217,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -269,7 +269,7 @@
             "price": 5.6,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 3.43
+            "next_gw_xp": 3.41
           }
         },
         {
@@ -291,24 +291,6 @@
           }
         },
         {
-          "player_id": 1,
-          "owners": 3,
-          "n_rivals": 6,
-          "ownership_pct": 50.0,
-          "effective_ownership_pct": 50.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 1,
-            "name": "Raya",
-            "team": "ARS",
-            "pos": "GKP",
-            "price": 6.0,
-            "code": 154561,
-            "team_code": 3,
-            "next_gw_xp": 4.79
-          }
-        },
-        {
           "player_id": 426,
           "owners": 3,
           "n_rivals": 6,
@@ -324,6 +306,24 @@
             "code": 141746,
             "team_code": 1,
             "next_gw_xp": 5.53
+          }
+        },
+        {
+          "player_id": 1,
+          "owners": 3,
+          "n_rivals": 6,
+          "ownership_pct": 50.0,
+          "effective_ownership_pct": 50.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 1,
+            "name": "Raya",
+            "team": "ARS",
+            "pos": "GKP",
+            "price": 6.0,
+            "code": 154561,
+            "team_code": 3,
+            "next_gw_xp": 4.78
           }
         }
       ],
@@ -358,7 +358,7 @@
             "name": "De Cuyper",
             "team": "BHA",
             "pos": "DEF",
-            "price": 4.6,
+            "price": 4.7,
             "code": 465730,
             "team_code": 36,
             "next_gw_xp": 2.53
@@ -403,6 +403,42 @@
           }
         },
         {
+          "player_id": 329,
+          "owners": 2,
+          "n_rivals": 6,
+          "ownership_pct": 33.3,
+          "effective_ownership_pct": 33.3,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 329,
+            "name": "Rodon",
+            "team": "LEE",
+            "pos": "DEF",
+            "price": 4.5,
+            "code": 214225,
+            "team_code": 2,
+            "next_gw_xp": 2.17
+          }
+        },
+        {
+          "player_id": 260,
+          "owners": 2,
+          "n_rivals": 6,
+          "ownership_pct": 33.3,
+          "effective_ownership_pct": 33.3,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 260,
+            "name": "Wilson",
+            "team": "LEE",
+            "pos": "MID",
+            "price": 6.5,
+            "code": 153682,
+            "team_code": 2,
+            "next_gw_xp": 4.22
+          }
+        },
+        {
           "player_id": 4,
           "owners": 2,
           "n_rivals": 6,
@@ -417,7 +453,7 @@
             "price": 8.0,
             "code": 226597,
             "team_code": 3,
-            "next_gw_xp": 4.4
+            "next_gw_xp": 4.39
           }
         },
         {
@@ -454,42 +490,6 @@
             "code": 219168,
             "team_code": 14,
             "next_gw_xp": 1.89
-          }
-        },
-        {
-          "player_id": 329,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 329,
-            "name": "Rodon",
-            "team": "LEE",
-            "pos": "DEF",
-            "price": 4.5,
-            "code": 214225,
-            "team_code": 2,
-            "next_gw_xp": 2.17
-          }
-        },
-        {
-          "player_id": 260,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 260,
-            "name": "Wilson",
-            "team": "LEE",
-            "pos": "MID",
-            "price": 6.5,
-            "code": 153682,
-            "team_code": 2,
-            "next_gw_xp": 4.22
           }
         },
         {
@@ -543,7 +543,7 @@
             "price": 4.5,
             "code": 159506,
             "team_code": 17,
-            "next_gw_xp": 1.8
+            "next_gw_xp": 1.79
           }
         }
       ],
@@ -567,7 +567,7 @@
       "name": "Dale Fantasy Football",
       "league_type": "x",
       "classification": "small_private",
-      "size": 25,
+      "size": 24,
       "target_position": 1,
       "posture": {
         "stance": "neutral",
@@ -578,7 +578,7 @@
         "p_first": 0.0,
         "p_target": 0.0,
         "target_position": 1,
-        "expected_position": 8.06,
+        "expected_position": 8.33,
         "simulations": 2000,
         "ci95_halfwidth": 0.0,
         "basis": "shared fixture scenarios",
@@ -592,10 +592,10 @@
         {
           "player_id": 411,
           "owners": 16,
-          "n_rivals": 24,
-          "ownership_pct": 66.7,
-          "effective_ownership_pct": 108.3,
-          "captain_eo_pct": 41.7,
+          "n_rivals": 23,
+          "ownership_pct": 69.6,
+          "effective_ownership_pct": 113.0,
+          "captain_eo_pct": 43.5,
           "player": {
             "id": 411,
             "name": "Haaland",
@@ -609,11 +609,11 @@
         },
         {
           "player_id": 165,
-          "owners": 21,
-          "n_rivals": 24,
-          "ownership_pct": 87.5,
+          "owners": 20,
+          "n_rivals": 23,
+          "ownership_pct": 87.0,
           "effective_ownership_pct": 100.0,
-          "captain_eo_pct": 12.5,
+          "captain_eo_pct": 13.0,
           "player": {
             "id": 165,
             "name": "João Pedro",
@@ -627,11 +627,11 @@
         },
         {
           "player_id": 426,
-          "owners": 14,
-          "n_rivals": 24,
-          "ownership_pct": 58.3,
-          "effective_ownership_pct": 87.5,
-          "captain_eo_pct": 29.2,
+          "owners": 13,
+          "n_rivals": 23,
+          "ownership_pct": 56.5,
+          "effective_ownership_pct": 82.6,
+          "captain_eo_pct": 26.1,
           "player": {
             "id": 426,
             "name": "B.Fernandes",
@@ -646,9 +646,9 @@
         {
           "player_id": 8,
           "owners": 12,
-          "n_rivals": 24,
-          "ownership_pct": 50.0,
-          "effective_ownership_pct": 50.0,
+          "n_rivals": 23,
+          "ownership_pct": 52.2,
+          "effective_ownership_pct": 52.2,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 8,
@@ -658,7 +658,7 @@
             "price": 5.6,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 3.43
+            "next_gw_xp": 3.41
           }
         }
       ],
@@ -667,9 +667,9 @@
         {
           "player_id": 368,
           "owners": 11,
-          "n_rivals": 24,
-          "ownership_pct": 45.8,
-          "effective_ownership_pct": 45.8,
+          "n_rivals": 23,
+          "ownership_pct": 47.8,
+          "effective_ownership_pct": 47.8,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 368,
@@ -684,10 +684,10 @@
         },
         {
           "player_id": 4,
-          "owners": 10,
-          "n_rivals": 24,
-          "ownership_pct": 41.7,
-          "effective_ownership_pct": 41.7,
+          "owners": 9,
+          "n_rivals": 23,
+          "ownership_pct": 39.1,
+          "effective_ownership_pct": 39.1,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 4,
@@ -697,15 +697,15 @@
             "price": 8.0,
             "code": 226597,
             "team_code": 3,
-            "next_gw_xp": 4.4
+            "next_gw_xp": 4.39
           }
         },
         {
           "player_id": 423,
           "owners": 8,
-          "n_rivals": 24,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
+          "n_rivals": 23,
+          "ownership_pct": 34.8,
+          "effective_ownership_pct": 34.8,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 423,
@@ -721,9 +721,9 @@
         {
           "player_id": 40,
           "owners": 7,
-          "n_rivals": 24,
-          "ownership_pct": 29.2,
-          "effective_ownership_pct": 29.2,
+          "n_rivals": 23,
+          "ownership_pct": 30.4,
+          "effective_ownership_pct": 30.4,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 40,
@@ -739,9 +739,9 @@
         {
           "player_id": 379,
           "owners": 7,
-          "n_rivals": 24,
-          "ownership_pct": 29.2,
-          "effective_ownership_pct": 29.2,
+          "n_rivals": 23,
+          "ownership_pct": 30.4,
+          "effective_ownership_pct": 30.4,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 379,
@@ -756,10 +756,10 @@
         },
         {
           "player_id": 388,
-          "owners": 7,
-          "n_rivals": 24,
-          "ownership_pct": 29.2,
-          "effective_ownership_pct": 29.2,
+          "owners": 6,
+          "n_rivals": 23,
+          "ownership_pct": 26.1,
+          "effective_ownership_pct": 26.1,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 388,
@@ -774,10 +774,10 @@
         },
         {
           "player_id": 106,
-          "owners": 7,
-          "n_rivals": 24,
-          "ownership_pct": 29.2,
-          "effective_ownership_pct": 29.2,
+          "owners": 6,
+          "n_rivals": 23,
+          "ownership_pct": 26.1,
+          "effective_ownership_pct": 26.1,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 106,
@@ -792,11 +792,11 @@
         },
         {
           "player_id": 154,
-          "owners": 4,
-          "n_rivals": 24,
-          "ownership_pct": 16.7,
-          "effective_ownership_pct": 25.0,
-          "captain_eo_pct": 8.3,
+          "owners": 3,
+          "n_rivals": 23,
+          "ownership_pct": 13.0,
+          "effective_ownership_pct": 21.7,
+          "captain_eo_pct": 8.7,
           "player": {
             "id": 154,
             "name": "Palmer",
@@ -809,29 +809,11 @@
           }
         },
         {
-          "player_id": 397,
-          "owners": 6,
-          "n_rivals": 24,
-          "ownership_pct": 25.0,
-          "effective_ownership_pct": 25.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 397,
-            "name": "Semenyo",
-            "team": "MCI",
-            "pos": "MID",
-            "price": 8.5,
-            "code": 437730,
-            "team_code": 43,
-            "next_gw_xp": 5.73
-          }
-        },
-        {
           "player_id": 13,
           "owners": 5,
-          "n_rivals": 24,
-          "ownership_pct": 20.8,
-          "effective_ownership_pct": 20.8,
+          "n_rivals": 23,
+          "ownership_pct": 21.7,
+          "effective_ownership_pct": 21.7,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 13,
@@ -843,12 +825,30 @@
             "team_code": 3,
             "next_gw_xp": 3.65
           }
+        },
+        {
+          "player_id": 397,
+          "owners": 5,
+          "n_rivals": 23,
+          "ownership_pct": 21.7,
+          "effective_ownership_pct": 21.7,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 397,
+            "name": "Semenyo",
+            "team": "MCI",
+            "pos": "MID",
+            "price": 8.5,
+            "code": 437730,
+            "team_code": 43,
+            "next_gw_xp": 5.73
+          }
         }
       ],
-      "my_captain_eo_pct": 41.7,
+      "my_captain_eo_pct": 43.5,
       "data_quality": {
-        "rivals": 24,
-        "with_picks": 24,
+        "rivals": 23,
+        "with_picks": 23,
         "coverage_pct": 100.0,
         "cohort_truncated": false,
         "picks_source_event": 2,
@@ -866,36 +866,36 @@
     {
       "key": "captain:411",
       "label": "Captain Haaland",
-      "expected_points": 51.249,
+      "expected_points": 51.022,
       "p_target": {
-        "271619": 0.6225,
+        "271619": 0.5755,
         "733241": 0.0
       }
     },
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 49.192,
+      "expected_points": 48.891,
       "p_target": {
-        "271619": 0.5385,
-        "733241": 0.0
-      }
-    },
-    {
-      "key": "captain:1",
-      "label": "Captain Raya",
-      "expected_points": 48.464,
-      "p_target": {
-        "271619": 0.5415,
+        "271619": 0.485,
         "733241": 0.0
       }
     },
     {
       "key": "captain:346",
       "label": "Captain Calvert-Lewin",
-      "expected_points": 48.459,
+      "expected_points": 48.311,
       "p_target": {
-        "271619": 0.5175,
+        "271619": 0.4835,
+        "733241": 0.0
+      }
+    },
+    {
+      "key": "captain:1",
+      "label": "Captain Raya",
+      "expected_points": 48.246,
+      "p_target": {
+        "271619": 0.479,
         "733241": 0.0
       }
     }
@@ -907,9 +907,9 @@
       {
         "key": "captain:411",
         "label": "Captain Haaland",
-        "expected_points": 51.249,
+        "expected_points": 51.022,
         "p_target": {
-          "271619": 0.6225,
+          "271619": 0.5755,
           "733241": 0.0
         }
       }
@@ -920,21 +920,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 45.71,
+    "expected_gain": 45.34,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "wildcard",
         "gameweek": 3,
-        "expected_gain": 45.71,
+        "expected_gain": 45.34,
         "ci95": [
-          43.8,
-          47.63
+          43.48,
+          47.2
         ],
-        "baseline_points": 225.78,
-        "with_chip_points": 271.49,
+        "baseline_points": 224.7,
+        "with_chip_points": 270.04,
         "horizon_gameweeks": 4,
-        "expected_gain_per_gameweek": 11.43,
+        "expected_gain_per_gameweek": 11.34,
         "assumptions": [
           "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
           "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -947,15 +947,15 @@
       {
         "chip": "freehit",
         "gameweek": 3,
-        "expected_gain": 16.62,
+        "expected_gain": 16.49,
         "ci95": [
-          15.93,
-          17.32
+          15.81,
+          17.16
         ],
-        "baseline_points": 51.25,
-        "with_chip_points": 67.87,
+        "baseline_points": 51.02,
+        "with_chip_points": 67.51,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 16.62,
+        "expected_gain_per_gameweek": 16.49,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -965,15 +965,15 @@
       {
         "chip": "3xc",
         "gameweek": 3,
-        "expected_gain": 7.64,
+        "expected_gain": 7.61,
         "ci95": [
-          7.41,
-          7.88
+          7.36,
+          7.86
         ],
-        "baseline_points": 51.25,
-        "with_chip_points": 58.89,
+        "baseline_points": 51.02,
+        "with_chip_points": 58.63,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 7.64,
+        "expected_gain_per_gameweek": 7.61,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice.",
@@ -983,15 +983,15 @@
       {
         "chip": "bboost",
         "gameweek": 3,
-        "expected_gain": 6.74,
+        "expected_gain": 6.56,
         "ci95": [
-          6.56,
-          6.92
+          6.39,
+          6.74
         ],
-        "baseline_points": 51.25,
-        "with_chip_points": 57.99,
+        "baseline_points": 51.02,
+        "with_chip_points": 57.58,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 6.74,
+        "expected_gain_per_gameweek": 6.56,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's.",
@@ -1034,15 +1034,15 @@
     "candidate": {
       "chip": "wildcard",
       "gameweek": 3,
-      "expected_gain": 45.71,
+      "expected_gain": 45.34,
       "ci95": [
-        43.8,
-        47.63
+        43.48,
+        47.2
       ],
-      "baseline_points": 225.78,
-      "with_chip_points": 271.49,
+      "baseline_points": 224.7,
+      "with_chip_points": 270.04,
       "horizon_gameweeks": 4,
-      "expected_gain_per_gameweek": 11.43,
+      "expected_gain_per_gameweek": 11.34,
       "assumptions": [
         "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
         "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -1159,7 +1159,7 @@
         }
       }
     },
-    "reason": "wildcard projects +45.7 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed"
+    "reason": "wildcard projects +45.3 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed"
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
