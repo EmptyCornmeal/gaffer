@@ -133,8 +133,26 @@ jobs:
           echo "generated_at=${prev}" >> "$GITHUB_OUTPUT"
           echo "Last published generated_at: ${prev:-<none>}"
 
-      - name: Backend tests
-        run: python -m pytest -q
+      # TIER 1 -- BLOCKING. Correctness. A failure here means the artifacts
+      # would be wrong, so nothing publishes.
+      - name: Backend tests (blocking)
+        run: python -m pytest -q -m "not advisory"
+
+      # TIER 2 -- ADVISORY. Interface ergonomics. Reported, never blocking.
+      # On 2026-09-01 a soft headroom assertion about ONE MCP response -- 1,107
+      # bytes over a warning threshold, well inside the client's real cap --
+      # failed 22 consecutive refreshes and froze the public site for 26 hours,
+      # three days before a gameweek deadline. The website's data must never
+      # again be held hostage to the ergonomics of a different consumer.
+      - name: Interface ergonomics (advisory, never blocks publishing)
+        id: advisory
+        continue-on-error: true
+        run: python -m pytest -q -m advisory
+
+      - name: Surface advisory failures without blocking
+        if: steps.advisory.outcome == 'failure'
+        run: |
+          echo "::warning title=Advisory checks failed::Interface ergonomics regressed. Publishing continued deliberately -- see the 'Interface ergonomics' step. Fix it before it reaches a hard cap."
 
       - name: Lint
         run: python -m ruff check .

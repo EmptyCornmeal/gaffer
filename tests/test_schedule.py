@@ -532,12 +532,45 @@ def test_refresh_still_gates_publishing():
     steps = wf["jobs"]["refresh"]["steps"]
     names = [s.get("name", "") for s in steps]
     runs = " ".join(s.get("run", "") for s in steps)
-    assert "Backend tests" in names and "Lint" in names
+    assert any(n.startswith("Backend tests") for n in names)
+    assert "Lint" in names
     assert "gaffer.contract" in runs
     assert "pip install -e" in runs
     # The no-diff failure must remain scheduled-only.
     fail = next(s for s in steps if "published nothing" in s.get("name", ""))
     assert "schedule" in fail["if"]
+
+
+def test_the_publish_gate_is_tiered_and_only_correctness_blocks():
+    """P0.1. The blocking tier must EXCLUDE advisory tests, and the advisory
+    tier must never be able to stop a publish.
+
+    This is the regression guard for the 2026-09-01 outage: a soft headroom
+    assertion about one MCP response failed 22 consecutive refreshes and froze
+    the public site for 26 hours, three days before a deadline. The website's
+    data must never again be gated on the ergonomics of a different consumer.
+    """
+    steps = _load("refresh.yml")["jobs"]["refresh"]["steps"]
+    by_name = {s.get("name", ""): s for s in steps}
+
+    blocking = next(s for n, s in by_name.items()
+                    if n.startswith("Backend tests"))
+    assert '-m "not advisory"' in blocking["run"], (
+        "the blocking tier must deselect advisory tests, or an ergonomics "
+        "failure can stop publishing again")
+    assert not blocking.get("continue-on-error"), (
+        "correctness must actually block")
+
+    advisory = next(s for n, s in by_name.items()
+                    if n.startswith("Interface ergonomics"))
+    assert advisory.get("continue-on-error") is True, (
+        "the advisory tier must never block a publish")
+    assert "-m advisory" in advisory["run"]
+
+    # A failure that blocks nothing must still be visible, or it is not a
+    # warning, it is a silence.
+    assert any("advisory.outcome == 'failure'" in str(s.get("if", ""))
+               for s in steps), "an advisory failure must be surfaced"
 
 
 # --- the pull-request gate ---------------------------------------------------

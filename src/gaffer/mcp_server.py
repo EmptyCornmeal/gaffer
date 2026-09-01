@@ -1407,6 +1407,62 @@ def _ownership_row(row: Any) -> dict[str, Any]:
             "captain_eo_pct": row.get("captain_eo_pct")}
 
 
+def _thin_chips(chips: Any, *, drop_assumptions: bool = False) -> Any:
+    """Project the chips block without losing a decision or a reason.
+
+    `candidate` is published as a FULL COPY of whichever entry in `alternatives`
+    the chip module picked -- assumptions and all. On 2026-09-01 that copy was
+    1,137 bytes of the 18,607 this tool reached, which is more than the 1,107 it
+    was over by. Two objects answering "which chip is the candidate" is a
+    CARDINALITY problem before it is a size one, so the copy becomes a reference
+    and the alternative stays the single source.
+
+    `drop_assumptions` is the second, coarser lever: assumption prose is 843 of
+    the 1,040 bytes of one alternative. It is dropped only from alternatives the
+    module did NOT pick, never from the candidate, and the response says so.
+    Nothing is lost -- `get_weekly_decision` publishes every alternative whole.
+    """
+    if not isinstance(chips, dict):
+        return chips
+    out = dict(chips)
+    alts, cand = out.get("alternatives"), out.get("candidate")
+    if isinstance(alts, list) and isinstance(cand, dict):
+        for i, a in enumerate(alts):
+            if (isinstance(a, dict)
+                    and a.get("chip") == cand.get("chip")
+                    and a.get("gameweek") == cand.get("gameweek")):
+                out["candidate"] = {
+                    "chip": cand.get("chip"),
+                    "gameweek": cand.get("gameweek"),
+                    "expected_gain": cand.get("expected_gain"),
+                    "why_not_recommended": cand.get("why_not_recommended"),
+                    "same_as": f"alternatives[{i}]",
+                }
+                out["candidate_projected"] = (
+                    "`candidate` duplicated an entry in `alternatives` verbatim; "
+                    "it is published here as a reference. Read "
+                    f"alternatives[{i}] for its ci95, baseline and assumptions.")
+                break
+    if drop_assumptions and isinstance(out.get("alternatives"), list):
+        picked = out.get("candidate")
+        cand_chip = picked.get("chip") if isinstance(picked, dict) else None
+        thinned, dropped = [], 0
+        for a in out["alternatives"]:
+            if (isinstance(a, dict) and a.get("chip") != cand_chip
+                    and a.get("assumptions")):
+                a = {k: v for k, v in a.items() if k != "assumptions"}
+                dropped += 1
+            thinned.append(a)
+        if dropped:
+            out["alternatives"] = thinned
+            out["alternatives_projected"] = (
+                f"assumptions dropped from {dropped} alternative(s) the chip "
+                "module did not pick, to fit the response budget; the "
+                "candidate's are kept, and get_weekly_decision publishes all "
+                "of them in full.")
+    return out
+
+
 def get_league_strategy() -> dict[str, Any]:
     """League-scoped ownership — shields, differentials and threats — with placing.
 
@@ -1424,7 +1480,7 @@ def get_league_strategy() -> dict[str, Any]:
                         "no strategy artifact — this run had no leagues "
                         "configured, or --skip-strategy was used")
 
-    def assemble(rows: int) -> dict[str, Any]:
+    def assemble(rows: int, lean_chips: bool = False) -> dict[str, Any]:
         leagues = []
         for lg in strat.get("leagues") or []:
             block: dict[str, Any] = {
@@ -1460,7 +1516,9 @@ def get_league_strategy() -> dict[str, Any]:
         return envelope(
             "strategy.json", meta, blob=strat, leagues=leagues,
             ownership_rows_per_list=rows,
-            simulation=strat.get("simulation"), chips=strat.get("chips"),
+            simulation=strat.get("simulation"),
+            chips=_thin_chips(strat.get("chips"),
+                              drop_assumptions=lean_chips),
             resolution=strat.get("resolution"), errors=strat.get("league_errors"),
             limitations=[
                 *(strat.get("limitations") or []),
@@ -1478,7 +1536,7 @@ def get_league_strategy() -> dict[str, Any]:
             ])
 
     rows = MAX_OWNERSHIP_ROWS
-    out = assemble(rows)
+    out = assemble(rows, False)
     # One league fits comfortably; several do not. Thin the ownership lists
     # rather than return a payload the client refuses, and say it was done.
     #
@@ -1488,13 +1546,24 @@ def get_league_strategy() -> dict[str, Any]:
     # and one more league from breaching it. The cap is where the client refuses;
     # the headroom is where a response is already too big to be safe.
     budget = MAX_RESULT_BYTES - RESULT_HEADROOM_BYTES
+    def note_rows(d: dict[str, Any]) -> dict[str, Any]:
+        if rows < MAX_OWNERSHIP_ROWS:
+            d["ownership_rows_thinned"] = (
+                f"the ownership lists were cut to {rows} rows each to fit the "
+                f"{budget:,}-byte working budget ({MAX_RESULT_BYTES:,} cap less "
+                f"{RESULT_HEADROOM_BYTES:,} bytes of headroom)")
+        return d
     while serialized_bytes(out) > budget and rows > 2:
         rows = max(2, rows - 2)
-        out = assemble(rows)
-        out["ownership_rows_thinned"] = (
-            f"the ownership lists were cut to {rows} rows each to fit the "
-            f"{budget:,}-byte working budget ({MAX_RESULT_BYTES:,} cap less "
-            f"{RESULT_HEADROOM_BYTES:,} bytes of headroom)")
+        out = note_rows(assemble(rows, False))
+    # Ownership rows are ONE lever and they run out at two. On 2026-09-01 they
+    # did: the response stopped shrinking at 18,607 bytes with 1,393 spare, the
+    # headroom test failed, and because publishing was gated on the whole suite
+    # the WEBSITE stopped updating for 26 hours over an MCP response size. A
+    # second lever exists precisely so an exhausted first one cannot do that
+    # again -- and it removes a duplicated object rather than real content.
+    if serialized_bytes(out) > budget:
+        out = note_rows(assemble(rows, True))
     return out
 
 

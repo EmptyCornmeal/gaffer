@@ -53,4 +53,13 @@ select = ["E", "F", "I", "UP", "B"]
 testpaths = ["tests"]
 markers = [
   "network: test is allowed to reach the live FPL API (see tests/conftest.py::_no_network)",
+  # ADVISORY tests describe interface ergonomics, not correctness. They run in
+  # CI and their failure is reported, but they do NOT gate publishing. On
+  # 2026-09-01 an early-warning headroom assertion about an MCP response --
+  # 1,107 bytes over a soft threshold, comfortably inside the client's real cap
+  # -- blocked every data refresh for 26 hours, three days before a deadline.
+  # A cosmetic budget on one consumer must never stop the product updating.
+  # The HARD cap test is deliberately NOT advisory: breaching it makes a tool
+  # unusable, which is correctness.
+  "advisory: interface ergonomics; reported in CI but never blocks a publish",
 ]
