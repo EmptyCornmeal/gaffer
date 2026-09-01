@@ -362,15 +362,27 @@
                  £100m budget, so it is not the owner's team and calling it "yours"
                  contradicts the risk note three cards above. -->
             <div class="flex items-baseline justify-between gap-2 mb-2">
+              <!-- 1.6 -- SCOPE, resolved by disclosure. The eleven are selected
+                   on the solver's decayed six-gameweek value, not on this week,
+                   while this card shows a one-week xP. Choosing them on one week
+                   instead was measured across three seasons and REFUSED: it won
+                   on train (+0.29) and select (+0.82) and lost on the held-out
+                   test season (-0.16). See backtest.XI_SELECTION_REFUSED. The
+                   contract asks for the domain to be STATED, not changed to
+                   something measurably worse -- so it is stated. -->
               <h3 id="sheet" class="font-bold text-sm">
                 {squadKnown
                   ? 'Your XI and bench order'
                   : "The model's suggested XI and bench order"}
+                <span class="text-micro font-normal text-muted2"
+                      title="The squad and the eleven are both chosen on a six-gameweek decayed projection, because that estimator beat a one-week one on held-out data. The xP beside it is this week's.">
+                  · picked over 6 GWs
+                </span>
               </h3>
               {#if xiTotal}
                 <span
                   class="shrink-0 text-mini text-muted2 tabular-nums"
-                  title="The eleven projections below add up to {xiTotal.xi.toFixed(1)}, plus {xiTotal.armband.toFixed(1)} for counting the armband a second time. Autosubs, bonus and price changes are not in it."
+                  title="The eleven projections below add up to {xiTotal.xi.toFixed(1)}, plus {xiTotal.armband.toFixed(1)} for counting the armband a second time. Autosubs, bonus and price changes are not in it. The eleven themselves were CHOSEN on a six-gameweek decayed projection, not on this week alone — picking them on one week was measured on three seasons and lost on the held-out one, so the horizon selection stays and this says so."
                 ><b class="text-sm text-brand-light">{xiTotal.total.toFixed(1)}</b> xP</span>
               {/if}
             </div>

@@ -536,6 +536,85 @@ MINUTES_VERDICT = (
 )
 
 #: A18 — the variant that was measured alongside the shipped fix and REFUSED.
+#: Phase 1.6 -- MEASURED AND REFUSED, 2026-09-01.
+#:
+#: The shipped objective picks the starting XI on ``players[i].value``, a
+#: horizon-decayed six-gameweek sum, while picking the captain on
+#: ``next_gw_points``. The line above the captain term states the reason it must
+#: be one week -- "Captaincy is re-chosen every week, so double on *next-GW*
+#: points, not horizon" -- and the identical argument was never applied to the
+#: eleven beside it. The roadmap carried this as a SCOPE defect worth about two
+#: points a week, blocked because ``_decision_metrics`` runs only at h=1 and
+#: picks squad AND XI on the same one-week column, so the harness could not see
+#: the shipped behaviour at all.
+#:
+#: The harness gap is now closed (``scripts/run_xi_horizon.py`` reconstructs the
+#: decayed column the solver actually uses) and the change was measured before
+#: it was written. Squad selection is held fixed on the decayed value in both
+#: arms; only the XI column moves.
+#:
+#: Pre-registered decision rule, fixed before any result was read: ship only if
+#: the proposal wins on the TEST season and does not lose on either other one.
+#:
+#:     season              shipped   proposed   delta
+#:     2023-24  train       49.684     49.974   +0.290
+#:     2024-25  select      49.000     49.816   +0.816
+#:     2025-26  TEST        47.368     47.211   -0.157
+#:
+#: It loses on the held-out season, so it is REFUSED. Two seasons agreeing and
+#: the test season reversing is the same signature that killed market-derived
+#: team strength, and the roadmap's "~2 pts/wk" was an intuition: the best case
+#: measured is +0.8 and the honest case is negative.
+#:
+#: The likely mechanism, and it is a correction to the premise rather than to
+#: the code: a decayed six-gameweek sum is a SHRUNK estimate of one gameweek.
+#: It is noisier week to week than the horizon it averages, so selecting on it
+#: buys variance reduction that outweighs the loss of specificity. "You re-pick
+#: the XI every week for free, so pick it on this week" is true about the
+#: DECISION and false about the ESTIMATOR.
+#:
+#: The Scope concern is real and survives the refusal. It is resolved by
+#: DISCLOSURE rather than by a change: the XI is selected on the horizon and
+#: now says so where it is presented. Stating the domain is what the contract
+#: asks for; changing the domain to something measurably worse is not.
+#:
+#: DO NOT REOPEN without new data or a structurally different hypothesis. A
+#: different decay constant is not a different hypothesis.
+XI_SELECTION_REFUSED = {
+    "candidate": "select_the_xi_on_next_gw_points_rather_than_horizon_value",
+    "decision": "measured, REFUSED",
+    "measured_on": "2026-09-01",
+    "change": ("in `solver.optimize`, weight `start[i]` by `next_gw_points` "
+               "instead of the decayed `value`, leaving squad selection and "
+               "the captain term unchanged"),
+    "rule": ("pre-registered: ship only if it wins on the test season and does "
+             "not lose on either of the other two"),
+    "xi_points_per_gw": {
+        "2023-24": {"role": "train", "shipped": 49.684, "proposed": 49.974,
+                    "delta": 0.290},
+        "2024-25": {"role": "select", "shipped": 49.000, "proposed": 49.816,
+                    "delta": 0.816},
+        "2025-26": {"role": "test", "shipped": 47.368, "proposed": 47.211,
+                    "delta": -0.157},
+    },
+    "refused_because": (
+        "it loses on the held-out season. Two seasons agreeing while the test "
+        "season reverses is the signature of a result that does not replicate, "
+        "and it is the same shape that refuted market-derived team strength."),
+    "mechanism": (
+        "a decayed six-gameweek sum is a SHRUNK estimate of one gameweek, so "
+        "selecting on it trades specificity for variance reduction and the "
+        "trade is favourable. 'The XI is re-picked weekly for free' is true "
+        "about the decision and false about the estimator."),
+    "roadmap_estimate_was": "~2 points per week — an intuition, not a measurement",
+    "scope_concern_resolved_by": (
+        "disclosure. The XI is selected on the horizon and now says so where it "
+        "is presented; the contract asks for the domain to be stated, not for "
+        "it to be changed to something measurably worse."),
+    "harness": "scripts/run_xi_horizon.py",
+}
+
+
 #: Recorded the way `WITHDRAWN_BASELINES` is: a measurement that did not ship is
 #: still a result, and the next person should find the reason rather than the
 #: intuition. Defined first because `MINUTES_CANDIDATE_FIX` carries it.
