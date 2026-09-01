@@ -2095,6 +2095,32 @@ def get_live_scorecard(entry_id: int | None = None) -> dict[str, Any]:
     return out
 
 
+def _journal_block(event: Any) -> dict[str, Any]:
+    """The manager's own record for this gameweek, when a vault is readable.
+
+    Never fatal and never noisy: a machine with no vault (every CI run) gets a
+    stated absence, not an error and not an empty object that reads as "he
+    wrote nothing".
+    """
+    try:
+        from gaffer import journal
+    except ImportError:
+        return {"available": False, "reason": "journal module unavailable"}
+    try:
+        st = journal.status()
+        if not st.get("available"):
+            return st
+        entries = journal.read(event if isinstance(event, int) else None)
+        st["entry"] = entries[0] if entries else None
+        if not entries:
+            st["reason"] = (
+                f"no `{journal.FENCE}` block found for GW{event}. Add one to "
+                "the gameweek note to record what you actually did and why.")
+        return st
+    except OSError as exc:
+        return {"available": False, "reason": f"journal unreadable: {exc}"}
+
+
 def get_decision_review() -> dict[str, Any]:
     """Last gameweek judged: decision quality separated from outcome luck."""
     meta = _meta()
@@ -2110,10 +2136,21 @@ def get_decision_review() -> dict[str, Any]:
         comparison=rev.get("comparison"), quality=rev.get("quality"),
         attribution=rev.get("attribution"), lesson=rev.get("lesson"),
         league=rev.get("league"),
+        # 1.12 -- the human half of the record. Gaffer knows what it advised and
+        # whether it was followed; it does not know what was done INSTEAD or
+        # why, and those are the informative rows. Captured in the vault
+        # gameweek note, which is written every week anyway and already holds
+        # the reasoning, and joined HERE rather than in the pipeline: Actions
+        # cannot see the vault, and Gaffer stays read-only.
+        journal=_journal_block(rev.get("event")),
         limitations=[
             *(rev.get("limitations") or []),
             "Everything judgemental comes from the immutable pre-deadline "
             "snapshot. Perfect hindsight is shown but never affects the verdict.",
+            "`journal` is the manager's own note, joined locally. It is "
+            "testimony, not measurement, and Gaffer never scores a decision "
+            "on it — but a recorded reason is what separates a good call from "
+            "a lucky one when the record is read back.",
         ])
 
 
