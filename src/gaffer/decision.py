@@ -128,6 +128,21 @@ class Comparison:
             "horizon_delta": (None if self.horizon_delta is None
                               else round(self.horizon_delta, 2)),
             "hit_cost": self.hit_cost,
+            # 1.1 / 0.3 -- name the uncertainty. `delta_ci95` is Monte-Carlo
+            # error on the MEAN difference across shared scenarios: how much of
+            # this edge is simulation noise. It is NOT the spread of possible
+            # football outcomes, which is far wider, and it is not uncertainty
+            # in the model's parameters. A 95% range of simulated outcomes
+            # called a "confidence interval on the edge" is the small
+            # terminology slip that becomes a confident lie.
+            "delta_ci95_interval_type": "monte_carlo",
+            "domain": {
+                "delta": "the next gameweek only",
+                "horizon_delta": ("gameweeks 2 onward of the planning horizon, "
+                                  "where the mean projections are materially "
+                                  "weaker than the one-week ones"),
+                "measured_in": f"{self.n_sims} shared fixture scenarios",
+            },
         }
 
 

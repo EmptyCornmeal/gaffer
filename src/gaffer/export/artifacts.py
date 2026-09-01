@@ -15,6 +15,7 @@ from gaffer import config, schedule
 from gaffer.io import write_json_atomic
 from gaffer.model.projection import shrunk_defcon90
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
+from gaffer.solver import optimize
 from gaffer.solver.optimize import MarginReport, Solution, squad_margins
 from gaffer.store import db
 
@@ -173,6 +174,37 @@ def build_meta(
     #
     # The numbers live HERE, in Python, once. The browser evaluates them; it
     # does not get to choose them.
+    # 1.1 / 0.3 -- SCOPE. State once, for the whole artifact set, what each
+    # published projection is a projection OF. `next_gw_xp` and `horizon_xp`
+    # are different questions and were distinguishable only by their names;
+    # the horizon behind the second was never published at all, so a reader
+    # could not tell whether it summed five gameweeks or six, or how the later
+    # weeks were weighted. A number whose domain is unstated is a number a
+    # reader will assume the domain of.
+    meta["projection_domain"] = {
+        "next_gw_xp": {
+            "horizon_gameweeks": 1,
+            "gameweek": meta.get("projection_event"),
+            "measures": "expected FPL points in the projected gameweek alone",
+        },
+        "horizon_xp": {
+            "horizon_gameweeks": config.PROJECTION_HORIZON,
+            "weighting": "undecayed sum over the horizon",
+            "measures": (
+                "expected FPL points summed across the projection horizon. "
+                "Beyond the first gameweek this is Gaffer's component model "
+                "alone and is materially weaker than its one-week figure"),
+        },
+        "solver_value": {
+            "horizon_gameweeks": config.PROJECTION_HORIZON,
+            "weighting": f"decayed at {optimize.HORIZON_DECAY} per gameweek",
+            "measures": (
+                "what the optimiser maximises. The squad AND the starting XI "
+                "are selected on this, not on the one-week figure: choosing "
+                "the XI on one week was measured across three seasons and lost "
+                "on the held-out one (backtest.XI_SELECTION_REFUSED)"),
+        },
+    }
     meta["freshness_policy"] = {
         "pre_deadline_open_min": int(
             schedule.PRE_DEADLINE_OPEN.total_seconds() // 60),
