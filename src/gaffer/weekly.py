@@ -99,13 +99,66 @@ def move_horizon_value(
     return round(sum(players[i].value for i in starting if i in players), 3)
 
 
+def _move_from_solution(sol: Any) -> dict[str, Any]:
+    """The single-window solver's move, in the shape the decision path reads."""
+    return {
+        "starting": list(sol.starting), "bench": list(sol.bench),
+        "captain": sol.captain, "vice": sol.vice,
+        "transfers_in": list(sol.transfers_in),
+        "transfers_out": list(sol.transfers_out),
+        "hits": int(sol.hits or 0), "source": "single_window_solution",
+    }
+
+
+def _first_step(plan: Any, from_gw: int) -> dict[str, Any] | None:
+    """The multi-period path's first step, or None if there is not one.
+
+    Defensive by design: the plan is optional, its status may be infeasible,
+    and a step for the wrong gameweek must never be read as this week's move.
+    """
+    if plan is None:
+        return None
+    steps = getattr(plan, "steps", None) or []
+    if not steps:
+        return None
+    step = steps[0]
+    if getattr(step, "gw", None) != from_gw:
+        return None
+    starting = list(getattr(step, "starting", []) or [])
+    if len(starting) != 11:
+        return None
+    squad = list(getattr(step, "squad", []) or [])
+    bench = [p for p in squad if p not in set(starting)]
+    return {
+        "starting": starting, "bench": bench,
+        "captain": getattr(step, "captain", None),
+        "vice": getattr(step, "vice", None),
+        "transfers_in": list(getattr(step, "transfers_in", []) or []),
+        "transfers_out": list(getattr(step, "transfers_out", []) or []),
+        "hits": int(getattr(step, "hits", 0) or 0),
+        "source": "multiperiod_first_step",
+    }
+
+
 def build(
     conn: sqlite3.Connection, *, sol: Any, from_gw: int, horizon: int,
     scen: SC.ScenarioSet | None, settings: config.Settings,
     strategy: dict[str, Any] | None = None,
     params: OBJ.ObjectiveParams | None = None,
+    plan: Any | None = None,
 ) -> decision.Decision:
-    """Produce the week's single decision."""
+    """Produce the week's single decision.
+
+    `plan` is the multi-period path, and when supplied its FIRST STEP is the
+    move this decision evaluates. It used to evaluate `sol` -- the single-window
+    optimum -- while `plan.json` published the path's first step, so one run
+    shipped two different first moves and two adjacent pages disagreed about
+    what to do (2026-09-01: four transfers for -12 on the home page, three for
+    -8 on the planner). Only the path models sequencing, so the path wins.
+
+    `sol` is still the fallback when no plan is available, and still supplies
+    the squad shown when the squad cannot be read at all.
+    """
     params = params or OBJ.DEFAULT
     held = held_squad(conn)
 
@@ -156,12 +209,17 @@ def build(
                          "not be scored."],
         )
 
-    move_xi = list(sol.starting)
-    hit_cost = int(sol.hits or 0) * params.hit_cost
+    # 1.4 -- the move under evaluation is the PLAN's first step when there is
+    # one. Everything downstream (the comparison, the candidate block, the
+    # published transfers) reads `mv`, so the numbers always describe the move
+    # actually being shown.
+    mv = _first_step(plan, from_gw) or _move_from_solution(sol)
+    move_xi = list(mv["starting"])
+    hit_cost = int(mv["hits"] or 0) * params.hit_cost
 
     cmp_ = decision.compare(
         scen,
-        move_xi=move_xi, move_captain=sol.captain or None,
+        move_xi=move_xi, move_captain=mv["captain"] or None,
         hold_xi=hold["starting"], hold_captain=hold["captain"],
         hit_cost=hit_cost,
         move_horizon=move_horizon_value(conn, move_xi, from_gw, horizon),
@@ -171,7 +229,7 @@ def build(
     ft = _int_meta(conn, "free_transfers") or settings.free_transfers
     bank = _int_meta(conn, "bank")
     exe = decision.executability(
-        conn, list(sol.transfers_in), list(sol.transfers_out), ft, bank)
+        conn, list(mv["transfers_in"]), list(mv["transfers_out"]), ft, bank)
 
     horizon_driven = (
         cmp_.horizon_delta is not None
@@ -180,26 +238,26 @@ def build(
     action, reason = decision.classify(cmp_)
 
     # A move nobody can pay for is not a recommendation, whatever it projects.
-    if action == decision.ACTION_TRANSFER and sol.transfers_in and not exe.affordable:
+    if action == decision.ACTION_TRANSFER and mv["transfers_in"] and not exe.affordable:
         action = decision.ACTION_UNAVAILABLE
         reason = f"the recommended move is not executable: {exe.reason}"
 
     # The solver proposing nothing is a roll, not a "transfer worth 0".
-    if action == decision.ACTION_TRANSFER and not sol.transfers_in:
+    if action == decision.ACTION_TRANSFER and not mv["transfers_in"]:
         action = decision.ACTION_ROLL
         reason = ("no transfer beats holding, so the free transfer is worth more "
                   "kept than spent")
 
     is_transfer = action == decision.ACTION_TRANSFER
-    captain = (sol.captain or None) if is_transfer else hold["captain"]
-    vice = (sol.vice or None) if is_transfer else hold["vice"]
+    captain = (mv["captain"] or None) if is_transfer else hold["captain"]
+    vice = (mv["vice"] or None) if is_transfer else hold["vice"]
 
     # Preserve a horizon-driven solver result as inspectable evidence, but only
     # in a block whose schema says it is NOT the action. The primary transfer and
     # executability fields are empty for every non-transfer decision.
     candidate = None
     if (not is_transfer and action == decision.ACTION_ROLL
-            and sol.transfers_in and horizon_driven
+            and mv["transfers_in"] and horizon_driven
             and cmp_.horizon_delta is not None and cmp_.horizon_delta > 0):
         candidate = decision.CandidateMove(
             basis=decision.CANDIDATE_BASIS_FUTURE_HORIZON,
@@ -210,14 +268,14 @@ def build(
                 f"{100 * cmp_.p_move_beats_hold:.0f}% of scenarios. Re-evaluate "
                 "it after this deadline; it is not a transfer instruction."
             ),
-            transfers_out=list(sol.transfers_out),
-            transfers_in=list(sol.transfers_in),
-            captain=sol.captain or None,
-            vice=sol.vice or None,
+            transfers_out=list(mv["transfers_out"]),
+            transfers_in=list(mv["transfers_in"]),
+            captain=mv["captain"] or None,
+            vice=mv["vice"] or None,
             executability=exe,
         )
 
-    headline = _headline(conn, action, sol, captain, exe)
+    headline = _headline(conn, action, mv, captain, exe)
     league_note = _league_note(strategy)
     chip = (strategy or {}).get("chips")
 
@@ -230,18 +288,18 @@ def build(
     else:
         risk = decision.biggest_risk(
             conn,
-            list(sol.transfers_in) if is_transfer else [],
+            list(mv["transfers_in"]) if is_transfer else [],
             captain,
             horizon_driven if is_transfer else False,
         )
 
     return decision.Decision(
         action=action, headline=headline, reason=reason,
-        transfers_out=list(sol.transfers_out) if is_transfer else [],
-        transfers_in=list(sol.transfers_in) if is_transfer else [],
+        transfers_out=list(mv["transfers_out"]) if is_transfer else [],
+        transfers_in=list(mv["transfers_in"]) if is_transfer else [],
         captain=captain, vice=vice,
         starting=move_xi if is_transfer else hold["starting"],
-        bench=list(sol.bench) if is_transfer else hold["bench"],
+        bench=list(mv["bench"]) if is_transfer else hold["bench"],
         comparison=cmp_, executability=exe if is_transfer else None,
         chip=chip, league_note=league_note,
         confidence=decision.confidence_band(cmp_),
@@ -259,7 +317,7 @@ def _name(conn: sqlite3.Connection, pid: int | None) -> str:
 
 
 def _headline(
-    conn: sqlite3.Connection, action: str, sol: Any, captain: int | None,
+    conn: sqlite3.Connection, action: str, mv: dict[str, Any], captain: int | None,
     exe: decision.Executability,
 ) -> str:
     if action == decision.ACTION_UNAVAILABLE:
@@ -268,10 +326,10 @@ def _headline(
         return f"Roll your transfer — captain {_name(conn, captain)}"
     if action == decision.ACTION_TOO_CLOSE:
         return f"Too close to call — captain {_name(conn, captain)}"
-    outs = ", ".join(_name(conn, p) for p in sol.transfers_out)
-    ins = ", ".join(_name(conn, p) for p in sol.transfers_in)
+    outs = ", ".join(_name(conn, p) for p in mv["transfers_out"])
+    ins = ", ".join(_name(conn, p) for p in mv["transfers_in"])
     hit = f" (-{exe.paid_transfers * config.HIT_COST})" if exe.paid_transfers else ""
-    return f"{outs} → {ins}{hit} — captain {_name(conn, sol.captain)}"
+    return f"{outs} → {ins}{hit} — captain {_name(conn, mv['captain'])}"
 
 
 def _league_note(strategy: dict[str, Any] | None) -> str:

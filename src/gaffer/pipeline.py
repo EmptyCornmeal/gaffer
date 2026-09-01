@@ -122,7 +122,14 @@ def run(
     # Multi-GW transfer path: the optimal *sequence* of moves (when to transfer,
     # roll a free transfer, or take a -4) across a 5-GW window — the planner half
     # of the engine, distinct from the single-window optimal squad above.
-    plan_horizon = min(5, horizon)
+    # 1.4 -- ONE horizon. This was `min(5, horizon)` while `weekly.build` below
+    # was given the full `horizon` (6), so each run solved the same question
+    # over two different windows and published two different first moves: on
+    # 2026-09-01 the home page offered four transfers for -12 while the planner
+    # offered three for -8, from the same run. `objective.py` was written
+    # precisely to stop the two solvers disagreeing and succeeded on the
+    # WEIGHTS; nobody had unified the window they were applied over.
+    plan_horizon = horizon
     plan = multiperiod.optimise_path(conn, from_gw, horizon=plan_horizon, free_transfers=ft)
     log["plan"] = {
         "status": plan.status, "mode": plan.meta.get("mode"),
@@ -162,8 +169,13 @@ def run(
     )
 
     # T-21: the one weekly decision, plus its immutable pre-deadline snapshot.
+    # The multi-period path is CANONICAL for transfers: it is the only solver
+    # that models sequencing -- when to roll, when to bank, when a -4 pays --
+    # and the weekly decision now evaluates its first step rather than
+    # re-solving the same question in a single window and getting a different
+    # answer. `sol` remains the single-window optimum behind recommendation.json.
     dec = weekly.build(conn, sol=sol, from_gw=from_gw, horizon=horizon,
-                       scen=scen, settings=settings, strategy=strat)
+                       scen=scen, settings=settings, strategy=strat, plan=plan)
     payload = weekly.snapshot_payload(
         conn, dec, from_gw=from_gw, horizon=horizon, scen=scen,
         settings=settings, strategy=strat, generated_at=generated_at)

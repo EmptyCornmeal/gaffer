@@ -2287,6 +2287,52 @@ def get_model_evidence(detail: str = DETAIL_SUMMARY) -> dict[str, Any]:
         limitations=bt.get("limitations"))
 
 
+def _decision_snapshots(event, limit: int = 2) -> list[dict[str, Any]]:
+    """Pre-deadline decision snapshots for one gameweek, newest first.
+
+    Reads `data/state/decisions.ndjson` -- the committed, immutable store --
+    rather than the local sqlite table, which only a pipeline run in this
+    checkout ever populates. See the note in `what_changed`.
+
+    A malformed line is skipped rather than fatal: the store is append-only and
+    one bad row must not hide the rest.
+    """
+    path = data_dir() / "state" / "decisions.ndjson"
+    if not path.exists():
+        path = config.REPO_ROOT / "data" / "state" / "decisions.ndjson"
+    out: list[dict[str, Any]] = []
+    if not path.exists():
+        return out
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        if event is not None and str(row.get("target_event")) != str(event):
+            continue
+        payload = row.get("payload")
+        if isinstance(payload, str):
+            try:
+                payload = json.loads(payload)
+            except ValueError:
+                continue
+        if not isinstance(payload, dict):
+            continue
+        out.append({"as_of": row.get("as_of"), "payload": payload})
+    out.sort(key=lambda r: r.get("as_of") or "", reverse=True)
+    return out[:limit]
+
+
+
 def what_changed() -> dict[str, Any]:
     """What moved since the previous immutable decision snapshot."""
     meta = _meta()
@@ -2294,23 +2340,20 @@ def what_changed() -> dict[str, Any]:
     cur_dec = current.get("decision") or {}
     event = current.get("gameweek")
 
-    try:
-        conn = read_only_db()
-    except ToolError:
-        return envelope("decision.json", meta, blob=current,
-                        status=STATUS_UNAVAILABLE, compared=False,
-                        detail="no local database, so no prior snapshot exists")
-    try:
-        rows = conn.execute(
-            "SELECT as_of, payload FROM decision_snapshots "
-            "WHERE target_event = ? ORDER BY as_of DESC LIMIT 2",
-            (event,)).fetchall()
-    except sqlite3.Error as exc:
-        raise ToolError(STATUS_UNAVAILABLE,
-                        f"snapshot table unreadable ({type(exc).__name__})") from None
-    finally:
-        conn.close()
-
+    # 1.11 -- read the COMMITTED snapshot store, not the local database.
+    #
+    # This queried `decision_snapshots` in `data/gaffer.db`. The pipeline runs
+    # in GitHub Actions, and only a run in THIS checkout writes that table, so
+    # on the Mac mini it held 15 rows for GW1 and 6 for GW2 and NOTHING for the
+    # gameweek being projected. `what_changed` therefore answered
+    # "snapshots_found: 0 -- this is the normal state on a first run" for every
+    # gameweek after the first, on every machine that had not run the pipeline
+    # locally. Measured 2026-09-01: 0 rows found against 26 in the NDJSON.
+    #
+    # `data/state/decisions.ndjson` is the immutable, version-controlled store
+    # the calibration ledger already reads. It travels with the repository, so
+    # it is correct everywhere, and ONE store now answers this question.
+    rows = _decision_snapshots(event, limit=2)
     if len(rows) < 2:
         return envelope(
             "decision_snapshots", meta, blob=current, status=STATUS_UNAVAILABLE,
@@ -2318,11 +2361,8 @@ def what_changed() -> dict[str, Any]:
             detail="no prior snapshot for this gameweek, so there is nothing "
                    "to compare against. This is the normal state on a first run.")
 
-    try:
-        prev_payload = json.loads(rows[1]["payload"])
-        prev = prev_payload.get("decision") or {}
-    except ValueError:
-        raise ToolError(STATUS_MALFORMED, "the prior snapshot is unreadable") from None
+    prev_payload = rows[1]["payload"]
+    prev = prev_payload.get("decision") or {}
 
     # The snapshot stores player IDs; the published artifact stores resolved
     # cards. Comparing one against the other reported the captain as changed on

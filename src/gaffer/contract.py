@@ -734,6 +734,57 @@ def _check_strategy(
         )
 
 
+def _check_one_canonical_first_move(data_dir: Path, report: Report) -> None:
+    """1.5 -- CARDINALITY. Exactly one object may answer "what is the move".
+
+    `decision.json` and `plan.json` are produced by one pipeline run and were
+    published from two different solvers over two different horizons. On
+    2026-09-01 the home page offered four transfers for -12 while the planner
+    offered three for -8, from the same run, and nothing noticed: every shape
+    invariant passed, because each artifact was individually well formed.
+
+    A contract that validates shape will pass any self-contradiction that is
+    correctly shaped. This asserts the two agree.
+
+    Compared as SETS of element ids, because ordering is a rendering choice.
+    An empty move on both sides is agreement -- that is a roll.
+    """
+    dec_p, plan_p = data_dir / "decision.json", data_dir / "plan.json"
+    if not (dec_p.exists() and plan_p.exists()):
+        return
+    dec = _load(data_dir, "decision.json", report)
+    plan = _load(data_dir, "plan.json", report)
+    if not isinstance(dec, dict) or not isinstance(plan, dict):
+        return
+    d = dec.get("decision")
+    if not isinstance(d, dict):
+        return
+
+    def ids(blob: Any, key: str) -> set:
+        rows = (blob or {}).get(key) or []
+        out = set()
+        for r in rows:
+            out.add(r.get("id") if isinstance(r, dict) else r)
+        return {i for i in out if i is not None}
+
+    # The decision publishes its move as primary transfers when it recommends
+    # one, and as `candidate_move` when it does not. Either way it is the move.
+    src = d if d.get("transfers_in") or d.get("transfers_out") else (
+        d.get("candidate_move") or {})
+    steps = plan.get("steps") or []
+    first = plan.get("first_move") or (steps[0] if steps else {})
+    if not isinstance(first, dict):
+        return
+    for key in ("transfers_in", "transfers_out"):
+        a, b = ids(src, key), ids(first, key)
+        if a != b:
+            report.violations.append(Violation(
+                "decision.json", f"decision.{key}", sorted(a),
+                f"the same set as plan.json first_move.{key} ({sorted(b)}) — "
+                "one run must not publish two different first moves; the "
+                "multi-period path is canonical for transfers"))
+
+
 def _check_decision(
     dec: Any, report: Report, meta: Any = None, expected_entry_id: int | None = None,
 ) -> None:
@@ -1483,6 +1534,8 @@ def validate(
             blob = _load(data_dir, fname, report)
             if blob is not None:
                 checker(blob)
+
+    _check_one_canonical_first_move(data_dir, report)
 
     # --- one season, everywhere ----------------------------------------------
     # T-29: FPL reuses element ids, so an artifact from last season parses
