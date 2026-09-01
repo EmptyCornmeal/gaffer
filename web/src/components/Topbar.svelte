@@ -227,7 +227,7 @@
       {#if freshness.state !== 'fresh'}
         <Icon name="hourglass" size={11} />
       {/if}
-      <span class="hidden sm:inline">{freshness.label}</span>
+      <span class="hidden sm:inline">{freshness.label.replace("Updated", "Model data")}</span>
       <span class="sm:hidden">{freshness.label.replace('Updated ', '')}</span>
     </span>
   {/if}

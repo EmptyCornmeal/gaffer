@@ -42,6 +42,26 @@ export interface Holding {
   ids: number[]
 }
 
+/**
+ * Give a plan saved before provenance existed the origin its contents imply.
+ *
+ * 1.7 -- A15 fixed the budget rule for a squad you HOLD (bank against selling
+ * prices) versus one you BUILD (a flat £100.0m cap on current prices), and
+ * `emptyPlan()` defaults to `built`. But a plan saved before `origin` existed
+ * has none, spreads under that default, and gets the from-scratch rule -- so
+ * the live planner went on telling the manager his real, appreciated squad was
+ * "£0.2m over budget" while the code that decides it was already correct. The
+ * fix shipped; the stored state did not move.
+ *
+ * A `holding` block is FPL's own money for a squad the manager owns, and only
+ * an import writes one. Its presence is therefore proof of provenance, and the
+ * safe default for a plan with neither is unchanged: `built`.
+ */
+export function migrateOrigin(plan: Plan): Plan {
+  if (plan.origin) return plan
+  return { ...plan, origin: plan.holding ? 'imported' : 'built' }
+}
+
 export function emptyPlan(): Plan {
   return { name: '', ids: [], starters: [], captainId: -1, viceId: -1, origin: 'built' }
 }
@@ -61,7 +81,7 @@ export function asBuilt(plan: Plan): Plan {
 export function loadCurrent(): Plan {
   try {
     const raw = localStorage.getItem(CUR_KEY)
-    if (raw) return { ...emptyPlan(), ...JSON.parse(raw) }
+    if (raw) return migrateOrigin({ ...emptyPlan(), ...JSON.parse(raw) })
     // migrate old squad-only storage
     const old = localStorage.getItem('gaffer.squad')
     if (old) return { ...emptyPlan(), ids: JSON.parse(old) }
@@ -76,7 +96,8 @@ export function saveCurrent(plan: Plan) {
 
 export function listPlans(): Plan[] {
   try {
-    return JSON.parse(localStorage.getItem(PLANS_KEY) || '[]')
+    return (JSON.parse(localStorage.getItem(PLANS_KEY) || '[]') as Plan[])
+      .map(migrateOrigin)
   } catch {
     return []
   }

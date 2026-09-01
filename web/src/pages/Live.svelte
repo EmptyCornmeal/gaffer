@@ -242,8 +242,18 @@
            into "Updated never updated". Only a real timestamp takes the prefix.
            Deliberately NOT a live region: this text changes on a 15s cosmetic
            tick, so announcing it buries the score. See the status line above. -->
-      <div class="text-mini text-muted2">
-        {dataAt == null ? 'Not updated yet' : `Updated ${freshnessLabel(dataAt, tick)}`}
+      <!-- 1.9 -- say WHICH clock this is. The topbar reads the artifact's age
+           and this reads the live feed's, so on 2026-09-01 the page carried
+           "Updated 13s ago" three centimetres under "Updated 21h ago". Both
+           were true; together they taught the reader that the freshness chip
+           means nothing. Two clocks are fine as long as each is labelled. -->
+      <div class="text-mini text-muted2"
+           title="Live scores are fetched from FPL directly and refresh every
+                  minute. The header chip is the age of Gaffer's published
+                  artifacts, which is a different clock.">
+        {dataAt == null
+          ? 'Live feed: not updated yet'
+          : `Live feed ${freshnessLabel(dataAt, tick)}`}
       </div>
       {#if source === 'artifact'}
         <span class="chip chip-warn" title={fallbackReason ?? ''}>

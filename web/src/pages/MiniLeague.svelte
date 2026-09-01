@@ -75,6 +75,19 @@
   let liveRivals = $state<LiveRival[]>([])
   let liveGw = $state<number | null>(null)
   let liveOn = $state(false)
+  /**
+   * 1.8 -- whether this gameweek is still MOVING, from the artifact's own
+   * fixture summary rather than from "we have rows for it".
+   *
+   * `hasLive` only means live data was published, which stays true after a
+   * gameweek is finished and its bonus confirmed. So the League page badged a
+   * settled GW2 as "GW2 live" and warned that positions were provisional and
+   * bonus could still move -- while every fixture read Final, `data_checked`
+   * was true on FPL's own event, and the Live page's own PROVISIONAL tile read
+   * +0. A disclaimer that is wrong in the safe direction still spends trust,
+   * and this one taught the reader to discount a warning that is sometimes real.
+   */
+  let liveMoving = $state(false)
 
   $effect(() => {
     let cancelled = false
@@ -84,6 +97,10 @@
       liveOn = d.available === true
       liveGw = typeof d.gameweek === 'number' ? d.gameweek : null
       liveRivals = Array.isArray(d.rivals) ? (d.rivals as LiveRival[]) : []
+      const fs = (d.fixture_summary ?? {}) as Record<string, unknown>
+      // Absence is not finality: an artifact without the summary keeps the
+      // warning, because the honest default is "we cannot tell".
+      liveMoving = !(fs.all_finished === true && fs.bonus_final === true)
     })
     return () => { cancelled = true }
   })
@@ -533,8 +550,10 @@
       <div class="flex items-center gap-2 flex-wrap">
         <h2 class="font-bold text-lg">{name}</h2>
         <span class="text-xs text-muted">{rows.length} member{rows.length === 1 ? '' : 's'}{hasHistory ? ` · ${gwCount} GW${gwCount === 1 ? '' : 's'}` : ''}</span>
-        {#if hasLive}
+        {#if hasLive && liveMoving}
           <span class="chip chip-good text-micro">GW{liveGw} live</span>
+        {:else if hasLive}
+          <span class="chip text-micro">GW{liveGw} final</span>
         {/if}
       </div>
 
@@ -680,11 +699,16 @@
         {/if}
       {/if}
 
-      {#if hasLive}
+      {#if hasLive && liveMoving}
         <p class="text-mini text-muted2">
           <b class="text-brand-light">GW</b> and <b>Total</b> are both live: FPL's league standings
           update during the gameweek. They are <b>provisional</b> — bonus points move until each
           match is finalised, so positions can still change without anyone scoring again.
+        </p>
+      {:else if hasLive}
+        <p class="text-mini text-muted2">
+          GW{liveGw} is <b>final</b>: every fixture is played and its bonus is confirmed, so these
+          standings will not move again.
         </p>
       {/if}
 
