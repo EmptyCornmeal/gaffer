@@ -310,10 +310,34 @@ def build(
 
 
 def _name(conn: sqlite3.Connection, pid: int | None) -> str:
+    """A player's name, disambiguated when it is not his alone.
+
+    1.10 -- 15 of 626 `web_name`s are shared by two players: `Gomez` is a
+    Brighton midfielder projected at 3.19 and a Liverpool defender at 0.00;
+    `Hughes` is a Palace midfielder and a Hull defender, and one of each pair
+    was in the squad. The headline is the single most-read sentence Gaffer
+    publishes, and "Tzolis -> Gomez" does not say which Gomez.
+
+    The team is appended only where the bare name is genuinely ambiguous, so
+    every other name is left exactly as it was. `_resolve` in the MCP already
+    REFUSES an ambiguous lookup rather than guessing -- this is the display
+    half of the same problem.
+    """
     if pid is None:
         return "?"
-    r = conn.execute("SELECT web_name FROM players WHERE id=?", (pid,)).fetchone()
-    return r["web_name"] if r else str(pid)
+    r = conn.execute("SELECT web_name, team_id FROM players WHERE id=?",
+                     (pid,)).fetchone()
+    if not r:
+        return str(pid)
+    name = r["web_name"]
+    shared = conn.execute(
+        "SELECT COUNT(*) AS n FROM players WHERE web_name = ?", (name,)
+    ).fetchone()
+    if not shared or int(shared["n"]) <= 1:
+        return name
+    team = conn.execute(
+        "SELECT short FROM teams WHERE id = ?", (r["team_id"],)).fetchone()
+    return f"{name} ({team['short']})" if team else name
 
 
 def _headline(

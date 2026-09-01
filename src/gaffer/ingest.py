@@ -415,9 +415,10 @@ def ingest_my_squad(
     except (httpx.HTTPStatusError, httpx.TransportError, ValueError):
         transfers = None
     try:
-        chips = (client.entry_history(entry_id) or {}).get("chips")
+        history = client.entry_history(entry_id) or {}
+        chips = history.get("chips")
     except (httpx.HTTPStatusError, httpx.TransportError, ValueError):
-        chips = None
+        history, chips = None, None
 
     market = {r["id"]: r["price"] for r in conn.execute("SELECT id, price FROM players")}
     starts = {
@@ -469,9 +470,23 @@ def ingest_my_squad(
     # T-11: bank and free transfers, with their provenance. An unknown bank is
     # recorded as unknown — never silently as £0.0m.
     bank = teamstate.resolve_bank(settings.bank, from_picks=eh.get("bank"))
-    summary = teamstate.summarise(
-        priced, bank, settings.free_transfers, settings.sources.get("free_transfers", "default")
-    )
+    # 1.15 -- derive free transfers from the ledger rather than defaulting to 1.
+    # An explicit configuration value still wins: if the operator has said what
+    # it is, that is knowledge, not a guess.
+    ft_value = settings.free_transfers
+    ft_source = settings.sources.get("free_transfers", "default")
+    if ft_source == "default":
+        try:
+            cap_extra = int(db.get_meta(conn, "rule_max_extra_ft") or 4)
+        except (TypeError, ValueError):
+            cap_extra = 4
+        derived, derived_source, ft_notes = teamstate.derive_free_transfers(
+            history, cap_extra=cap_extra)
+        if derived is not None:
+            ft_value, ft_source = derived, derived_source
+        if ft_notes:
+            db.set_meta(conn, "free_transfers_note", "; ".join(ft_notes))
+    summary = teamstate.summarise(priced, bank, ft_value, ft_source)
     db.set_meta(conn, "bank", "" if bank.value is None else bank.value)
     for k, v in summary.as_meta().items():
         if k != "bank":

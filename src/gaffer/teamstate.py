@@ -182,6 +182,62 @@ class BankState:
     exact: bool
 
 
+#: Chips that make a gameweek's transfers free, so they consume no free
+#: transfer. A wildcard or free hit week must not be read as "he spent five".
+_TRANSFER_FREEING_CHIPS = {"wildcard", "freehit"}
+
+
+def derive_free_transfers(
+    history: dict | None, *, cap_extra: int = 4,
+) -> tuple[int | None, str, list[str]]:
+    """Free transfers for the NEXT gameweek, reconstructed from what was spent.
+
+    1.15 -- this was a configuration constant defaulting to 1, published as
+    `free_transfers_source: "default"`. The single most important state
+    variable in a transfer decision was a guess, and it decides how many of a
+    move's transfers are paid: three transfers on 1 FT is -8, on 2 FT it is -4.
+
+    FPL publishes no free-transfer field, but it publishes the ledger it is
+    computed from. The rule: one is granted per gameweek, unused ones roll,
+    the total is capped at ``1 + max_extra_free_transfers``, and a wildcard or
+    free-hit week spends none of them.
+
+        ft_next = min(cap, max(0, ft - used) + 1)
+
+    GW1 is skipped: pre-season transfers are unlimited and free, so the ledger
+    starts with the single transfer FPL grants for GW2.
+
+    Returns ``(value, source, notes)``. ``value`` is None when the history
+    cannot support a derivation -- an absent answer, never a fabricated one.
+    """
+    notes: list[str] = []
+    rows = (history or {}).get("current") or []
+    if not rows:
+        return None, "unavailable", ["no entry history to derive from"]
+    chips_by_event = {
+        c.get("event"): str(c.get("name") or "").lower()
+        for c in ((history or {}).get("chips") or [])
+        if isinstance(c, dict)
+    }
+    cap = 1 + max(0, int(cap_extra))
+    ft = 1                       # what FPL grants for GW2
+    for row in sorted(rows, key=lambda r: r.get("event") or 0):
+        gw = row.get("event")
+        if not isinstance(gw, int) or gw < 1:
+            return None, "unavailable", ["entry history has an unusable event"]
+        if gw == 1:
+            continue             # pre-season: unlimited, consumes nothing
+        used = row.get("event_transfers")
+        if not isinstance(used, int) or used < 0:
+            return None, "unavailable", [f"GW{gw} has no usable transfer count"]
+        chip = chips_by_event.get(gw)
+        if chip in _TRANSFER_FREEING_CHIPS:
+            notes.append(f"GW{gw} was a {chip}: its transfers cost no free transfer")
+            used = 0
+        ft = min(cap, max(0, ft - used) + 1)
+    return ft, "derived_from_entry_history", notes
+
+
 def resolve_bank(
     configured: int | None,
     from_picks: int | None = None,
