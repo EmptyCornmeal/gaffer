@@ -366,9 +366,15 @@ def chip_block(
                 scen, starting, captain, free_sol.starting, free_sol.captain, gw,
                 weeks_retained=weeks_retained))
     profiles, basis, through, fixtures = chip_timing(conn, gw, starting, bench)
+    # 1.3 -- the timing PROFILES only cover the gameweeks Gaffer projects, but
+    # a chip's expiry is a calendar fact and the calendar runs to GW38. Read the
+    # full remaining season so "hold" can name the date it becomes a loss, and
+    # say whether there is any double or blank left to hold it FOR.
+    calendar = fixture_density(conn, list(range(gw, 39))) if conn is not None else {}
     plan = CH.plan_chips(evaluations, windows, used, gw, squad_known=squad_known,
                          chip_state_known=chip_state_known, timing=profiles,
-                         timing_basis=basis, projected_through=through)
+                         timing_basis=basis, projected_through=through,
+                         calendar=calendar)
     block = plan.as_dict()
     block["timing"]["fixtures"] = {str(g): f for g, f in (fixtures or {}).items()}
     return block

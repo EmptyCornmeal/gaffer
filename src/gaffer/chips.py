@@ -348,6 +348,53 @@ def evaluate_wildcard(scen: Any, starting: list[int], captain: int | None,
 # Timing: WHEN, not just whether
 # ---------------------------------------------------------------------------
 
+def expiry_report(
+    chip: str, gw: int, window_end: int | None,
+    calendar: dict | None,
+) -> dict:
+    """When this chip expires, and whether the calendar holds anything to wait for.
+
+    1.3 -- "hold" without an expiry date is half an answer. The first-half
+    chips run to GW19 and Gaffer was recommending `hold` on all of them while
+    a scan of the published calendar showed every gameweek GW1-GW38 with
+    exactly ten fixtures and none unscheduled: no double and no blank anywhere,
+    so "hold for a double" was a bet on a fixture that does not yet exist. Cup
+    postponements historically create them from GW20+, which is AFTER these
+    chips are gone.
+
+    Stated as calendar fact, never as a forecast: postponements are not
+    published in advance and this says only what the calendar shows today.
+    """
+    out: dict = {"chip": chip, "stop_event": window_end}
+    if not isinstance(window_end, int):
+        out["note"] = "this chip's window end is unknown"
+        return out
+    left = max(0, window_end - gw + 1)
+    out["gameweeks_left_including_this_one"] = left
+    cal = calendar or {}
+    span = [g for g in sorted(cal) if gw <= g <= window_end]
+    doubles = [g for g in span if (cal[g] or {}).get("double_teams")]
+    blanks = [g for g in span if (cal[g] or {}).get("blank_teams")]
+    out["doubles_in_window"] = doubles
+    out["blanks_in_window"] = blanks
+    out["calendar_checked_through"] = max(span) if span else None
+    if not span:
+        out["note"] = (f"expires after GW{window_end}; the fixture calendar for "
+                       "its window could not be read")
+    elif doubles or blanks:
+        out["note"] = (
+            f"expires after GW{window_end}. Scheduled in its remaining window: "
+            f"doubles {doubles or 'none'}, blanks {blanks or 'none'}")
+    else:
+        out["note"] = (
+            f"expires after GW{window_end}, {left} gameweek(s) from now, and "
+            f"the published calendar shows NO double and NO blank anywhere in "
+            f"GW{gw}-GW{window_end}. Holding for one is a bet on a fixture that "
+            "does not yet exist; postponements historically create them after "
+            "these chips have expired.")
+    return out
+
+
 def timing_report(
     chip: str, gw: int, window_end: int | None,
     profile: dict[int, float] | None,
@@ -449,6 +496,7 @@ def plan_chips(
     squad_known: bool = True, chip_state_known: bool = True,
     timing: dict[str, dict[int, float]] | None = None,
     timing_basis: str = "",
+    calendar: dict | None = None,
     projected_through: int | None = None,
 ) -> ChipPlan:
     """Answer WHEN, not just whether — and say which question was answered.
@@ -492,6 +540,10 @@ def plan_chips(
                      if r["coverage"] == TIMING_PARTIAL)
     unassessed = sorted(c for c, r in reports.items()
                         if r["coverage"] == TIMING_NONE)
+    expiry = {
+        e.chip: expiry_report(e.chip, gw, window_end.get(e.chip), calendar)
+        for e in live
+    }
     timing_block = {
         "basis": timing_basis,
         "projected_through": projected_through,
@@ -500,7 +552,13 @@ def plan_chips(
         "partly_assessed": partial,
         "not_assessed": unassessed,
         "by_chip": reports,
+        # 1.3 -- a hold must name the date it becomes a loss.
+        "expiry": expiry,
     }
+
+    def with_expiry(chip: str, reason: str) -> str:
+        note = (expiry.get(chip) or {}).get("note")
+        return f"{reason}. {note}" if note else reason
 
     def plan(rec, gameweek, gain, reason, *, candidate=None, state=True):
         return ChipPlan(rec, gameweek, gain, alts, [w.as_dict() for w in avail],
@@ -546,11 +604,12 @@ def plan_chips(
             and rep["best_gain"] > rep["now_gain"] + TIMING_MARGIN):
         return plan(
             "hold", None, best.expected_gain,
+            with_expiry(best.chip,
             f"{best.chip} is worth +{best.expected_gain:.1f} here, but GW"
             f"{rep['best_gameweek']} projects {rep['best_gain']:.1f} against GW"
             f"{gw}'s {rep['now_gain']:.1f} on the same basis — a chip is a WHEN "
             f"decision and this is not yet the best gameweek in its window "
-            f"({rep['note']})",
+            f"({rep['note']})"),
             candidate=_candidate(
                 best, f"a later gameweek in the window (GW{rep['best_gameweek']}) "
                       "projects more"))
@@ -560,11 +619,12 @@ def plan_chips(
         span = f"GW{gw + 1}-GW{end}" if end else "the rest of its window"
         return plan(
             "hold", None, best.expected_gain,
+            with_expiry(best.chip,
             f"{best.chip} projects +{best.expected_gain:.1f} points in GW{gw}, "
             f"but Gaffer has not valued it in {span}, so it cannot say this is "
             "the gameweek to spend it. Published as a candidate, not a "
             "recommendation — a chip you can only play once is a WHEN decision, "
-            "and the WHEN has not been assessed",
+            "and the WHEN has not been assessed"),
             candidate=_candidate(
                 best, "chip timing was not assessed: no later gameweek in the "
                       "window was valued"))
@@ -573,10 +633,11 @@ def plan_chips(
         end, through = rep["window_end"], rep["assessed_through"]
         return plan(
             "hold", None, best.expected_gain,
+            with_expiry(best.chip,
             f"{best.chip} projects +{best.expected_gain:.1f} points and GW{gw} "
             f"is the best of GW{gw}-GW{through} — but its window runs to GW"
             f"{end} and Gaffer projects no further, so GW{through + 1}-GW{end} "
-            "were not assessed. Published as a candidate, not a recommendation",
+            "were not assessed. Published as a candidate, not a recommendation"),
             candidate=_candidate(
                 best, f"timing assessed only to GW{through}; the window runs to "
                       f"GW{end}"))
