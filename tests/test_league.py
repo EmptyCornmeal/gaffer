@@ -195,7 +195,9 @@ def test_confidence_interval_is_reported():
     r = LG.placing_probabilities(sc, s, [1], 1)
     assert r.ci_halfwidth > 0
     assert r.n_sims == sc.n_sims
-    assert "p_first" in r.as_dict() and "ci95_halfwidth" in r.as_dict()
+    assert "p_first_after_gw" in r.as_dict() and "ci95_halfwidth" in r.as_dict()
+    # 1.2 -- the published key must carry its horizon.
+    assert r.as_dict()["domain"]["horizon"] == "next_gameweek"
 
 
 def test_unknown_rivals_are_flagged_not_treated_as_empty():

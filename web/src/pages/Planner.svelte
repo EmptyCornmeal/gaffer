@@ -124,6 +124,14 @@
     { key: 'balanced', label: 'Balanced' },
     { key: 'template', label: 'Template' },
   ]
+  /**
+   * 1.13 -- flip to true when Phase 3's placing objective makes the three
+   * stances solve to different squads. Until then the control is hidden, not
+   * deleted: the wiring, the artifact field and the note all stay, so turning
+   * it back on is one boolean rather than a rebuild.
+   */
+  const RISK_STANCE_IS_LIVE = false
+
   let optimalHorizon = $state(3)
   let optimalRisk = $state<RiskStance>('balanced')
   let shownOptimal = $state<OptimalHorizon | null>(null)
@@ -353,6 +361,16 @@
               {/each}
             </div>
           </div>
+          <!-- 1.13 -- the risk stance is HIDDEN until it does something.
+               All three settings solve to byte-identical squads because
+               `ownership_weight` is pinned to 0.0 in objective.py ("MUST remain
+               0.0 until a league-specific placing objective exists"). It sat in
+               a primary control position with a caption explaining that it
+               changed nothing, which is worse than not offering it: a control
+               that renders an apology is still asking to be clicked.
+               Phase 3 makes the objective real, and only then does the selector
+               come back -- objective mathematics, then behaviour, then UI. -->
+          {#if RISK_STANCE_IS_LIVE}
           <div>
             <div class="text-micro uppercase tracking-wide font-bold text-muted2 mb-1">Risk stance</div>
             <div class="flex gap-0.5 rounded-lg border border-line bg-bg2 p-0.5" title="Risk stance: differential chases value, template owns the crowd for rank safety">
@@ -368,6 +386,7 @@
               <p class="text-micro leading-snug text-muted2 mt-1">{riskNote}</p>
             {/if}
           </div>
+          {/if}
         </div>
       </div>
       {#if importMsg}<div class="text-xs chip-info rounded px-2 py-1 mt-2">{importMsg}</div>{/if}

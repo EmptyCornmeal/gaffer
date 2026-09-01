@@ -486,8 +486,8 @@ def test_build_skips_leagues_entirely_without_an_entry_id(conn, monkeypatch):
 def test_every_probability_is_a_probability(conn, monkeypatch):
     strat, _ = _build(conn, monkeypatch)
     for lg in strat["leagues"]:
-        assert 0.0 <= lg["placing"]["p_first"] <= 1.0
-        assert 0.0 <= lg["placing"]["p_target"] <= 1.0
+        assert 0.0 <= lg["placing"]["p_first_after_gw"] <= 1.0
+        assert 0.0 <= lg["placing"]["p_target_after_gw"] <= 1.0
     for opt in strat["options"]:
         assert all(0.0 <= v <= 1.0 for v in opt["p_target"].values())
 
@@ -542,7 +542,7 @@ def test_a_league_with_no_published_field_never_claims_a_certain_win(conn, monke
     strat = ST.build(conn, client, settings, from_gw=8, squad_event=7, sol=sol)
     p = strat["leagues"][0]["placing"]
     assert p["available"] is False
-    assert p["p_first"] == 0.0
+    assert p["p_first_after_gw"] == 0.0
     # And an unmeasurable league gets no vote in the multi-league resolution.
     assert strat["options"] == []
     assert "measurable" in strat["resolution"]["reason"]
@@ -551,7 +551,7 @@ def test_a_league_with_no_published_field_never_claims_a_certain_win(conn, monke
 def test_the_contract_rejects_a_certainty_with_no_field(conn, monkeypatch):
     strat, _ = _build(conn, monkeypatch)
     lg = strat["leagues"][0]
-    lg["placing"].update({"p_first": 1.0, "available": True})
+    lg["placing"].update({"p_first_after_gw": 1.0, "available": True})
     lg["data_quality"]["rivals"] = 0
     report = contract.Report(data_dir=".")
     contract._check_strategy(strat, report)
@@ -633,10 +633,11 @@ def test_the_contract_rejects_a_duplicated_league(conn, monkeypatch):
 
 def test_the_contract_rejects_an_out_of_range_probability(conn, monkeypatch):
     strat, _ = _build(conn, monkeypatch)
-    strat["leagues"][0]["placing"]["p_target"] = 1.4
+    strat["leagues"][0]["placing"]["p_target_after_gw"] = 1.4
     report = contract.Report(data_dir=".")
     contract._check_strategy(strat, report)
-    assert any(v.field.endswith("p_target") for v in report.violations)
+    assert any(v.field.endswith("p_target_after_gw")
+               for v in report.violations)
 
 
 def test_the_contract_rejects_recommending_a_spent_chip(conn, monkeypatch):

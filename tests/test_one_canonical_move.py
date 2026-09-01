@@ -121,3 +121,18 @@ def test_an_incomplete_xi_falls_back_rather_than_publishing_ten_players():
         steps = [_Step()]
 
     assert weekly._first_step(_Plan(), 3) is None
+
+
+def test_a_plain_roll_is_a_silence_not_a_second_answer(tmp_path):
+    """When the decision publishes NO move -- not a primary transfer and not a
+    candidate -- it is claiming nothing about a move, and the plan's first step
+    is the only published answer. Comparing against an empty set there would
+    fire on every legitimate roll, which is the commonest outcome of all."""
+    (tmp_path / "decision.json").write_text(json.dumps({
+        "decision": {"action": "roll", "transfers_in": [], "transfers_out": []},
+    }), encoding="utf-8")
+    (tmp_path / "plan.json").write_text(json.dumps({
+        "steps": [{"gw": 3, "transfers_in": [{"id": 31}],
+                   "transfers_out": [{"id": 504}]}],
+    }), encoding="utf-8")
+    assert _violations(tmp_path) == []

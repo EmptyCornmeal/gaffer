@@ -130,7 +130,7 @@ def _league_block(
     target = default_target(state)
     placing = LG.placing_probabilities(
         scen, state, starting, captain, target=target,
-        gameweeks_remaining=gws_remaining,
+        gameweeks_remaining=gws_remaining, gameweek=getattr(scen, "gameweek", None),
     )
     return ML.build_view(
         state, list(starting) + [], captain, placing, gws_remaining, target
@@ -185,6 +185,7 @@ def build_options(
             res = LG.placing_probabilities(
                 scen, st, starting, pid, target=default_target(st),
                 gameweeks_remaining=gws_remaining,
+                gameweek=getattr(scen, "gameweek", None),
             )
             # A league with no measurable probability contributes no axis. Writing
             # 0.0 would make every option look equally hopeless there and let an

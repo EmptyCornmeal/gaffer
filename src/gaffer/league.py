@@ -375,13 +375,32 @@ class PlacingResult:
     basis: str
     coverage_pct: float
     caveats: list[str] = field(default_factory=list)
+    #: The gameweek these probabilities describe the standings AFTER.
+    gameweek: int | None = None
 
     def as_dict(self) -> dict[str, Any]:
+        # 1.2 -- SCOPE. These are next-GAMEWEEK quantities and were published as
+        # `p_first`, `p_target` and `expected_position`, which read as
+        # season-end. On 2026-09-01 the manager was leading his league and
+        # `p_first` was 0.6225: the probability of still leading after GW3, not
+        # of winning the league. Read as a season probability it argues for
+        # taking far more risk than the number supports. The names now carry
+        # the horizon, and `domain` states it in full.
         return {
-            "p_first": round(self.p_first, 4),
-            "p_target": round(self.p_target, 4),
+            "p_first_after_gw": round(self.p_first, 4),
+            "p_target_after_gw": round(self.p_target, 4),
             "target_position": self.target,
-            "expected_position": round(self.expected_position, 2),
+            "expected_position_after_gw": round(self.expected_position, 2),
+            "domain": {
+                "horizon": "next_gameweek",
+                "gameweek": self.gameweek,
+                "measures": (
+                    "the standings immediately after gameweek "
+                    f"{self.gameweek}, not the end of the season"
+                    if self.gameweek is not None else
+                    "the standings after the next gameweek, not the season"),
+                "rivals_assumed": "rivals keep their current squads",
+            },
             "simulations": self.n_sims,
             "ci95_halfwidth": round(self.ci_halfwidth, 4),
             "basis": self.basis,
@@ -395,6 +414,7 @@ def placing_probabilities(
     scen: Any, state: LeagueState, my_starting: list[int],
     my_captain: int | None, *, target: int = 1,
     gameweeks_remaining: int = 1, rng_seed: int = 5,
+    gameweek: int | None = None,
 ) -> PlacingResult:
     """P(finishing at or above ``target``) under shared football scenarios.
 
@@ -411,7 +431,8 @@ def placing_probabilities(
     if n == 0:
         caveats.append("no scenarios available")
         return PlacingResult(0.0, 0.0, target, 0.0, 0, 1.0, BASIS_UNAVAILABLE,
-                             round(100 * state.coverage, 1), caveats)
+                             round(100 * state.coverage, 1), caveats,
+                             gameweek=gameweek)
     if not state.rivals:
         # Nobody to finish above or below. Pre-season the global leagues publish
         # no standings at all, and simulating an empty field returns "you finish
@@ -422,6 +443,7 @@ def placing_probabilities(
             round(100 * state.coverage, 1),
             ["no rivals are published in this league yet, so there is no field "
              "to place against"],
+            gameweek=gameweek,
         )
 
     me = state.my_entry
@@ -462,6 +484,7 @@ def placing_probabilities(
         expected_position=float(position.mean()), n_sims=n,
         ci_halfwidth=1.96 * se, basis="shared fixture scenarios",
         coverage_pct=round(100 * state.coverage, 1), caveats=caveats,
+        gameweek=gameweek,
     )
 
 

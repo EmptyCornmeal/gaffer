@@ -175,10 +175,17 @@
       <!-- Coverage is stated from the counts every time, whether or not a placing
            probability came out, because it is what those probabilities are worth. -->
       {@const cov = describeCoverage(l.data_quality)}
-      <!-- `p_first` is P(finish first) and `p_target` is P(finish in the top N);
-           they are simulated separately, but `default_target` makes N = 1 for a
-           tiny or small league, where the two are the same event and the second
-           tile just restates the first under another label. -->
+      <!-- `p_first_after_gw` is P(LEADING after the next gameweek) and
+           `p_target_after_gw` is P(in the top N after it). They are simulated
+           separately, but `default_target` makes N = 1 for a tiny or small
+           league, where the two are the same event.
+
+           1.2 -- these tiles used to read "Win it" and "Exp. place" over
+           next-gameweek numbers. On 2026-09-01 the manager was top of his
+           league and the tile said 62%: that is the chance of still leading
+           after GW3, not of winning the league, and read as the latter it
+           argues for far more risk than the number supports. The horizon is
+           now in the label. -->
       {@const separateTarget = l.target_position > 1}
       <div class="card p-4">
         <button class="w-full text-left" onclick={() => (openLeague = lg(l) ? null : l.league_id)}>
@@ -193,19 +200,29 @@
 
         <div class="grid {separateTarget ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-3 text-center">
           <div class="rounded-lg bg-bg3 p-2">
-            <div class="text-micro uppercase text-muted2 font-bold">Win it</div>
-            <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_first) : '—'}</div>
+            <div class="text-micro uppercase text-muted2 font-bold">
+              Lead after GW{l.placing.domain?.gameweek ?? '—'}
+            </div>
+            <div class="text-xl font-black tabular-nums">
+              {l.placing.available ? pct(l.placing.p_first_after_gw) : '—'}
+            </div>
           </div>
           {#if separateTarget}
             <div class="rounded-lg bg-bg3 p-2">
-              <div class="text-micro uppercase text-muted2 font-bold">Top {l.target_position}</div>
-              <div class="text-xl font-black tabular-nums">{l.placing.available ? pct(l.placing.p_target) : '—'}</div>
+              <div class="text-micro uppercase text-muted2 font-bold">
+                Top {l.target_position} after GW{l.placing.domain?.gameweek ?? '—'}
+              </div>
+              <div class="text-xl font-black tabular-nums">
+                {l.placing.available ? pct(l.placing.p_target_after_gw) : '—'}
+              </div>
             </div>
           {/if}
           <div class="rounded-lg bg-bg3 p-2">
-            <div class="text-micro uppercase text-muted2 font-bold">Exp. place</div>
+            <div class="text-micro uppercase text-muted2 font-bold">
+              Place after GW{l.placing.domain?.gameweek ?? '—'}
+            </div>
             <div class="text-xl font-black tabular-nums">
-              {l.placing.available ? l.placing.expected_position.toFixed(1) : '—'}
+              {l.placing.available ? l.placing.expected_position_after_gw.toFixed(1) : '—'}
             </div>
           </div>
         </div>

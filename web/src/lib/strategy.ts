@@ -40,10 +40,16 @@ export interface OwnershipRow {
 }
 
 export interface Placing {
-  p_first: number
-  p_target: number
+  p_first_after_gw: number
+  p_target_after_gw: number
   target_position: number
-  expected_position: number
+  expected_position_after_gw: number
+  domain?: {
+    horizon: string
+    gameweek: number | null
+    measures: string
+    rivals_assumed: string
+  }
   simulations: number
   ci95_halfwidth: number
   basis: string

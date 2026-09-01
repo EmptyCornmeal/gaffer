@@ -617,7 +617,7 @@ def _check_strategy(
                           "an object of placing probabilities")
             )
             continue
-        for key in ("p_first", "p_target"):
+        for key in ("p_first_after_gw", "p_target_after_gw"):
             v = placing.get(key)
             if not isinstance(v, (int, float)) or not (0.0 <= float(v) <= 1.0):
                 report.violations.append(
@@ -638,11 +638,12 @@ def _check_strategy(
             )
         # A certainty is almost always a bug (an empty field simulates as "you
         # win every scenario"), so it must be earned by an actual field.
-        if placing.get("available") and float(placing.get("p_first") or 0) >= 1.0:
+        if (placing.get("available")
+                and float(placing.get("p_first_after_gw") or 0) >= 1.0):
             dqx = lg.get("data_quality") or {}
             if not dqx.get("rivals"):
                 report.violations.append(
-                    Violation(name, f"leagues[{i}].placing.p_first", 1.0,
+                    Violation(name, f"leagues[{i}].placing.p_first_after_gw", 1.0,
                               "a probability below certainty, or an unavailable "
                               "placing — a 100% chance of winning a league with "
                               "no known rivals is an artefact, not a forecast")
@@ -768,9 +769,17 @@ def _check_one_canonical_first_move(data_dir: Path, report: Report) -> None:
         return {i for i in out if i is not None}
 
     # The decision publishes its move as primary transfers when it recommends
-    # one, and as `candidate_move` when it does not. Either way it is the move.
+    # one, and as `candidate_move` when it holds one back as evidence. Either
+    # way it is a published move and must match the plan.
+    #
+    # When it publishes NEITHER, the decision is a plain roll and is claiming
+    # nothing about a move: the plan's first step is then the only published
+    # answer, which is a silence rather than a second one. Comparing against an
+    # empty set there would fire on every legitimate roll.
     src = d if d.get("transfers_in") or d.get("transfers_out") else (
         d.get("candidate_move") or {})
+    if not (src.get("transfers_in") or src.get("transfers_out")):
+        return
     steps = plan.get("steps") or []
     first = plan.get("first_move") or (steps[0] if steps else {})
     if not isinstance(first, dict):
