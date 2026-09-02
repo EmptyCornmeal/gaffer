@@ -279,9 +279,42 @@ def _player_inputs(row: Any) -> dict[str, Any]:
     }
 
 
+def _recency_before(
+    df: pd.DataFrame, decision_gw: int, last_n: int = 3,
+) -> dict[int, dict[str, float]]:
+    """Per-player start recency from STRICTLY PRIOR gameweeks.
+
+    2A.2, and the leakage boundary is the whole point: the decision is taken
+    before ``decision_gw`` kicks off, so only completed fixtures may be read.
+    ``df["GW"] < decision_gw`` is that boundary and nothing here relaxes it.
+
+    Mirrors ``features.start_recency_by_player``, which does the same job
+    against the live ``player_gw`` table. Two implementations of one definition
+    is a risk the parity test below is there to hold down; they are kept
+    separate because one reads a DataFrame of a finished season and the other a
+    SQLite table of a live one.
+    """
+    prior = df[df["GW"] < decision_gw]
+    if prior.empty or "starts" not in prior.columns:
+        return {}
+    out: dict[int, dict[str, float]] = {}
+    grouped = prior.sort_values(["GW"]).groupby("element")["starts"]
+    for element, seq in grouped:
+        vals = [float(v) for v in seq.tolist() if v is not None and not pd.isna(v)]
+        if not vals:
+            continue
+        tail = vals[-last_n:]
+        out[int(element)] = {
+            "started_lag": vals[-1],
+            "start_rate_r3": sum(tail) / len(tail),
+        }
+    return out
+
+
 def project_rows(
     frame: pd.DataFrame, ctx: F.TeamContext,
     fixtures_played: Mapping[int, int] | int,
+    recency: Mapping[int, dict[str, float]] | None = None,
 ) -> pd.Series:
     """Run the real projection over historical fixtures.
 
@@ -306,7 +339,13 @@ def project_rows(
         avail = projection._availability("a", None)
         played = (fixtures_played if isinstance(fixtures_played, int)
                   else fixtures_played.get(player["team_id"], 0))
-        parts = projection._project_one_fixture(player, fx, ctx, avail, played)
+        # 2A -- the backtest must score the model that SHIPS. `p_start` now
+        # reads per-fixture recency, so omitting it here would grade a model
+        # nobody runs, which is the cardinality failure this project has already
+        # paid for once.
+        rec = None if recency is None else recency.get(int(row.element))
+        parts = projection._project_one_fixture(
+            player, fx, ctx, avail, played, rec)
         out[i] = parts["exp_points"]
     return pd.Series(out, index=frame.index)
 
@@ -518,21 +557,34 @@ MINUTES_LIMITATIONS = [
 ]
 
 MINUTES_VERDICT = (
-    "Measured, and then fixed. The first reading of this block found the "
-    "shipped `p_start` losing to every naive baseline at every horizon, with "
-    "almost all of the gap in one branch: a third of every row got its "
-    "`p_start` from a PRICE prior, was told it had a ~29% chance of starting, "
-    "and started 2.3% of the time. A18 removed the gate that sent those rows "
-    "there. That branch is now 4.1% of rows, the h=1 Brier is 0.114 where it "
-    "was 0.150, the skill score is 0.44 where it was 0.26, and AUC is 0.90 "
-    "where it was 0.83. The model now BEATS the three-game rolling start rate "
-    "at h=2 through h=6, and at h=1 it is no longer distinguishable from "
-    "`start_rate_td` or `started_lag` — paired over gameweeks the 95% interval "
-    "against each contains zero, where before it lost in 37 gameweeks of 37. "
-    "It still loses to `start_rate_r3` at h=1, 0.114 against 0.099, and "
-    "`exp_minutes` MAE is still 17.1 against 11.5 for a lagged start times 90. "
-    "A gate that had never been measured is now a gate beaten at one horizon "
-    "by one baseline."
+    "Measured, fixed, and now winning. Two readings of this block found the "
+    "shipped `p_start` losing to every naive baseline at h=1. The first found "
+    "a third of every row taking its answer from a PRICE prior -- told a ~29% "
+    "chance of starting, starting 2.3% of the time -- and A18 removed the gate "
+    "that sent them there. The second found what remained: the gate below it, "
+    "`fixtures_played >= 3`, made the current season INVISIBLE until a team had "
+    "played three fixtures, so at GW1-GW3 every player in the game was graded "
+    "on last season. On 2026-09-01 that published a NAILED badge and a 0.90 "
+    "start probability for a player with 0 starts and 11 minutes, while six "
+    "ever-presents were flagged as rotation risks -- and at GW4 the ranking "
+    "inverted on no new information beyond a counter reaching three. "
+    "Phase 2A replaced the gate with SHRINKAGE (the current season enters from "
+    "the first fixture, weighted by how much of it there is) plus RECENCY (the "
+    "last-three start share, and whether he started his last fixture) -- the "
+    "estimator this block had been reporting as the winner for two revisions "
+    "while the model ignored it. "
+    "It now beats every baseline at every horizon on both Brier and AUC. At "
+    "h=1: Brier 0.086 against 0.099 for the three-game rolling rate, 0.110 for "
+    "season-to-date and 0.112 for a lagged start; AUC 0.937 against 0.907. At "
+    "h=6 the margin narrows to 0.134 against 0.135 and the honest reading is "
+    "that the baselines converge on it there, not that it pulls away. The "
+    "price-prior arm is 1.3% of rows, from 4.1% and originally 36.3%, and 97% "
+    "of rows now take a recency-informed branch with a skill score above 0.45. "
+    "Two things it still does NOT do. `exp_minutes` MAE is 14.3 against 11.5 "
+    "for a lagged start times ninety, so the MINUTES estimate still loses to a "
+    "one-line rule even though the start PROBABILITY no longer does -- the "
+    "bimodal ~78'-or-~3' shape is untouched and is the next thing to attack. "
+    "And NAILED remains over-confident: 0.939 claimed against 0.884 realised."
 )
 
 #: A18 — the variant that was measured alongside the shipped fix and REFUSED.
@@ -876,28 +928,18 @@ def _start_bands(df: pd.DataFrame, col: str = "p_start") -> list[dict[str, Any]]
     return out
 
 
-def _minutes_branch(player: Mapping[str, Any], fixtures_played: int) -> str:
-    """Which arm of the shipped minutes gate produced this ``p_start``.
+def _minutes_branch(rates: Mapping[str, Any]) -> str:
+    """Which evidence produced this ``p_start``.
 
-    A transcription of the conditions in `projection.fixture_rates`, because that
-    function returns a number and not the branch that made it. Duplicated logic
-    is a liability, so it is pinned rather than trusted:
-    `test_the_branch_label_names_the_formula_that_produced_p_start` recomputes
-    all three arms over a grid of synthetic players and asserts the label names
-    the one `p_start` actually equals.
+    2A -- this used to TRANSCRIBE the conditions in `projection.fixture_rates`,
+    because that function returned a number and not the branch that made it,
+    and its own docstring called the duplication a liability. It was: the gate
+    it copied has been replaced by shrinkage plus recency, and a second copy
+    would have gone on reporting arms the model no longer has.
+
+    The estimator now names its own branch and this reads it. One definition.
     """
-    base_min = player["base_minutes"] or 0
-    base_starts = player.get("base_starts") or 0
-    have_base = base_min >= config.BASE_SAMPLE_MINUTES
-    zero_is_evidence = config.season_reports_advanced_stats(
-        player.get("base_season")) is not False
-    zero_starts_possible = base_min <= projection._MAX_UNSTARTED_MINUTES
-    # A18. `cur_min` is deliberately absent, mirroring the gate it transcribes.
-    if fixtures_played >= 3 and player.get("starts") is not None:
-        return "current_season"
-    if have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
-        return "prior_season"
-    return "price_prior"
+    return str(rates.get("start_branch") or "unknown")
 
 
 def build_minutes_evaluation(
@@ -936,6 +978,7 @@ def build_minutes_evaluation(
         feat = snap.drop_duplicates("element").set_index("element")
         ctx = _context_for(hist, decision_gw)
         fixtures_played = hist.team_fixtures_played(decision_gw)
+        recency = _recency_before(df, decision_gw)
         # Ownership at the freeze, ranked. `selected` is a pre-deadline field and
         # this is the value from the DECISION snapshot, not the target one.
         own_rank = feat["selected"].rank(ascending=False, method="first")
@@ -962,12 +1005,13 @@ def build_minutes_evaluation(
                 opponent_id=int(opponent) if not pd.isna(opponent) else 1,
                 at_home=True, fdr=3,
             )
-            rates = projection.fixture_rates(player, fx, ctx, avail, played)
+            rates = projection.fixture_rates(
+                player, fx, ctx, avail, played, recency.get(int(element)))
             frozen[int(element)] = {
                 "p_start": float(rates["p_start"]),
                 "p_play": float(rates["p_play"]),
                 "exp_minutes": float(rates["exp_minutes"]),
-                "branch": _minutes_branch(player, played),
+                "branch": _minutes_branch(rates),
                 "pos": player["position"],
                 "own_rank": float(own_rank.get(element, np.nan)),
                 "start_rate_td": (player["starts"] / played) if played else np.nan,
@@ -2252,6 +2296,7 @@ def build_evaluation(
         # Per team, not `decision_gw - 1`: after a double the two disagree, and
         # `starts` is a fixture count.
         fixtures_played = hist.team_fixtures_played(decision_gw)
+        recency = _recency_before(df, decision_gw)
         coverage["decision_gws"] += 1
 
         for h in horizons:
@@ -2271,7 +2316,7 @@ def build_evaluation(
             if tgt.empty:
                 coverage["skipped_no_fixture"] += 1
                 continue
-            tgt["pred"] = project_rows(tgt, ctx, fixtures_played)
+            tgt["pred"] = project_rows(tgt, ctx, fixtures_played, recency)
             # A DGW is two fixture rows; sum them, as the live projection does.
             # `xP` is deliberately NOT carried through. It is the archive's own
             # expected-points column, it is not FPL's pre-deadline `ep_next`, and

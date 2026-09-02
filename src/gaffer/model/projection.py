@@ -405,6 +405,96 @@ def _start_prior(position: str, price: int) -> float:
     return 0.25 + frac * (ceiling - 0.25)
 
 
+#: 2A -- shrinkage half-life, in team fixtures. At three completed fixtures the
+#: current season and the prior one weigh equally, which is exactly where the
+#: gate this replaces flipped from one to the other in a single step. Chosen to
+#: make the change about the SHAPE rather than about a tuned constant, and
+#: deliberately not swept: sweeping it on the same data that chose it is how an
+#: in-sample gain gets shipped as a finding.
+START_SHRINK_K = 3.0
+
+#: Weight on the last-three start share, and on whether he started his last
+#: fixture. Also not swept.
+START_W_LAST3 = 0.35
+START_W_LAST_MATCH = 0.25
+
+
+def base_start_rate(
+    starts_td: float | None, fixtures_played: int, base_starts: float | None,
+    *, price: int | None = None, position: str | None = None,
+    started_lag: float | None = None, start_rate_r3: float | None = None,
+    have_base: bool = True,
+) -> tuple[float, str]:
+    """How often this player starts, and which evidence said so.
+
+    2A.1-2A.2. This replaces a HARD GATE with shrinkage plus recency.
+
+    The gate was ``fixtures_played >= 3``: below it the current season was
+    invisible and every player in the game was graded on ``base_starts / 38``.
+    Teams have played two fixtures at GW3, so on 2026-09-01 the model published
+    ``p_start 0.90`` and a NAILED badge for a player with 0 starts and 11
+    minutes, while six ever-presents were flagged as rotation risks. The
+    ordering was anti-correlated with the only evidence the season had
+    produced. At GW4 the gate opened and the same ranking inverted on no new
+    information beyond a counter reaching three.
+
+    Two variants had been measured for that gate and both were RATES -- the
+    shipped ``>= 3`` and a refused ``>= 1`` -- and neither was scored inside the
+    window the gate binds in, which is about 8% of a season. The estimator that
+    wins there is RECENCY, and it was never a candidate.
+
+    Measured on three seasons before this was written
+    (``scripts/run_minutes_ablation.py``, rungs R0-R3, Brier on ``started`` at
+    h=1). Every rung improved on the one above it, on both the GW1-3 window and
+    the full season, in all three seasons:
+
+        season          GW1-3: shipped -> R3      full: shipped -> R3
+        2023-24 train   0.18630 -> 0.12057        0.11846 -> 0.08857
+        2024-25 select  0.18173 -> 0.11550        0.12038 -> 0.09485
+        2025-26 TEST    0.18184 -> 0.12310        0.11544 -> 0.08902
+
+    R3 also beats every naive baseline on both metrics in all three seasons,
+    which the shipped model did not: it lost to "started last time" in GW1-3 by
+    0.056 Brier.
+
+    Returns ``(rate, branch)``. The branch names the evidence, because a
+    probability whose provenance is unknown is what produced the 0.90.
+    """
+    prior_rate = (base_starts / 38.0) if (have_base and base_starts is not None) else None
+    td_rate = ((starts_td / fixtures_played)
+               if (fixtures_played > 0 and starts_td is not None) else None)
+
+    if td_rate is None and prior_rate is None:
+        # No season, no prior season. The price prior is the last resort and is
+        # measured to be the worst arm in the model; A18 shrank it from a third
+        # of all rows to a twenty-fifth and it stays a fallback, not a branch
+        # anything is expected to land in.
+        return _start_prior(position or "MID", int(price or 40)), "price_prior"
+
+    if td_rate is None:
+        rate, branch = prior_rate, "prior_season"
+    elif prior_rate is None:
+        rate, branch = td_rate, "current_season"
+    else:
+        # Shrinkage, not a switch. The current season enters from the FIRST
+        # fixture and its weight grows with how much of it there is, so there is
+        # no gameweek at which the answer jumps.
+        w = fixtures_played / (fixtures_played + START_SHRINK_K)
+        rate = w * td_rate + (1.0 - w) * prior_rate
+        branch = "shrunk_current_and_prior"
+
+    # Recency. Both terms are per-FIXTURE facts the season-to-date rate cannot
+    # see: a rate over two games cannot tell which game it came from, and a
+    # half-time withdrawal on a yellow card looks identical to a demotion.
+    if start_rate_r3 is not None:
+        rate = (1.0 - START_W_LAST3) * rate + START_W_LAST3 * start_rate_r3
+        branch += "+last3"
+    if started_lag is not None:
+        rate = (1.0 - START_W_LAST_MATCH) * rate + START_W_LAST_MATCH * started_lag
+        branch += "+last_match"
+    return clamp(rate, 0.0, 0.98), branch
+
+
 #: The most minutes a player could accumulate in a season without ever starting:
 #: 38 appearances at the model's own cameo length. Above this, a `base_starts` of
 #: 0 is a column the source did not have, not a career on the bench — and unlike
@@ -498,6 +588,7 @@ def _shrunk_rate(player: Any, key: str) -> float:
 def fixture_rates(
     player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float,
     fixtures_played: int = 0,
+    recency: dict[str, float] | None = None,
 ) -> dict[str, float]:
     """The underlying per-fixture rate bundle the projection is built from.
 
@@ -583,38 +674,29 @@ def fixture_rates(
     # start, and the model now calls them at 0.00 rather than at 0.29. It was
     # wrong about 99.5% of that population before and is wrong about 0.6% of it
     # now, which is the trade being made.
-    if fixtures_played >= 3 and player["starts"] is not None:
-        base_start = clamp(player["starts"] / fixtures_played, 0.0, 0.98)
-    elif have_base and (base_starts or (zero_is_evidence and zero_starts_possible)):
-        # `base_starts / 38` — and the denominator really is 38, which is known
-        # to conflate two different things. It assumes the player was available
-        # for every match, so a season missed through injury is recorded as a
-        # season of not being picked. Saka started 25 of 38 because he spent
-        # three months injured, and this reads 0.66.
-        #
-        # Two corrections were built and MEASURED, and neither survived:
-        #
-        #   symmetric blend with the price prior — wrong mechanism. A £4.5m
-        #   price prior is 0.30, so it dragged Shaw from 0.98 to 0.65 and Raya
-        #   from 0.97 to 0.72. Cheap does not mean benched. It improved the
-        #   aggregate while degrading the best-known estimates, which is exactly
-        #   the trade an average hides.
-        #
-        #   upward-only price floor — right mechanism, no effect. Held out on
-        #   2024-25, XI points were flat at 50.7/gw for every floor weight in
-        #   [0, 0.75] while rank correlation and MAE got monotonically WORSE as
-        #   the floor rose. 2023-24 agreed. Measured, not guessed.
-        #
-        # The likely reason, and it is a correction to the premise rather than
-        # to the code: absence predicts absence. A player who missed three
-        # months is more likely to miss time again, so conflating injury with
-        # rotation is crude but not the free win it looks like. Separating them
-        # needs per-fixture history — the run-length of a player's zero-minute
-        # gameweeks distinguishes an injury from rotation, and season aggregates
-        # cannot. That is roadmap M6, not a constant.
-        base_start = clamp(base_starts / 38.0, 0.0, 0.98)
-    else:
-        base_start = _start_prior(pos, player["price"])
+    # 2A.1/2A.2 -- shrinkage plus recency, replacing the `fixtures_played >= 3`
+    # gate. See `base_start_rate` for the mechanism, the three-season
+    # measurement and why the two variants measured before it both missed the
+    # regime the gate actually binds in.
+    # A prior-season zero is only evidence when the season could report it AND
+    # the minutes are physically reachable without ever starting: a season of
+    # substitute appearances cannot exceed 38 cameos, and more than that with no
+    # starts is a missing column whatever the provenance says. Preserved from
+    # the gate this replaces -- dropping it would send exactly those players to
+    # the price prior, which reads an expensive squad player as a probable
+    # starter.
+    prior_usable = have_base and bool(
+        base_starts or (zero_is_evidence and zero_starts_possible))
+    base_start, start_branch = base_start_rate(
+        starts_td=_field(player, "starts", None),
+        fixtures_played=fixtures_played,
+        base_starts=base_starts if prior_usable else None,
+        price=_field(player, "price", None),
+        position=pos,
+        started_lag=(recency or {}).get("started_lag"),
+        start_rate_r3=(recency or {}).get("start_rate_r3"),
+        have_base=prior_usable,
+    )
     p_start = clamp(base_start * avail, 0.0, 0.98)
     # M9 — the cameo term was a flat 0.35 for every player in the game, which
     # handed a backup keeper the same chance of appearing as a rotating forward
@@ -771,6 +853,11 @@ def fixture_rates(
     return {
         "pos": pos,
         "p_start": p_start,
+        # 2A -- the estimator names its own branch, so nothing downstream has to
+        # transcribe the conditions to work out which evidence answered. The
+        # backtest used to keep a second copy of the gate for exactly that, and
+        # its own docstring called the duplication a liability.
+        "start_branch": start_branch,
         "p_play": p_play,
         "p60": p60,
         "exp_minutes": exp_minutes,
@@ -839,8 +926,9 @@ def bonus_points(
 def _project_one_fixture(
     player: sqlite3.Row, fx: F.Fixture, ctx: TeamContext, avail: float,
     fixtures_played: int = 0,
+    recency: dict[str, float] | None = None,
 ) -> dict[str, float]:
-    r = fixture_rates(player, fx, ctx, avail, fixtures_played)
+    r = fixture_rates(player, fx, ctx, avail, fixtures_played, recency)
     pos = r["pos"]
 
     exp_goal_pts = r["exp_goals"] * r["goal_pts_per"]
@@ -944,6 +1032,11 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
     lf = conn.execute("SELECT value FROM meta WHERE key='last_finished_gw'").fetchone()
     games_played = int(lf["value"]) if lf and str(lf["value"]).isdigit() else 0
     played_by_team = F.played_fixtures_by_team(conn)
+    # 2A.2 -- per-fixture recency of starting, read once for the whole run.
+    # A player with no completed fixtures is ABSENT from this map, and
+    # `base_start_rate` must see None rather than a zero: a new signing has
+    # not been dropped.
+    recency_by_player = F.start_recency_by_player(conn)
 
     rows: list[dict] = []
     avail_by_player: dict[int, float] = {}
@@ -973,7 +1066,8 @@ def project(conn: sqlite3.Connection, from_gw: int, horizon: int | None = None) 
         for gw in range(from_gw, from_gw + horizon):
             parts = [
                 _project_one_fixture(p, fx, ctx, avail,
-                                     played_by_team.get(p["team_id"], 0))
+                                     played_by_team.get(p["team_id"], 0),
+                                     recency_by_player.get(p["id"]))
                 for fx in by_gw.get(gw, [])
             ]
             acc = {k: sum(part[k] for part in parts) for k in additive}

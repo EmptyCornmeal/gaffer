@@ -259,6 +259,14 @@ def simulate_next_gw(
     played_by_team = F.played_fixtures_by_team(conn)
     rng = np.random.default_rng(_SEED)
     out: dict[int, dict[str, float]] = {}
+        # 2A -- the recency map MUST be passed here too. `fixture_rates`
+        # now reads per-fixture start recency, and a reading of it that
+        # omits the input computes a DIFFERENT p_start from the one the
+        # projection published. That is the A13/A17 divergence the
+        # sampling-tolerance invariant exists to catch, and it caught
+        # this: Armstrong published a point estimate of 2.17 above his
+        # own simulated ceiling of 2.0 before the map was threaded.
+    recency_by_player = F.start_recency_by_player(conn)
     for p in players:
         gw_fx = [fx for fx in fixtures.get(p["team_id"], []) if fx.gw == from_gw]
         if not gw_fx:  # blank
@@ -268,7 +276,8 @@ def simulate_next_gw(
         totals = np.zeros(n)
         for fx in gw_fx:
             r = projection.fixture_rates(
-                p, fx, ctx, avail, played_by_team.get(p["team_id"], 0))
+                p, fx, ctx, avail, played_by_team.get(p["team_id"], 0),
+                recency_by_player.get(p["id"]))
             totals = totals + _sample_fixture(r, n, rng)
         out[p["id"]] = _summarise(totals)
     return out

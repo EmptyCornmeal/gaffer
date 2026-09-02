@@ -127,7 +127,7 @@ def score_season(season: str) -> dict:
             "brier_full": round(brier(y, pv), 5),
         }
     base = out["rungs"]["R0_shipped"]
-    for name, r in out["rungs"].items():
+    for r in out["rungs"].values():
         r["d_early_vs_shipped"] = round(r["brier_gw1_3"] - base["brier_gw1_3"], 5)
         r["d_full_vs_shipped"] = round(r["brier_full"] - base["brier_full"], 5)
     return out

@@ -256,6 +256,11 @@ def _collect_rates(
     # double or blank of the season onward, and a different denominator is a
     # different `p_start`, which is a different everything.
     played_by_team = F.played_fixtures_by_team(conn)
+    # 2A -- see the note in `model.simulate`: a reading of `fixture_rates` that
+    # omits the recency map computes a different p_start from the published one,
+    # and this module is the THIRD reading of that function. Three readings of
+    # one rulebook that disagree is the defect A13 and A17 were both about.
+    recency_by_player = F.start_recency_by_player(conn)
     rates: list[_PlayerRates] = []
     for p in conn.execute("SELECT * FROM players").fetchall():
         avail = projection._availability(p["status"], p["chance_playing"])
@@ -265,7 +270,8 @@ def _collect_rates(
             if fx.gw != gw:
                 continue
             r = projection.fixture_rates(
-                p, fx, ctx, avail, played_by_team.get(p["team_id"], 0))
+                p, fx, ctx, avail, played_by_team.get(p["team_id"], 0),
+                recency_by_player.get(p["id"]))
             rates.append(_PlayerRates(
                 pid=p["id"], team_id=p["team_id"], position=r["pos"],
                 fixture_key=(fx.gw, p["team_id"], fx.opponent_id),

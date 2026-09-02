@@ -206,9 +206,9 @@ def test_the_starts_denominator_is_the_teams_own_fixtures(conn, monkeypatch):
     seen: dict[int, int] = {}
     real = projection.fixture_rates
 
-    def spy(player, fx, ctx, avail, fixtures_played=0):
+    def spy(player, fx, ctx, avail, fixtures_played=0, recency=None):
         seen[player["team_id"]] = fixtures_played
-        return real(player, fx, ctx, avail, fixtures_played)
+        return real(player, fx, ctx, avail, fixtures_played, recency)
 
     monkeypatch.setattr(projection, "fixture_rates", spy)
     scenarios._collect_rates(conn, 1)

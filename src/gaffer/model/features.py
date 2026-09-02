@@ -426,6 +426,50 @@ class Fixture:
     fdr: int
 
 
+def start_recency_by_player(
+    conn: sqlite3.Connection, last_n: int = 3,
+) -> dict[int, dict[str, float]]:
+    """Per-player recency of STARTING, from the ``player_gw`` table.
+
+    2A.2. Two facts a season-to-date rate cannot express, because a rate over
+    two games cannot tell which game it came from:
+
+    * ``started_lag``   -- did he start his most recent completed fixture
+    * ``start_rate_r3`` -- the share of his last ``last_n`` fixtures he started
+
+    These are what separate a half-time withdrawal on a yellow card from a
+    demotion, and a player rested once from a player dropped. Gaffer's own
+    published evidence had "started, last 3" beating the shipped start
+    probability at h=1 -- Brier 0.0986 against 0.1138 -- while the model that
+    lost to it read neither.
+
+    Ordered by ``(gw, fixture)`` so a double gameweek contributes two fixtures
+    rather than one: starts are counted per fixture, and their recency must be
+    counted the same way.
+
+    A player with no completed fixtures contributes NO entry, and the caller
+    must read that as "no recency evidence" rather than as a zero. A new
+    signing has not been dropped.
+    """
+    rows = conn.execute(
+        "SELECT player_id, gw, fixture, starts FROM player_gw "
+        "WHERE starts IS NOT NULL ORDER BY player_id, gw, fixture"
+    ).fetchall()
+    by_player: dict[int, list[float]] = {}
+    for r in rows:
+        by_player.setdefault(int(r["player_id"]), []).append(float(r["starts"]))
+    out: dict[int, dict[str, float]] = {}
+    for pid, seq in by_player.items():
+        if not seq:
+            continue
+        tail = seq[-last_n:]
+        out[pid] = {
+            "started_lag": float(seq[-1]),
+            "start_rate_r3": float(sum(tail) / len(tail)),
+        }
+    return out
+
+
 def played_fixtures_by_team(conn: sqlite3.Connection) -> dict[int, int]:
     """Map team_id -> how many fixtures that team has actually completed.
 

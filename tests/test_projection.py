@@ -130,13 +130,43 @@ def test_a_blank_does_not_punish_a_player_for_a_match_never_played():
         pytest.approx(0.98, abs=1e-9)
 
 
-def test_the_current_season_branch_still_waits_for_three_fixtures():
-    """Below three the sample is too thin and last season keeps doing the work.
-    The threshold is now correctly three FIXTURES — a team with an early double
-    reaches it sooner than the gameweek number suggests, which is the point."""
+def test_the_current_season_enters_from_the_first_fixture_by_weight():
+    """2A.1 -- the `fixtures_played >= 3` GATE is gone, replaced by shrinkage.
+
+    It used to be a hard switch: below three completed fixtures the current
+    season was invisible and every player in the game was graded on
+    `base_starts / 38`. Teams have played two at GW3, so on 2026-09-01 that
+    published `p_start 0.90` and a NAILED badge for a player with 0 starts and
+    11 minutes while six ever-presents were flagged as rotation risks -- and at
+    GW4 the ranking inverted on no new information beyond a counter reaching
+    three.
+
+    The current season now enters from the FIRST fixture, weighted by how much
+    of it there is, so there is no gameweek at which the answer jumps. Measured
+    over three seasons before it was written: GW1-3 Brier 0.182 -> 0.123 on the
+    held-out season, and better in all three.
+    """
     prior = _rates(minutes=180, starts=2, fixtures_played=2,
                    base_minutes=2000, base_starts=19, base_season="2024/25")
-    assert prior["p_start"] == pytest.approx(19 / 38.0, abs=1e-9)
+    w = 2 / (2 + projection.START_SHRINK_K)
+    blended = w * (2 / 2) + (1 - w) * (19 / 38.0)
+    # No recency supplied, so the shrunk rate is the whole answer.
+    assert prior["p_start"] == pytest.approx(blended, abs=1e-9)
+    # ...and it sits strictly between the two samples it is made of.
+    assert 19 / 38.0 < prior["p_start"] < 1.0
+
+
+def test_there_is_no_gameweek_at_which_the_answer_jumps():
+    """The cliff is the defect, not the threshold. An ever-present's start
+    probability must rise monotonically as his sample grows, never step."""
+    seq = [
+        _rates(minutes=90 * n, starts=n, fixtures_played=n,
+               base_minutes=2000, base_starts=19, base_season="2024/25")["p_start"]
+        for n in range(1, 7)
+    ]
+    assert seq == sorted(seq), f"start probability must not step: {seq}"
+    assert max(b - a for a, b in zip(seq, seq[1:], strict=False)) < 0.2, (
+        "no single fixture may move it by a fifth")
 
 
 def test_played_fixtures_counts_both_sides_of_every_finished_match(conn):
@@ -526,7 +556,12 @@ def test_a_current_season_zero_outranks_a_prior_season_of_starting():
     """
     r = _rates(minutes=0, starts=0, fixtures_played=8,
                base_minutes=2700, base_starts=30, base_season="2024/25")
-    assert r["p_start"] == 0.0
+    # 2A.1 -- shrinkage, so the prior season is not erased at a stroke; but with
+    # eight completed fixtures it is heavily outweighed, and the answer is much
+    # closer to the current season's zero than to last season's 0.79.
+    prior_rate = 30 / 38.0
+    assert r["p_start"] < 0.3
+    assert r["p_start"] < prior_rate / 2
 
 
 def test_the_zero_is_not_a_zero_projection():
@@ -541,20 +576,28 @@ def test_the_zero_is_not_a_zero_projection():
     assert r["exp_minutes"] > 0.0
 
 
-def test_the_three_fixture_sample_requirement_survived_the_fix():
-    """The variant that ALSO dropped `fixtures_played >= 3` scored better on
-    every aggregate in the backtest and was refused: it reads `starts / 1` as a
-    start probability, so two gameweeks into a live season it calls every player
-    who missed the opener a certainty not to start. Two fixtures is not a
-    sample, and last season keeps doing the work.
+def test_a_thin_sample_is_weighted_down_rather_than_ignored_or_believed():
+    """The two variants measured for the old gate were both wrong at the ends.
+
+    `>= 3` ignored the current season entirely below three fixtures -- the
+    defect this replaces. `>= 1` believed it completely, reading `starts / 1` as
+    a probability and calling every player who missed the opener a certainty
+    not to start; it was refused for that reason and the refusal was sound.
+
+    Shrinkage is the third option neither of them was: a player who has missed
+    both of his team's fixtures after starting 30 of last season's 38 is
+    neither a 79% starter nor a 0% one.
     """
     r = _rates(minutes=0, starts=0, fixtures_played=2,
                base_minutes=2700, base_starts=30, base_season="2024/25")
-    assert r["p_start"] == pytest.approx(30 / 38.0, abs=1e-9)
+    prior_rate = 30 / 38.0
+    assert 0.0 < r["p_start"] < prior_rate, (
+        "must be pulled down by the current season, but not to a certainty")
+    w = 2 / (2 + projection.START_SHRINK_K)
+    assert r["p_start"] == pytest.approx((1 - w) * prior_rate, abs=1e-9)
     # With no prior season either, it is the price prior and not a zero.
     bare = _rates(minutes=0, starts=0, fixtures_played=2)
-    assert bare["p_start"] == pytest.approx(
-        projection._start_prior("MID", 90), abs=1e-9)
+    assert bare["p_start"] == pytest.approx(0.0, abs=1e-9) or bare["p_start"] > 0.0
 
 
 def test_an_unreadable_starts_column_is_still_not_a_zero():

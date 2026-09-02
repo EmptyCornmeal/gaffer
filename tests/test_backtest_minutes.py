@@ -114,19 +114,27 @@ def test_the_branch_label_names_the_formula_that_produced_p_start():
                               "base_starts": base_starts, "starts": 10.0}
                     rates = projection.fixture_rates(
                         player, fx, ctx, 1.0, fixtures_played)
-                    branch = backtest._minutes_branch(player, fixtures_played)
+                    branch = backtest._minutes_branch(rates)
                     checked.add(branch)
-                    expected = {
-                        "current_season": min(
-                            player["starts"] / max(fixtures_played, 1), 0.98),
-                        "prior_season": min(base_starts / 38.0, 0.98),
-                        "price_prior": projection._start_prior(
-                            player["position"], player["price"]),
-                    }[branch]
+                    td = (player["starts"] / fixtures_played
+                          if fixtures_played else None)
+                    prior = base_starts / 38.0
+                    if branch.startswith("shrunk"):
+                        w = fixtures_played / (
+                            fixtures_played + projection.START_SHRINK_K)
+                        expected = min(w * td + (1 - w) * prior, 0.98)
+                    elif branch == "current_season":
+                        expected = min(td, 0.98)
+                    elif branch == "prior_season":
+                        expected = min(prior, 0.98)
+                    else:
+                        expected = projection._start_prior(
+                            player["position"], player["price"])
                     assert rates["p_start"] == pytest.approx(expected, abs=1e-12), (
                         f"branch={branch} fixtures={fixtures_played} "
                         f"cur={cur_minutes} base={base_minutes}/{base_starts}")
-    assert checked == {"current_season", "prior_season", "price_prior"}, (
+    assert checked >= {"shrunk_current_and_prior", "current_season",
+                       "prior_season", "price_prior"}, (
         f"the grid never exercised every arm: {checked}")
 
 
@@ -148,8 +156,8 @@ def test_the_price_prior_branch_reads_price_and_nothing_else():
     fx = F.Fixture(gw=5, opponent_id=2, at_home=True, fdr=3)
     ra = projection.fixture_rates(a, fx, _ctx(), 1.0, 8)
     rb = projection.fixture_rates(b, fx, _ctx(), 1.0, 8)
-    assert backtest._minutes_branch(a, 8) == "price_prior"
-    assert backtest._minutes_branch(b, 8) == "price_prior"
+    assert backtest._minutes_branch(ra) == "price_prior"
+    assert backtest._minutes_branch(rb) == "price_prior"
     assert ra["p_start"] == pytest.approx(rb["p_start"])
 
 
@@ -163,12 +171,19 @@ def test_a_readable_zero_no_longer_reaches_the_price_prior():
     p = {**_BASE, "minutes": 0.0, "starts": 0.0,
          "base_minutes": 2400.0, "base_starts": 28.0}
     fx = F.Fixture(gw=5, opponent_id=2, at_home=True, fdr=3)
-    assert backtest._minutes_branch(p, 8) == "current_season"
-    assert projection.fixture_rates(p, fx, _ctx(), 1.0, 8)["p_start"] == 0.0
-    # ...and below the sample threshold it still is not evidence.
-    assert backtest._minutes_branch(p, 2) == "prior_season"
-    assert projection.fixture_rates(p, fx, _ctx(), 1.0, 2)["p_start"] == \
-        pytest.approx(28 / 38.0, abs=1e-12)
+    r8 = projection.fixture_rates(p, fx, _ctx(), 1.0, 8)
+    assert backtest._minutes_branch(r8) == "shrunk_current_and_prior"
+    # 2A.1 -- eight fixtures of not starting outweigh last season heavily, but
+    # shrinkage does not erase it at a stroke. The old gate answered exactly
+    # 0.00 here; the point of the change is that the transition is a curve.
+    assert r8["p_start"] < 0.3
+    # ...and below the old three-fixture threshold the prior still dominates,
+    # rather than being switched off entirely as `>= 1` would have done.
+    r2 = projection.fixture_rates(p, fx, _ctx(), 1.0, 2)
+    w = 2 / (2 + projection.START_SHRINK_K)
+    assert r2["p_start"] == pytest.approx((1 - w) * (28 / 38.0), abs=1e-12)
+    assert r2["p_start"] > r8["p_start"], (
+        "more evidence of not starting must lower it, monotonically")
 
 def test_the_minutes_features_are_leak_free():
     assert leakage.check_features(backtest.MINUTES_FEATURE_COLUMNS) == []
@@ -554,11 +569,32 @@ def test_the_published_verdict_matches_the_published_numbers(report):
     which claimed a result its own columns contradicted.
     """
     h1 = report["per_horizon"]["1"]
-    assert "loses" in report["verdict"].lower()
-    assert h1["brier"]["gaffer"] > min(
+    verdict = report["verdict"].lower()
+    beats_all_brier = h1["brier"]["gaffer"] < min(
         v for k, v in h1["brier"].items() if k != "gaffer")
-    assert h1["auc"]["gaffer"] < max(
+    beats_all_auc = h1["auc"]["gaffer"] > max(
         v for k, v in h1["auc"].items() if k != "gaffer")
+
+    # 2A -- the direction is no longer the invariant; the AGREEMENT is. The
+    # model used to lose to every baseline at h=1 and the prose said so. It now
+    # wins, and the prose has to say THAT. A test that pins one direction stops
+    # being a check on honesty and becomes a check on the result.
+    if beats_all_brier and beats_all_auc:
+        assert "winning" in verdict or "beats every baseline" in verdict, (
+            "the table says the model wins at h=1; the prose must not still "
+            "say it loses")
+    else:
+        assert "loses" in verdict, (
+            "the table says the model does not beat every baseline; the prose "
+            "must say so")
+
+    # Whatever the direction, a claim of winning must not be made while any
+    # baseline is ahead.
+    if "beats every baseline at every horizon" in verdict:
+        for h, block in report["per_horizon"].items():
+            best_other = min(v for k, v in block["brier"].items() if k != "gaffer")
+            assert block["brier"]["gaffer"] <= best_other, (
+                f"the verdict claims every horizon, but h={h} loses")
 
 
 def test_every_baseline_is_actually_scored(report):
@@ -581,7 +617,14 @@ def test_the_price_prior_branch_is_no_longer_a_third_of_the_population(report):
     assert pp["share_pct"] < 10, (
         "A18 shrank this arm from ~36% of rows to ~4%; a third of the "
         "population back on the price prior means the gate regressed")
-    assert branches["current_season"]["share_pct"] > 85
+    # 2A -- the arms are named for the EVIDENCE now, not for a gate, so the
+    # check is on how much of the population reaches a recency-informed answer
+    # rather than on one arm's name. 97% do; before the change, none did.
+    informed = sum(b["share_pct"] for name, b in branches.items()
+                   if "last_match" in name or "last3" in name)
+    assert informed > 85, (
+        f"only {informed:.1f}% of rows reach a recency-informed branch; the "
+        "estimator that wins at h=1 is recency and it must reach the population")
     # Still the weakest arm, and still worse than quoting its own base rate. It
     # is simply no longer the largest source of error in the model.
     assert pp["brier_skill"] < 0
@@ -602,14 +645,24 @@ def test_the_badge_is_measured_on_the_pool_a_manager_picks_from(report):
     overall = {b["band"]: b for b in report["bands"]["overall"]}
     considered = {b["band"]: b for b in report["bands"]["considered"]}
     assert overall and considered
-    assert considered["CAMEO?"]["start_rate"] >= considered["CAMEO?"]["claimed"]
-    considered_gap = (considered["CAMEO?"]["start_rate"]
-                      - considered["CAMEO?"]["claimed"])
-    overall_gap = abs(overall["CAMEO?"]["start_rate"]
-                      - overall["CAMEO?"]["claimed"])
-    assert considered_gap > overall_gap, (
-        "the owned pool must remain the worse-called one, or this pair of "
+
+    # 2A -- CAMEO? is now well called on BOTH populations (0.102/0.105 pool-wide,
+    # 0.232/0.233 among the most-owned), so "the owned pool is the worse-called
+    # one" has stopped being true. That was a symptom, not the reason both
+    # tables ship.
+    #
+    # The reason is that the two populations are DIFFERENT: a CAMEO? among the
+    # players anyone owns starts more than twice as often as one pool-wide, so
+    # a single table would describe neither. That is the invariant.
+    assert considered["CAMEO?"]["claimed"] > overall["CAMEO?"]["claimed"] * 1.5, (
+        "the two populations must remain materially different, or this pair of "
         "tables has stopped earning its place")
+    assert considered["CAMEO?"]["start_rate"] > overall["CAMEO?"]["start_rate"] * 1.5
+
+    # And each must be calibrated on its own terms rather than merely different.
+    for pop in (overall, considered):
+        gap = abs(pop["CAMEO?"]["start_rate"] - pop["CAMEO?"]["claimed"])
+        assert gap < 0.10, f"CAMEO? is off by {gap:.3f} on one of the populations"
 
 def test_nailed_is_reported_as_over_confident_rather_than_rounded_up(report):
     """~0.94 claimed, ~0.84 realised. The gap is the number that matters."""
