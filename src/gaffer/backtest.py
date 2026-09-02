@@ -686,6 +686,86 @@ CLEAN_SHEET_RECONCILIATION_REFUSED = {
 }
 
 
+#: Congestion and load as `p_start` inputs -- measured 2026-09-02, REFUSED.
+#:
+#: Motivated by a live failure: Gaffer recommended holding the Triple Captain
+#: for GW7 because Ipswich are the worst defence Man City meet. GW7 is three
+#: days after PSG at home and three days before AEK Athens at home. The model
+#: ranked fixtures by opponent and had no term for whether the player would be
+#: on the pitch.
+#:
+#: Two hypotheses, tested separately on the ladder in
+#: `scripts/run_congestion_ablation.py`, pre-registered before any rung was
+#: scored.
+CONGESTION_REFUSED = {
+    "candidate": "congestion_and_load_in_p_start",
+    "decision": "measured, REFUSED (both ladders)",
+    "measured_on": "2026-09-02",
+    "rule": ("pre-registered: ship the highest rung improving full-season h=1 "
+             "Brier on 2025-26 by >= 0.002 and worsening neither hold-out "
+             "season. Ties to the lower rung."),
+    "ladder_a_congestion": {
+        "change": "days since the club's last fixture, days to its next, and "
+                  "an easy-opponent-inside-a-tight-block interaction",
+        "brier_delta_vs_shipped": {
+            "turnaround": {"2023-24": +0.00274, "2024-25": +0.00297,
+                           "2025-26": +0.00316},
+            "forward_density": {"2023-24": +0.01024, "2024-25": +0.01101,
+                                "2025-26": +0.01177},
+            "interaction": {"2023-24": +0.01024, "2024-25": +0.01101,
+                            "2025-26": +0.01177},
+        },
+        "refused_because": (
+            "it makes the model WORSE, consistently, in all three seasons. The "
+            "underlying association is absent before any model is fitted: "
+            "among regulars in 2025-26 a <=3.5-day turnaround gives a 0.722 "
+            "start rate against 0.753 at 5-8 days, the club-matches-in-14-days "
+            "cut is flat to three decimals, and the interaction changes SIGN "
+            "between seasons (-0.042, -0.013, +0.019)."),
+        "interaction_never_fired": (
+            "the interaction rung scores identically to the one below it to "
+            "five decimals, because an easy opponent inside a tight block is "
+            "almost never observed in a Premier-League-only archive"),
+    },
+    "ladder_b_load": {
+        "change": "minutes played in the prior 14 days, then consecutive starts",
+        "brier_delta_vs_shipped": {
+            "load": {"2023-24": -0.00089, "2024-25": -0.00107,
+                     "2025-26": -0.00129},
+            "load_plus_streak": {"2023-24": -0.00090, "2024-25": -0.00082,
+                                 "2025-26": -0.00129},
+        },
+        "refused_because": (
+            "real, consistent, and too small. It improves every season and "
+            "clears no bar that was set before it was measured: -0.00129 on "
+            "the test season against a -0.002 rule."),
+        "weight_was_not_the_problem": (
+            "a second stage fitted the blend weight on the two hold-out "
+            "seasons only and applied it ONCE to the untouched test season. "
+            "The grid chose 0.15 -- the same value pre-registered by hand -- "
+            "and the result was unchanged at -0.00129. The refusal is about "
+            "the feature, not the tuning."),
+        "why_it_is_small": (
+            "the univariate association is enormous -- 0.537 / 0.859 / 0.921 "
+            "start rate by 14-day minutes band, replicated across three "
+            "seasons -- but the shipped model already reads `start_rate_r3` "
+            "and `started_lag`, which capture nearly the same thing. This "
+            "measures the MARGINAL contribution, which is what matters."),
+    },
+    "the_finding_that_outlives_the_refusal": (
+        "the archive is Premier League only. A club playing Tuesday in Europe "
+        "and Saturday in the league shows a SEVEN-day gap in this data. So "
+        "ladder A falsifies the PL-internal PROXY and says nothing about "
+        "European congestion -- the fixture that motivated the work is "
+        "invisible to the data that would score it. The conclusion is not "
+        "'congestion does not matter'; it is that congestion is an "
+        "INFORMATION problem before it is a modelling one, and the right "
+        "response is to make the European and cup fixtures visible rather than "
+        "to fit a term on a proxy that cannot see them."),
+    "reproduce": "PYTHONPATH=src python scripts/run_congestion_ablation.py",
+}
+
+
 #: Phase 2A.4 -- MEASURED AND REFUSED, 2026-09-02.
 #:
 #: After Release A the START PROBABILITY beats every baseline at every horizon.
@@ -1603,6 +1683,10 @@ def minutes_report(
         "candidate_fix": MINUTES_CANDIDATE_FIX,
         "limitations": MINUTES_LIMITATIONS,
         "verdict": MINUTES_VERDICT,
+        # A refusal nobody can read is indistinguishable from never having
+        # looked, which is why the refusals travel with the evidence.
+        "congestion_refused": CONGESTION_REFUSED,
+        "minutes_shape_refused": MINUTES_SHAPE_REFUSED,
         "live_audit": LIVE_GW1_START_AUDIT,
     }
 
