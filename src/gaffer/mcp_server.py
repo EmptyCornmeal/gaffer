@@ -443,6 +443,39 @@ def gaffer_status() -> dict[str, Any]:
 
 
 
+def _evidence_expand(compact: Any) -> dict[str, Any] | None:
+    """Re-attach the evidence text the artifact could not afford to repeat.
+
+    `players.json` carries the share and the name of the largest weak
+    component for all 626 players; the prose behind each status is identical
+    for every one of them and lives in one place. A single-player response can
+    afford the sentence, so it gets it.
+    """
+    # Imported here, not at module scope: this server reads artifacts and is
+    # deliberately light on model imports. The table is a constant.
+    from gaffer.model.projection import COMPONENT_EVIDENCE
+
+    if not isinstance(compact, dict):
+        return None
+    name = compact.get("largest_weak_component")
+    meta = COMPONENT_EVIDENCE.get(name) if name else None
+    out: dict[str, Any] = {
+        "weak_evidence_share": compact.get("weak_evidence_share"),
+        "means": ("the share of this projection contributed by components "
+                  "Gaffer has measured and found wanting. It is a statement "
+                  "about EVIDENCE, not a confidence: it does not say how "
+                  "likely the number is to be right."),
+    }
+    if meta is not None:
+        out["largest_weak_component"] = {
+            "component": name,
+            "status": meta["status"],
+            "evidence": meta["evidence"],
+            "measured_in": meta["where"],
+        }
+    return out
+
+
 def get_weekly_decision() -> dict[str, Any]:
     """This week's single action, with the hold comparison behind it."""
     meta = _meta()
@@ -472,6 +505,12 @@ def get_weekly_decision() -> dict[str, Any]:
         comparison=dec.get("comparison"),
         executability=dec.get("executability"),
         chip=_thin_chips(d.get("chip")),
+        # 4.2 -- what the recommendation rests on. Read this before arguing
+        # with the number: a verdict that turns on the clean-sheet term is a
+        # different kind of claim from one that turns on appearances.
+        evidence_quality=dec.get("evidence_quality") or {
+            "available": False,
+            "reason": "this decision predates evidence-quality reporting"},
         # 3.3/3.7 -- what this move does to each named rival, beside what it
         # does to expected points. Trimmed to the three closest contests: they
         # are ordered by the change in P(ahead of him), so what is dropped is
@@ -1028,6 +1067,10 @@ def _outlook(row: dict[str, Any], components: dict[str, Any] | None = None,
         "ep_next_xp": row.get("ep_next_xp"),
         # Sums to `model_xp`, never to the blend.
         "breakdown": row.get("breakdown"),
+        # 4.3 -- how well evidenced this number is. NOT a confidence: it says
+        # what share of the projection comes from components Gaffer has itself
+        # measured and found wanting, not how likely the number is to be right.
+        "evidence_quality": _evidence_expand(row.get("evidence_quality")),
         "blend_weight_nominal": config.EP_NEXT_BLEND_WEIGHT,
         "blend_is_fitted": config.EP_NEXT_BLEND_IS_FITTED,
     }

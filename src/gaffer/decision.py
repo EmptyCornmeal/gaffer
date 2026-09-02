@@ -239,6 +239,11 @@ class Decision:
     #: objectives and the reader is entitled to see the trade rather than
     #: inherit somebody's weighting of it.
     league_effects: list[dict[str, Any]] = field(default_factory=list)
+    #: 4.2 -- what this recommendation RESTS ON: the share of the XI's
+    #: projected points contributed by components Gaffer has measured and found
+    #: wanting. Not a confidence: it says how well evidenced the number is, not
+    #: how likely the recommendation is to be right.
+    evidence_quality: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         d = {k: v for k, v in asdict(self).items()

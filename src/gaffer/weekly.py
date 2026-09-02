@@ -309,6 +309,8 @@ def build(
         comparison=cmp_, executability=exe if is_transfer else None,
         chip=chip, league_note=league_note,
         league_effects=league_effects,
+        evidence_quality=_squad_evidence(
+            conn, move_xi if is_transfer else hold["starting"]),
         confidence=decision.confidence_band(cmp_),
         biggest_risk=risk,
         assumptions=_assumptions(conn, scen, horizon, hold, held),
@@ -361,6 +363,58 @@ def _headline(
     ins = ", ".join(_name(conn, p) for p in mv["transfers_in"])
     hit = f" (-{exe.paid_transfers * config.HIT_COST})" if exe.paid_transfers else ""
     return f"{outs} → {ins}{hit} — captain {_name(conn, mv['captain'])}"
+
+
+def _squad_evidence(
+    conn: sqlite3.Connection, starting: list[int],
+) -> dict[str, Any]:
+    """Evidence quality for the eleven this decision actually recommends.
+
+    4.2. Summed across the XI rather than averaged: a defender whose number is
+    mostly clean sheet contributes his weak share in proportion to how much of
+    the total he is, which is what a reader of the total needs to know.
+
+    Returns a stated absence rather than a zero when the components cannot be
+    read -- an unmeasured projection is not a well-evidenced one.
+    """
+    if not starting:
+        return {"available": False, "reason": "no XI to describe"}
+    if conn is None:
+        # The decision can be built without a database (tests, and any caller
+        # working from an already-solved squad). Say so rather than reporting
+        # a zero weak share, which would read as "nothing here is shaky".
+        return {"available": False, "reason": "no database to read components from"}
+    cols = ("exp_appearance", "exp_goal_pts", "exp_assist_pts", "exp_cs_pts",
+            "exp_defcon_pts", "exp_bonus_pts", "exp_saves_pts",
+            "exp_conceded_pts", "exp_cards_pts", "exp_misc_pts")
+    gw = _int_meta(conn, "projection_event") or _int_meta(conn, "current_gw")
+    placeholders = ",".join("?" * len(starting))
+    try:
+        rows = conn.execute(
+            f"SELECT {', '.join(cols)} FROM projections "
+            f"WHERE gw = ? AND player_id IN ({placeholders})",
+            (gw, *starting)).fetchall()
+    except sqlite3.Error:
+        return {"available": False, "reason": "projection components unreadable"}
+    if not rows:
+        return {"available": False,
+                "reason": f"no stored components for GW{gw}"}
+    total: dict[str, float] = {}
+    for r in rows:
+        total["appearance"] = total.get("appearance", 0.0) + (r["exp_appearance"] or 0.0)
+        total["goals"] = total.get("goals", 0.0) + (r["exp_goal_pts"] or 0.0)
+        total["assists"] = total.get("assists", 0.0) + (r["exp_assist_pts"] or 0.0)
+        total["clean_sheet"] = total.get("clean_sheet", 0.0) + (r["exp_cs_pts"] or 0.0)
+        total["defcon"] = total.get("defcon", 0.0) + (r["exp_defcon_pts"] or 0.0)
+        total["bonus"] = total.get("bonus", 0.0) + (r["exp_bonus_pts"] or 0.0)
+        total["saves"] = total.get("saves", 0.0) + (r["exp_saves_pts"] or 0.0)
+        total["other"] = total.get("other", 0.0) + ((r["exp_conceded_pts"] or 0.0)
+                                                    + (r["exp_cards_pts"] or 0.0)
+                                                    + (r["exp_misc_pts"] or 0.0))
+    eq = projection.evidence_quality(total)
+    eq["players_scored"] = len(rows)
+    eq["of_xi"] = len(starting)
+    return eq
 
 
 def _league_effects(

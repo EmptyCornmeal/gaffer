@@ -242,6 +242,26 @@ def _defcon_view(
     }
 
 
+def _evidence_compact(breakdown: dict[str, float] | None) -> dict[str, Any] | None:
+    """Evidence quality reduced to what a player row can carry.
+
+    The share, the largest weak component and its status. Nothing that repeats
+    per player: the prose behind each status is identical for all 626 of them
+    and belongs in one place.
+    """
+    from gaffer.model.projection import evidence_quality
+
+    eq = evidence_quality(breakdown)
+    if not eq.get("available"):
+        return None
+    biggest = eq.get("largest_weak_component") or {}
+    return {
+        "weak_evidence_share": eq["weak_evidence_share"],
+        "largest_weak_component": biggest.get("component"),
+        "largest_weak_status": biggest.get("status"),
+    }
+
+
 def build_players(
     conn: sqlite3.Connection,
     from_gw: int,
@@ -347,6 +367,11 @@ def build_players(
                 "p_start": round(r["p_start"], 2) if r["p_start"] is not None else 0.0,
                 "confidence": round(r["confidence"], 2) if r["confidence"] is not None else 0.0,
                 "xmins_badge": xmins_badge(r["exp_minutes"] or 0, r["p_start"] or 0),
+                # 4.2 -- how much of this number rests on components Gaffer has
+                # itself measured and found wanting. COMPACT here: the share and
+                # the name of the largest offender. The full evidence text is
+                # one lookup away in `projection.COMPONENT_EVIDENCE` and on the
+                # Model page, and 626 copies of it would not fit anywhere.
                 "rationale": player_rationale(rat_input),
                 "tags": player_tags(rat_input),
                 "fixtures": fixtures,
@@ -375,6 +400,11 @@ def build_players(
                 },
             }
         )
+        # 4.2 -- how much of this number rests on components Gaffer has itself
+        # measured and found wanting. COMPACT: the share and the name of the
+        # largest offender. The prose behind each status is identical for all
+        # 626 players and lives in .
+        out[-1]["evidence_quality"] = _evidence_compact(out[-1]["breakdown"])
     out.sort(key=lambda p: p["next_gw_xp"], reverse=True)
     return out
 

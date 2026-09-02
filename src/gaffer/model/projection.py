@@ -395,6 +395,152 @@ def _availability(status: str | None, chance: int | None) -> float:
     return clamp(base, 0.0, 1.0)
 
 
+# ---------------------------------------------------------------------------
+# 4.2/4.3/4.4 -- EVIDENCE QUALITY
+# ---------------------------------------------------------------------------
+#
+# Gaffer measures which of its own components are unreliable and publishes that
+# on the Model page, then spends them at full confidence everywhere else. The
+# two halves of the product are epistemically disconnected: one page says the
+# clean-sheet term has no measured skill, and the page that prints a number
+# built more than half from it says nothing.
+#
+# This is the wiring between them. Every projection can now say what share of
+# itself comes from components whose skill has been measured and found wanting.
+#
+# NOT "confidence". The share is a statement about EVIDENCE, not about the
+# probability that a recommendation is right: "56% of this projection depends
+# on poorly validated components" and "this recommendation is 44% likely to be
+# correct" are different claims, and conflating them would be a fresh semantic
+# overreach inside the very contract meant to stop them. `confidence` is
+# reserved for the day there is a calibrated probability that a recommendation
+# beats its alternative.
+#
+# THREE-WAY, not binary. "We measured this and it failed" and "we have too
+# little data to know" are different claims, and collapsing them would be a
+# confidence violation in the other direction -- treating absence of proof as
+# proof of failure. This mirrors the calibration ledger's own `reportable`
+# discipline, which already refuses to grade what it cannot.
+SUPPORTED = "supported"
+WEAK_OR_FAILED = "weak_or_failed"
+INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+
+#: What is known about each component of a projection, and where it was
+#: measured. A POLICY table, not a fitted one -- the statuses come from
+#: measurements recorded in `backtest.py`, and this names them so a projection
+#: can carry its own provenance.
+COMPONENT_EVIDENCE: dict[str, dict[str, str]] = {
+    "appearance": {
+        "status": SUPPORTED,
+        "evidence": ("h=1 Brier 0.086 against 0.099 for the best naive "
+                     "baseline after Phase 2A; beats every baseline at every "
+                     "horizon on Brier and AUC"),
+        "where": "backtest.minutes_model",
+    },
+    "goals": {
+        "status": SUPPORTED,
+        "evidence": ("carried by the points model, which beats the naive "
+                     "baseline on h=1 MAE (1.048 against 1.075)"),
+        "where": "backtest.per_horizon",
+    },
+    "assists": {
+        "status": SUPPORTED,
+        "evidence": "as goals; the same rate machinery and the same test",
+        "where": "backtest.per_horizon",
+    },
+    "clean_sheet": {
+        "status": WEAK_OR_FAILED,
+        "evidence": ("Brier 0.1899 against a league base rate of 0.1901 -- "
+                     "barely distinguishable from quoting the base rate to "
+                     "everybody -- and over-confident above 0.35, where a "
+                     "claimed 0.49 realises 0.29. A reconciled two-pass "
+                     "alternative was built and measured and lost on the "
+                     "decision metric"),
+        "where": "backtest.CLEAN_SHEET_CONTRADICTION",
+    },
+    "defcon": {
+        "status": INSUFFICIENT_EVIDENCE,
+        "evidence": ("2025-26 is the only season in the archive with a "
+                     "defensive-contribution column, so this component has "
+                     "been measured exactly once. One season is one season"),
+        "where": "backtest.limitations",
+    },
+    "bonus": {
+        "status": INSUFFICIENT_EVIDENCE,
+        "evidence": ("a proxy for BPS, never scored against realised bonus on "
+                     "its own; it is blended with history and the blend has no "
+                     "separate measurement"),
+        "where": "projection._bonus",
+    },
+    "saves": {
+        "status": INSUFFICIENT_EVIDENCE,
+        "evidence": "no separate measurement exists for the saves term",
+        "where": "-",
+    },
+    "other": {
+        "status": INSUFFICIENT_EVIDENCE,
+        "evidence": "cards, own goals and penalties; small, and never measured apart",
+        "where": "-",
+    },
+}
+
+#: Components whose share is reported as weak evidence. A DECLARED POLICY
+#: CHOICE, exactly like `EP_NEXT_BLEND_WEIGHT` and the minimum-actionable
+#: thresholds, and labelled as one wherever it is published: nothing fitted it.
+WEAK_EVIDENCE_STATUSES = (WEAK_OR_FAILED, INSUFFICIENT_EVIDENCE)
+
+
+def evidence_quality(breakdown: dict[str, float] | None) -> dict[str, Any]:
+    """What share of this projection rests on components measured and wanting.
+
+    Reads the published breakdown, so it describes the number actually shown
+    rather than a re-derivation of it. Negative components (the `other` term is
+    routinely negative) are taken by magnitude: a term that subtracts a point
+    is as much of the answer as one that adds it.
+    """
+    if not isinstance(breakdown, dict) or not breakdown:
+        return {"available": False,
+                "reason": "no component breakdown was published"}
+    total = sum(abs(float(v or 0.0)) for v in breakdown.values())
+    if total <= 0:
+        return {"available": False, "reason": "the projection is entirely zero"}
+    by_status: dict[str, float] = {}
+    unknown: list[str] = []
+    for name, value in breakdown.items():
+        meta = COMPONENT_EVIDENCE.get(name)
+        if meta is None:
+            unknown.append(name)
+            status = INSUFFICIENT_EVIDENCE
+        else:
+            status = meta["status"]
+        by_status[status] = by_status.get(status, 0.0) + abs(float(value or 0.0))
+    weak = sum(by_status.get(k, 0.0) for k in WEAK_EVIDENCE_STATUSES)
+    out: dict[str, Any] = {
+        "available": True,
+        "weak_evidence_share": round(weak / total, 4),
+        "share_by_status": {k: round(v / total, 4) for k, v in by_status.items()},
+        "largest_weak_component": None,
+        "policy": ("which statuses count as weak evidence is a DECLARED POLICY "
+                   "CHOICE, not a fitted threshold; the statuses themselves "
+                   "come from measurements recorded in backtest.py"),
+    }
+    weak_parts = {
+        n: abs(float(v or 0.0)) for n, v in breakdown.items()
+        if COMPONENT_EVIDENCE.get(n, {}).get("status", INSUFFICIENT_EVIDENCE)
+        in WEAK_EVIDENCE_STATUSES
+    }
+    if weak_parts:
+        biggest = max(weak_parts, key=lambda k: weak_parts[k])
+        out["largest_weak_component"] = {
+            "component": biggest,
+            "share": round(weak_parts[biggest] / total, 4),
+            **COMPONENT_EVIDENCE.get(biggest, {}),
+        }
+    if unknown:
+        out["unrecognised_components"] = sorted(unknown)
+    return out
+
+
 def _start_prior(position: str, price: int) -> float:
     """Fallback start probability for players with no usable PL history.
 
