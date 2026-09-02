@@ -132,8 +132,12 @@ def _league_block(
         scen, state, starting, captain, target=target,
         gameweeks_remaining=gws_remaining, gameweek=getattr(scen, "gameweek", None),
     )
+    # 3.1/3.2 -- the rival-by-rival contest, under the SAME scenarios as the
+    # placing probabilities, so the two can never disagree about the football.
+    gaps = LG.rival_gaps(scen, state, starting, captain)
     return ML.build_view(
-        state, list(starting) + [], captain, placing, gws_remaining, target
+        state, list(starting) + [], captain, placing, gws_remaining, target,
+        rival_gaps=gaps,
     )
 
 
@@ -486,6 +490,11 @@ def build(
         },
         "leagues": [v.as_dict() for v in views],
         "league_errors": errors,
+        # 3.3 -- the live LeagueState objects, for callers in the same process
+        # that need to score a candidate move against each rival. Underscored
+        # and stripped before publishing: it is not artifact data, and the
+        # contract would reject an unknown key that carried Python objects.
+        "_states": states,
         "options": [o.as_dict() for o in options],
         "resolution": resolution,
         "chips": chips,

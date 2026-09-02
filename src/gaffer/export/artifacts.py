@@ -755,6 +755,11 @@ def build_strategy(
     """
     idx = {p["id"]: p for p in players_index}
     out = dict(strategy)
+    # 3.3 -- in-process handles never reach an artifact.  carries live
+    # LeagueState objects for callers in the same run; they are not JSON and are
+    # not data anyone should read from a file.
+    for private in [k for k in out if str(k).startswith("_")]:
+        out.pop(private, None)
     out["generated_at"] = generated_at or strategy.get("generated_at") or run_timestamp()
 
     squad = dict(strategy.get("squad") or {})

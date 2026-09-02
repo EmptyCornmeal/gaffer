@@ -233,6 +233,12 @@ class Decision:
     biggest_risk: str = ""
     assumptions: list[str] = field(default_factory=list)
     candidate_move: CandidateMove | None = None
+    #: 3.3/3.7 -- what this move does to each named rival's contest, beside
+    #: what it does to expected points. Rival-optimal and rank-optimal are
+    #: shown SEPARATELY and never merged into one score: they are different
+    #: objectives and the reader is entitled to see the trade rather than
+    #: inherit somebody's weighting of it.
+    league_effects: list[dict[str, Any]] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
         d = {k: v for k, v in asdict(self).items()

@@ -13,6 +13,7 @@ rendered as "owns nothing".
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -362,6 +363,255 @@ def shields_and_differentials(
 #: A placing probability that could not be computed. Consumers must render this
 #: as "unknown" — never as a number, and above all never as 100%.
 BASIS_UNAVAILABLE = "unavailable"
+
+
+@dataclass
+class RivalGap:
+    """The distribution of ``my score minus his``, for ONE named rival.
+
+    3.1/3.2. Maximising expected points and maximising the chance of finishing
+    above a particular person are different optimisation problems, and the
+    difference is the whole reason a mini-league is not the overall game.
+    Gaffer optimised the first and reported the second; this is the quantity
+    the second is actually about.
+
+    ``D = S_mine - S_rival`` is evaluated under the SHARED scenarios, so a goal
+    that helps one of us is the same goal in the same simulated match. That
+    matters more than it sounds: two independently drawn distributions would
+    exaggerate the variance of the difference by roughly the amount the two
+    squads have in common, which in a seven-person league is most of it.
+
+    DOMAIN: next gameweek only. ``gap`` is the season points already banked and
+    is added as a constant, so ``p_above`` is "will I be ahead of him after
+    this gameweek" -- NOT "will I finish above him", which needs a model of the
+    remaining season that does not exist. See `league.py`'s naming and the
+    `domain` block published beside every figure.
+    """
+
+    entry_id: int
+    name: str
+    #: Season points already banked, mine minus his, before this gameweek.
+    gap: float
+    #: Mean and spread of the DIFFERENCE, this gameweek only.
+    mean: float
+    std: float
+    #: P(I am ahead of him after this gameweek).
+    p_above: float
+    #: Monte-Carlo 95% interval on `p_above` -- simulation error, not football.
+    p_above_ci95: tuple[float, float]
+    n_sims: int
+    #: How many of his fifteen I also own. Shared players cancel in D.
+    overlap: int
+    #: True when his squad was never published, so the comparison is a
+    #: distribution rather than a team.
+    inferred: bool = False
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "entry_id": self.entry_id,
+            "name": self.name,
+            "points_gap": round(self.gap, 1),
+            "difference_mean": round(self.mean, 2),
+            "difference_std": round(self.std, 2),
+            "p_above_after_gw": round(self.p_above, 4),
+            "p_above_ci95": [round(self.p_above_ci95[0], 4),
+                             round(self.p_above_ci95[1], 4)],
+            "p_above_ci95_interval_type": "monte_carlo",
+            "simulations": self.n_sims,
+            "squad_overlap": self.overlap,
+            "squad_inferred": self.inferred,
+            "domain": {
+                "horizon": "next_gameweek",
+                "measures": ("whether you are ahead of this manager once the "
+                             "next gameweek has been played, not at the end of "
+                             "the season"),
+            },
+        }
+
+
+def _wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """A 95% interval on a simulated proportion.
+
+    Wilson rather than the normal approximation: `p_above` is routinely near 0
+    or 1 in a seven-person league, and the normal interval there runs outside
+    [0, 1] and is narrow exactly where it should be widest.
+    """
+    if n <= 0:
+        return (0.0, 1.0)
+    phat = k / n
+    denom = 1.0 + z * z / n
+    centre = (phat + z * z / (2 * n)) / denom
+    half = (z * math.sqrt(phat * (1 - phat) / n + z * z / (4 * n * n))) / denom
+    return (max(0.0, centre - half), min(1.0, centre + half))
+
+
+def rival_gaps(
+    scen: Any, state: LeagueState, my_starting: list[int],
+    my_captain: int | None, *, rng_seed: int = 11,
+) -> list[RivalGap]:
+    """``D = mine - his`` for every rival, under one shared set of scenarios.
+
+    Sorted by how close the contest is -- smallest absolute expected margin
+    first -- because the rival who is nearly level is the one a decision can
+    actually move, and the one twenty points clear is not.
+    """
+    out: list[RivalGap] = []
+    n = int(getattr(scen, "n_sims", 0) or 0)
+    if n == 0 or not state.rivals:
+        return out
+    me = state.my_entry
+    my_total = float(me.total) if me else 0.0
+    mine = scen.squad_points(my_starting, captain=my_captain)
+    my_set = set(my_starting)
+    rng = np.random.default_rng(rng_seed)
+
+    for r in state.rivals:
+        if r.has_picks:
+            theirs = scen.squad_points(r.starting, captain=r.captain)
+            overlap = len(my_set & set(r.starting))
+            inferred = False
+        else:
+            # No published squad. Carrying him at his current points would say
+            # he scores nothing, which is a stronger claim than "we cannot see
+            # his team". A distribution centred on our own mean is the honest
+            # stand-in, and `inferred` says the row is one.
+            theirs = np.asarray(mine).mean() + rng.normal(0.0, 12.0, n)
+            overlap = 0
+            inferred = True
+        gap = my_total - (float(r.total) - r.hits)
+        diff = np.asarray(mine) - np.asarray(theirs) + gap
+        k = int((diff > 0).sum())
+        out.append(RivalGap(
+            entry_id=int(r.entry_id), name=str(r.manager or r.entry_name), gap=gap,
+            mean=float(diff.mean()), std=float(diff.std()),
+            p_above=k / n, p_above_ci95=_wilson(k, n), n_sims=n,
+            overlap=overlap, inferred=inferred,
+        ))
+    out.sort(key=lambda g: abs(g.mean))
+    return out
+
+
+@dataclass
+class MoveEffect:
+    """What one candidate move does to the contest with ONE named rival.
+
+    3.3/3.4/3.11. Expected points is one axis and it is not the objective in a
+    mini-league; this carries the others beside it so a trade is visible rather
+    than implied.
+    """
+
+    entry_id: int
+    name: str
+    d_expected_points: float
+    d_p_above: float
+    d_p_above_ci95: tuple[float, float]
+    d_variance_of_gap: float
+    p_above_before: float
+    p_above_after: float
+    n_sims: int
+
+    @property
+    def resolved(self) -> bool:
+        """False when the paired interval spans zero: the moves are tied.
+
+        3.11. With 2,000 scenarios an ordinary probability carries about a
+        point of simulation error, so a recommendation resting on 62.1% against
+        63.0% is resting on noise. Saying "tied" is `certainty earned` as
+        arithmetic rather than as a slogan.
+        """
+        lo, hi = self.d_p_above_ci95
+        return not (lo <= 0.0 <= hi)
+
+    @property
+    def variance_reduction_per_point(self) -> float | None:
+        """Variance of the gap removed per expected point given up.
+
+        A DIAGNOSTIC, never the ranking. As a ranking it misbehaves exactly
+        where covering decisions live: the ratio explodes as the sacrifice
+        approaches zero, it is meaningless when the cover is also the better
+        points pick (a negative sacrifice), and the largest variance reduction
+        need not be the largest gain in the probability of finishing above him.
+        The objective-aligned quantity is `d_p_above`, and that is what ranks.
+        """
+        sacrifice = -self.d_expected_points
+        if sacrifice <= 0.05:
+            return None
+        return round((-self.d_variance_of_gap) / sacrifice, 3)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "entry_id": self.entry_id,
+            "name": self.name,
+            "d_expected_points": round(self.d_expected_points, 3),
+            "d_p_above": round(self.d_p_above, 4),
+            "d_p_above_ci95": [round(self.d_p_above_ci95[0], 4),
+                               round(self.d_p_above_ci95[1], 4)],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": self.resolved,
+            "p_above_before": round(self.p_above_before, 4),
+            "p_above_after": round(self.p_above_after, 4),
+            "d_variance_of_gap": round(self.d_variance_of_gap, 3),
+            "variance_reduction_per_point_given_up":
+                self.variance_reduction_per_point,
+            "simulations": self.n_sims,
+            "domain": {"horizon": "next_gameweek"},
+        }
+
+
+def move_effects(
+    scen: Any, state: LeagueState,
+    hold_starting: list[int], hold_captain: int | None,
+    move_starting: list[int], move_captain: int | None,
+    *, hit_cost: float = 0.0,
+) -> list[MoveEffect]:
+    """Per rival: what this move does to `P(I am ahead of him)`.
+
+    PAIRED, and that is the point. The same scenario set scores the hold and
+    the move, so the difference is taken WITHIN each simulated week and its
+    interval comes from the distribution of those differences. Combining two
+    marginal intervals instead would be far too wide -- most scenarios agree
+    about who is ahead, and the disagreement is the whole signal -- and would
+    report real edges as ties.
+    """
+    out: list[MoveEffect] = []
+    n = int(getattr(scen, "n_sims", 0) or 0)
+    if n == 0 or not state.rivals:
+        return out
+    me = state.my_entry
+    my_total = float(me.total) if me else 0.0
+    hold = np.asarray(scen.squad_points(hold_starting, captain=hold_captain))
+    move = np.asarray(scen.squad_points(move_starting, captain=move_captain))
+    move = move - float(hit_cost)
+
+    for r in state.rivals:
+        if not r.has_picks:
+            continue
+        theirs = np.asarray(scen.squad_points(r.starting, captain=r.captain))
+        gap = my_total - (float(r.total) - r.hits)
+        d_hold = hold - theirs + gap
+        d_move = move - theirs + gap
+        ahead_hold = (d_hold > 0).astype(np.float64)
+        ahead_move = (d_move > 0).astype(np.float64)
+        per_scenario = ahead_move - ahead_hold
+        mean = float(per_scenario.mean())
+        # Standard error of the PAIRED difference. Scenarios where both agree
+        # contribute exactly zero, which is why this is tight.
+        se = float(per_scenario.std(ddof=1) / math.sqrt(n)) if n > 1 else 0.0
+        out.append(MoveEffect(
+            entry_id=int(r.entry_id), name=str(r.manager or r.entry_name),
+            d_expected_points=float(move.mean() - hold.mean()),
+            d_p_above=mean,
+            d_p_above_ci95=(mean - 1.96 * se, mean + 1.96 * se),
+            d_variance_of_gap=float(d_move.var() - d_hold.var()),
+            p_above_before=float(ahead_hold.mean()),
+            p_above_after=float(ahead_move.mean()),
+            n_sims=n,
+        ))
+    # 3.4 -- ranked on the OBJECTIVE-aligned quantity. The rival whose contest
+    # this move moves most is the one worth naming first, and an unresolved
+    # delta ranks below every resolved one however large its point estimate.
+    out.sort(key=lambda e: (e.resolved, abs(e.d_p_above)), reverse=True)
+    return out
 
 
 @dataclass

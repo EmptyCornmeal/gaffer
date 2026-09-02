@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from gaffer import config, decision, snapshots
+from gaffer import league as LG
 from gaffer.model import projection
 from gaffer.model import scenarios as SC
 from gaffer.solver import objective as OBJ
@@ -277,6 +278,11 @@ def build(
 
     headline = _headline(conn, action, mv, captain, exe)
     league_note = _league_note(strategy)
+    # 3.3 -- the same move, scored against each named rival rather than only
+    # against expected points. Paired inside the shared scenarios, so a delta
+    # that cannot be resolved from 2,000 draws says so instead of being ranked.
+    league_effects = _league_effects(
+        conn, scen, strategy, hold, mv, hit_cost, is_transfer)
     chip = (strategy or {}).get("chips")
 
     if candidate is not None:
@@ -302,6 +308,7 @@ def build(
         bench=list(mv["bench"]) if is_transfer else hold["bench"],
         comparison=cmp_, executability=exe if is_transfer else None,
         chip=chip, league_note=league_note,
+        league_effects=league_effects,
         confidence=decision.confidence_band(cmp_),
         biggest_risk=risk,
         assumptions=_assumptions(conn, scen, horizon, hold, held),
@@ -354,6 +361,49 @@ def _headline(
     ins = ", ".join(_name(conn, p) for p in mv["transfers_in"])
     hit = f" (-{exe.paid_transfers * config.HIT_COST})" if exe.paid_transfers else ""
     return f"{outs} → {ins}{hit} — captain {_name(conn, mv['captain'])}"
+
+
+def _league_effects(
+    conn: sqlite3.Connection, scen: Any, strategy: dict[str, Any] | None,
+    hold: dict[str, Any], mv: dict[str, Any], hit_cost: float,
+    is_transfer: bool,
+) -> list[dict[str, Any]]:
+    """Per league, what the candidate move does to each rival's contest.
+
+    Returns an empty list rather than raising when the league layer is absent,
+    a squad is unreadable, or the move is a roll: an absent answer is a real
+    answer and an invented one is not.
+    """
+    if scen is None or not strategy:
+        return []
+    states = strategy.get("_states") or []
+    if not states:
+        return []
+    out: list[dict[str, Any]] = []
+    for st in states:
+        try:
+            effects = LG.move_effects(
+                scen, st,
+                hold_starting=list(hold["starting"]), hold_captain=hold["captain"],
+                move_starting=list(mv["starting"]), move_captain=mv["captain"],
+                hit_cost=hit_cost,
+            )
+        except Exception:  # noqa: BLE001 - never lose a decision to this
+            continue
+        if not effects:
+            continue
+        out.append({
+            "league_id": getattr(st, "league_id", None),
+            "name": getattr(st, "name", ""),
+            "move_is_the_recommendation": is_transfer,
+            "rivals": [e.as_dict() for e in effects],
+            "note": ("Ranked by the change in P(you finish ahead of him after "
+                     "this gameweek), not by expected points, and not by the "
+                     "variance ratio -- that is published beside it as a "
+                     "diagnostic. A delta whose paired interval spans zero is "
+                     "marked unresolved and ranks below every resolved one."),
+        })
+    return out
 
 
 def _league_note(strategy: dict[str, Any] | None) -> str:

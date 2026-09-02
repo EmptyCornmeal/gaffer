@@ -169,6 +169,10 @@ class LeagueView:
     shields: list[dict[str, Any]]
     differentials: list[dict[str, Any]]
     data_quality: dict[str, Any]
+    #: 3.1/3.2 -- one row per named rival: the distribution of my score minus
+    #: his, and P(I am ahead of him after this gameweek). Defaulted so a view
+    #: built by an older caller is still constructible.
+    rival_gaps: list[dict[str, Any]] = field(default_factory=list)
     differs_from_neutral: bool = False
     difference_reason: str = ""
     #: Players your rivals own and you do not, and how much of the league
@@ -187,6 +191,7 @@ class LeagueView:
             "threats": self.threats,
             "my_captain_eo_pct": self.my_captain_eo_pct,
             "data_quality": self.data_quality,
+            "rival_gaps": self.rival_gaps,
             "differs_from_neutral": self.differs_from_neutral,
             "difference_reason": self.difference_reason,
         }
@@ -195,6 +200,7 @@ class LeagueView:
 def build_view(
     state: LG.LeagueState, my_squad: list[int], my_captain: int | None,
     placing: LG.PlacingResult, gameweeks_remaining: int, target: int,
+    rival_gaps: list | None = None,
 ) -> LeagueView:
     """Assemble one league's public view. No other league's data enters here."""
     sd = LG.shields_and_differentials(state, my_squad, my_captain)
@@ -215,6 +221,10 @@ def build_view(
         league_type=state.league_type, classification=state.classification,
         size=state.size, target=target, posture=p.as_dict(),
         placing=placing.as_dict(), shields=sd["shields"],
+        # 3.1/3.2 -- the contest, one row per named rival. `placing` answers
+        # "where do I finish"; this answers "am I ahead of HIM", which is the
+        # question actually asked and a different optimisation problem.
+        rival_gaps=[g.as_dict() for g in (rival_gaps or [])],
         differentials=sd["differentials"], threats=sd["threats"],
         my_captain_eo_pct=sd["my_captain_eo_pct"],
         data_quality=state.data_quality(),
