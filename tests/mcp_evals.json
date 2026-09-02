@@ -39,12 +39,15 @@
         "get_weekly_decision"
       ],
       "require_fields": [
-        "action",
-        "headline",
-        "reason",
-        "confidence",
-        "biggest_risk",
-        "threshold_status"
+        "card.recommendation.action",
+        "card.recommendation.headline",
+        "card.recommendation.reason",
+        "card.strength.label",
+        "card.sensitivity.biggest_risk",
+        "card.strength.basis",
+        "card.margin.interval_type",
+        "card.margin.realistic_range_interval_type",
+        "card.content_hash"
       ],
       "allowed_statuses": [
         "ok",
@@ -61,16 +64,18 @@
         "get_weekly_decision"
       ],
       "require_fields": [
-        "comparison",
-        "threshold_status",
-        "assumptions"
+        "card.margin.value",
+        "card.margin.p_beats_hold",
+        "card.alternatives",
+        "card.strength.min_actionable_points",
+        "card.sensitivity.assumptions"
       ],
       "allowed_statuses": [
         "ok",
         "data_unavailable"
       ],
       "require_facts": {
-        "threshold_status.fitted": false
+        "card.strength.fitted": false
       }
     },
     {
@@ -100,7 +105,8 @@
         "get_weekly_decision"
       ],
       "require_fields": [
-        "biggest_risk",
+        "card.sensitivity.biggest_risk",
+        "card.what_would_change_it",
         "limitations"
       ],
       "allowed_statuses": [

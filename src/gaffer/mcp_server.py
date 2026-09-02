@@ -487,46 +487,54 @@ def get_weekly_decision() -> dict[str, Any]:
         raise ToolError(STATUS_UNAVAILABLE,
                         "no decision has been published for this gameweek")
 
-    def card(p: Any) -> Any:
-        if not isinstance(p, dict):
-            return p
-        return {k: p.get(k) for k in ("id", "name", "team", "pos", "price",
-                                      "next_gw_xp")}
 
+    # 4.5 -- the CANONICAL decision card IS the answer.
+    #
+    # This tool used to compose its own subset of the decision while the site
+    # composed a different one, so "what did Gaffer advise?" had two answers
+    # that could drift apart without a test noticing. It now passes the one
+    # object through verbatim. `card.content_hash` is the same digest the site
+    # renders and the snapshot stored, and `contract._check_card_equality`
+    # proves the three agree rather than assuming it.
+    #
+    # The card supersedes what used to be composed here -- action, headline,
+    # reason, transfers, captain, comparison, executability, confidence,
+    # biggest_risk, assumptions and thresholds are all inside it. Repeating
+    # them beside it would be a second answer to the same question, which is
+    # the Cardinality violation this task exists to close, and it cost 10 kB of
+    # a 20 kB budget to say everything twice.
+    canonical = dec.get("card")
     out = envelope(
         "decision.json", meta, blob=d,
-        action=dec.get("action"),
-        headline=dec.get("headline"),
-        reason=dec.get("reason"),
-        transfers={"out": [card(p) for p in dec.get("transfers_out") or []],
-                   "in": [card(p) for p in dec.get("transfers_in") or []]},
-        captain=card(dec.get("captain")),
-        vice=card(dec.get("vice")),
-        comparison=dec.get("comparison"),
-        executability=dec.get("executability"),
-        chip=_thin_chips(d.get("chip")),
-        # 4.2 -- what the recommendation rests on. Read this before arguing
-        # with the number: a verdict that turns on the clean-sheet term is a
-        # different kind of claim from one that turns on appearances.
-        evidence_quality=dec.get("evidence_quality") or {
+        card=canonical or {
             "available": False,
-            "reason": "this decision predates evidence-quality reporting"},
-        # 3.3/3.7 -- what this move does to each named rival, beside what it
-        # does to expected points. Trimmed to the three closest contests: they
-        # are ordered by the change in P(ahead of him), so what is dropped is
-        # what the move could least affect.
+            "reason": "this decision predates the canonical card"},
+        # Not in the card, because it is not part of the recommendation: this
+        # is the chip module's separate answer.
+        chip=_thin_chips(d.get("chip")),
+        # 3.3/3.7 -- the card carries the league effect summary; this is the
+        # per-rival detail behind it, trimmed to the three closest contests.
+        # They are ordered by the change in P(ahead of him), so what is dropped
+        # is what the move could least affect.
         league_effects=[{**lg, "rivals": (lg.get("rivals") or [])[:3]}
                         for lg in (dec.get("league_effects") or [])],
-        confidence=dec.get("confidence"),
-        biggest_risk=dec.get("biggest_risk"),
-        assumptions=dec.get("assumptions"),
-        threshold_status=dec.get("threshold_status"),
         squad_known=bool((d.get("squad_state") or {}).get("known")),
         limitations=[
-            "The action bar (points and probability) is a policy choice, not a "
-            "fitted parameter — see `threshold_status`.",
+            "The action bar (points and probability) is a policy choice, not "
+            "a fitted parameter — see `card.strength`.",
+            "`card.margin.interval_type` is Monte-Carlo error on the mean "
+            "edge; `card.margin.realistic_range` is the far wider spread of "
+            "football outcomes. They are different quantities.",
         ],
     )
+    # A card that fails its own digest is reported, not silently served: a
+    # reader acting on a card that no longer matches what was stored is
+    # exactly the failure the hash exists to make visible.
+    if canonical:
+        from gaffer import card as card_mod
+        ok, why = card_mod.verify(canonical)
+        if not ok:
+            out["card_integrity"] = {"verified": False, "reason": why}
 
     # A response the client refuses is worth nothing however correct it is, so
     # the levers are pulled in order of what a reader can most afford to lose.

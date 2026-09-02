@@ -9,6 +9,7 @@
   import Icon from '../components/Icon.svelte'
   import Crest from '../components/Crest.svelte'
   import { modelLink } from '../lib/evidence'
+  import DecisionCardView from '../components/DecisionCard.svelte'
 
   let { bundle, onnav, onpick, now = Date.now() }: {
     bundle: Bundle
@@ -269,6 +270,12 @@
             </p>
           {/if}
         </section>
+
+        <!-- 4.5 -- the canonical card. Not a second composition of the same
+             artifact: this renders the object the MCP serves and the snapshot
+             stored, digest and all, so the post-gameweek review scores exactly
+             what was on the screen. -->
+        <DecisionCardView card={body.card} />
 
         <!-- ── versus holding ─────────────────────────────────────── -->
         {#if cmp}

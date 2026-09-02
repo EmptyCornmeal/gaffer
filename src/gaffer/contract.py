@@ -755,6 +755,88 @@ def _check_strategy(
         )
 
 
+def _check_card_equality(data_dir: Path, report: Report) -> None:
+    """4.6 -- the site, the MCP and the snapshot show ONE decision card.
+
+    The card carries a digest of its own body. This recomputes it from the
+    published artifact and compares it against the copy stored in the immutable
+    pre-deadline snapshot for the same gameweek. If a renderer, an exporter or a
+    later edit changed what a surface shows, the two digests part company and
+    this fails.
+
+    That matters for more than tidiness: the post-gameweek review scores the
+    advice as it stood, so a snapshot holding a different card from the one on
+    screen would mean Gaffer grades itself on something the reader never saw.
+
+    Absence is not a violation. A build with no decision, or one whose snapshot
+    has not been written yet, has nothing to disagree about -- but a card that
+    fails its OWN hash is always a violation, because that needs no second
+    surface to be wrong.
+    """
+    from gaffer import card as card_mod
+
+    if not (data_dir / "decision.json").exists():
+        # A build with no weekly decision has no card to disagree about. Which
+        # artifacts must be present is settled elsewhere; reporting the absence
+        # again here would make every set without a decision fail twice.
+        return
+    dec_blob = _load(data_dir, "decision.json", report)
+    if not isinstance(dec_blob, dict):
+        return
+    dec = dec_blob.get("decision")
+    if not isinstance(dec, dict):
+        return
+    published = dec.get("card")
+    if published is None:
+        report.add(Violation(
+            "decision.json", "decision.card", None,
+            "a canonical decision card (4.1); every surface renders this object"))
+        return
+
+    ok, why = card_mod.verify(published)
+    if not ok:
+        report.add(Violation("decision.json", "decision.card", why,
+                             "a card that satisfies its own content hash"))
+        return
+
+    # ...and the stored copy, which is what the review will score.
+    path = data_dir / "state" / "decisions.ndjson"
+    if not path.exists():
+        return
+    gw = published.get("gameweek")
+    stored = None
+    try:
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                payload = row.get("payload") if isinstance(row, dict) else None
+                if not isinstance(payload, dict):
+                    continue
+                if payload.get("gameweek") != gw:
+                    continue
+                got = (payload.get("decision") or {}).get("card")
+                if isinstance(got, dict):
+                    stored = got
+    except OSError:
+        return
+    if stored is None:
+        # A snapshot written before the card existed, or a gameweek whose
+        # deadline passed before this ran. Nothing to disagree about.
+        return
+    if stored.get(card_mod.HASH_FIELD) != published.get(card_mod.HASH_FIELD):
+        report.add(Violation(
+            "decision.json", "decision.card.content_hash",
+            f"artifact {published.get(card_mod.HASH_FIELD)} != "
+            f"snapshot {stored.get(card_mod.HASH_FIELD)}",
+            "the same card on every surface: the review scores what was shown"))
+
+
 def _check_one_canonical_first_move(data_dir: Path, report: Report) -> None:
     """1.5 -- CARDINALITY. Exactly one object may answer "what is the move".
 
@@ -1565,6 +1647,7 @@ def validate(
                 checker(blob)
 
     _check_one_canonical_first_move(data_dir, report)
+    _check_card_equality(data_dir, report)
 
     # --- one season, everywhere ----------------------------------------------
     # T-29: FPL reuses element ids, so an artifact from last season parses

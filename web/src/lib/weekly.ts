@@ -9,6 +9,48 @@
 // Shared
 // ---------------------------------------------------------------------------
 
+/** 4.1 -- one object per weekly decision. Shape mirrors `gaffer.card`. */
+export interface DecisionCard {
+  card_version: string
+  gameweek: number | null
+  recommendation: {
+    action: string
+    headline: string
+    reason: string
+    transfers_out: Array<{ id: number; name: string | null; team: string | null; pos: string | null } | null>
+    transfers_in: Array<{ id: number; name: string | null; team: string | null; pos: string | null } | null>
+    captain: { id: number; name: string | null } | null
+    vice: { id: number; name: string | null } | null
+  }
+  strength?: {
+    label?: string
+    basis?: string
+    fitted?: boolean
+    min_actionable_points?: number
+    min_actionable_probability?: number
+    note?: string
+  }
+  margin?: {
+    available?: boolean
+    reason?: string
+    value?: number
+    ci95?: [number, number]
+    /** 0.3 -- `monte_carlo`: simulation error on the mean edge. */
+    interval_type?: string
+    p_beats_hold?: number
+    /** 0.3 -- `prediction`: the spread of football outcomes. Wider, and it
+        does not shrink when more scenarios are drawn. */
+    realistic_range?: [number, number]
+    realistic_range_interval_type?: string
+    domain?: string
+  }
+  upside?: { available?: boolean; value?: number; means?: string }
+  downside?: { available?: boolean; value?: number; means?: string }
+  what_would_change_it: string[] | { available: false; reason: string }
+  content_hash: string
+  [k: string]: unknown
+}
+
 export interface Card {
   id: number
   name?: string
@@ -98,6 +140,14 @@ export interface DecisionBody {
   league_note: string
   confidence: 'high' | 'medium' | 'low' | 'unknown'
   biggest_risk: string
+  /**
+   * 4.1/4.5 -- the canonical decision card. The same object the MCP serves and
+   * the pre-deadline snapshot stored, carrying a digest of its own body, so
+   * "what did Gaffer advise?" has one answer rather than three compositions of
+   * one artifact. Optional: a decision published before the card existed
+   * renders without it rather than faking one.
+   */
+  card?: DecisionCard
   /**
    * 4.2 -- the share of the recommended XI's projected points contributed by
    * components Gaffer has measured and found wanting. Optional: a decision

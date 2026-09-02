@@ -115,6 +115,22 @@ class Comparison:
     #: turns a clear loss into "too close to call".
     horizon_delta: float | None
     hit_cost: int
+    #: 4.1 -- what the move actually buys and costs, as football rather than as
+    #: simulation error. The 10th and 90th percentiles of the PAIRED per-scenario
+    #: difference: in the worst tenth of weeks this move goes this badly against
+    #: the hold, and in the best tenth it goes this well.
+    #:
+    #: A DIFFERENT QUANTITY FROM `delta_ci95`, and the whole reason §0.3 asks
+    #: every interval to name its type. `delta_ci95` is Monte-Carlo error on the
+    #: mean -- how much of the edge is simulation noise, and it shrinks as the
+    #: draw count rises. This range is the spread of football outcomes and does
+    #: not shrink at all. Confusing them is how a +1.4 edge with a -9 to +12
+    #: realistic range gets published as "+1.4 (±0.3)".
+    #:
+    #: Default None so a comparison built before this existed says nothing
+    #: rather than claiming a zero-width range.
+    delta_p10: float | None = None
+    delta_p90: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -136,6 +152,15 @@ class Comparison:
             # called a "confidence interval on the edge" is the small
             # terminology slip that becomes a confident lie.
             "delta_ci95_interval_type": "monte_carlo",
+            # The other interval, and it is not the same shape of claim.
+            "delta_range_p10_p90": (
+                None if self.delta_p10 is None or self.delta_p90 is None
+                else [round(self.delta_p10, 2), round(self.delta_p90, 2)]),
+            "delta_range_interval_type": "prediction",
+            "delta_range_means": (
+                "the spread of FOOTBALL outcomes for this move against this "
+                "hold, across the same shared scenarios. Unlike delta_ci95 it "
+                "does not shrink when more scenarios are drawn."),
             "domain": {
                 "delta": "the next gameweek only",
                 "horizon_delta": ("gameweeks 2 onward of the planning horizon, "
@@ -290,8 +315,13 @@ def compare(
         else float(move_horizon - hold_horizon - hit_cost))
     n = int(getattr(scen, "n_sims", 0) or 0)
     if n == 0 or not move_xi or not hold_xi:
-        return Comparison(0.0, 0.0, 0.0, (0.0, 0.0), 0.0, n, 0.0,
-                          horizon_delta, hit_cost)
+        # Keyword-constructed: this dataclass has grown fields in the middle
+        # before, and a positional call silently rebinds them when it does.
+        return Comparison(
+            move_expected=0.0, hold_expected=0.0, delta=0.0,
+            delta_ci95=(0.0, 0.0), p_move_beats_hold=0.0, n_sims=n,
+            short_term_delta=0.0, horizon_delta=horizon_delta,
+            hit_cost=hit_cost)
     move = scen.squad_points(move_xi, captain=move_captain) - float(hit_cost)
     hold = scen.squad_points(hold_xi, captain=hold_captain)
     diff = move - hold
@@ -305,6 +335,8 @@ def compare(
         short_term_delta=float(diff.mean()),
         horizon_delta=horizon_delta,
         hit_cost=hit_cost,
+        delta_p10=float(np.percentile(diff, 10)),
+        delta_p90=float(np.percentile(diff, 90)),
     )
 
 

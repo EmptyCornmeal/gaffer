@@ -17,7 +17,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
-from gaffer import config, decision, snapshots
+from gaffer import card, config, decision, snapshots
 from gaffer import league as LG
 from gaffer.model import projection
 from gaffer.model import scenarios as SC
@@ -365,6 +365,30 @@ def _headline(
     return f"{outs} → {ins}{hit} — captain {_name(conn, mv['captain'])}"
 
 
+def _card_player(conn: sqlite3.Connection, pid: Any) -> dict[str, Any] | None:
+    """One player, as the card carries him: identity only.
+
+    Uses `_name`, so a card and a headline disambiguate a shared `web_name`
+    the same way. Two different spellings of the same player across two
+    surfaces is exactly the drift the canonical card exists to end.
+    """
+    if pid is None:
+        return None
+    try:
+        r = conn.execute(
+            "SELECT p.id, p.position, t.short_name AS team "
+            "FROM players p LEFT JOIN teams t ON t.id = p.team_id "
+            "WHERE p.id = ?", (int(pid),)).fetchone()
+    except (sqlite3.Error, TypeError, ValueError):
+        return {"id": pid, "name": None, "team": None, "pos": None}
+    return {
+        "id": int(pid),
+        "name": _name(conn, int(pid)),
+        "team": r["team"] if r else None,
+        "pos": r["position"] if r else None,
+    }
+
+
 def _squad_evidence(
     conn: sqlite3.Connection, starting: list[int],
 ) -> dict[str, Any]:
@@ -525,6 +549,17 @@ def snapshot_payload(
          "stance": (lg.get("posture") or {}).get("stance")}
         for lg in (strategy or {}).get("leagues") or []
     ]
+    # 4.1/4.5 -- the canonical decision card, built ONCE and here.
+    #
+    # This is the single point every surface descends from: the snapshot stores
+    # this dict verbatim, `artifacts.build_decision` is built from this same
+    # payload and passes `card` through untouched, and the MCP reads the
+    # artifact. Three surfaces, one object, one digest -- which is what
+    # `contract._check_card_equality` then proves rather than assumes.
+    dec_dict = dec.as_dict()
+    dec_dict["card"] = card.build(
+        dec_dict, gameweek=from_gw, horizon=horizon,
+        resolve=lambda pid: _card_player(conn, pid))
     return {
         "weekly_version": WEEKLY_VERSION,
         "decision_version": decision.DECISION_VERSION,
@@ -539,7 +574,7 @@ def snapshot_payload(
             "captain": (held or {}).get("captain"),
             "vice": (held or {}).get("vice"),
         },
-        "decision": dec.as_dict(),
+        "decision": dec_dict,
         "versions": {
             "model_version": projection.MODEL_VERSION,
             "objective_version": OBJ.OBJECTIVE_VERSION,

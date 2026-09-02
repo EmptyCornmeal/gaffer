@@ -1,7 +1,7 @@
 {
   "weekly_version": "weekly-1.0",
   "decision_version": "decision-1.0",
-  "generated_at": "2026-09-02T16:47:03+00:00",
+  "generated_at": "2026-09-02T16:55:41+00:00",
   "gameweek": 3,
   "horizon": 6,
   "squad_state": {
@@ -2492,6 +2492,12 @@
       "horizon_delta": 9.23,
       "hit_cost": 4,
       "delta_ci95_interval_type": "monte_carlo",
+      "delta_range_p10_p90": [
+        -6.0,
+        10.0
+      ],
+      "delta_range_interval_type": "prediction",
+      "delta_range_means": "the spread of FOOTBALL outcomes for this move against this hold, across the same shared scenarios. Unlike delta_ci95 it does not shrink when more scenarios are drawn.",
       "domain": {
         "delta": "the next gameweek only",
         "horizon_delta": "gameweeks 2 onward of the planning horizon, where the mean projections are materially weaker than the one-week ones",
@@ -2508,6 +2514,159 @@
       "rationale": "A conservative floor that stops a sub-point projected edge — well inside any honest model's error — from being published as a transfer recommendation. It is not derived from a measurement.",
       "withdrawn_justification": "The original 1.0 was justified by a ~0.76 rank correlation and ~85 legal-XI points per gameweek. Both came from baselines withdrawn in T-26 and are no longer cited.",
       "reassess_after": "~6 completed gameweeks of immutable decision snapshots joined to their reviews — the first sample in which the realised gain from acting on an edge of size x can be measured against holding."
+    },
+    "card": {
+      "card_version": "decision-card-1",
+      "gameweek": 3,
+      "recommendation": {
+        "action": "too_close",
+        "headline": "Too close to call — captain Haaland",
+        "reason": "the move averages +9.2 points but only beats holding in 53% of scenarios — a coin flip with a good-looking mean",
+        "transfers_out": [],
+        "transfers_in": [],
+        "captain": {
+          "id": 411,
+          "name": null,
+          "team": null,
+          "pos": null
+        },
+        "vice": {
+          "id": 426,
+          "name": null,
+          "team": null,
+          "pos": null
+        }
+      },
+      "strength": {
+        "action": "too_close",
+        "label": "high",
+        "basis": "policy",
+        "fitted": false,
+        "min_actionable_points": null,
+        "min_actionable_probability": null,
+        "note": "the bars a move must clear before it is called an action are a conservative policy floor, not a fitted parameter"
+      },
+      "alternatives": [
+        {
+          "option": "hold",
+          "label": "make no transfer",
+          "expected": 59.79,
+          "beaten_by": 1.45
+        }
+      ],
+      "margin": {
+        "available": true,
+        "value": 1.45,
+        "unit": "expected points",
+        "ci95": [
+          1.16,
+          1.74
+        ],
+        "interval_type": "monte_carlo",
+        "interval_means": "simulation error on the mean edge; it shrinks as more scenarios are drawn",
+        "p_beats_hold": 0.526,
+        "measured_in": "2000 shared fixture scenarios",
+        "domain": "the next gameweek only",
+        "realistic_range": [
+          -6.0,
+          10.0
+        ],
+        "realistic_range_interval_type": "prediction"
+      },
+      "horizon": {
+        "gameweeks": 6,
+        "delta": 9.23,
+        "domain": "gameweeks 2 onward of the planning horizon, where the mean projections are materially weaker than the one-week ones"
+      },
+      "cost": {
+        "hit_points": 4,
+        "paid_transfers": null,
+        "free_transfers_before": null,
+        "free_transfers_after": null,
+        "bank_before": null,
+        "bank_after": null,
+        "affordable": null,
+        "note": ""
+      },
+      "upside": {
+        "available": true,
+        "value": 10.0,
+        "means": "in the best tenth of weeks this move beats holding by about this much",
+        "interval_type": "prediction"
+      },
+      "downside": {
+        "available": true,
+        "value": -6.0,
+        "means": "in the worst tenth of weeks this move does this badly against holding -- the hit is already inside the number",
+        "interval_type": "prediction"
+      },
+      "sensitivity": {
+        "available": true,
+        "biggest_risk": "captaincy is the biggest single swing of the week: if Haaland blanks, the gain disappears regardless of the transfer",
+        "assumptions": [
+          "Move and hold are scored in the same 2000 fixture scenarios, with the same projections, objective and team state.",
+          "The hold baseline re-optimises your XI and captain from the squad you already own (source: GW2), so it is the best version of doing nothing.",
+          "Horizon value uses gameweeks 2-6, where Gaffer's mean projections are materially weaker than its one-week ones.",
+          "The bar for calling a move an action (1.0 points and 55% chance of beating the hold) is a conservative policy choice, not a fitted one. It becomes fittable once ~6 gameweeks of decision snapshots and reviews exist."
+        ]
+      },
+      "what_would_change_it": [
+        "captaincy is the biggest single swing of the week: if Haaland blanks, the gain disappears regardless of the transfer"
+      ],
+      "league_effect": [
+        {
+          "league_id": 271619,
+          "name": "Crouch Potatoes",
+          "is_the_recommendation": false,
+          "rivals_measured": 6,
+          "rivals_unresolved": 4,
+          "best_case": {
+            "rival": "Kevin Colling",
+            "d_p_above": 0.031
+          },
+          "worst_case": {
+            "rival": "Nat Stubbs",
+            "d_p_above": -0.0005
+          },
+          "detail": "per-rival detail: get_league_strategy, or the League page"
+        },
+        {
+          "league_id": 733241,
+          "name": "Dale Fantasy Football",
+          "is_the_recommendation": false,
+          "rivals_measured": 23,
+          "rivals_unresolved": 8,
+          "best_case": {
+            "rival": "James Gosling",
+            "d_p_above": 0.07
+          },
+          "worst_case": {
+            "rival": "chris martyn",
+            "d_p_above": -0.0035
+          },
+          "detail": "per-rival detail: get_league_strategy, or the League page"
+        }
+      ],
+      "evidence_quality": {
+        "available": true,
+        "weak_evidence_share": 0.2633,
+        "share_by_status": {
+          "supported": 0.7367,
+          "weak_or_failed": 0.137,
+          "insufficient_evidence": 0.1262
+        },
+        "largest_weak_component": {
+          "component": "clean_sheet",
+          "share": 0.137,
+          "status": "weak_or_failed",
+          "evidence": "Brier 0.1899 against a league base rate of 0.1901 -- barely distinguishable from quoting the base rate to everybody -- and over-confident above 0.35, where a claimed 0.49 realises 0.29. A reconciled two-pass alternative was built and measured and lost on the decision metric",
+          "where": "backtest.CLEAN_SHEET_CONTRADICTION"
+        },
+        "policy": "which statuses count as weak evidence is a DECLARED POLICY CHOICE, not a fitted threshold; the statuses themselves come from measurements recorded in backtest.py",
+        "players_scored": 11,
+        "of_xi": 11
+      },
+      "content_hash": "4b3b9f78600b959e"
     }
   },
   "versions": {
@@ -3007,8 +3166,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-09-02T16:47:03+00:00",
-    "squad_retrieved_at": "2026-09-02T16:47:03+00:00",
+    "generated_at": "2026-09-02T16:55:41+00:00",
+    "squad_retrieved_at": "2026-09-02T16:55:41+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"

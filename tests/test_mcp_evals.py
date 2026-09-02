@@ -67,7 +67,12 @@ def test_eval_case(case):
         return
 
     for field in case.get("require_fields", []):
-        assert field in result, f"{case['id']}: {tool} result lacks {field!r}"
+        # Dotted, because the answer to "what should I do?" is now one
+        # canonical object rather than a dozen sibling keys (4.5). A case that
+        # named a top-level key still reads the same; one that names
+        # `card.strength.label` follows it into the card.
+        assert _dig(result, field) is not _MISSING, (
+            f"{case['id']}: {tool} result lacks {field!r}")
 
     for path, expected in (case.get("require_facts") or {}).items():
         got = _dig(result, path)
