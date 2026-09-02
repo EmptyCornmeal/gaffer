@@ -974,6 +974,21 @@ def build_minutes_evaluation(
                 "mins_avg_td": (player["minutes"] / played) if played else np.nan,
                 "started_lag": float(last_start.get(element, np.nan)),
                 "start_rate_r3": float(rate_r3.get(element, np.nan)),
+                # 2A.3 -- the gate's own INPUTS, so an alternative estimator can
+                # be scored without re-running the projection.
+                #
+                # The shipped gate is `fixtures_played >= 3`, and it binds only
+                # in GW1-3: about 8% of a season. Both candidates ever measured
+                # for it were judged on season averages, where 35 of 38
+                # gameweeks are indifferent to it, so the regime was diluted out
+                # of its own evaluation and the estimator that wins at h=1
+                # (recency) was never a candidate for it at all. Exposing these
+                # four columns is what makes the GW1-3 regime measurable on its
+                # own terms.
+                "fixtures_played": played,
+                "starts_td": float(player["starts"]),
+                "base_starts": float(player["base_starts"]),
+                "price": float(row.get("value") or 0.0),
             }
         coverage["decision_gws"] += 1
         for h in horizons:
