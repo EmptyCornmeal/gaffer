@@ -322,6 +322,19 @@ def chip_timing(
     return profiles, basis, gws[-1], fixtures
 
 
+def _positions(conn) -> dict[int, str]:
+    """player_id -> position, for autosub legality (2B.3).
+
+    A substitution is only legal if the side keeps a goalkeeper, three
+    defenders and a forward, so resolving one needs positions and not just
+    points.
+    """
+    if conn is None:
+        return {}
+    return {int(r["id"]): str(r["position"])
+            for r in conn.execute("SELECT id, position FROM players")}
+
+
 def chip_block(
     client: Any, scen: SC.ScenarioSet, entry_id: int | None, gw: int,
     starting: list[int], bench: list[int], captain: int | None,
@@ -356,7 +369,8 @@ def chip_block(
     if starting:
         if bench:
             evaluations.append(
-                CH.evaluate_bench_boost(scen, starting, bench, captain, gw))
+                CH.evaluate_bench_boost(scen, starting, bench, captain, gw,
+                                        positions=_positions(conn)))
         if captain is not None:
             evaluations.append(CH.evaluate_triple_captain(scen, starting, captain, gw))
         if free_sol is not None and free_sol.starting:

@@ -204,18 +204,42 @@ def _ci(diff: np.ndarray) -> tuple[float, float]:
 
 
 def evaluate_bench_boost(scen: Any, starting: list[int], bench: list[int],
-                         captain: int | None, gw: int) -> ChipEvaluation:
-    """All 15 score. The gain is exactly the bench, in the same scenarios."""
-    base = scen.squad_points(starting, captain=captain)
+                         captain: int | None, gw: int,
+                         positions: dict[int, str] | None = None) -> ChipEvaluation:
+    """All 15 score. The gain is the bench MINUS what autosubs would have given.
+
+    2B.3. The baseline used to be the XI with no substitutions, and its own
+    assumption line said so: "a benched non-starter contributes his own
+    simulated points rather than a replacement's." That understates the
+    baseline, because WITHOUT the chip a starter who does not play is replaced
+    by a bench player -- so the chip was credited with points the rules would
+    have collected for free. It valued a bench containing two players with no
+    minutes at 6.74, against a bench that returned 1 and 2 in the two gameweeks
+    actually played.
+
+    The baseline now resolves FPL's automatic substitutions per scenario, so
+    the gain is only what the chip adds ON TOP of them.
+    """
     boosted = scen.squad_points(starting, captain=captain, bench=bench,
                                 bench_boost=True)
+    if positions and getattr(scen, "appeared", None) is not None:
+        base = scen.points_with_autosubs(starting, bench, positions,
+                                         captain=captain)
+        note = ("Autosubs ARE modelled in the baseline: the gain is what the "
+                "chip adds beyond the substitutions the rules make for free.")
+    else:
+        base = scen.squad_points(starting, captain=captain)
+        note = ("Autosubs are NOT modelled in this baseline (no appearance "
+                "mask or positions available), so the gain is an upper bound.")
     base_mean = float(base.mean())
     gain = float((boosted - base).mean())
     return ChipEvaluation(
         BENCH_BOOST, gw, gain, _ci(boosted - base), base_mean, base_mean + gain,
         ["Bench points are simulated under the same fixtures as the XI.",
-         "Autosubs are not modelled, so a benched non-starter contributes his "
-         "own simulated points rather than a replacement's.",
+         note,
+         "The armband does not pass to the vice when the captain does not "
+         "play, which understates the baseline slightly -- the conservative "
+         "direction for a chip valuation.",
          "A one-gameweek figure: this is what the chip is worth in GW"
          f"{gw} specifically, not in the best gameweek of its window."])
 

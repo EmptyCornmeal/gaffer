@@ -155,6 +155,17 @@ class ScenarioSet:
     index: dict[int, int]
     n_sims: int
     seed: int
+    #: 2B.3 -- did he appear at all, per scenario. (n_players, n_sims), bool.
+    #:
+    #: The Bench Boost gain was measured against a baseline with NO AUTOSUBS:
+    #: "a benched non-starter contributes his own simulated points rather than
+    #: a replacement's", as its own assumption line said. Without the chip, a
+    #: starter who does not play is REPLACED by a bench player, so that
+    #: baseline is too low and the gain the chip is credited with is too high.
+    #: Resolving a substitution needs to know who appeared, which the points
+    #: matrix cannot say -- a zero there is equally "played and scored nothing".
+    #: About 5 MB at 626 players and 2,000 scenarios.
+    appeared: np.ndarray | None = None
     meta: dict[str, Any] = field(default_factory=dict)
     #: Measurements about the draw itself. Deliberately NOT merged into
     #: ``as_meta``: the meta block is echoed wholesale into a byte-capped MCP
@@ -186,6 +197,93 @@ class ScenarioSet:
         if bench_boost and bench:
             for pid in bench:
                 total += self.row(pid)
+        return total
+
+    def points_with_autosubs(
+        self, starting: list[int], bench: list[int],
+        positions: dict[int, str], captain: int | None = None,
+        captain_multiplier: int = 2,
+    ) -> np.ndarray:
+        """Squad points with FPL's automatic substitutions applied.
+
+        2B.3. FPL's rule, per scenario: a starter who records no minutes is
+        replaced by the first player in BENCH ORDER who did appear and whose
+        introduction leaves a legal formation -- at least one goalkeeper, three
+        defenders and one forward. A goalkeeper is replaced only by the bench
+        goalkeeper. The captain's armband passes to the vice only if the captain
+        did not appear, which this does NOT model: the caller supplies one
+        captain, and an armband that never moves understates the baseline
+        slightly, which is the conservative direction for a chip valuation.
+
+        Falls back to the plain sum when no appearance mask is available, so a
+        ScenarioSet built by an older path still answers.
+        """
+        if self.appeared is None:
+            return self.squad_points(starting, captain=captain,
+                                     captain_multiplier=captain_multiplier)
+
+        n = self.n_sims
+        idx = {pid: self.index.get(pid) for pid in [*starting, *bench]}
+
+        def mask(pid: int) -> np.ndarray:
+            i = idx.get(pid)
+            if i is None:
+                return np.zeros(n, dtype=bool)
+            return self.appeared[i]
+
+        xi = list(starting)
+        played = {pid: mask(pid) for pid in [*starting, *bench]}
+        # Start from the XI as picked, then swap per scenario.
+        in_side = {pid: np.ones(n, dtype=bool) for pid in xi}
+        for pid in bench:
+            in_side[pid] = np.zeros(n, dtype=bool)
+
+        def pos_of(pid: int) -> str:
+            return positions.get(pid, "MID")
+
+        # Resolve one bench slot at a time, in order, exactly as FPL does.
+        for sub_in in bench:
+            avail = played[sub_in] & ~in_side[sub_in]
+            if not avail.any():
+                continue
+            for sub_out in xi:
+                if pos_of(sub_out) == "GKP" and pos_of(sub_in) != "GKP":
+                    continue
+                if pos_of(sub_in) == "GKP" and pos_of(sub_out) != "GKP":
+                    continue
+                # He must be on the pitch and not have appeared.
+                target = in_side[sub_out] & ~played[sub_out] & avail
+                if not target.any():
+                    continue
+                # Formation legality, evaluated per scenario on the side as it
+                # currently stands.
+                def count(role: str) -> np.ndarray:
+                    out = np.zeros(n, dtype=np.int16)
+                    for pid, on in in_side.items():
+                        if pos_of(pid) == role:
+                            out = out + on.astype(np.int16)
+                    return out
+
+                if pos_of(sub_out) != pos_of(sub_in):
+                    after_def = count("DEF") - (pos_of(sub_out) == "DEF") \
+                        + (pos_of(sub_in) == "DEF")
+                    after_fwd = count("FWD") - (pos_of(sub_out) == "FWD") \
+                        + (pos_of(sub_in) == "FWD")
+                    legal = (after_def >= 3) & (after_fwd >= 1)
+                    target = target & legal
+                    if not target.any():
+                        continue
+                in_side[sub_out] = in_side[sub_out] & ~target
+                in_side[sub_in] = in_side[sub_in] | target
+                avail = avail & ~target
+                if not avail.any():
+                    break
+
+        total = np.zeros(n, dtype=np.float32)
+        for pid, on in in_side.items():
+            total = total + np.where(on, self.row(pid), 0.0).astype(np.float32)
+        if captain is not None:
+            total = total + self.row(captain) * (captain_multiplier - 1)
         return total
 
     def summary(self, player_id: int) -> dict[str, float]:
@@ -330,8 +428,14 @@ def simulate(
     rng = np.random.default_rng(seed)
     rates, _lam = _collect_rates(conn, gw)
     if not rates:
-        return ScenarioSet(np.zeros((0, n_sims), np.float32), [], {}, n_sims, seed,
-                           {"fixtures": 0, "note": "no fixtures in this gameweek"})
+        # Keyword arguments deliberately: a new field before  silently
+        # rebound the sixth POSITIONAL argument and turned an empty gameweek's
+        # metadata into an appearance mask.
+        return ScenarioSet(
+            points=np.zeros((0, n_sims), np.float32), player_ids=[], index={},
+            n_sims=n_sims, seed=seed,
+            appeared=np.zeros((0, n_sims), dtype=bool),
+            meta={"fixtures": 0, "note": "no fixtures in this gameweek"})
 
     by_fixture: dict[tuple[int, int, int], list[_PlayerRates]] = {}
     for r in rates:
@@ -350,6 +454,7 @@ def simulate(
     pids = sorted({r.pid for r in rates})
     index = {p: i for i, p in enumerate(pids)}
     points = np.zeros((len(pids), n_sims), dtype=np.float32)
+    appeared = np.zeros((len(pids), n_sims), dtype=bool)
     # P(this side draws no goals) and the clean-sheet probability the projection
     # gives the side facing it — the two estimates of one quantity, kept so the
     # gap between them is published rather than assumed away.
@@ -509,9 +614,15 @@ def simulate(
 
             # A double gameweek adds a second fixture for the same player.
             points[index[r.pid]] += row.astype(np.float32)
+            # 2B.3 -- did he appear at all. A zero in  cannot say: it is
+            # equally played and scored nothing. Autosub resolution needs the
+            # distinction, so it is recorded rather than inferred. OR across a
+            # double: appearing in either fixture counts as appearing.
+            appeared[index[r.pid]] |= played[i]
 
     return ScenarioSet(
         points=points, player_ids=pids, index=index, n_sims=n_sims, seed=seed,
+        appeared=appeared,
         meta={
             "gameweek": gw,
             "fixtures": len(by_fixture),

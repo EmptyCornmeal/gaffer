@@ -588,6 +588,101 @@ MINUTES_VERDICT = (
 )
 
 #: A18 — the variant that was measured alongside the shipped fix and REFUSED.
+#: Phase 2 Release B -- MEASURED AND REFUSED, 2026-09-02.
+#:
+#: `CLEAN_SHEET_CONTRADICTION` records that the projection holds two estimates
+#: of one quantity -- how many goals the opposition scores -- and that the
+#: bottom-up one (summed opposing `exp_goals`) is the better clean-sheet
+#: forecaster in all three archive seasons, better calibrated above 0.35, while
+#: what ships is barely distinguishable from quoting the league base rate.
+#: A19 left it unfixed because reconciling needs a two-pass projection.
+#:
+#: The two-pass projection was BUILT: accumulate every side's attacking lambda,
+#: then read `p_cs` off the opponent's entry, with the same pass added to the
+#: backtest so it scored what would ship. The lambdas were checked as physically
+#: sensible first -- median 1.36, mean 1.50 goals a side, against a real Premier
+#: League average near 1.4 -- so what follows is a result and not a bug.
+#:
+#:     season           points MAE h=1        XI points per gameweek
+#:                      Rel A -> Rel B        Rel A -> Rel B
+#:     2023-24 train    1.0190 -> 1.0170      49.9 -> 49.1   (-0.8)
+#:     2024-25 select   1.1340 -> 1.1140      55.9 -> 56.0   (+0.1)
+#:     2025-26 TEST     1.0480 -> 1.0340      51.4 -> 50.2   (-1.2)
+#:
+#: Points MAE improved in ALL THREE seasons. The decision metric did not: it
+#: lost on two of three including the held-out one, and the pattern across
+#: seasons (-0.8, +0.1, -1.2) is the non-replication signature. The
+#: pre-registered rule required XI points not to fall on the test season.
+#: REFUSED, and reverted.
+#:
+#: This is the THIRD time in this codebase that a better input has not been a
+#: better decision -- after E2 of the crossover programme and 2A.4's
+#: conditional minutes -- and it is now a pattern rather than an anecdote. An
+#: estimate that is closer on average across 600 players can still move the
+#: fifteen a squad is built from the wrong way, because a squad is a selection
+#: at the tail and MAE is a statement about the middle.
+#:
+#: WHAT THIS REFUSAL COSTS, stated rather than glossed: the contradiction stays.
+#: `model.scenarios` still cannot be exact against both lambdas and still says
+#: so, `p_cs` is still barely better than the base rate, and it is still
+#: over-confident above 0.35. Refusing the fix does not make the defect go
+#: away; it means the fix measured worse than the defect on the metric that
+#: decides.
+#:
+#: One observation that is NOT a reason to ship it and IS a reason to look
+#: again: captain points rose 5.92 -> 6.84 on the test season while the XI fell,
+#: so XI + captain is nearly flat (57.3 -> 57.0). `xi_points_per_gw` excludes
+#: the armband, and the real gameweek score does not. That may make it an
+#: incomplete decision metric -- but changing the metric after seeing the
+#: result is what invalidates a pre-registration, so it is recorded as a
+#: question for a future revisit rather than used to reverse this one.
+#:
+#: TO REVISIT, pre-register BOTH first: a decision metric that includes the
+#: armband, and a paired test over gameweeks rather than a comparison of means.
+#: A different blend weight between the two lambdas is not a different
+#: hypothesis.
+CLEAN_SHEET_RECONCILIATION_REFUSED = {
+    "candidate": "two_pass_p_cs_from_opponent_attack_sum",
+    "decision": "measured, REFUSED",
+    "measured_on": "2026-09-02",
+    "change": ("accumulate each side's attacking lambda in a first pass, then "
+               "read `p_cs` from the opponent's entry instead of from "
+               "`ctx.expected_conceded`"),
+    "rule": ("pre-registered: ship only if clean-sheet Brier improves AND "
+             "points MAE does not worsen AND XI points per gameweek does not "
+             "fall, on the test season"),
+    "points_mae_h1": {
+        "2023-24": {"rel_a": 1.0190, "rel_b": 1.0170},
+        "2024-25": {"rel_a": 1.1340, "rel_b": 1.1140},
+        "2025-26": {"rel_a": 1.0480, "rel_b": 1.0340},
+    },
+    "xi_points_per_gw": {
+        "2023-24": {"rel_a": 49.9, "rel_b": 49.1},
+        "2024-25": {"rel_a": 55.9, "rel_b": 56.0},
+        "2025-26": {"rel_a": 51.4, "rel_b": 50.2},
+    },
+    "captain_points_per_gw": {
+        "2025-26": {"rel_a": 5.92, "rel_b": 6.84},
+    },
+    "lambda_sanity": ("accumulated team attack lambdas: median 1.36, mean 1.50, "
+                      "range 0.60-3.51 -- physically sensible, so this is a "
+                      "result and not a bug"),
+    "refused_because": (
+        "points MAE improved in all three seasons and the DECISION metric lost "
+        "on two of three including the held-out one. -0.8, +0.1, -1.2 is the "
+        "non-replication signature."),
+    "cost_of_refusing": (
+        "the contradiction stays: two lambdas, a scenario engine that cannot be "
+        "exact against both and says so, and a `p_cs` barely better than the "
+        "league base rate and over-confident above 0.35."),
+    "open_question": (
+        "captain points rose 5.92 -> 6.84 while the XI fell, so XI + captain is "
+        "nearly flat. `xi_points_per_gw` excludes the armband and a real "
+        "gameweek score does not. Pre-register a metric that includes it, and a "
+        "paired test over gameweeks, BEFORE revisiting."),
+}
+
+
 #: Phase 2A.4 -- MEASURED AND REFUSED, 2026-09-02.
 #:
 #: After Release A the START PROBABILITY beats every baseline at every horizon.
