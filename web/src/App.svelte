@@ -17,7 +17,7 @@
   // chunk, fetched on first navigation and then cached by the browser.
   const LAZY: Record<string, () => Promise<{ default: unknown }>> = {
     planner: () => import('./pages/Planner.svelte'),
-    players: () => import('./pages/Players.svelte'),
+    research: () => import('./pages/Research.svelte'),
     live: () => import('./pages/Live.svelte'),
     league: () => import('./pages/MiniLeague.svelte'),
     model: () => import('./pages/Model.svelte'),
@@ -180,7 +180,7 @@
         {#key reloadKey}<MyTeam {bundle} onpick={(id) => (selectedId = id)} ongoSettings={() => (sidebarOpen = true)} onnav={nav} />{/key}
       {:else if route === 'fixtures'}
         <Fixtures fixtures={bundle.fixtures} />
-      {:else if route === 'players' && LazyPage}
+      {:else if route === 'research' && LazyPage}
         <LazyPage players={bundle.players} onpick={(id: number) => (selectedId = id)} {bundle} />
       {:else if route === 'planner' && LazyPage}
         <LazyPage {bundle} onpick={(id: number) => (selectedId = id)} onnav={nav} />

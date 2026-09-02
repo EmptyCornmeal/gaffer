@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  BOTTOM_TABS, DEFAULT_ROUTE, KNOWN_ROUTES, MORE_TABS, NAV_TABS, PRIMARY_TABS, REDIRECTS,
+  BOTTOM_TABS, DEFAULT_ROUTE, KNOWN_ROUTES, MORE_TABS, NAV_TABS, PRIMARY_TABS,
+  REDIRECTS, SECONDARY_TABS,
   normaliseRoute, routeSection,
 } from './nav'
 
@@ -27,13 +28,15 @@ describe('normaliseRoute', () => {
   })
 
   it('normalises case and stray whitespace', () => {
-    expect(normaliseRoute('#/Players')).toBe('players')
+    // 6.3/6.4: retired into Research, and the redirect is what a bookmark
+    // from last week lands on.
+    expect(normaliseRoute('#/Players')).toBe('research')
     expect(normaliseRoute('#/MY-TEAM')).toBe('my-team')
     expect(normaliseRoute('#/  planner  ')).toBe('planner')
   })
 
   it('strips query strings and trailing fragments', () => {
-    expect(normaliseRoute('#/players?sort=xp')).toBe('players')
+    expect(normaliseRoute('#/players?sort=xp')).toBe('research')
     expect(normaliseRoute('#/live&x=1')).toBe('live')
   })
 
@@ -44,8 +47,12 @@ describe('normaliseRoute', () => {
     }
   })
 
-  it('keeps KNOWN_ROUTES in sync with the rendered nav', () => {
-    expect(KNOWN_ROUTES.size).toBe(NAV_TABS.length)
+  it('keeps KNOWN_ROUTES in sync with everything the app can render', () => {
+    // NAV_TABS alone stopped being the whole answer in 6.3: `Live` and
+    // `Planner` are reachable destinations that no longer hold a permanent
+    // tab. A route the app can render but this set does not know about would
+    // silently normalise to home, which is the regression this guards.
+    expect(KNOWN_ROUTES.size).toBe(NAV_TABS.length + SECONDARY_TABS.length)
   })
 })
 
@@ -58,8 +65,12 @@ describe('normaliseRoute', () => {
 
 describe('the header partition', () => {
   it('covers every route exactly once', () => {
+    // The partition spans NAV_TABS plus SECONDARY_TABS after 6.3. The property
+    // that matters is unchanged and is the one this test exists for: every
+    // destination the app can route to appears in exactly one of the two
+    // lists, so nothing becomes unreachable by being dropped from a menu.
     const covered = [...PRIMARY_TABS, ...MORE_TABS].map((t) => t.key)
-    expect(covered.slice().sort()).toEqual(NAV_TABS.map((t) => t.key).sort())
+    expect(covered.slice().sort()).toEqual([...KNOWN_ROUTES].sort())
     expect(new Set(covered).size).toBe(covered.length)
   })
 
@@ -69,7 +80,13 @@ describe('the header partition', () => {
   })
 
   it('accounts for every route', () => {
-    expect(PRIMARY_TABS.length + MORE_TABS.length).toBe(NAV_TABS.length)
+    // After 6.3 the header partition spans NAV_TABS plus the secondary
+    // destinations, which are reachable but do not compete for prime
+    // navigation. Every known route still appears in exactly one list --
+    // that is the property worth holding, not the arithmetic against
+    // NAV_TABS alone.
+    expect(PRIMARY_TABS.length + MORE_TABS.length)
+      .toBe(NAV_TABS.length + SECONDARY_TABS.length)
     expect(KNOWN_ROUTES.size).toBe(PRIMARY_TABS.length + MORE_TABS.length)
   })
 
@@ -81,21 +98,22 @@ describe('the header partition', () => {
 
   it('leads with the weekly questions, in NAV_TABS order', () => {
     expect(PRIMARY_TABS.map((t) => t.key)).toEqual(
-      ['home', 'live', 'my-team', 'players', 'fixtures', 'league'],
+      ['home', 'my-team', 'league', 'research', 'model'],
     )
   })
 
-  it('preserves NAV_TABS order within each list', () => {
-    const order = NAV_TABS.map((t) => t.key)
+  it('preserves source order within each list', () => {
+    const order = [...NAV_TABS, ...SECONDARY_TABS].map((t) => t.key)
     for (const list of [PRIMARY_TABS, MORE_TABS]) {
       const idx = list.map((t) => order.indexOf(t.key))
       expect(idx).toEqual(idx.slice().sort((a, b) => a - b))
     }
   })
 
-  it('carries the same object identity as NAV_TABS, so labels cannot drift', () => {
+  it('carries the same object identity as its source list, so labels cannot drift', () => {
+    const source = [...NAV_TABS, ...SECONDARY_TABS]
     for (const t of [...PRIMARY_TABS, ...MORE_TABS]) {
-      expect(NAV_TABS).toContain(t)
+      expect(source).toContain(t)
     }
   })
 
@@ -106,14 +124,21 @@ describe('the header partition', () => {
   })
 
   it('puts the reference pages behind More rather than off the right-hand edge', () => {
-    expect(MORE_TABS.map((t) => t.key)).toContain('model')
+    // `Model` was behind More because eight destinations did not fit. Five
+    // do, so the trust surface is now a first-class tab and More carries
+    // the two secondary destinations instead.
+    expect(PRIMARY_TABS.map((t) => t.key)).toContain('model')
+    expect(MORE_TABS.map((t) => t.key)).toEqual(['live', 'planner'])
   })
 })
 
-describe('the phone bottom bar is untouched', () => {
-  it('still shows exactly This Week, Live, My Team and Players', () => {
+describe('the phone bottom bar', () => {
+  it('shows the four destinations a phone opens first', () => {
+    // Live left the phone bar in 6.3: it advertised nothing for 91% of the
+    // week and is now the Saturday state of Now, which links to it when it
+    // matters.
     expect(BOTTOM_TABS.map((t) => t.label)).toEqual(
-      ['This Week', 'Live', 'My Team', 'Players'],
+      ['Now', 'My Team', 'League', 'Research'],
     )
   })
 
@@ -134,16 +159,16 @@ describe('unknown hashes after the partition', () => {
   })
 
   it('still resolves a More-menu route from a deep link', () => {
-    expect(normaliseRoute('#/Fixtures/')).toBe('fixtures')
-    expect(normaliseRoute('#/players')).toBe('players')
+    expect(normaliseRoute('#/Fixtures/')).toBe('research')
+    expect(normaliseRoute('#/players')).toBe('research')
   })
 
   it('forwards a merged-away route to the page that absorbed it', () => {
     // Overview became Planner's "Model's ideal" tab. Someone's bookmark and
     // someone's home-screen icon still say #/overview, and dropping them on
     // This Week would look like the link had simply broken.
-    expect(normaliseRoute('#/overview')).toBe('planner')
-    expect(normaliseRoute('#/Overview/')).toBe('planner')
+    expect(normaliseRoute('#/overview')).toBe('my-team')
+    expect(normaliseRoute('#/Overview/')).toBe('my-team')
   })
 
   it('every redirect points at a route that exists', () => {

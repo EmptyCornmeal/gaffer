@@ -11,6 +11,7 @@
   import { modelLink } from '../lib/evidence'
   import DecisionCardView from '../components/DecisionCard.svelte'
   import CalendarView from '../components/Calendar.svelte'
+  import { nowState, STATE_COPY, timeToDeadline } from '../lib/now'
 
   let { bundle, onnav, onpick, now = Date.now() }: {
     bundle: Bundle
@@ -37,6 +38,32 @@
                       meta?.freshness_policy ?? FALLBACK_POLICY),
   )
   const dl = $derived(meta?.deadline ? deadlineState(meta.deadline, now) : null)
+
+  // 6.1/6.2 -- which week it is, and therefore what this surface is for.
+  //
+  // The page used to show the same thing on a Monday morning as it did ninety
+  // seconds before a deadline, while the question a reader arrives with
+  // changes completely across the week.
+  //
+  // `footballOn` is the SERVERs answer, not the browsers guess.
+  //
+  // `live.json` is deliberately never bundled -- it is valid only for the
+  // instant it was fetched -- and `fixtures.json` is a per-team schedule with
+  // no match state in it. But `schedule._window` already decides this on every
+  // run, from fixture states and kick-off times, and 5.1 publishes it on the
+  // calendar. A postponed Saturday is not live football, and that is the only
+  // component that knows it.
+  const weekState = $derived(nowState({
+    now,
+    deadline: meta?.deadline ? Date.parse(meta.deadline) : null,
+    footballOn: d?.calendar?.window === 'live',
+    hasFreshReview: Boolean(bundle.review),
+  }))
+  const stateCopy = $derived(STATE_COPY[weekState])
+  const countdown = $derived(timeToDeadline({
+    now, deadline: meta?.deadline ? Date.parse(meta.deadline) : null,
+    footballOn: false, hasFreshReview: false,
+  }))
   const cmp = $derived(body?.comparison ?? null)
   const exe = $derived(body?.executability ?? null)
   const candidate = $derived(body?.candidate_move ?? null)
@@ -143,8 +170,13 @@
             <b class="text-text">Deadline passed</b>
           </p>
         {/if}
+        <p class="text-mini text-muted2 mt-1 max-w-prose">{stateCopy.says}</p>
       </div>
       <div class="flex flex-col items-end gap-1">
+        <!-- 6.2 -- the state is ALWAYS labelled. A surface that changes shape
+             silently is harder to learn, not easier: the label is what makes
+             the behaviour legible rather than mysterious. -->
+        <span class="chip chip-{stateCopy.tone}" title={stateCopy.says}>{stateCopy.label}</span>
         <span
           class="chip {fresh.state === 'fresh' ? 'chip-good' : fresh.state === 'critical' || fresh.state === 'expired' ? 'chip-bad' : 'chip-warn'}"
           title={fresh.title}
@@ -155,6 +187,55 @@
       </div>
     </div>
   </div>
+
+  <!-- 6.1 -- the surface leads with what this part of the week is for.
+       Nothing below is hidden: this is an ORDERING, so a reader who wants the
+       decision on a Monday scrolls rather than being told to come back. -->
+  {#if weekState === 'live'}
+    <button class="card p-4 text-left w-full" onclick={() => onnav('live')}>
+      <div class="flex items-center gap-2">
+        <Icon name="flame" size={18} />
+        <span class="font-bold">Football is being played</span>
+      </div>
+      <p class="text-sm text-muted mt-1">
+        Your live score and the bonus that has not settled yet — open Live.
+      </p>
+    </button>
+  {:else if weekState === 'locked'}
+    <div class="card p-4 border border-yellow/40">
+      <div class="flex items-center gap-2">
+        <Icon name="shield" size={18} />
+        <span class="font-bold">Your team is locked for {meta?.gw_name ?? 'this gameweek'}</span>
+      </div>
+      <p class="text-sm text-muted mt-1">
+        Nothing below can be acted on until the gameweek ends. It is kept
+        visible because it is what you went in with.
+      </p>
+    </div>
+  {:else if weekState === 'review' && bundle.review}
+    <button class="card p-4 text-left w-full" onclick={() => (tab = 'last')}>
+      <div class="flex items-center gap-2">
+        <Icon name="award" size={18} />
+        <span class="font-bold">Last gameweek has finished</span>
+      </div>
+      <p class="text-sm text-muted mt-1">
+        What happened, and what it says about the advice — the "Last week" tab
+        below has it.
+      </p>
+    </button>
+  {:else if weekState === 'wait'}
+    <div class="card p-4">
+      <div class="flex items-center gap-2">
+        <Icon name="hourglass" size={18} />
+        <span class="font-bold">Too early to decide{countdown ? ` — ${countdown} to go` : ''}</span>
+      </div>
+      <p class="text-sm text-muted mt-1">
+        The projections below are ready. The team news is not, and it is the
+        largest thing Gaffer cannot see — so what follows is worth reading and
+        not yet worth acting on.
+      </p>
+    </div>
+  {/if}
 
   {#if parsed.kind === 'missing'}
     <div class="card p-6 text-center">

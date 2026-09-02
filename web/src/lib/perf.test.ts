@@ -100,7 +100,8 @@ describe('routes', () => {
     expect(normaliseRoute('#/nope')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#//')).toBe(DEFAULT_ROUTE)
     expect(normaliseRoute('#/live/extra')).toBe('live')
-    expect(normaliseRoute('#/players?x=1')).toBe('players')
+    // 6.4: retired into Research, so the old key redirects rather than blanking.
+    expect(normaliseRoute('#/players?x=1')).toBe('research')
   })
 
   it('hash routing is used, so GitHub Pages deep links cannot 404', () => {
