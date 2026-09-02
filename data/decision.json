@@ -2,14 +2,14 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-09-02T19:36:04.192205+00:00",
+    "generated_for": "2026-09-02T19:48:07.122057+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-09-04T17:30:00+00:00",
-        "in_hours": 45.9,
+        "in_hours": 45.7,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
@@ -83,11 +83,33 @@
         "changes": "Mbeumo may move 0.1m before the deadline"
       }
     ],
+    "schedule_shape": [
+      {
+        "kind": "international_break",
+        "gameweek": 6,
+        "at": "2026-10-10T11:30:00+00:00",
+        "gap_days": 21,
+        "certainty": "published: derived from FPL's own deadlines",
+        "changes": "a 21-day gap before GW6. Players travel, and the ones who travel furthest come back latest"
+      }
+    ],
+    "european_coverage": {
+      "season": "2026-27",
+      "found": {},
+      "missing": {
+        "cl": "cl 2026-27: HTTP 404",
+        "el": "el 2026-27: HTTP 404",
+        "conf": "conf 2026-27: HTTP 404"
+      },
+      "complete": false,
+      "available": false
+    },
     "covers": [
       "the deadline",
       "price changes that FPL says are due",
       "price changes past 70% of the way, marked as not due",
       "price locks",
+      "international breaks and midweek rounds, derived from the schedule",
       "which schedule window this is"
     ],
     "does_not_cover": [
@@ -96,8 +118,12 @@
         "why": "no source is ingested; this is the substrate for it, not the thing"
       },
       {
-        "what": "European and cup fixtures",
-        "why": "not in the FPL API; a player's Thursday night is invisible here"
+        "what": "European fixtures",
+        "why": "no source carries cl, el, conf, so a club playing in Europe looks the same here as one that is not. This is the gap that produced the GW7 Triple Captain error"
+      },
+      {
+        "what": "the domestic cups (FA Cup, League Cup)",
+        "why": "no source carries them for the current season; they are also what creates blanks and doubles, so this matters more from GW20"
       },
       {
         "what": "predicted lineups",
@@ -119,7 +145,7 @@
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
     "verdict": "money may be at stake",
     "reason": "Mbeumo is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
-    "hours_to_deadline": 45.9,
+    "hours_to_deadline": 45.7,
     "edge_points": 1.45,
     "edge_interval_type": "monte_carlo",
     "money_cost_of_waiting_m": 0.0,
@@ -175,7 +201,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-09-02T19:35:34+00:00",
+  "generated_at": "2026-09-02T19:48:00+00:00",
   "gameweek": 3,
   "horizon": 6,
   "squad_state": {
@@ -3340,8 +3366,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-09-02T19:35:34+00:00",
-    "squad_retrieved_at": "2026-09-02T19:35:57+00:00",
+    "generated_at": "2026-09-02T19:48:00+00:00",
+    "squad_retrieved_at": "2026-09-02T19:48:00+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"

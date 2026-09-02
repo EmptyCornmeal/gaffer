@@ -365,6 +365,25 @@ def _headline(
     return f"{outs} → {ins}{hit} — captain {_name(conn, mv['captain'])}"
 
 
+def _squad_teams(conn: sqlite3.Connection, squad: list[int]) -> set[str]:
+    """The clubs the reader actually owns players at.
+
+    The calendar is scoped to these rather than to all twenty: a European tie
+    involving nobody in the squad is not an event in this reader's week.
+    """
+    if not squad:
+        return set()
+    marks = ",".join("?" * len(squad))
+    try:
+        rows = conn.execute(
+            f"SELECT DISTINCT t.name FROM players p "
+            f"JOIN teams t ON t.id = p.team_id WHERE p.id IN ({marks})",
+            squad).fetchall()
+    except sqlite3.Error:
+        return set()
+    return {r["name"] for r in rows if r["name"]}
+
+
 def _deadline(conn: sqlite3.Connection) -> datetime | None:
     """The published deadline, or None. Never a guess."""
     raw = _meta(conn, "deadline")
@@ -596,7 +615,10 @@ def snapshot_payload(
         conn, now=datetime.now(UTC), deadline=_deadline(conn),
         window=_schedule_window(conn),
         squad_ids=list((held or {}).get("squad") or []),
-        move_ids=[*(dec.transfers_in or []), *(dec.transfers_out or [])])
+        move_ids=[*(dec.transfers_in or []), *(dec.transfers_out or [])],
+        gameweek=from_gw,
+        season=_meta(conn, "season"),
+        squad_teams=_squad_teams(conn, list((held or {}).get("squad") or [])))
     return {
         "weekly_version": WEEKLY_VERSION,
         "calendar": cal,

@@ -183,3 +183,72 @@ def test_the_module_has_no_opinion_about_who_wins():
     f = C.parse_openfootball(SAMPLE, "x", "european")[0]
     assert not hasattr(f, "score")
     assert not any("score" in k for k in f.__dataclass_fields__)
+
+
+# --------------------------------------------------------------------------
+# Caching, because the pipeline runs every fifteen minutes
+# --------------------------------------------------------------------------
+
+def test_a_fetched_file_is_reused_rather_than_refetched(tmp_path, monkeypatch):
+    """A fixture list is one of the slowest-moving things in football and the
+    pipeline runs on a fifteen-minute schedule. Re-fetching on every tick would
+    put ~300 pointless requests a day on a volunteer-run public repository."""
+    monkeypatch.setattr(C.config, "CACHE_DIR", tmp_path)
+    calls = []
+
+    class R:
+        def read(self):
+            return SAMPLE.encode()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def once(*a, **k):
+        calls.append(1)
+        return R()
+
+    monkeypatch.setattr(C.urllib.request, "urlopen", once)
+    comp = C.COMPETITIONS[0]
+    first = C.fetch(comp, "2025-26")
+    second = C.fetch(comp, "2025-26")
+    assert len(calls) == 1
+    assert len(first) == len(second) == 5
+
+
+def test_a_404_is_remembered_so_an_absent_season_is_not_re_asked(tmp_path, monkeypatch):
+    """openfootball has no file for a season until someone writes one. Asking
+    three times a minute for the next twelve weeks would be rude as well as
+    pointless."""
+    monkeypatch.setattr(C.config, "CACHE_DIR", tmp_path)
+    calls = []
+
+    def gone(*a, **k):
+        calls.append(1)
+        raise urllib.error.HTTPError("u", 404, "Not Found", {}, None)
+
+    monkeypatch.setattr(C.urllib.request, "urlopen", gone)
+    comp = C.COMPETITIONS[0]
+    for _ in range(3):
+        with pytest.raises(C.SourceUnavailable):
+            C.fetch(comp, "2099-00")
+    assert len(calls) == 1
+
+
+def test_a_transport_failure_is_NOT_cached(tmp_path, monkeypatch):
+    """A timeout is a fact about this minute. Caching it would turn one bad
+    minute into a bad day."""
+    monkeypatch.setattr(C.config, "CACHE_DIR", tmp_path)
+    calls = []
+
+    def flaky(*a, **k):
+        calls.append(1)
+        raise TimeoutError("slow")
+
+    monkeypatch.setattr(C.urllib.request, "urlopen", flaky)
+    for _ in range(3):
+        with pytest.raises(C.SourceUnavailable):
+            C.fetch(C.COMPETITIONS[0], "2025-26")
+    assert len(calls) == 3

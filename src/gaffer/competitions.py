@@ -33,12 +33,16 @@ is recorded as one rather than faked here.
 from __future__ import annotations
 
 import re
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
+
+from gaffer import config
 
 COMPETITIONS_VERSION = "competitions-1"
 
@@ -47,6 +51,10 @@ COMPETITIONS_VERSION = "competitions-1"
 LOOKBACK_DAYS = 14
 
 _UA = {"User-Agent": "gaffer/1.0 (+https://github.com/EmptyCornmeal/gaffer)"}
+
+#: Marks a cached 404 so an absent season is remembered as absent rather than
+#: re-asked every fifteen minutes.
+_MISS_MARKER = "#gaffer-miss"
 
 
 @dataclass(frozen=True)
@@ -164,16 +172,72 @@ COMPETITIONS: tuple[Competition, ...] = (
 )
 
 
-def fetch(comp: Competition, season: str, *, timeout: int = 30) -> list[Fixture]:
+#: How long a fetched competition file is trusted before it is re-read.
+#:
+#: Twenty-four hours. A fixture list is one of the slowest-moving things in
+#: football -- kick-off times move occasionally, the fixtures themselves almost
+#: never -- and the pipeline runs on a fifteen-minute schedule. Re-fetching
+#: three files on every tick would put ~300 pointless requests a day on a
+#: volunteer-run public repository to learn nothing.
+CACHE_TTL_SECONDS = 24 * 3600
+
+
+def _cache_path(comp: Competition, season: str) -> Path:
+    return config.CACHE_DIR / "competitions" / f"{comp.key}-{season}.txt"
+
+
+def _cached(path: Path) -> str | None:
+    """The cached body, if it exists and is young enough."""
+    try:
+        age = time.time() - path.stat().st_mtime
+        if age > CACHE_TTL_SECONDS:
+            return None
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+
+def _store(path: Path, body: str) -> None:
+    """Best effort. A cache that cannot be written must not fail a run."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(body, encoding="utf-8")
+    except OSError:
+        pass
+
+
+def fetch(comp: Competition, season: str, *, timeout: int = 30,
+          use_cache: bool = True) -> list[Fixture]:
+    """One competition's fixtures, from the cache when it is fresh.
+
+    A 404 is cached as an empty marker too. `openfootball` has no file for a
+    season until someone writes one, and asking three times a minute for the
+    next twelve weeks would be rude as well as pointless.
+    """
+    path = _cache_path(comp, season)
+    if use_cache:
+        body = _cached(path)
+        if body is not None:
+            if body.startswith(_MISS_MARKER):
+                raise SourceUnavailable(body[len(_MISS_MARKER):].strip())
+            return parse_openfootball(body, comp.name, comp.kind)
+
     url = comp.url.format(season=season)
     try:
         with urllib.request.urlopen(
                 urllib.request.Request(url, headers=_UA), timeout=timeout) as r:
             text = r.read().decode("utf-8")
     except urllib.error.HTTPError as e:
-        raise SourceUnavailable(f"{comp.key} {season}: HTTP {e.code}") from e
+        msg = f"{comp.key} {season}: HTTP {e.code}"
+        if use_cache and e.code == 404:
+            _store(path, f"{_MISS_MARKER} {msg}")
+        raise SourceUnavailable(msg) from e
     except Exception as e:  # noqa: BLE001 -- any transport failure is the same answer
+        # NOT cached. A timeout or a DNS failure is a fact about this moment,
+        # and caching it would turn one bad minute into a bad day.
         raise SourceUnavailable(f"{comp.key} {season}: {type(e).__name__}") from e
+    if use_cache:
+        _store(path, text)
     return parse_openfootball(text, comp.name, comp.kind)
 
 
