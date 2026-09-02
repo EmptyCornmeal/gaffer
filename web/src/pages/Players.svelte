@@ -5,6 +5,7 @@
   import Crest from '../components/Crest.svelte'
   import Compare from '../components/Compare.svelte'
   import { matches } from '../lib/search'
+  import { badgeCaption } from '../lib/evidence'
 
   let { players, onpick, bundle }: {
     players: Player[]
@@ -227,7 +228,13 @@
                 <span class="min-w-0">
                   <span class="font-semibold flex items-center gap-1">
                     {p.name}
-                    <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
+                    <!-- 4.7: the badge carries its measured error. NAILED is a
+                         one-word confidence statement and over-claims by five
+                         points; the caption is how a reader finds that out
+                         without leaving the row. -->
+                    <span class="badge badge-{p.xmins_badge.kind}"
+                          title={badgeCaption(bundle.meta, p.xmins_badge.label) ?? undefined}
+                    >{p.xmins_badge.label}</span>
                     {#if f}<span class="badge badge-{f.kind}" title={p.news || f.label}>{f.short}<span class="sr-only"> — {f.label}{p.news ? `: ${p.news}` : ''}</span></span>{/if}
                   </span>
                   <span class="block text-micro text-muted">{p.pos} · {p.team}</span>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { loadBundle, loadShell, type Bundle, type Shell } from './lib/data'
   import { getTheme, setTheme } from './lib/config'
-  import { normaliseRoute } from './lib/nav'
+  import { normaliseRoute, routeSection } from './lib/nav'
   import type { Player } from './lib/types'
   import Topbar from './components/Topbar.svelte'
   import Sidebar from './components/Sidebar.svelte'
@@ -27,6 +27,10 @@
   let bundle = $state<Bundle | null>(null)
   let error = $state<string | null>(null)
   let route = $state(parseRoute())
+  // 4.8 -- the section a deep link asked for, cleared once it has been shown.
+  let pendingSection = $state<string | null>(routeSection(
+    typeof location !== 'undefined' ? location.hash : '',
+  ))
   let now = $state(Date.now())
   let selectedId = $state<number | null>(null)
   let sidebarOpen = $state(false)
@@ -53,6 +57,35 @@
   const selected = $derived<Player | null>(selectedId != null ? byId.get(selectedId) ?? null : null)
   const meta = $derived(bundle?.meta ?? shell?.meta ?? null)
   const LazyPage = $derived(loaded[route] ?? null)
+
+  /**
+   * Scroll a deep-linked section into view once it exists.
+   *
+   * The Model page is a lazy chunk and several thousand pixels of tables, so
+   * the element is not in the document when the hash changes. Re-running on
+   * `route` and `loaded` covers both orders: chunk-then-hash and
+   * hash-then-chunk. It gives up quietly rather than polling forever -- a link
+   * to a section that no longer exists should land on the page, not hang.
+   */
+  $effect(() => {
+    const id = pendingSection
+    void route
+    void loaded
+    if (!id) return
+    let tries = 0
+    const tick = () => {
+      const el = document.getElementById(id)
+      if (el) {
+        el.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        el.focus?.({ preventScroll: true })
+        pendingSection = null
+        return
+      }
+      if (++tries < 40) requestAnimationFrame(tick)
+      else pendingSection = null
+    }
+    requestAnimationFrame(tick)
+  })
   const needsChunk = $derived(route in LAZY && !loaded[route])
 
   // Fetch the chunk for whichever heavy route is active. Failures surface as a
@@ -74,7 +107,10 @@
       .then((s) => (shell = s))
       .catch(() => {})
     loadBundle().then((b) => (bundle = b)).catch((e) => (error = String(e)))
-    const onHash = () => (route = parseRoute())
+    const onHash = () => {
+      route = parseRoute()
+      pendingSection = routeSection(location.hash)
+    }
     window.addEventListener('hashchange', onHash)
     const t = setInterval(() => (now = Date.now()), 30000)
     return () => {
@@ -166,4 +202,4 @@
 
 <BottomNav {route} onnav={nav} onmore={() => (sidebarOpen = true)} />
 
-<PlayerDetail player={selected} onclose={() => (selectedId = null)} />
+<PlayerDetail player={selected} {meta} onclose={() => (selectedId = null)} />

@@ -1,11 +1,18 @@
 <script lang="ts">
-  import type { Player } from '../lib/types'
+  import type { Meta, Player } from '../lib/types'
+  import { badgeCaption, evidenceCaption, evidenceTone, modelLink } from '../lib/evidence'
   import { playerPhoto } from '../lib/img'
   import Crest from './Crest.svelte'
   import FixtureStrip from './FixtureStrip.svelte'
   import Icon from './Icon.svelte'
 
-  let { player, onclose }: { player: Player | null; onclose: () => void } = $props()
+  let { player, onclose, meta = null }: {
+    player: Player | null
+    onclose: () => void
+    /** 4.7 -- carries the measured badge calibration. Optional so the modal
+        still renders against an artifact published before it existed. */
+    meta?: Meta | null
+  } = $props()
 
   // Focus management: focus the close button on open, and trap Tab inside the
   // dialog so keyboard focus can't wander to the page behind it (WCAG 2.4.3).
@@ -79,6 +86,13 @@
         ]
       : [],
   )
+  // 4.7 / 4.2 -- what the badge is worth, and what the number rests on.
+  const badgeNote = $derived(badgeCaption(meta, player?.xmins_badge?.label))
+  const evidence = $derived(evidenceCaption(player?.evidence_quality))
+  const evidenceKind = $derived(evidenceTone(player?.evidence_quality))
+  const evidenceClass: Record<string, string> = {
+    good: 'text-muted', warn: 'text-amber', bad: 'text-red',
+  }
   const kindClass: Record<string, string> = {
     good: 'chip-good', warn: 'chip-warn', bad: 'chip-bad', info: 'chip-info',
   }
@@ -138,6 +152,14 @@
         <div class="relative mt-2.5 flex flex-wrap gap-1">
           {#each pills as p}<span class="chip {kindClass[p.kind] ?? 'chip-info'}">{p.label}</span>{/each}
         </div>
+        <!-- 4.7 -- the badge is a one-word confidence statement, and it was the
+             least qualified output in the product. Here it states its own error. -->
+        {#if badgeNote}
+          <a class="block mt-1.5 text-mini text-muted2 underline decoration-dotted hover:text-brand-light"
+             href={modelLink('badge')}
+             onclick={onclose}
+          >{badgeNote}</a>
+        {/if}
       </div>
 
       <div class="p-5 flex flex-col gap-4">
@@ -205,6 +227,20 @@
                   <span class="text-muted2">Ceiling <b class="text-muted">{dist.ceiling}</b></span>
                 </div>
               </div>
+            {/if}
+            <!-- 4.2 / 4.8 -- what this number rests on, and where that was
+                 measured. Gaffer has always graded its own components and has
+                 always done it on a page no number linked to; the total above
+                 is meaningless without knowing that more than half of some of
+                 them comes from a term with no measured skill. -->
+            {#if evidence}
+              <p class="mt-3 pt-2.5 border-t border-line text-mini {evidenceClass[evidenceKind ?? 'good']}">
+                {evidence}.
+                <a class="underline decoration-dotted hover:text-brand-light"
+                   href={modelLink('xp')}
+                   onclick={onclose}
+                >See how each part was graded</a>
+              </p>
             {/if}
           {:else}
             <div class="text-sm text-muted py-1">

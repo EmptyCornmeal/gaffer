@@ -108,6 +108,16 @@ export interface Player {
   p_start: number
   confidence: number
   xmins_badge: XminsBadge
+  /**
+   * 4.2 -- what share of `next_gw_xp` comes from components Gaffer has itself
+   * measured and found wanting. Optional: an artifact published before this
+   * field existed simply has no evidence line, which is the honest rendering.
+   */
+  evidence_quality?: {
+    weak_evidence_share: number
+    largest_weak_component: string | null
+    largest_weak_status: string | null
+  } | null
   rationale: string
   tags: Tag[]
   fixtures: TeamFixture[]
@@ -123,6 +133,23 @@ export interface Meta {
    * evaluates them instead of inventing its own. Optional: an artifact
    * published before this field existed falls back to FALLBACK_POLICY.
    */
+  /**
+   * 4.7 -- what each minutes badge claimed in the archive and what the badged
+   * players then did. Published ONCE per run rather than on 626 rows.
+   */
+  badge_calibration?: {
+    available: boolean
+    population?: string
+    source?: string
+    means?: string
+    bands?: Record<string, {
+      claimed?: number
+      start_rate?: number
+      appear_rate?: number
+      n?: number
+      over_claims_by?: number
+    }>
+  }
   freshness_policy?: {
     pre_deadline_open_min: number
     final_approach_min: number

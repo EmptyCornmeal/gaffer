@@ -7,7 +7,7 @@
   "projection_event": "3",
   "squad_source_event": "2",
   "squad_status_reason": "picks read for GW2 while projecting GW3",
-  "squad_retrieved_at": "2026-09-02T16:29:53+00:00",
+  "squad_retrieved_at": "2026-09-02T16:47:03+00:00",
   "bank_source": "entry_picks",
   "bank_exact": "True",
   "free_transfers_source": "derived_from_entry_history",
@@ -39,12 +39,12 @@
   "ep_next_blend_weight": "0.0",
   "ep_next_sample": "382",
   "ep_next_ep_max": "12.5",
-  "ep_next_spread_ratio": "1.842",
+  "ep_next_spread_ratio": "1.812",
   "ep_next_form_match": "0.869",
   "ep_next_form_sample": "382",
   "ep_next_blend_weight_applied_mean": null,
   "model_version": "heuristic-0.6",
-  "generated_at": "2026-09-02T16:28:52+00:00",
+  "generated_at": "2026-09-02T16:47:03+00:00",
   "season": "2026-27",
   "build_mode": "personalised",
   "entry_id": 1066421,
@@ -77,6 +77,35 @@
       "pre_deadline": 90,
       "live": 60,
       "idle": 360
+    }
+  },
+  "badge_calibration": {
+    "available": true,
+    "population": "considered",
+    "source": "backtest.json -> minutes_model.bands.considered",
+    "means": "`claimed` is the mean start probability of the players who wore this badge in the archive; `start_rate` is how often they then started. The gap is the badge's own error.",
+    "bands": {
+      "NAILED": {
+        "claimed": 0.943,
+        "start_rate": 0.895,
+        "appear_rate": 0.93,
+        "n": 3490,
+        "over_claims_by": 0.048
+      },
+      "ROTATION": {
+        "claimed": 0.74,
+        "start_rate": 0.761,
+        "appear_rate": 0.882,
+        "n": 1871,
+        "over_claims_by": -0.021
+      },
+      "CAMEO?": {
+        "claimed": 0.232,
+        "start_rate": 0.233,
+        "appear_rate": 0.425,
+        "n": 4285,
+        "over_claims_by": -0.001
+      }
     }
   }
 }

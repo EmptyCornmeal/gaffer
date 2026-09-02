@@ -8,6 +8,7 @@
   import { deadlineState } from '../lib/data'
   import Icon from '../components/Icon.svelte'
   import Crest from '../components/Crest.svelte'
+  import { modelLink } from '../lib/evidence'
 
   let { bundle, onnav, onpick, now = Date.now() }: {
     bundle: Bundle
@@ -37,6 +38,17 @@
   const cmp = $derived(body?.comparison ?? null)
   const exe = $derived(body?.executability ?? null)
   const candidate = $derived(body?.candidate_move ?? null)
+  // 4.2 -- the XI's evidence composition, in one sentence. Built here rather
+  // than in `evidence.ts` because the decision publishes a richer object than a
+  // player row: it names the component AND carries what was measured about it.
+  const squadEvidence = $derived.by(() => {
+    const eq = body?.evidence_quality
+    const share = eq?.available ? eq.weak_evidence_share : undefined
+    if (typeof share !== 'number' || !Number.isFinite(share)) return null
+    const c = eq?.largest_weak_component?.component
+    const tail = c ? `, mostly ${c.replace(/_/g, ' ')}` : ''
+    return `${Math.round(share * 100)}% of this XI's projected points come from components Gaffer has measured and found wanting${tail}.`
+  })
   const chip = $derived((d?.chip ?? null) as { recommendation?: string; reason?: string; expected_gain?: number } | null)
   // Whether the squad below is the owner's or one the optimiser invented. The
   // artifact says so directly; `action` does not — an unavailable recommendation
@@ -244,6 +256,17 @@
               </div>
               <p class="text-sm">{body.biggest_risk}</p>
             </div>
+          {/if}
+          <!-- 4.2 / 4.8 -- what the recommendation RESTS ON. Distinct from the
+               risk above, which is about football; this is about how well
+               evidenced the arithmetic is. Not a confidence: it does not say
+               how likely the recommendation is to be right. -->
+          {#if squadEvidence}
+            <p class="mt-3 text-mini text-muted2">
+              {squadEvidence}
+              <a class="underline decoration-dotted hover:text-brand-light"
+                 href={modelLink('xp')}>How each part was graded</a>
+            </p>
           {/if}
         </section>
 

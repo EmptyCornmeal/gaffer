@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   BOTTOM_TABS, DEFAULT_ROUTE, KNOWN_ROUTES, MORE_TABS, NAV_TABS, PRIMARY_TABS, REDIRECTS,
-  normaliseRoute,
+  normaliseRoute, routeSection,
 } from './nav'
 
 describe('normaliseRoute', () => {
@@ -155,5 +155,33 @@ describe('unknown hashes after the partition', () => {
 
   it('does not accidentally route the More button label', () => {
     expect(KNOWN_ROUTES.has('more')).toBe(false)
+  })
+})
+
+describe("routeSection (4.8 deep links)", () => {
+  it("reads the anchor a Model-page link carried", () => {
+    // `#acc-minutes` cannot work: the hash IS the router, so an ordinary
+    // anchor navigates to the default page instead of scrolling.
+    expect(routeSection("#/model/acc-minutes")).toBe("acc-minutes")
+    expect(routeSection("#/model/acc-horizon")).toBe("acc-horizon")
+  })
+
+  it("still routes to the page itself", () => {
+    expect(normaliseRoute("#/model/acc-minutes")).toBe("model")
+  })
+
+  it("is null when no section was asked for", () => {
+    expect(routeSection("#/model")).toBeNull()
+    expect(routeSection("")).toBeNull()
+    expect(routeSection(null)).toBeNull()
+  })
+
+  it("refuses anything that is not a plain element id", () => {
+    // A hash is attacker-adjacent input on a static site; it must never become
+    // a selector or a script-bearing string.
+    expect(routeSection("#/model/../etc")).toBeNull()
+    expect(routeSection("#/model/<script>")).toBeNull()
+    expect(routeSection("#/model/9lives")).toBeNull()
+    expect(routeSection("#/model/" + "a".repeat(200))).toBeNull()
   })
 })

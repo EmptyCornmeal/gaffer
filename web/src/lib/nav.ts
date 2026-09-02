@@ -92,6 +92,24 @@ export const REDIRECTS: Readonly<Record<string, string>> = {
   accuracy: 'model',
 }
 
+/**
+ * 4.8 -- the anchor a deep link carried, if any.
+ *
+ * `#/model/acc-minutes` routes to `model` (normaliseRoute already splits on
+ * `/`) and asks for the `acc-minutes` section. A bare `#acc-minutes` cannot
+ * work in this app: the hash IS the router, so an anchor written the ordinary
+ * way navigates to the default page instead of scrolling.
+ *
+ * Returns null for anything that is not a plain element id, so a hash cannot
+ * become a selector.
+ */
+export function routeSection(hash: string | null | undefined): string | null {
+  const rest = (hash ?? '').replace(/^#\/?/, '').split('/')[1]
+  if (!rest) return null
+  const id = rest.split(/[?&#]/)[0].trim().toLowerCase()
+  return /^[a-z][a-z0-9-]{0,63}$/.test(id) ? id : null
+}
+
 export function normaliseRoute(hash: string | null | undefined): string {
   const key = (hash ?? '')
     .replace(/^#\/?/, '')

@@ -27,6 +27,66 @@ def xmins_badge(exp_minutes: float, p_start: float | None = None) -> dict[str, s
     return {"label": "CAMEO?", "kind": "bad", "hint": hint}
 
 
+#: 4.7 -- which measured population the badge quotes.
+#:
+#: `overall` is every registered player, and 22,490 of its 29,757 rows are
+#: CAMEO?: players nobody is choosing between, trivially easy to call, and they
+#: carry the aggregate. `considered` is the same rows cut to the most-owned --
+#: the ones a manager actually picks between -- and the CAMEO? error changes
+#: SIGN between the two. A badge shown next to a player being considered must
+#: quote the population that player belongs to.
+BADGE_CALIBRATION_POPULATION = "considered"
+
+#: Where the numbers come from. Never computed here: this module owns the
+#: thresholds, `backtest.START_BANDS` mirrors them, and the measurement is the
+#: backtest's.
+BADGE_CALIBRATION_SOURCE = "backtest.json -> minutes_model.bands.considered"
+
+
+def badge_calibration(backtest: dict | None) -> dict:
+    """What each badge claimed and what the badged players then did.
+
+    A badge is a one-word confidence statement and was the least qualified
+    output in the product: NAILED asserts a near-certainty in capital letters
+    and, measured, over-claims by five points. This attaches the measurement
+    to the claim.
+
+    Read from the backtest artifact rather than restated here. A constant
+    would drift the moment the model changed, and a stale calibration is worse
+    than none: it would be a false reassurance carrying a measurement's
+    authority.
+    """
+    bands = (((backtest or {}).get("minutes_model") or {})
+             .get("bands") or {}).get(BADGE_CALIBRATION_POPULATION)
+    if not isinstance(bands, list) or not bands:
+        return {"available": False,
+                "reason": f"no measured bands at {BADGE_CALIBRATION_SOURCE}"}
+    out: dict = {
+        "available": True,
+        "population": BADGE_CALIBRATION_POPULATION,
+        "source": BADGE_CALIBRATION_SOURCE,
+        "means": ("`claimed` is the mean start probability of the players who "
+                  "wore this badge in the archive; `start_rate` is how often "
+                  "they then started. The gap is the badge's own error."),
+        "bands": {},
+    }
+    for row in bands:
+        name = row.get("band")
+        if not name:
+            continue
+        claimed, actual = row.get("claimed"), row.get("start_rate")
+        entry = {
+            "claimed": claimed,
+            "start_rate": actual,
+            "appear_rate": row.get("appear_rate"),
+            "n": row.get("n"),
+        }
+        if isinstance(claimed, (int, float)) and isinstance(actual, (int, float)):
+            entry["over_claims_by"] = round(claimed - actual, 3)
+        out["bands"][name] = entry
+    return out
+
+
 def player_tags(p: dict) -> list[dict[str, str]]:
     """Short chips summarising the case for/against a player."""
     pos = p["position"]

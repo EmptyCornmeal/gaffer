@@ -6,6 +6,7 @@ Keep the shapes stable; the Svelte app depends on them.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Any
 
 from gaffer import config, schedule
 from gaffer.io import write_json_atomic
+from gaffer.model import rationale
 from gaffer.model.projection import shrunk_defcon90
 from gaffer.model.rationale import player_rationale, player_tags, xmins_badge
 from gaffer.solver import optimize
@@ -110,6 +112,23 @@ def run_timestamp() -> str:
     the contract can assert they came from the same run.
     """
     return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def _badge_calibration() -> dict[str, Any]:
+    """The measured badge calibration, or a stated absence.
+
+    Read from the committed backtest artifact at export time. The daily
+    pipeline does not run the backtest -- it grades an archive of finished
+    seasons and changes only when the model does -- so this is a join against
+    a file, not a recomputation.
+    """
+    path = config.DATA_DIR / "backtest.json"
+    try:
+        with path.open(encoding="utf-8") as fh:
+            return rationale.badge_calibration(json.load(fh))
+    except (OSError, ValueError) as exc:
+        return {"available": False,
+                "reason": f"backtest.json unreadable: {type(exc).__name__}"}
 
 
 def build_meta(
@@ -403,7 +422,7 @@ def build_players(
         # 4.2 -- how much of this number rests on components Gaffer has itself
         # measured and found wanting. COMPACT: the share and the name of the
         # largest offender. The prose behind each status is identical for all
-        # 626 players and lives in .
+        # 626 players and lives in `projection.COMPONENT_EVIDENCE`.
         out[-1]["evidence_quality"] = _evidence_compact(out[-1]["breakdown"])
     out.sort(key=lambda p: p["next_gw_xp"], reverse=True)
     return out
@@ -1064,9 +1083,14 @@ def write_all(
             for h, risk_map in sorted(horizon_solutions.items())
         }
     artifacts = {
-        "meta.json": build_meta(
-            conn, model_version, generated_at=generated_at, settings=settings
-        ),
+        "meta.json": {
+            **build_meta(
+                conn, model_version, generated_at=generated_at, settings=settings
+            ),
+            # 4.7 -- the badge's own error, published ONCE rather than on each
+            # of 626 rows. Every surface joins on the label.
+            "badge_calibration": _badge_calibration(),
+        },
         "players.json": players,
         "fixtures.json": fixtures,
         "recommendation.json": reco,

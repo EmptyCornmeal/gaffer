@@ -6,6 +6,7 @@
   import Pitch from '../components/Pitch.svelte'
   import FixtureStrip from '../components/FixtureStrip.svelte'
   import Icon from '../components/Icon.svelte'
+  import { badgeCaption } from '../lib/evidence'
 
   let { bundle, onpick, ongoSettings, onnav }: { bundle: Bundle; onpick: (id: number) => void; ongoSettings: () => void; onnav: (r: string) => void } = $props()
 
@@ -199,7 +200,9 @@
                      alone as a pointer convenience. -->
                 <button class="w-full text-left" onclick={(e) => { e.stopPropagation(); onpick(p.id) }}>
                   <span class="flex items-center gap-1 font-semibold">{p.name}
-                    <span class="badge badge-{p.xmins_badge.kind}">{p.xmins_badge.label}</span>
+                    <span class="badge badge-{p.xmins_badge.kind}"
+                          title={badgeCaption(bundle.meta, p.xmins_badge.label) ?? undefined}
+                    >{p.xmins_badge.label}</span>
                     {#if p.id === captainId}<span class="badge badge-good">C</span>{/if}
                   </span>
                   <span class="block text-micro text-muted">{p.pos} · {p.team} · £{p.price.toFixed(1)}</span>

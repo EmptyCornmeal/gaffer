@@ -98,6 +98,19 @@ export interface DecisionBody {
   league_note: string
   confidence: 'high' | 'medium' | 'low' | 'unknown'
   biggest_risk: string
+  /**
+   * 4.2 -- the share of the recommended XI's projected points contributed by
+   * components Gaffer has measured and found wanting. Optional: a decision
+   * published before this field existed simply does not show the line.
+   */
+  evidence_quality?: {
+    available?: boolean
+    reason?: string
+    weak_evidence_share?: number
+    largest_weak_component?: { component?: string; status?: string; evidence?: string }
+    players_scored?: number
+    of_xi?: number
+  }
   assumptions: string[]
   candidate_move?: CandidateMove | null
 }
