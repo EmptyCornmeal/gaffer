@@ -10,6 +10,7 @@
   import Crest from '../components/Crest.svelte'
   import { modelLink } from '../lib/evidence'
   import DecisionCardView from '../components/DecisionCard.svelte'
+  import CalendarView from '../components/Calendar.svelte'
 
   let { bundle, onnav, onpick, now = Date.now() }: {
     bundle: Bundle
@@ -276,6 +277,11 @@
              stored, digest and all, so the post-gameweek review scores exactly
              what was on the screen. -->
         <DecisionCardView card={body.card} />
+
+        <!-- 5.1/5.3 -- what is still to come, and whether waiting costs
+             anything. Placed after the card because it qualifies the timing of
+             the answer rather than the answer itself. -->
+        <CalendarView calendar={d?.calendar} wait={d?.wait_vs_act} />
 
         <!-- ── versus holding ─────────────────────────────────────── -->
         {#if cmp}

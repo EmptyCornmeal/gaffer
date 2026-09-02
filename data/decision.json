@@ -1,7 +1,139 @@
 {
   "weekly_version": "weekly-1.0",
+  "calendar": {
+    "calendar_version": "calendar-1",
+    "generated_for": "2026-09-02T17:20:05.832417+00:00",
+    "window": "idle",
+    "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
+    "events": [
+      {
+        "kind": "deadline",
+        "at": "2026-09-04T17:30:00+00:00",
+        "in_hours": 48.2,
+        "passed": false,
+        "certainty": "published",
+        "changes": "everything: after this the squad is locked for the gameweek"
+      },
+      {
+        "kind": "price_change_near",
+        "at": null,
+        "player": {
+          "id": 8,
+          "name": "Calafiori",
+          "team": "ARS",
+          "price": 5.6
+        },
+        "direction": "rise",
+        "percent": 85.4,
+        "projections": [
+          {
+            "offset": 0,
+            "projected_percent": "90.7",
+            "likelihood": 3
+          },
+          {
+            "offset": 1,
+            "projected_percent": "110.4",
+            "likelihood": 5
+          },
+          {
+            "offset": 2,
+            "projected_percent": "130.2",
+            "likelihood": 5
+          }
+        ],
+        "certainty": "85% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "in_this_move": false,
+        "owned": true,
+        "changes": "Calafiori may move 0.1m before the deadline"
+      },
+      {
+        "kind": "price_change_near",
+        "at": null,
+        "player": {
+          "id": 427,
+          "name": "Mbeumo",
+          "team": "MUN",
+          "price": 8.0
+        },
+        "direction": "fall",
+        "percent": -79.3,
+        "projections": [
+          {
+            "offset": 0,
+            "projected_percent": "-81.4",
+            "likelihood": -3
+          },
+          {
+            "offset": 1,
+            "projected_percent": "-89.4",
+            "likelihood": -3
+          },
+          {
+            "offset": 2,
+            "projected_percent": "-97.5",
+            "likelihood": -4
+          }
+        ],
+        "certainty": "79% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "in_this_move": false,
+        "owned": true,
+        "changes": "Mbeumo may move 0.1m before the deadline"
+      }
+    ],
+    "covers": [
+      "the deadline",
+      "price changes that FPL says are due",
+      "price changes past 70% of the way, marked as not due",
+      "price locks",
+      "which schedule window this is"
+    ],
+    "does_not_cover": [
+      {
+        "what": "team news and press conferences",
+        "why": "no source is ingested; this is the substrate for it, not the thing"
+      },
+      {
+        "what": "European and cup fixtures",
+        "why": "not in the FPL API; a player's Thursday night is invisible here"
+      },
+      {
+        "what": "predicted lineups",
+        "why": "no source is ingested"
+      },
+      {
+        "what": "injury updates between now and the deadline",
+        "why": "`news` is a snapshot of what FPL had when the pipeline ran, not a feed"
+      },
+      {
+        "what": "WHEN a due price change will happen",
+        "why": "FPL's price system is rolling rather than nightly -- locks land across the day -- and `price_change_hourly_rate` does not reconcile with the published projections in any units, so no countdown can be derived from it honestly"
+      }
+    ],
+    "honesty": "This is TIME and MONEY awareness. It is not football awareness. An empty calendar means Gaffer knows of nothing pending in the things it can see -- it does not mean no team news is coming."
+  },
+  "wait_vs_act": {
+    "kind": "comparison",
+    "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
+    "verdict": "money may be at stake",
+    "reason": "Mbeumo is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
+    "hours_to_deadline": 48.2,
+    "edge_points": 1.45,
+    "edge_interval_type": "monte_carlo",
+    "money_cost_of_waiting_m": 0.0,
+    "detail": [],
+    "pending_price_changes": 0,
+    "near_price_changes": 2,
+    "near_at_risk_if_you_wait": [
+      "Mbeumo"
+    ],
+    "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
+    "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
+  },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-09-02T17:07:14+00:00",
+  "generated_at": "2026-09-02T17:20:00+00:00",
   "gameweek": 3,
   "horizon": 6,
   "squad_state": {
@@ -2526,15 +2658,15 @@
         "transfers_in": [],
         "captain": {
           "id": 411,
-          "name": null,
-          "team": null,
-          "pos": null
+          "name": "Haaland",
+          "team": "MCI",
+          "pos": "FWD"
         },
         "vice": {
           "id": 426,
-          "name": null,
-          "team": null,
-          "pos": null
+          "name": "B.Fernandes",
+          "team": "MUN",
+          "pos": "MID"
         }
       },
       "strength": {
@@ -2666,7 +2798,7 @@
         "players_scored": 11,
         "of_xi": 11
       },
-      "content_hash": "4b3b9f78600b959e"
+      "content_hash": "bcbd1e6ecbd16caa"
     }
   },
   "versions": {
@@ -3166,8 +3298,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-09-02T17:07:14+00:00",
-    "squad_retrieved_at": "2026-09-02T17:07:14+00:00",
+    "generated_at": "2026-09-02T17:20:00+00:00",
+    "squad_retrieved_at": "2026-09-02T17:20:00+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"

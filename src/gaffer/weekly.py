@@ -17,7 +17,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
-from gaffer import card, config, decision, snapshots
+from gaffer import calendar, card, config, decision, snapshots
 from gaffer import league as LG
 from gaffer.model import projection
 from gaffer.model import scenarios as SC
@@ -365,6 +365,32 @@ def _headline(
     return f"{outs} → {ins}{hit} — captain {_name(conn, mv['captain'])}"
 
 
+def _deadline(conn: sqlite3.Connection) -> datetime | None:
+    """The published deadline, or None. Never a guess."""
+    raw = _meta(conn, "deadline")
+    if not isinstance(raw, str) or not raw:
+        return None
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _schedule_window(conn: sqlite3.Connection) -> str:
+    """Which regime the calendar is being built in.
+
+    Uses `schedule._window`, so the calendar, the refresh gate and the browser
+    all name the same states -- including `locked`, which is the one a reader
+    most needs the calendar to explain.
+    """
+    from gaffer import schedule
+
+    try:
+        return schedule._window(datetime.now(UTC), _deadline(conn), None, None)
+    except Exception:
+        return "unknown"
+
+
 def _card_player(conn: sqlite3.Connection, pid: Any) -> dict[str, Any] | None:
     """One player, as the card carries him: identity only.
 
@@ -376,7 +402,7 @@ def _card_player(conn: sqlite3.Connection, pid: Any) -> dict[str, Any] | None:
         return None
     try:
         r = conn.execute(
-            "SELECT p.id, p.position, t.short_name AS team "
+            "SELECT p.id, p.position, t.short AS team "
             "FROM players p LEFT JOIN teams t ON t.id = p.team_id "
             "WHERE p.id = ?", (int(pid),)).fetchone()
     except (sqlite3.Error, TypeError, ValueError):
@@ -560,8 +586,21 @@ def snapshot_payload(
     dec_dict["card"] = card.build(
         dec_dict, gameweek=from_gw, horizon=horizon,
         resolve=lambda pid: _card_player(conn, pid))
+    # 5.1/5.3 -- what is still to come, and whether it is worth waiting for.
+    #
+    # A SIBLING of the decision, not a field inside the card: "what should I
+    # do?" and "what is still to come before I have to?" are different
+    # questions, and Cardinality asks for one canonical object per question,
+    # not one object for everything.
+    cal = calendar.build(
+        conn, now=datetime.now(UTC), deadline=_deadline(conn),
+        window=_schedule_window(conn),
+        squad_ids=list((held or {}).get("squad") or []),
+        move_ids=[*(dec.transfers_in or []), *(dec.transfers_out or [])])
     return {
         "weekly_version": WEEKLY_VERSION,
+        "calendar": cal,
+        "wait_vs_act": calendar.wait_vs_act(dec_dict, cal),
         "decision_version": decision.DECISION_VERSION,
         "generated_at": generated_at,
         "gameweek": from_gw,

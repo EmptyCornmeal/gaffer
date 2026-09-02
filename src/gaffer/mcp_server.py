@@ -476,6 +476,25 @@ def _evidence_expand(compact: Any) -> dict[str, Any] | None:
     return out
 
 
+def _thin_calendar(cal: Any) -> Any:
+    """The calendar, minus the per-player projection tables.
+
+    FPL's three-offset projection is worth having on one player's page and is
+    not worth 3 x N rows in a decision response. The `does_not_cover` block is
+    NOT thinned: it is the part that stops an empty calendar being read as "the
+    coast is clear", and dropping it to save bytes would remove the only thing
+    protecting the reader from the feature.
+    """
+    if not isinstance(cal, dict):
+        return cal
+    out = dict(cal)
+    out["events"] = [
+        {k: v for k, v in e.items() if k != "projections"}
+        for e in (cal.get("events") or []) if isinstance(e, dict)
+    ]
+    return out
+
+
 def get_weekly_decision() -> dict[str, Any]:
     """This week's single action, with the hold comparison behind it."""
     meta = _meta()
@@ -518,10 +537,20 @@ def get_weekly_decision() -> dict[str, Any]:
         # is what the move could least affect.
         league_effects=[{**lg, "rivals": (lg.get("rivals") or [])[:3]}
                         for lg in (dec.get("league_effects") or [])],
+        # 5.1/5.3 -- what is still to come before the deadline, and whether
+        # waiting costs anything. A SIBLING of the card: "what should I do?"
+        # and "what is still to come before I have to?" are different
+        # questions.
+        calendar=_thin_calendar(d.get("calendar")),
+        wait_vs_act=d.get("wait_vs_act"),
         squad_known=bool((d.get("squad_state") or {}).get("known")),
         limitations=[
             "The action bar (points and probability) is a policy choice, not "
             "a fitted parameter — see `card.strength`.",
+            "`calendar` covers TIME and MONEY only. It does not know about "
+            "team news, European fixtures or predicted lineups, and an empty "
+            "calendar does not mean nothing is coming — see "
+            "`calendar.does_not_cover`.",
             "`card.margin.interval_type` is Monte-Carlo error on the mean "
             "edge; `card.margin.realistic_range` is the far wider spread of "
             "football outcomes. They are different quantities.",

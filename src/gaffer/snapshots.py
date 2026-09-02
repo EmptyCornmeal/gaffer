@@ -94,6 +94,12 @@ def parse_time(raw: Any) -> datetime | None:
 VOLATILE_KEYS = frozenset({
     "as_of", "generated_at", "data_age_seconds", "content_hash",
     "squad_retrieved_at", "retrieved_at",
+    # 5.1 -- the information calendar is measured from the wall clock, so
+    # "46.8 hours to the deadline" and "46.6 hours" are the same decision an
+    # hour apart. Without these three, every refresh would store a new
+    # snapshot row and the immutable record would fill with duplicates of one
+    # answer.
+    "generated_for", "in_hours", "hours_to_deadline",
 })
 
 

@@ -10,6 +10,44 @@
 // ---------------------------------------------------------------------------
 
 /** 4.1 -- one object per weekly decision. Shape mirrors `gaffer.card`. */
+/** 5.1 -- the information calendar. Time and money; explicitly not football. */
+export interface InfoCalendar {
+  calendar_version: string
+  window: string
+  scope: string
+  events: Array<{
+    kind: 'deadline' | 'price_change_due' | 'price_change_near' | 'price_locked'
+    at: string | null
+    in_hours?: number
+    passed?: boolean
+    percent?: number
+    direction?: 'rise' | 'fall'
+    certainty?: string
+    changes?: string
+    in_this_move?: boolean
+    owned?: boolean
+    player?: { id: number; name: string; team: string | null }
+  }>
+  covers: string[]
+  does_not_cover: Array<{ what: string; why: string }>
+  honesty: string
+}
+
+/** 5.3 -- a comparison, and deliberately not an EVPI calculation. */
+export interface WaitVsAct {
+  kind: 'comparison'
+  not_an_evpi: string
+  verdict: string
+  reason: string
+  hours_to_deadline?: number | null
+  edge_points?: number | null
+  money_cost_of_waiting_m: number
+  detail: string[]
+  near_at_risk_if_you_wait?: string[]
+  no_exchange_rate: string
+  missing_term: string
+}
+
 export interface DecisionCard {
   card_version: string
   gameweek: number | null
@@ -168,6 +206,12 @@ export interface DecisionBody {
 export interface WeeklyDecision {
   weekly_version: string
   decision_version: string
+  /** 5.1 -- what is still to come. A sibling of `decision`, not a field of it:
+      "what should I do?" and "what is still to come before I have to?" are
+      different questions. Optional, for artifacts published before it existed. */
+  calendar?: InfoCalendar
+  /** 5.3 -- the wait-versus-act comparison built from that calendar. */
+  wait_vs_act?: WaitVsAct
   generated_at: string
   gameweek: number
   horizon: number
