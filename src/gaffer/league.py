@@ -388,6 +388,17 @@ class RivalGap:
     `domain` block published beside every figure.
     """
 
+    #: The domain, stated ONCE for the whole set rather than repeated on every
+    #: row. It is a property of the measurement, not of the rival, and a block
+    #: of identical prose per row is both noise and 200 bytes of a capped
+    #: response spent saying the same thing six times.
+    DOMAIN = {
+        "horizon": "next_gameweek",
+        "measures": ("whether you are ahead of this manager once the next "
+                     "gameweek has been played, not at the end of the season"),
+        "basis": "shared fixture scenarios",
+    }
+
     entry_id: int
     name: str
     #: Season points already banked, mine minus his, before this gameweek.
@@ -420,12 +431,6 @@ class RivalGap:
             "simulations": self.n_sims,
             "squad_overlap": self.overlap,
             "squad_inferred": self.inferred,
-            "domain": {
-                "horizon": "next_gameweek",
-                "measures": ("whether you are ahead of this manager once the "
-                             "next gameweek has been played, not at the end of "
-                             "the season"),
-            },
         }
 
 
@@ -491,6 +496,83 @@ def rival_gaps(
     return out
 
 
+def differential_leverage(
+    scen: Any, state: LeagueState, my_starting: list[int],
+    my_captain: int | None, top: int = 8,
+) -> list[dict[str, Any]]:
+    """Which of my differentials actually move the contest, and which only differ.
+
+    3.6. A differential is a player my rivals do not own. That says nothing
+    about whether he creates SEPARATION: a nailed defender who returns two
+    points every week differs from everyone's squad and moves nothing, while a
+    forward with the same expected points and twice the spread decides weeks.
+    Ownership is the definition; leverage is the question.
+
+    The measure is his contribution to the standard deviation of the gap:
+
+        leverage_i = cov(points_i, D) / std(D)
+
+    which is the component of ``std(D)`` attributable to him, and which sums
+    across the squad to ``std(D)`` exactly. It is in POINTS, so it reads
+    directly: "he is worth 1.9 points of the spread between you and this
+    league". Correlation is reported beside it because a player can carry
+    spread and still be the wrong kind of spread -- one who moves with the
+    rivals' own players, through a shared fixture, separates less than his
+    variance suggests.
+
+    Averaged over rivals with published squads. A rival whose team is unknown
+    contributes no opinion rather than a guessed one.
+    """
+    n = int(getattr(scen, "n_sims", 0) or 0)
+    known = [r for r in state.rivals if r.has_picks]
+    if n == 0 or not known or not my_starting:
+        return []
+    mine = np.asarray(scen.squad_points(my_starting, captain=my_captain))
+    owned_by_rivals: set[int] = set()
+    for r in known:
+        owned_by_rivals |= set(r.squad)
+
+    diffs = [pid for pid in my_starting if pid not in owned_by_rivals]
+    if not diffs:
+        return []
+
+    # One gap series per rival, then average the leverage across them: a
+    # differential that separates from one rival and not another is a different
+    # object from one that separates from nobody, and the spread across rivals
+    # is what says which it is.
+    gaps = []
+    for r in known:
+        theirs = np.asarray(scen.squad_points(r.starting, captain=r.captain))
+        gaps.append(mine - theirs)
+
+    out: list[dict[str, Any]] = []
+    for pid in diffs:
+        x = np.asarray(scen.row(pid), dtype=np.float64)
+        mult = 2.0 if pid == my_captain else 1.0
+        x = x * mult
+        levs, cors = [], []
+        for d in gaps:
+            sd = float(np.std(d))
+            if sd <= 1e-9:
+                continue
+            cov = float(np.cov(x, d, ddof=0)[0, 1])
+            levs.append(cov / sd)
+            sx = float(np.std(x))
+            cors.append(cov / (sx * sd) if sx > 1e-9 else 0.0)
+        if not levs:
+            continue
+        out.append({
+            "player_id": int(pid),
+            "leverage_points": round(float(np.mean(levs)), 3),
+            "leverage_spread_across_rivals": round(float(np.std(levs)), 3),
+            "correlation_with_gap": round(float(np.mean(cors)), 3),
+            "own_std": round(float(np.std(x)), 3),
+            "captained": pid == my_captain,
+        })
+    out.sort(key=lambda r: -abs(r["leverage_points"]))
+    return out[:top]
+
+
 @dataclass
 class MoveEffect:
     """What one candidate move does to the contest with ONE named rival.
@@ -554,7 +636,6 @@ class MoveEffect:
             "variance_reduction_per_point_given_up":
                 self.variance_reduction_per_point,
             "simulations": self.n_sims,
-            "domain": {"horizon": "next_gameweek"},
         }
 
 

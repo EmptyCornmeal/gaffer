@@ -116,11 +116,25 @@ def default_target(state: LG.LeagueState) -> int:
     Positions are measured inside the fetched cohort, so the target must be too —
     a top-10% target in a truncated league means top 10% of the rivals we can
     actually see, and the caveats say so.
+
+    3.9 -- SMALL leagues no longer target first place. `classify` calls anything
+    up to thirty entries SMALL, so a 24-person work league was being scored on
+    "will you finish first": `p_target` came out at 0.001 and the stance
+    computed from it was `neutral`, which is not a strategy, it is an absence of
+    one. A probability that is always about to be zero cannot rank a decision,
+    because every option scores the same nothing.
+
+    The target is a property of the LEAGUE, never of how well you happen to be
+    doing in it — choosing a band because it flatters the current position is
+    how a metric stops measuring anything. Tiny leagues, where everybody can
+    realistically win, keep first place; above that it is a band of roughly the
+    top tenth, floored at three so a twenty-person league is not effectively
+    asked for first place under another name.
     """
     n = max(1, len(state.entries))
-    if state.classification in (LG.TINY, LG.SMALL):
+    if state.classification == LG.TINY:
         return 1
-    return max(1, round(n * 0.1))
+    return max(3, round(n * 0.1))
 
 
 def _league_block(
@@ -135,9 +149,10 @@ def _league_block(
     # 3.1/3.2 -- the rival-by-rival contest, under the SAME scenarios as the
     # placing probabilities, so the two can never disagree about the football.
     gaps = LG.rival_gaps(scen, state, starting, captain)
+    leverage = LG.differential_leverage(scen, state, starting, captain)
     return ML.build_view(
         state, list(starting) + [], captain, placing, gws_remaining, target,
-        rival_gaps=gaps,
+        rival_gaps=gaps, differential_leverage=leverage,
     )
 
 
@@ -326,6 +341,107 @@ def chip_timing(
     return profiles, basis, gws[-1], fixtures
 
 
+#: 3.10 -- bands for the coarse long-horizon chip ranking. Deliberately three
+#: and deliberately words: a GW3 model must not assert that GW16 is worth 8.54
+#: points, and publishing a number invites exactly that reading.
+COARSE_BANDS = ("strong", "average", "weak")
+
+
+def coarse_chip_outlook(
+    conn: Any, gw: int, stop_event: int, starting: list[int], bench: list[int],
+) -> dict[str, Any]:
+    """A RANKING of the gameweeks a chip could still be played in, to its expiry.
+
+    3.10. `chip_timing` values Bench Boost and Triple Captain properly, but only
+    across the gameweeks Gaffer projects -- six of them. Every first-half chip
+    runs to GW19, so the published "best gameweek" answered "of the six I looked
+    at" while being read as "of the seventeen available", which is a Scope
+    error with a decision attached: GW16 is Manchester City at home to Hull, the
+    fixture the wider game names as the standout Triple Captain window of the
+    first half, and it was invisible.
+
+    The method is deliberately coarser than the near-horizon one and says so.
+    Beyond the projection horizon there is no per-player projection, so this
+    scales each player's CURRENT rate by the difficulty of his team's fixture
+    in that gameweek and by how many fixtures his team has. That is enough to
+    ORDER gameweeks and nowhere near enough to price one, so the output is a
+    band -- strong / average / weak -- and never a number.
+
+    Wildcard and Free Hit are not ranked here and are not guessed. Both are
+    worth whatever a re-solved squad would be worth in that gameweek, and no
+    squad is solved beyond the horizon; a fixture-scaled version of today's
+    squad would be answering a different question under their name.
+    """
+    out: dict[str, Any] = {
+        "method": ("current per-player rates scaled by fixture difficulty and "
+                   "fixture count; ORDERS gameweeks, does not price them"),
+        "bands": list(COARSE_BANDS),
+        "assessed_to": stop_event,
+        "not_ranked": ["wildcard", "freehit"],
+        "not_ranked_reason": (
+            "both are worth what a re-solved squad would be worth in that "
+            "gameweek, and no squad is solved beyond the projection horizon. "
+            "Scaling today's squad would answer a different question under "
+            "their name."),
+        "by_chip": {},
+    }
+    if conn is None or stop_event <= gw:
+        out["unavailable"] = "no gameweeks remain in the window"
+        return out
+
+    rates = {int(r["player_id"]): float(r["exp_points"] or 0.0)
+             for r in conn.execute(
+                 "SELECT player_id, exp_points FROM projections WHERE gw = ?",
+                 (gw,))}
+    teams = {int(r["id"]): int(r["team_id"]) for r in conn.execute(
+        "SELECT id, team_id FROM players")}
+    # Per (gw, team): how many fixtures, and their mean difficulty.
+    fx: dict[tuple[int, int], list[int]] = {}
+    for r in conn.execute(
+            "SELECT gw, team_h, team_a, fdr_h, fdr_a FROM fixtures "
+            "WHERE gw > ? AND gw <= ?", (gw, stop_event)):
+        fx.setdefault((int(r["gw"]), int(r["team_h"])), []).append(int(r["fdr_h"] or 3))
+        fx.setdefault((int(r["gw"]), int(r["team_a"])), []).append(int(r["fdr_a"] or 3))
+    if not fx:
+        out["unavailable"] = "no fixtures published in the remaining window"
+        return out
+
+    def multiplier(g: int, team: int) -> float:
+        diffs = fx.get((g, team))
+        if not diffs:
+            return 0.0                       # blank: the chip scores nothing
+        # A soft fixture is worth more than a hard one, and a double is worth
+        # roughly two fixtures. Linear in difficulty is crude on purpose.
+        return sum((6 - d) / 3.0 for d in diffs)
+
+    for chip, squad, pick_best in (("3xc", starting, True),
+                                   ("bboost", bench, False)):
+        rows = []
+        for g in range(gw + 1, stop_event + 1):
+            vals = [rates.get(pid, 0.0) * multiplier(g, teams.get(pid, -1))
+                    for pid in squad]
+            if not vals:
+                continue
+            score = max(vals) if pick_best else sum(vals)
+            rows.append((g, score))
+        if not rows:
+            continue
+        scores = sorted(v for _g, v in rows)
+        lo = scores[max(0, len(scores) // 3 - 1)]
+        hi = scores[min(len(scores) - 1, (2 * len(scores)) // 3)]
+        ranked = []
+        for g, v in sorted(rows, key=lambda t: -t[1]):
+            band = ("strong" if v >= hi else "weak" if v <= lo else "average")
+            ranked.append({"gameweek": g, "band": band})
+        out["by_chip"][chip] = {
+            "best_gameweeks": [r["gameweek"] for r in ranked[:3]],
+            "ranked": ranked,
+            "note": (f"ordered over GW{gw + 1}-GW{stop_event} on a coarser basis "
+                     "than the near-horizon table; bands, not points"),
+        }
+    return out
+
+
 def _positions(conn) -> dict[int, str]:
     """player_id -> position, for autosub legality (2B.3).
 
@@ -395,6 +511,19 @@ def chip_block(
                          calendar=calendar)
     block = plan.as_dict()
     block["timing"]["fixtures"] = {str(g): f for g, f in (fixtures or {}).items()}
+    # 3.10 -- order the gameweeks to each chip's own expiry, on a coarser basis
+    # that is labelled as such. Without it the published "best gameweek" means
+    # "best of the six I projected" while reading as "best of the seventeen
+    # available", and GW16 -- the standout Triple Captain fixture of the first
+    # half -- was invisible.
+    # The expiry block from 1.3 already carries each chip's stop_event, which
+    # is the same number and one source rather than two.
+    stop = max((int((e or {}).get("stop_event") or 0)
+                for e in (block["timing"].get("expiry") or {}).values()),
+               default=0)
+    if stop > gw:
+        block["timing"]["long_horizon"] = coarse_chip_outlook(
+            conn, gw, stop, starting, bench)
     return block
 
 

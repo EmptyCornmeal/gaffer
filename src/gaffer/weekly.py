@@ -397,6 +397,7 @@ def _league_effects(
             "name": getattr(st, "name", ""),
             "move_is_the_recommendation": is_transfer,
             "rivals": [e.as_dict() for e in effects],
+            "domain": LG.RivalGap.DOMAIN,
             "note": ("Ranked by the change in P(you finish ahead of him after "
                      "this gameweek), not by expected points, and not by the "
                      "variance ratio -- that is published beside it as a "

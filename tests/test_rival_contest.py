@@ -100,8 +100,12 @@ def test_the_domain_says_next_gameweek():
     rows = {1: np.zeros(n)}
     st, _ = _state([_rival(2, 100, [1])])
     d = LG.rival_gaps(_Scen(rows, n), st, [1], my_captain=None)[0].as_dict()
-    assert d["domain"]["horizon"] == "next_gameweek"
-    assert "not at the end of the season" in d["domain"]["measures"]
+    # The domain is a property of the MEASUREMENT, not of the rival, so it is
+    # published once for the set rather than repeated on every row -- which was
+    # both noise and 200 bytes of a capped response spent six times over.
+    assert "domain" not in d
+    assert LG.RivalGap.DOMAIN["horizon"] == "next_gameweek"
+    assert "not at the end of the season" in LG.RivalGap.DOMAIN["measures"]
     assert d["p_above_ci95_interval_type"] == "monte_carlo"
 
 

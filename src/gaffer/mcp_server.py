@@ -460,7 +460,7 @@ def get_weekly_decision() -> dict[str, Any]:
         return {k: p.get(k) for k in ("id", "name", "team", "pos", "price",
                                       "next_gw_xp")}
 
-    return envelope(
+    out = envelope(
         "decision.json", meta, blob=d,
         action=dec.get("action"),
         headline=dec.get("headline"),
@@ -471,7 +471,13 @@ def get_weekly_decision() -> dict[str, Any]:
         vice=card(dec.get("vice")),
         comparison=dec.get("comparison"),
         executability=dec.get("executability"),
-        chip=d.get("chip"),
+        chip=_thin_chips(d.get("chip")),
+        # 3.3/3.7 -- what this move does to each named rival, beside what it
+        # does to expected points. Trimmed to the three closest contests: they
+        # are ordered by the change in P(ahead of him), so what is dropped is
+        # what the move could least affect.
+        league_effects=[{**lg, "rivals": (lg.get("rivals") or [])[:3]}
+                        for lg in (dec.get("league_effects") or [])],
         confidence=dec.get("confidence"),
         biggest_risk=dec.get("biggest_risk"),
         assumptions=dec.get("assumptions"),
@@ -482,6 +488,36 @@ def get_weekly_decision() -> dict[str, Any]:
             "fitted parameter — see `threshold_status`.",
         ],
     )
+
+    # A response the client refuses is worth nothing however correct it is, so
+    # the levers are pulled in order of what a reader can most afford to lose.
+    #
+    # The rival rows go first: they are ordered by the change in P(ahead of
+    # him), so trimming drops the contests this move affects least. The chip
+    # block goes last and only down to its ANSWER plus a pointer -- it is a
+    # different question with its own home in strategy.json and on the site.
+    budget = MAX_RESULT_BYTES - RESULT_HEADROOM_BYTES
+    # The chip block goes FIRST, not last. It is the largest thing here by a
+    # wide margin, it is a different question from "what should I do this
+    # week", and it has its own home in strategy.json and on the site -- so
+    # reducing it to its answer plus a pointer costs a reader almost nothing.
+    # Reducing it recovered ten kilobytes; trimming the rival contests first
+    # spent the new capability to save a fraction of that.
+    if serialized_bytes(out) > budget:
+        out["chip"] = _chips_pointer(d.get("chip"))
+    # Only then the rival rows, ordered by the change in P(ahead of him), so
+    # what goes is what this move affects least.
+    rows = 3
+    while serialized_bytes(out) > budget and rows > 1:
+        rows -= 1
+        out["league_effects"] = [
+            {**lg, "rivals": (lg.get("rivals") or [])[:rows]}
+            for lg in out.get("league_effects") or []]
+        out["league_effects_thinned"] = (
+            f"the closest {rows} contest(s) per league, ordered by how much "
+            "this move changes P(you finish ahead of him); strategy.json "
+            "carries every rival")
+    return out
 
 
 #: Why a blend component is absent, as a stable code.
@@ -1407,7 +1443,39 @@ def _ownership_row(row: Any) -> dict[str, Any]:
             "captain_eo_pct": row.get("captain_eo_pct")}
 
 
-def _thin_chips(chips: Any, *, drop_assumptions: bool = False) -> Any:
+def _chips_pointer(chips: Any) -> Any:
+    """The chip decision reduced to its answer, with a pointer to the detail.
+
+    `get_league_strategy` answers "where do I stand against these people". The
+    chip block is a different question with its own home -- `get_weekly_decision`
+    publishes it whole, and so does the site -- and at nine kilobytes it was
+    crowding the league data out of a capped response. Context, not the answer.
+
+    What survives is what a reader needs to know the chip question has been
+    asked and answered: the recommendation, its reason, and where to read the
+    rest. Nothing is lost, and the response says where it went.
+    """
+    if not isinstance(chips, dict):
+        return chips
+    timing = chips.get("timing") or {}
+    return {
+        "recommendation": chips.get("recommendation"),
+        "gameweek": chips.get("gameweek"),
+        "expected_gain": chips.get("expected_gain"),
+        "reason": chips.get("reason"),
+        "available": chips.get("available"),
+        "used": chips.get("used"),
+        "candidate_chip": (chips.get("candidate") or {}).get("chip"),
+        "expiry": {c: (e or {}).get("stop_event")
+                   for c, e in (timing.get("expiry") or {}).items()},
+        "projected": ("the chip block is summarised here; get_weekly_decision "
+                      "publishes the alternatives, the timing table and the "
+                      "long-horizon ranking in full"),
+    }
+
+
+def _thin_chips(chips: Any, *, drop_assumptions: bool = False,
+                drop_long_horizon: bool = False) -> Any:
     """Project the chips block without losing a decision or a reason.
 
     `candidate` is published as a FULL COPY of whichever entry in `alternatives`
@@ -1443,6 +1511,40 @@ def _thin_chips(chips: Any, *, drop_assumptions: bool = False) -> Any:
                     "it is published here as a reference. Read "
                     f"alternatives[{i}] for its ci95, baseline and assumptions.")
                 break
+    # The long-horizon table is 16 rows per chip and the tail of a RANKING
+    # carries almost nothing: the question is which gameweeks are strong, and
+    # the site reads the artifact where the full table lives. Always trimmed
+    # here, never dropped silently.
+    if isinstance(out.get("timing"), dict):
+        timing = dict(out["timing"])
+        lh = timing.get("long_horizon")
+        if isinstance(lh, dict) and lh.get("by_chip"):
+            trimmed = {}
+            for chip, blk in lh["by_chip"].items():
+                rows = list(blk.get("ranked") or [])
+                trimmed[chip] = {
+                    **blk,
+                    "ranked": rows[:6],
+                    "ranked_projected": (
+                        f"top 6 of {len(rows)} gameweeks; the full ordering is "
+                        "in strategy.json"),
+                }
+            timing["long_horizon"] = {**lh, "by_chip": trimmed}
+            out["timing"] = timing
+    if drop_long_horizon and isinstance(out.get("timing"), dict):
+        timing = dict(out["timing"])
+        lh = timing.pop("long_horizon", None)
+        if lh is not None:
+            best = {c: b.get("best_gameweeks")
+                    for c, b in (lh.get("by_chip") or {}).items()}
+            timing["long_horizon_projected"] = {
+                "best_gameweeks": best,
+                "assessed_to": lh.get("assessed_to"),
+                "note": ("the per-gameweek band table was dropped to fit the "
+                         "response budget; get_weekly_decision and the site "
+                         "carry it in full"),
+            }
+            out["timing"] = timing
     if drop_assumptions and isinstance(out.get("alternatives"), list):
         picked = out.get("candidate")
         cand_chip = picked.get("chip") if isinstance(picked, dict) else None
@@ -1480,7 +1582,9 @@ def get_league_strategy() -> dict[str, Any]:
                         "no strategy artifact — this run had no leagues "
                         "configured, or --skip-strategy was used")
 
-    def assemble(rows: int, lean_chips: bool = False) -> dict[str, Any]:
+    def assemble(rows: int, lean_chips: bool = False,
+                 contest_rows: int = 99, lean_horizon: bool = False,
+                 ) -> dict[str, Any]:
         leagues = []
         for lg in strat.get("leagues") or []:
             block: dict[str, Any] = {
@@ -1490,6 +1594,13 @@ def get_league_strategy() -> dict[str, Any]:
                 "placing": lg.get("placing"),
                 "data_quality": lg.get("data_quality"),
                 "posture": lg.get("posture"),
+                # 3.1/3.6 -- the contest rows, thinned like the ownership
+                # lists. They are ordered by how close the contest is and by
+                # leverage, so a cut keeps the rivals and the players a decision
+                # can actually move and drops the ones it cannot.
+                "rival_gaps": (lg.get("rival_gaps") or [])[:contest_rows],
+                "differential_leverage":
+                    (lg.get("differential_leverage") or [])[:contest_rows],
                 "shields": [_ownership_row(r)
                             for r in (lg.get("shields") or [])[:rows]],
                 "differentials": [_ownership_row(r)
@@ -1517,8 +1628,10 @@ def get_league_strategy() -> dict[str, Any]:
             "strategy.json", meta, blob=strat, leagues=leagues,
             ownership_rows_per_list=rows,
             simulation=strat.get("simulation"),
-            chips=_thin_chips(strat.get("chips"),
-                              drop_assumptions=lean_chips),
+            chips=(_chips_pointer(strat.get("chips")) if lean_horizon
+                   else _thin_chips(strat.get("chips"),
+                                    drop_assumptions=lean_chips,
+                                    drop_long_horizon=False)),
             resolution=strat.get("resolution"), errors=strat.get("league_errors"),
             limitations=[
                 *(strat.get("limitations") or []),
@@ -1553,9 +1666,26 @@ def get_league_strategy() -> dict[str, Any]:
                 f"{budget:,}-byte working budget ({MAX_RESULT_BYTES:,} cap less "
                 f"{RESULT_HEADROOM_BYTES:,} bytes of headroom)")
         return d
+    contest = 99
+    lean_h = False
     while serialized_bytes(out) > budget and rows > 2:
         rows = max(2, rows - 2)
-        out = note_rows(assemble(rows, False))
+        out = note_rows(assemble(rows, False, contest, lean_h))
+    # 3.x -- two more levers before the assumption prose, because the Phase 3
+    # blocks are the ones that grew: the contest rows are ordered by closeness
+    # and by leverage, and the long-horizon band table is a ranking whose top
+    # three carry almost all of its meaning.
+    while serialized_bytes(out) > budget and contest > 3:
+        contest = max(3, contest - 3)
+        out = note_rows(assemble(rows, False, contest, lean_h))
+        out["contest_rows_thinned"] = (
+            f"rival and leverage rows were cut to {contest} each to fit the "
+            f"{budget:,}-byte working budget; they are ordered by how close "
+            "the contest is and by leverage, so what is dropped is what a "
+            "decision could least move")
+    if serialized_bytes(out) > budget:
+        lean_h = True
+        out = note_rows(assemble(rows, False, contest, lean_h))
     # Ownership rows are ONE lever and they run out at two. On 2026-09-01 they
     # did: the response stopped shrinking at 18,607 bytes with 1,393 spare, the
     # headroom test failed, and because publishing was gated on the whole suite
@@ -1563,7 +1693,7 @@ def get_league_strategy() -> dict[str, Any]:
     # second lever exists precisely so an exhausted first one cannot do that
     # again -- and it removes a duplicated object rather than real content.
     if serialized_bytes(out) > budget:
-        out = note_rows(assemble(rows, True))
+        out = note_rows(assemble(rows, True, contest, lean_h))
     return out
 
 
