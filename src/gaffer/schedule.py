@@ -327,6 +327,24 @@ def read_published_state(data_dir: Path | str = "data") -> dict[str, Any]:
                            "degraded": None}
     faults: list[str] = []
 
+    # Judge freshness on what is SERVED, not on what was generated.
+    #
+    # `data/` is the pipeline's output directory; the site is built from
+    # `web/public/data/`, and the refresh workflow copies one to the other. Any
+    # process that writes `data/` WITHOUT that copy makes them diverge -- and
+    # then this gate reads a fresh timestamp while the reader is looking at a
+    # stale page. Found 2026-09-02, when local pipeline runs were committed to
+    # `data/` alone: the gate saw 15-minute-old data while the site served an
+    # artifact 85 minutes old.
+    #
+    # The reader's freshness is the served copy's freshness, so the OLDER of the
+    # two wins. A missing served copy is not evidence of anything and is
+    # ignored; a served copy that is older is the answer.
+    # Derived from the given directory, never from the process cwd. A relative
+    # fallback reached out of a caller's directory into whatever repo the gate
+    # happened to be run from, which a test caught on the first run.
+    served = d.parent / "web" / "public" / "data" / "meta.json"
+
     try:
         meta = json.loads((d / "meta.json").read_text(encoding="utf-8"))
         if not isinstance(meta, dict):
@@ -341,6 +359,20 @@ def read_published_state(data_dir: Path | str = "data") -> dict[str, Any]:
         pass                          # first run: nothing has been published yet
     except (OSError, ValueError, TypeError, AttributeError) as e:
         faults.append(f"meta.json unreadable ({type(e).__name__})")
+
+    # ...and now the served copy, which is what a reader actually sees.
+    if served.exists():
+        try:
+            got = json.loads(served.read_text(encoding="utf-8"))
+            served_at = parse_timestamp((got or {}).get("generated_at"))
+            if served_at is not None:
+                if out["generated_at"] is None or served_at < out["generated_at"]:
+                    out["generated_at"] = served_at
+                    out["freshness_source"] = str(served)
+            elif got:
+                faults.append("served meta.json has no readable generated_at")
+        except (OSError, ValueError, TypeError, AttributeError) as e:
+            faults.append(f"served meta.json unreadable ({type(e).__name__})")
 
     try:
         live = json.loads((d / "live.json").read_text(encoding="utf-8"))

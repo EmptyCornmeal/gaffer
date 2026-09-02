@@ -13,13 +13,35 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "GKP",
-      "net_transfers": -7704,
+      "net_transfers": -7889,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": -7704,
-        "progress": 0.03,
-        "threshold": 293298
+        "available": true,
+        "dir": "up",
+        "percent": 9.9,
+        "due": false,
+        "momentum": -7889,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": 9.7,
+            "likelihood": 1
+          },
+          {
+            "offset": 1,
+            "percent": 8.8,
+            "likelihood": 1
+          },
+          {
+            "offset": 2,
+            "percent": 7.9,
+            "likelihood": 1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -65.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 6.0,
       "owned_by": 37.9,
@@ -158,6 +180,11 @@
         "bonus": 0.23,
         "saves": 0.01,
         "other": -0.05
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.602,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -169,13 +196,35 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "DEF",
-      "net_transfers": 245118,
+      "net_transfers": 249047,
       "cost_change_event": 0,
       "price_pred": {
+        "available": true,
         "dir": "up",
-        "momentum": 245118,
-        "progress": 0.73,
-        "threshold": 336636
+        "percent": 86.4,
+        "due": false,
+        "momentum": 249047,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": 90.9,
+            "likelihood": 3
+          },
+          {
+            "offset": 1,
+            "percent": 111.4,
+            "likelihood": 5
+          },
+          {
+            "offset": 2,
+            "percent": 132.0,
+            "likelihood": 5
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": 1529.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.6,
       "owned_by": 43.5,
@@ -193,47 +242,47 @@
         "xa90": 0.04
       },
       "dist": {
-        "mean": 4.96,
+        "mean": 4.95,
         "floor": 2.0,
         "ceiling": 8.0,
-        "boom": 7.1,
-        "std": 3.35
+        "boom": 7.0,
+        "std": 3.34
       },
       "defcon": {
-        "p_hit": 0.025,
-        "per90": 5.4,
+        "p_hit": 0.015,
+        "per90": 5.0,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.37,
-      "defcon90": 5.41,
-      "next_gw_xp": 5.02,
-      "horizon_xp": 36.06,
-      "xp_window": 36.06,
+      "defcon90": 4.99,
+      "next_gw_xp": 5.0,
+      "horizon_xp": 35.94,
+      "xp_window": 35.94,
       "gw_xp": [
         {
           "gw": 3,
-          "xp": 5.02
+          "xp": 5.0
         },
         {
           "gw": 4,
-          "xp": 6.89
+          "xp": 6.87
         },
         {
           "gw": 5,
-          "xp": 6.89
+          "xp": 6.87
         },
         {
           "gw": 6,
-          "xp": 5.86
+          "xp": 5.84
         },
         {
           "gw": 7,
-          "xp": 5.55
+          "xp": 5.53
         },
         {
           "gw": 8,
-          "xp": 5.86
+          "xp": 5.84
         }
       ],
       "p_start": 0.88,
@@ -308,17 +357,22 @@
           "def": 1
         }
       ],
-      "model_xp": 5.02,
+      "model_xp": 5.0,
       "ep_next_xp": 10.0,
       "breakdown": {
         "appearance": 1.73,
         "goals": 0.51,
         "assists": 0.16,
         "clean_sheet": 2.28,
-        "defcon": 0.05,
+        "defcon": 0.03,
         "bonus": 0.32,
         "saves": 0,
         "other": -0.04
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.5266,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -330,16 +384,38 @@
       "team_id": 5,
       "team_code": 36,
       "pos": "DEF",
-      "net_transfers": 440362,
+      "net_transfers": 444886,
       "cost_change_event": 1,
       "price_pred": {
+        "available": true,
         "dir": "up",
-        "momentum": 440362,
-        "progress": 1.0,
-        "threshold": 112212
+        "percent": 16.7,
+        "due": false,
+        "momentum": 444886,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": 18.7,
+            "likelihood": 1
+          },
+          {
+            "offset": 1,
+            "percent": 27.7,
+            "likelihood": 2
+          },
+          {
+            "offset": 2,
+            "percent": 36.8,
+            "likelihood": 2
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": 1825.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.7,
-      "owned_by": 14.5,
+      "owned_by": 14.6,
       "status": "a",
       "news": "",
       "set_pieces": "corners #2",
@@ -361,16 +437,16 @@
         "std": 4.25
       },
       "defcon": {
-        "p_hit": 0.004,
-        "per90": 4.1,
+        "p_hit": 0.003,
+        "per90": 3.8,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.95,
-      "defcon90": 4.1,
+      "defcon90": 3.79,
       "next_gw_xp": 4.28,
-      "horizon_xp": 25.26,
-      "xp_window": 25.26,
+      "horizon_xp": 25.24,
+      "xp_window": 25.24,
       "gw_xp": [
         {
           "gw": 3,
@@ -378,7 +454,7 @@
         },
         {
           "gw": 4,
-          "xp": 6.4
+          "xp": 6.39
         },
         {
           "gw": 5,
@@ -386,7 +462,7 @@
         },
         {
           "gw": 6,
-          "xp": 6.4
+          "xp": 6.39
         },
         {
           "gw": 7,
@@ -468,6 +544,11 @@
         "bonus": 0.32,
         "saves": 0,
         "other": -0.36
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.278,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -479,13 +560,35 @@
       "team_id": 6,
       "team_code": 8,
       "pos": "FWD",
-      "net_transfers": 223527,
+      "net_transfers": 225432,
       "cost_change_event": 1,
       "price_pred": {
-        "dir": "stable",
-        "momentum": 223527,
-        "progress": 0.41,
-        "threshold": 540939
+        "available": true,
+        "dir": "up",
+        "percent": 3.1,
+        "due": false,
+        "momentum": 225432,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": 4.1,
+            "likelihood": 1
+          },
+          {
+            "offset": 1,
+            "percent": 8.8,
+            "likelihood": 1
+          },
+          {
+            "offset": 2,
+            "percent": 13.5,
+            "likelihood": 1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": 945.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 7.7,
       "owned_by": 69.9,
@@ -510,16 +613,16 @@
         "std": 2.64
       },
       "defcon": {
-        "p_hit": 0.003,
-        "per90": 4.7,
+        "p_hit": 0.001,
+        "per90": 4.0,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.98,
-      "defcon90": 4.67,
+      "defcon90": 4.05,
       "next_gw_xp": 3.88,
-      "horizon_xp": 30.61,
-      "xp_window": 30.61,
+      "horizon_xp": 30.58,
+      "xp_window": 30.58,
       "gw_xp": [
         {
           "gw": 3,
@@ -535,7 +638,7 @@
         },
         {
           "gw": 6,
-          "xp": 5.13
+          "xp": 5.12
         },
         {
           "gw": 7,
@@ -543,7 +646,7 @@
         },
         {
           "gw": 8,
-          "xp": 5.13
+          "xp": 5.12
         }
       ],
       "p_start": 0.95,
@@ -621,10 +724,15 @@
         "goals": 1.24,
         "assists": 0.1,
         "clean_sheet": 0,
-        "defcon": 0.01,
+        "defcon": 0.0,
         "bonus": 0.7,
         "saves": 0,
         "other": -0.0
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.1804,
+        "largest_weak_component": "bonus",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -636,13 +744,35 @@
       "team_id": 7,
       "team_code": 9,
       "pos": "DEF",
-      "net_transfers": -51852,
+      "net_transfers": -52378,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": -51852,
-        "progress": 0.55,
-        "threshold": 93638
+        "available": true,
+        "dir": "down",
+        "percent": -10.8,
+        "due": false,
+        "momentum": -52378,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -11.1,
+            "likelihood": -1
+          },
+          {
+            "offset": 1,
+            "percent": -12.2,
+            "likelihood": -1
+          },
+          {
+            "offset": 2,
+            "percent": -13.3,
+            "likelihood": -1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -98.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.0,
       "owned_by": 12.1,
@@ -763,6 +893,11 @@
         "bonus": 0.1,
         "saves": 0,
         "other": -0.79
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.4085,
+        "largest_weak_component": "other",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -774,13 +909,35 @@
       "team_id": 8,
       "team_code": 31,
       "pos": "MID",
-      "net_transfers": -63406,
+      "net_transfers": -64024,
       "cost_change_event": 0,
       "price_pred": {
+        "available": true,
         "dir": "down",
-        "momentum": -63406,
-        "progress": 0.84,
-        "threshold": 75839
+        "percent": -48.0,
+        "due": false,
+        "momentum": -64024,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -48.4,
+            "likelihood": -3
+          },
+          {
+            "offset": 1,
+            "percent": -50.6,
+            "likelihood": -3
+          },
+          {
+            "offset": 2,
+            "percent": -52.7,
+            "likelihood": -3
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -148.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.5,
       "owned_by": 9.8,
@@ -912,6 +1069,11 @@
         "bonus": 0.04,
         "saves": 0,
         "other": 0
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.0957,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -923,13 +1085,35 @@
       "team_id": 13,
       "team_code": 2,
       "pos": "FWD",
-      "net_transfers": -70261,
+      "net_transfers": -71162,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": -70261,
-        "progress": 0.34,
-        "threshold": 205851
+        "available": true,
+        "dir": "down",
+        "percent": -15.6,
+        "due": false,
+        "momentum": -71162,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -15.6,
+            "likelihood": -1
+          },
+          {
+            "offset": 1,
+            "percent": -15.3,
+            "likelihood": -1
+          },
+          {
+            "offset": 2,
+            "percent": -15.0,
+            "likelihood": -1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": 55.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 6.0,
       "owned_by": 26.6,
@@ -954,13 +1138,13 @@
         "std": 4.15
       },
       "defcon": {
-        "p_hit": 0.001,
-        "per90": 3.5,
+        "p_hit": 0.0,
+        "per90": 3.3,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.53,
-      "defcon90": 3.47,
+      "defcon90": 3.3,
       "next_gw_xp": 5.63,
       "horizon_xp": 26.06,
       "xp_window": 26.06,
@@ -1057,10 +1241,15 @@
         "goals": 3.28,
         "assists": 0.14,
         "clean_sheet": 0,
-        "defcon": 0.0,
+        "defcon": 0,
         "bonus": 0.6,
         "saves": 0,
         "other": -0.22
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.1353,
+        "largest_weak_component": "bonus",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -1072,16 +1261,38 @@
       "team_id": 15,
       "team_code": 43,
       "pos": "FWD",
-      "net_transfers": 225202,
+      "net_transfers": 227569,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": 225202,
-        "progress": 0.41,
-        "threshold": 547130
+        "available": true,
+        "dir": "up",
+        "percent": 45.8,
+        "due": false,
+        "momentum": 227569,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": 47.7,
+            "likelihood": 3
+          },
+          {
+            "offset": 1,
+            "percent": 56.6,
+            "likelihood": 3
+          },
+          {
+            "offset": 2,
+            "percent": 65.6,
+            "likelihood": 3
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": 664.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 15.5,
-      "owned_by": 70.7,
+      "owned_by": 70.8,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1",
@@ -1103,13 +1314,13 @@
         "std": 5.05
       },
       "defcon": {
-        "p_hit": 0.0,
-        "per90": 3.2,
+        "p_hit": 0.001,
+        "per90": 3.5,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.71,
-      "defcon90": 3.17,
+      "defcon90": 3.48,
       "next_gw_xp": 8.04,
       "horizon_xp": 35.55,
       "xp_window": 35.55,
@@ -1218,10 +1429,15 @@
         "goals": 4.97,
         "assists": 0.32,
         "clean_sheet": 0,
-        "defcon": 0,
+        "defcon": 0.0,
         "bonus": 0.87,
         "saves": 0,
         "other": 0
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.1083,
+        "largest_weak_component": "bonus",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -1233,13 +1449,35 @@
       "team_id": 16,
       "team_code": 1,
       "pos": "DEF",
-      "net_transfers": -129649,
+      "net_transfers": -131270,
       "cost_change_event": 0,
       "price_pred": {
+        "available": true,
         "dir": "down",
-        "momentum": -129649,
-        "progress": 1.0,
-        "threshold": 116855
+        "percent": -40.0,
+        "due": false,
+        "momentum": -131270,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -41.1,
+            "likelihood": -3
+          },
+          {
+            "offset": 1,
+            "percent": -46.1,
+            "likelihood": -3
+          },
+          {
+            "offset": 2,
+            "percent": -51.0,
+            "likelihood": -3
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -537.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.0,
       "owned_by": 15.1,
@@ -1257,47 +1495,47 @@
         "xa90": 0.03
       },
       "dist": {
-        "mean": 2.74,
+        "mean": 2.56,
         "floor": 1.0,
-        "ceiling": 7.0,
-        "boom": 2.0,
-        "std": 2.71
+        "ceiling": 6.0,
+        "boom": 1.8,
+        "std": 2.64
       },
       "defcon": {
-        "p_hit": 0.149,
-        "per90": 8.2,
+        "p_hit": 0.069,
+        "per90": 6.8,
         "threshold": 10,
-        "near_hit": true
+        "near_hit": false
       },
       "xgi90": 0.24,
-      "defcon90": 8.24,
-      "next_gw_xp": 2.76,
-      "horizon_xp": 19.21,
-      "xp_window": 19.21,
+      "defcon90": 6.84,
+      "next_gw_xp": 2.56,
+      "horizon_xp": 18.01,
+      "xp_window": 18.01,
       "gw_xp": [
         {
           "gw": 3,
-          "xp": 2.76
+          "xp": 2.56
         },
         {
           "gw": 4,
-          "xp": 1.43
+          "xp": 1.23
         },
         {
           "gw": 5,
-          "xp": 4.31
+          "xp": 4.11
         },
         {
           "gw": 6,
-          "xp": 3.2
+          "xp": 3.0
         },
         {
           "gw": 7,
-          "xp": 4.31
+          "xp": 4.11
         },
         {
           "gw": 8,
-          "xp": 3.2
+          "xp": 3.0
         }
       ],
       "p_start": 0.85,
@@ -1307,7 +1545,7 @@
         "kind": "good",
         "hint": "~71'"
       },
-      "rationale": "Nailed defender with projected 2.8 pts next GW.",
+      "rationale": "Nailed defender with projected 2.6 pts next GW.",
       "tags": [
         {
           "label": "nailed",
@@ -1356,17 +1594,22 @@
           "def": 2
         }
       ],
-      "model_xp": 2.76,
+      "model_xp": 2.56,
       "ep_next_xp": 2.5,
       "breakdown": {
         "appearance": 1.7,
         "goals": 0.26,
         "assists": 0.15,
         "clean_sheet": 0.6,
-        "defcon": 0.3,
-        "bonus": 0.18,
+        "defcon": 0.14,
+        "bonus": 0.14,
         "saves": 0,
         "other": -0.43
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.383,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -1378,16 +1621,38 @@
       "team_id": 16,
       "team_code": 1,
       "pos": "MID",
-      "net_transfers": 44478,
+      "net_transfers": 45546,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": 44478,
-        "progress": 0.12,
-        "threshold": 375329
+        "available": true,
+        "dir": "down",
+        "percent": -13.6,
+        "due": false,
+        "momentum": 45546,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -13.3,
+            "likelihood": -1
+          },
+          {
+            "offset": 1,
+            "percent": -12.1,
+            "likelihood": -1
+          },
+          {
+            "offset": 2,
+            "percent": -10.8,
+            "likelihood": -1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": 435.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 12.0,
-      "owned_by": 48.5,
+      "owned_by": 48.6,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1, FK #1, corners #1",
@@ -1402,47 +1667,47 @@
         "xa90": 0.36
       },
       "dist": {
-        "mean": 5.83,
-        "floor": 3.0,
+        "mean": 5.77,
+        "floor": 2.0,
         "ceiling": 11.0,
-        "boom": 16.7,
-        "std": 4.0
+        "boom": 15.8,
+        "std": 3.98
       },
       "defcon": {
-        "p_hit": 0.113,
-        "per90": 8.4,
+        "p_hit": 0.084,
+        "per90": 7.9,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 1.42,
-      "defcon90": 8.43,
-      "next_gw_xp": 5.87,
-      "horizon_xp": 40.94,
-      "xp_window": 40.94,
+      "defcon90": 7.89,
+      "next_gw_xp": 5.8,
+      "horizon_xp": 40.55,
+      "xp_window": 40.55,
       "gw_xp": [
         {
           "gw": 3,
-          "xp": 5.87
+          "xp": 5.8
         },
         {
           "gw": 4,
-          "xp": 4.17
+          "xp": 4.11
         },
         {
           "gw": 5,
-          "xp": 9.04
+          "xp": 8.97
         },
         {
           "gw": 6,
-          "xp": 6.41
+          "xp": 6.35
         },
         {
           "gw": 7,
-          "xp": 9.04
+          "xp": 8.97
         },
         {
           "gw": 8,
-          "xp": 6.41
+          "xp": 6.35
         }
       ],
       "p_start": 0.98,
@@ -1517,17 +1782,22 @@
           "def": 2
         }
       ],
-      "model_xp": 5.87,
+      "model_xp": 5.8,
       "ep_next_xp": 12.5,
       "breakdown": {
         "appearance": 1.88,
         "goals": 2.1,
         "assists": 0.94,
         "clean_sheet": 0.17,
-        "defcon": 0.23,
-        "bonus": 0.56,
+        "defcon": 0.17,
+        "bonus": 0.55,
         "saves": 0,
         "other": 0
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.1532,
+        "largest_weak_component": "bonus",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -1539,16 +1809,38 @@
       "team_id": 16,
       "team_code": 1,
       "pos": "MID",
-      "net_transfers": -422234,
+      "net_transfers": -426389,
       "cost_change_event": 0,
       "price_pred": {
+        "available": true,
         "dir": "down",
-        "momentum": -422234,
-        "progress": 1.0,
-        "threshold": 232936
+        "percent": -79.8,
+        "due": false,
+        "momentum": -426389,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -81.8,
+            "likelihood": -3
+          },
+          {
+            "offset": 1,
+            "percent": -90.7,
+            "likelihood": -3
+          },
+          {
+            "offset": 2,
+            "percent": -99.6,
+            "likelihood": -4
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -1912.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 8.0,
-      "owned_by": 30.1,
+      "owned_by": 30.0,
       "status": "a",
       "news": "",
       "set_pieces": "pens #2, FK #2, corners #2",
@@ -1570,20 +1862,20 @@
         "std": 3.97
       },
       "defcon": {
-        "p_hit": 0.004,
-        "per90": 4.8,
+        "p_hit": 0.003,
+        "per90": 4.7,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 1.35,
-      "defcon90": 4.79,
-      "next_gw_xp": 5.04,
-      "horizon_xp": 35.66,
-      "xp_window": 35.66,
+      "defcon90": 4.68,
+      "next_gw_xp": 5.03,
+      "horizon_xp": 35.65,
+      "xp_window": 35.65,
       "gw_xp": [
         {
           "gw": 3,
-          "xp": 5.04
+          "xp": 5.03
         },
         {
           "gw": 4,
@@ -1678,7 +1970,7 @@
           "def": 2
         }
       ],
-      "model_xp": 5.04,
+      "model_xp": 5.03,
       "ep_next_xp": 6.5,
       "breakdown": {
         "appearance": 1.83,
@@ -1689,6 +1981,11 @@
         "bonus": 0.42,
         "saves": 0,
         "other": -0.26
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.1529,
+        "largest_weak_component": "bonus",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -1700,13 +1997,35 @@
       "team_id": 19,
       "team_code": 6,
       "pos": "GKP",
-      "net_transfers": 2982,
+      "net_transfers": 3114,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": 2982,
-        "progress": 0.02,
-        "threshold": 140845
+        "available": true,
+        "dir": "down",
+        "percent": -8.1,
+        "due": false,
+        "momentum": 3114,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -8.2,
+            "likelihood": -1
+          },
+          {
+            "offset": 1,
+            "percent": -8.7,
+            "likelihood": -1
+          },
+          {
+            "offset": 2,
+            "percent": -9.1,
+            "likelihood": -1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -56.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.0,
       "owned_by": 18.2,
@@ -1833,6 +2152,11 @@
         "bonus": 0.01,
         "saves": 0.14,
         "other": -0.12
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.4022,
+        "largest_weak_component": "saves",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -1844,13 +2168,35 @@
       "team_id": 5,
       "team_code": 36,
       "pos": "DEF",
-      "net_transfers": -6893,
+      "net_transfers": -7015,
       "cost_change_event": 0,
       "price_pred": {
-        "dir": "stable",
-        "momentum": -6893,
-        "progress": 0.23,
-        "threshold": 30000
+        "available": true,
+        "dir": "up",
+        "percent": 4.0,
+        "due": false,
+        "momentum": -7015,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": 3.9,
+            "likelihood": 1
+          },
+          {
+            "offset": 1,
+            "percent": 3.7,
+            "likelihood": 1
+          },
+          {
+            "offset": 2,
+            "percent": 3.4,
+            "likelihood": 1
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -18.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.0,
       "owned_by": 2.4,
@@ -1971,6 +2317,11 @@
         "bonus": 0.19,
         "saves": 0,
         "other": -0.44
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.4257,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -1982,13 +2333,35 @@
       "team_id": 20,
       "team_code": 56,
       "pos": "MID",
-      "net_transfers": -159789,
+      "net_transfers": -161487,
       "cost_change_event": -1,
       "price_pred": {
+        "available": true,
         "dir": "down",
-        "momentum": -159789,
-        "progress": 1.0,
-        "threshold": 51075
+        "percent": -31.6,
+        "due": false,
+        "momentum": -161487,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -33.8,
+            "likelihood": -2
+          },
+          {
+            "offset": 1,
+            "percent": -43.8,
+            "likelihood": -3
+          },
+          {
+            "offset": 2,
+            "percent": -53.8,
+            "likelihood": -3
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -804.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.9,
       "owned_by": 6.6,
@@ -2006,47 +2379,47 @@
         "xa90": 0.18
       },
       "dist": {
-        "mean": 3.76,
+        "mean": 3.48,
         "floor": 2.0,
         "ceiling": 8.0,
-        "boom": 4.6,
-        "std": 2.8
+        "boom": 3.7,
+        "std": 2.69
       },
       "defcon": {
-        "p_hit": 0.196,
-        "per90": 9.8,
+        "p_hit": 0.075,
+        "per90": 7.8,
         "threshold": 12,
-        "near_hit": true
+        "near_hit": false
       },
       "xgi90": 0.31,
-      "defcon90": 9.8,
-      "next_gw_xp": 3.84,
-      "horizon_xp": 22.14,
-      "xp_window": 22.14,
+      "defcon90": 7.82,
+      "next_gw_xp": 3.53,
+      "horizon_xp": 20.33,
+      "xp_window": 20.33,
       "gw_xp": [
         {
           "gw": 3,
-          "xp": 3.84
+          "xp": 3.53
         },
         {
           "gw": 4,
-          "xp": 3.06
+          "xp": 2.76
         },
         {
           "gw": 5,
-          "xp": 3.21
+          "xp": 2.91
         },
         {
           "gw": 6,
-          "xp": 4.1
+          "xp": 3.79
         },
         {
           "gw": 7,
-          "xp": 3.84
+          "xp": 3.53
         },
         {
           "gw": 8,
-          "xp": 4.1
+          "xp": 3.79
         }
       ],
       "p_start": 0.96,
@@ -2113,17 +2486,22 @@
           "def": 3
         }
       ],
-      "model_xp": 3.84,
+      "model_xp": 3.53,
       "ep_next_xp": 2.5,
       "breakdown": {
         "appearance": 1.85,
         "goals": 0.72,
         "assists": 0.43,
         "clean_sheet": 0.19,
-        "defcon": 0.39,
-        "bonus": 0.26,
+        "defcon": 0.15,
+        "bonus": 0.19,
         "saves": 0,
         "other": 0
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.1501,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -2135,16 +2513,38 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "MID",
-      "net_transfers": -277380,
+      "net_transfers": -282757,
       "cost_change_event": 0,
       "price_pred": {
+        "available": true,
         "dir": "down",
-        "momentum": -277380,
-        "progress": 1.0,
-        "threshold": 171800
+        "percent": -4.2,
+        "due": false,
+        "momentum": -282757,
+        "projections": [
+          {
+            "offset": 0,
+            "percent": -7.4,
+            "likelihood": -1
+          },
+          {
+            "offset": 1,
+            "percent": -22.2,
+            "likelihood": -2
+          },
+          {
+            "offset": 2,
+            "percent": -37.0,
+            "likelihood": -2
+          }
+        ],
+        "locked_until": null,
+        "hourly_rate": -2331.0,
+        "calibrating": false,
+        "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 6.5,
-      "owned_by": 22.2,
+      "owned_by": 22.1,
       "status": "a",
       "news": "",
       "set_pieces": "",
@@ -2273,6 +2673,11 @@
         "bonus": 0.12,
         "saves": 0,
         "other": -0.3
+      },
+      "evidence_quality": {
+        "weak_evidence_share": 0.337,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     }
   ],
