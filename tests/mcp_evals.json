@@ -376,6 +376,30 @@
         "a calibration figure quoted without the number of observations behind it",
         "a verdict drawn from a block whose `reportable` is false"
       ]
+    },
+    {
+      "id": "was-the-advice-good",
+      "question": "Was Gaffer right, separately from whether the week went well?",
+      "expect_tools": [
+        "get_decision_loop"
+      ],
+      "require_fields": [
+        "matrix.counts",
+        "matrix.meanings",
+        "matrix.reportable",
+        "threshold_fitting.status",
+        "threshold_fitting.unit",
+        "threshold_fitting.pre_registered",
+        "overrides.status",
+        "join"
+      ],
+      "allowed_statuses": [
+        "ok",
+        "data_unavailable"
+      ],
+      "require_facts": {
+        "threshold_fitting.pre_registered.fixed_before_looking": true
+      }
     }
   ]
 }

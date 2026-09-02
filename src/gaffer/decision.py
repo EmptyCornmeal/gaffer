@@ -80,10 +80,29 @@ THRESHOLD_STATUS = {
                                "correlation and ~85 legal-XI points per gameweek. "
                                "Both came from baselines withdrawn in T-26 and "
                                "are no longer cited.",
-    "reassess_after": "~6 completed gameweeks of immutable decision snapshots "
-                      "joined to their reviews — the first sample in which the "
-                      "realised gain from acting on an edge of size x can be "
-                      "measured against holding.",
+    # CORRECTED in 7.3. This used to say "~6 completed gameweeks", a number
+    # inherited without scrutiny and repeated by the MCP for a season. Six
+    # gameweeks is six decisions; fitting two thresholds on six observations is
+    # overfitting one month and calling it measurement.
+    #
+    # The requirement is now computed rather than asserted, and it is not
+    # close. At the per-decision spread Gaffer itself publishes -- about 6.2
+    # points, from the paired p10-p90 range of the move-versus-hold delta --
+    # detecting a 0.5-point improvement at 80% power needs on the order of
+    # 1,200 DISCORDANT decisions: weeks where the candidate bar would have
+    # chosen differently. That is roughly thirty seasons of one decision a
+    # week, and only the discordant ones count, so the true figure is larger.
+    #
+    # The bars therefore stay declared policy, and `gaffer.loop` recomputes the
+    # requirement from live data every run rather than trusting this comment.
+    "reassess_after": "a pre-registered sample-and-power requirement, computed "
+                      "in `gaffer.loop.fitting_readiness` and measured in "
+                      "DISCORDANT decisions rather than gameweeks. The "
+                      "previously published '~6 completed gameweeks' was "
+                      "inherited without scrutiny and is wrong by roughly two "
+                      "orders of magnitude; the bars stay declared policy "
+                      "until the computed requirement is met, very possibly "
+                      "beyond this season.",
 }
 
 #: Above this many points, the edge is large enough that the probability gate is

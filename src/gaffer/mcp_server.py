@@ -495,6 +495,185 @@ def _thin_calendar(cal: Any) -> Any:
     return out
 
 
+def _payload(row: Any) -> dict[str, Any] | None:
+    """The stored payload, which the snapshot store writes as a JSON STRING.
+
+    Both shapes are accepted because the store's own schema has carried both:
+    a reader that assumed the object form silently found nothing and reported
+    an empty history, which looks exactly like a season with no decisions in it.
+    """
+    if not isinstance(row, dict):
+        return None
+    payload = row.get("payload")
+    if isinstance(payload, dict):
+        return payload
+    if isinstance(payload, str):
+        try:
+            got = json.loads(payload)
+        except ValueError:
+            return None
+        return got if isinstance(got, dict) else None
+    return None
+
+
+def _final_snapshot_per_gameweek() -> list[dict[str, Any]]:
+    """The LAST pre-deadline snapshot for each gameweek, oldest first.
+
+    One row per decision, not per refresh. A gameweek refreshed twelve times
+    stored twelve rows of the same advice, and counting them as twelve
+    decisions would inflate every rate in this tool by an order of magnitude
+    while looking like more evidence.
+
+    The last one before the deadline is the advice that actually stood.
+    """
+    path = data_dir() / "state" / "decisions.ndjson"
+    if not path.exists():
+        path = config.REPO_ROOT / "data" / "state" / "decisions.ndjson"
+    if not path.exists():
+        return []
+    latest: dict[Any, dict[str, Any]] = {}
+    try:
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                if not isinstance(row, dict):
+                    continue
+                if row.get("is_pre_deadline") is False:
+                    continue
+                body = _payload(row)
+                if body is None:
+                    continue
+                # `target_event` is the row's own key for the gameweek and is
+                # present even when the payload predates `gameweek`.
+                gw = row.get("target_event", body.get("gameweek"))
+                if gw is None:
+                    continue
+                latest[gw] = body
+    except OSError:
+        return []
+    return [latest[k] for k in sorted(latest, key=lambda x: (x is None, x))]
+
+
+def get_decision_loop() -> dict[str, Any]:
+    """Phase 7 -- was the advice good, separately from whether the week was?
+
+    THE LOCAL JOIN (7.1). Three records, deliberately kept apart:
+
+      - the vault is the human decision journal, and lives only on this machine;
+      - the committed snapshots are the model's own immutable record;
+      - this tool is the join.
+
+    GitHub Actions cannot see the vault and never will. Human reasoning does
+    not belong inside a deployed deterministic pipeline, and a join that ran in
+    CI would have to put it there.
+
+    Reports the four-cell matrix (7.2), what it would take to FIT the action
+    bars rather than declare them (7.3), and whether the overrides beat the
+    model (7.4) -- each with its own reporting floor, and each refusing to
+    answer below it.
+    """
+    from gaffer import journal, loop
+
+    snaps = _final_snapshot_per_gameweek()
+    reviews = _committed_reviews()
+    rows: list[dict[str, Any]] = []
+    sigmas: list[float] = []
+    discordant = 0
+    for snap in snaps:
+        gw = snap.get("gameweek")
+        review = reviews.get(gw) or {}
+        placed = loop.classify(snap, review)
+        placed["gameweek"] = gw
+        rows.append(placed)
+        cmp_ = ((snap.get("decision") or {}).get("comparison") or {})
+        rng = cmp_.get("delta_range_p10_p90")
+        sd = loop.sigma_from_range(*rng) if rng else None
+        if sd:
+            sigmas.append(sd)
+        # A decision is DISCORDANT if a plausible move of the bar would have
+        # flipped it: the edge sits within the smallest effect worth acting on.
+        delta = cmp_.get("delta")
+        bar = ((snap.get("decision") or {}).get("thresholds") or {}).get(
+            "min_actionable_points")
+        if isinstance(delta, (int, float)) and isinstance(bar, (int, float)):
+            if abs(delta - bar) <= loop.FIT_EFFECT_POINTS:
+                discordant += 1
+
+    sigma = (sum(sigmas) / len(sigmas)) if sigmas else None
+    j = journal.status()
+    return envelope(
+        "data/state/decisions.ndjson", _meta(),
+        loop_version=loop.LOOP_VERSION,
+        matrix=loop.matrix(rows),
+        by_gameweek=rows[-8:],
+        threshold_fitting=loop.fitting_readiness(discordant, sigma),
+        overrides=loop.override_analysis(_journal_entries()),
+        journal=j,
+        join=("the vault is the human journal and is LOCAL ONLY; the committed "
+              "snapshots are the model record; this tool is the join. CI "
+              "cannot see the vault, and that split is deliberate."),
+        limitations=[
+            "The decision axis is computed from the pre-deadline snapshot "
+            "alone. Perfect hindsight is never scored.",
+            "Both rates carry a reporting floor and are withheld below it.",
+        ],
+    )
+
+
+def _committed_reviews() -> dict[int, dict[str, Any]]:
+    """Reviews from the committed store, keyed by the gameweek they scored."""
+    path = data_dir() / "state" / "reviews.ndjson"
+    if not path.exists():
+        path = config.REPO_ROOT / "data" / "state" / "reviews.ndjson"
+    out: dict[int, dict[str, Any]] = {}
+    if not path.exists():
+        return out
+    try:
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                except ValueError:
+                    continue
+                body = _payload(row)
+                ev = row.get("event", (body or {}).get("event"))
+                if isinstance(ev, int) and body is not None:
+                    out[ev] = body
+    except OSError:
+        return out
+    return out
+
+
+def _journal_entries() -> list[dict[str, Any]]:
+    """Journal rows shaped for the override analysis, or nothing.
+
+    Returns an empty list rather than raising when the vault is not reachable:
+    a machine without it is a normal state, not an error, and the analysis has
+    its own floor that will refuse on an empty list.
+    """
+    from gaffer import journal
+
+    try:
+        return [
+            {"gameweek": e.get("gameweek"),
+             "followed": e.get("followed"),
+             "override_kind": e.get("override_kind"),
+             "outcome_percentile": e.get("outcome_percentile")}
+            for e in journal.read()
+        ]
+    except Exception:
+        return []
+
+
 def get_weekly_decision() -> dict[str, Any]:
     """This week's single action, with the hold comparison behind it."""
     meta = _meta()
@@ -2960,6 +3139,7 @@ TOOLS: dict[str, Any] = {
     "get_live_gameweek": get_live_gameweek,
     "get_live_scorecard": get_live_scorecard,
     "get_decision_review": get_decision_review,
+    "get_decision_loop": get_decision_loop,
     "get_model_evidence": get_model_evidence,
     "get_minutes_evidence": get_minutes_evidence,
     "get_calibration": get_calibration,
@@ -3073,6 +3253,11 @@ def build_server() -> Any:
                  description=get_decision_review.__doc__)
     def decision_review() -> dict[str, Any]:
         return call("get_decision_review")
+
+    @server.tool(name="get_decision_loop",
+                 description=get_decision_loop.__doc__)
+    def decision_loop() -> dict[str, Any]:
+        return call("get_decision_loop")
 
     @server.tool(name="get_model_evidence",
                  description=get_model_evidence.__doc__)
