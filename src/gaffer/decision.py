@@ -409,8 +409,28 @@ def classify(
             f"the move averages {best:+.1f} points but only beats holding in "
             f"{100 * cmp_.p_move_beats_hold:.0f}% of scenarios — a coin flip with "
             "a good-looking mean")
+    # SCOPE (0.3). `best` is max(this gameweek, the whole horizon), so this
+    # sentence quoted a six-week number and attached a ONE-WEEK probability to
+    # it, without naming either domain.
+    #
+    # Live on 2026-09-02 it read "+11.1 points over holding, ahead in 56% of
+    # scenarios" while the panel directly beneath it said the gain was +1.9.
+    # Both numbers were correct and the sentence was not: the one-week edge is
+    # 1.95, the horizon edge is 11.12, and 56% is the probability of the FIRST.
+    #
+    # Every other branch of this function already names its timescale -- "this
+    # gameweek", "the longer-term plan projects". This one was the exception,
+    # in the single most-read sentence Gaffer publishes.
+    from_horizon = (cmp_.horizon_delta is not None
+                    and best > cmp_.delta + 1e-9)
+    if from_horizon:
+        return ACTION_TRANSFER, (
+            f"+{best:.1f} points over holding across the planning horizon "
+            f"({cmp_.delta:+.1f} next gameweek, where the projections are "
+            f"strongest), ahead in "
+            f"{100 * cmp_.p_move_beats_hold:.0f}% of next-gameweek scenarios")
     return ACTION_TRANSFER, (
-        f"+{best:.1f} points over holding, ahead in "
+        f"+{best:.1f} points over holding next gameweek, ahead in "
         f"{100 * cmp_.p_move_beats_hold:.0f}% of scenarios")
 
 
