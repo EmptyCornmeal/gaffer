@@ -752,6 +752,56 @@ CONGESTION_REFUSED = {
             "and `started_lag`, which capture nearly the same thing. This "
             "measures the MARGINAL contribution, which is what matters."),
     },
+    "retested_with_european_fixtures": {
+        "why": ("the refusal above was measured on a Premier-League-only "
+                "archive, in which a club playing Tuesday in Europe and "
+                "Saturday in the league shows a seven-day gap. That falsifies "
+                "a PROXY. `gaffer.competitions` makes the real fixtures "
+                "visible, so the same ladder was re-run against a timeline "
+                "that includes them."),
+        "harness": "scripts/run_euro_congestion.py",
+        "exposure": {
+            "note": "European-club rows, and how many had a tight turnaround "
+                    "once European fixtures were counted. The first experiment "
+                    "saw almost none of these.",
+            "2023-24": {"euro_rows": 11236, "tight": 5526},
+            "2024-25": {"euro_rows": 9956, "tight": 5585},
+            "2025-26": {"euro_rows": 8517, "tight": 4413},
+        },
+        "brier_delta_on_european_club_rows": {
+            "true_turnaround": {"2023-24": +0.00175, "2024-25": +0.00142,
+                                "2025-26": +0.00201},
+            "true_forward_density": {"2023-24": +0.00586, "2024-25": +0.00492,
+                                     "2025-26": +0.00592},
+            "true_14d_load": {"2023-24": +0.00573, "2024-25": +0.00461,
+                              "2025-26": +0.00561},
+        },
+        "decision": "REFUSED again, on the right data this time",
+    },
+    "why_it_fails_structurally": {
+        "finding": ("ELEVEN PLAYERS START EVERY MATCH. Congestion cannot move "
+                    "the MEAN of p_start across a squad, because the mean is "
+                    "pinned by the laws of the game. It redistributes WHICH "
+                    "eleven."),
+        "evidence": (
+            "measured on European clubs, regulars only, after a European match "
+            "in the prior seven days versus not. The mean start rate is flat -- "
+            "0.762 against 0.759 in 2023-24, 0.712 against 0.697 in 2024-25, "
+            "0.719 against 0.718 in 2025-26 -- while the ACROSS-PLAYER standard "
+            "deviation rises in all three: 0.160 to 0.220, 0.162 to 0.188, "
+            "0.161 to 0.186."),
+        "so": ("a blanket downward shift was guaranteed to lose. It predicts "
+               "that fewer than eleven players will start, which is never "
+               "true. The functional form was wrong, and it was wrong for a "
+               "reason that is visible from the rules of football rather than "
+               "from the data."),
+        "residual_hypothesis_NOT_tested": (
+            "congestion as a DISPERSION effect -- widening the gap between "
+            "nailed starters and rotation risks while holding the squad mean "
+            "fixed. That is a different functional form and a different "
+            "experiment, and it is registered here rather than fished for "
+            "after seeing this result. It needs its own pre-registration."),
+    },
     "the_finding_that_outlives_the_refusal": (
         "the archive is Premier League only. A club playing Tuesday in Europe "
         "and Saturday in the league shows a SEVEN-day gap in this data. So "
@@ -761,7 +811,11 @@ CONGESTION_REFUSED = {
         "'congestion does not matter'; it is that congestion is an "
         "INFORMATION problem before it is a modelling one, and the right "
         "response is to make the European and cup fixtures visible rather than "
-        "to fit a term on a proxy that cannot see them."),
+        "to fit a term on a proxy that cannot see them. UPDATE, same day: the "
+        "fixtures were made visible and the term was re-fitted on them, and it "
+        "lost again -- see `retested_with_european_fixtures` and "
+        "`why_it_fails_structurally`. Making them visible remains the right "
+        "response; treating them as a p_start LEVEL effect does not."),
     "reproduce": "PYTHONPATH=src python scripts/run_congestion_ablation.py",
 }
 
