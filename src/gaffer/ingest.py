@@ -140,6 +140,9 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
                 "price": e["now_cost"],
                 "status": e.get("status"),
                 "chance_playing": e.get("chance_of_playing_next_round"),
+                # The timestamp is the point: it is what lets a claim
+                # be judged stale rather than merely read.
+                "news_added": e.get("news_added"),
                 "selected_by_pct": _f(e.get("selected_by_percent")),
                 "transfers_in_event": e.get("transfers_in_event", 0),
                 "transfers_out_event": e.get("transfers_out_event", 0),

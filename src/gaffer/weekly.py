@@ -17,7 +17,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
-from gaffer import calendar, card, config, decision, snapshots, squadrisk
+from gaffer import availability, calendar, card, config, decision, snapshots, squadrisk
 from gaffer import league as LG
 from gaffer.model import projection
 from gaffer.model import scenarios as SC
@@ -628,6 +628,11 @@ def snapshot_payload(
         # two fixtures is visible anywhere in a points projection, and both are
         # knowable weeks ahead -- which is why this is published beside the
         # decision rather than folded into it.
+        # Availability, with the AGE of each claim. FPL publishes
+        # `news_added` and Gaffer never stored it, so a six-week-old
+        # "unknown return date" read exactly like this morning's news.
+        "availability": availability.squad_availability(
+            conn, list((held or {}).get("squad") or [])),
         "squad_risk": squadrisk.horizon_warnings(
             conn,
             list((held or {}).get("squad") or []),

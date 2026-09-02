@@ -80,6 +80,11 @@ CREATE TABLE IF NOT EXISTS players (
     -- current prior season and presented an old cameo as current evidence.
     base_season         TEXT DEFAULT '',
     news                TEXT,
+    -- When FPL wrote that news. It publishes the field and Gaffer never stored
+    -- it, which is why availability could be read but never DATED: "groin
+    -- injury, unknown return date" is a different claim six weeks and two
+    -- matches later than it is on the morning it appears.
+    news_added          TEXT,
     set_piece_notes     TEXT,
     -- G11. `set_piece_notes` is a display string, so the orders behind it were
     -- thrown away at ingest and the projection never saw them. Set-piece duty

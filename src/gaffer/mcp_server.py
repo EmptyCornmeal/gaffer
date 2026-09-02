@@ -674,6 +674,27 @@ def _journal_entries() -> list[dict[str, Any]]:
         return []
 
 
+def _thin_availability(av: Any) -> Any:
+    """Availability, minus the provider investigation.
+
+    The list of predicted-lineup sources and why each was rejected is durable
+    documentation, not weekly news. It is identical on every response and it
+    costs ~700 bytes of a 20,000-byte budget to repeat it.
+    """
+    if not isinstance(av, dict):
+        return av
+    out = dict(av)
+    lineups = out.get("lineups")
+    if isinstance(lineups, dict):
+        out["lineups"] = {
+            "available": lineups.get("available"),
+            "reason": lineups.get("reason"),
+            "detail": ("the sources investigated and why each was rejected are "
+                       "recorded in `gaffer.availability.NoLineupProvider`"),
+        }
+    return out
+
+
 def get_weekly_decision() -> dict[str, Any]:
     """This week's single action, with the hold comparison behind it."""
     meta = _meta()
@@ -725,6 +746,11 @@ def get_weekly_decision() -> dict[str, Any]:
         # Structural problems, looked for three gameweeks ahead because that is
         # how far a free transfer can still reach.
         squad_risk=d.get("squad_risk"),
+        # Availability with the age of each claim. Thinned: the full
+        # record of which lineup sources were investigated and rejected
+        # is the same eight lines on every response and belongs in one
+        # place, not in every weekly decision.
+        availability=_thin_availability(d.get("availability")),
         squad_known=bool((d.get("squad_state") or {}).get("known")),
         limitations=[
             "The action bar (points and probability) is a policy choice, not "
@@ -778,6 +804,34 @@ def get_weekly_decision() -> dict[str, Any]:
             f"the closest {rows} contest(s) per league, ordered by how much "
             "this move changes P(you finish ahead of him); strategy.json "
             "carries every rival")
+    # Then the structural warnings, nearest first. A problem three gameweeks
+    # out survives being dropped from one response; the one that bites this
+    # week does not, so distance is the right thing to cut on.
+    if serialized_bytes(out) > budget:
+        risk = out.get("squad_risk")
+        if isinstance(risk, dict) and len(risk.get("warnings") or []) > 2:
+            kept = sorted(risk["warnings"],
+                          key=lambda w: w.get("gameweeks_away", 0))[:2]
+            out["squad_risk"] = {
+                **risk, "warnings": kept,
+                "warnings_thinned": (
+                    f"the {len(kept)} nearest of "
+                    f"{len(risk['warnings'])}, ordered by how soon they bite; "
+                    "decision.json carries them all"),
+            }
+    # Last: the per-player availability detail. The READING survives, because a
+    # sentence saying two players carry stale news is most of the value; the
+    # per-player rows are the part a reader can go and look up.
+    if serialized_bytes(out) > budget:
+        av = out.get("availability")
+        if isinstance(av, dict) and av.get("flagged"):
+            out["availability"] = {
+                **av, "flagged": [],
+                "flagged_thinned": (
+                    f"{len(av['flagged'])} flagged player(s) omitted to fit the "
+                    "response budget; the reading above summarises them and "
+                    "decision.json carries each one"),
+            }
     return out
 
 
