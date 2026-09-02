@@ -1,15 +1,27 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-09-02T17:55:38+00:00",
+  "generated_at": "2026-09-02T18:49:45+00:00",
   "result": {
     "considered": 1,
-    "new": 0,
-    "duplicates": 1,
+    "new": 1,
+    "duplicates": 0,
     "suppressed": 0,
-    "delivered": 0,
+    "delivered": 1,
     "failed": 0,
     "dry_run": true,
-    "alerts": [],
+    "alerts": [
+      {
+        "kind": "league_swing",
+        "title": "A differential is winning you the week",
+        "body": "B.Fernandes: +23 points against your closest rival.",
+        "severity": "info",
+        "event": 3,
+        "deep_link": "#/live",
+        "dedupe_key": "league_swing:07d416ccfe66",
+        "created_at": "2026-09-02T18:52:28+00:00",
+        "state": "dry_run"
+      }
+    ],
     "errors": []
   },
   "config": {
@@ -29,81 +41,17 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 7,
-      "suppressed": 1
+      "dry_run": 1
     },
     "recent": [
-      {
-        "kind": "recommendation_changed",
-        "severity": "important",
-        "title": "The recommendation changed",
-        "deep_link": "#/overview",
-        "created_at": "2026-09-02T05:37:38+00:00",
-        "state": "suppressed",
-        "event": 3
-      },
-      {
-        "kind": "recommendation_changed",
-        "severity": "important",
-        "title": "The recommended transfer changed",
-        "deep_link": "#/overview",
-        "created_at": "2026-09-01T20:23:34+00:00",
-        "state": "dry_run",
-        "event": 3
-      },
-      {
-        "kind": "recommendation_changed",
-        "severity": "important",
-        "title": "The recommendation changed",
-        "deep_link": "#/overview",
-        "created_at": "2026-09-01T20:21:27+00:00",
-        "state": "dry_run",
-        "event": 3
-      },
-      {
-        "kind": "captain_changed",
-        "severity": "important",
-        "title": "Captain recommendation changed",
-        "deep_link": "#/overview",
-        "created_at": "2026-09-01T20:21:27+00:00",
-        "state": "dry_run",
-        "event": 3
-      },
       {
         "kind": "league_swing",
         "severity": "info",
         "title": "A differential is winning you the week",
         "deep_link": "#/live",
-        "created_at": "2026-09-01T20:21:27+00:00",
+        "created_at": "2026-09-02T18:52:28+00:00",
         "state": "dry_run",
         "event": 3
-      },
-      {
-        "kind": "recommendation_changed",
-        "severity": "important",
-        "title": "The recommended transfer changed",
-        "deep_link": "#/overview",
-        "created_at": "2026-08-21T19:55:26+00:00",
-        "state": "dry_run",
-        "event": 2
-      },
-      {
-        "kind": "recommendation_changed",
-        "severity": "important",
-        "title": "The recommendation changed",
-        "deep_link": "#/overview",
-        "created_at": "2026-08-21T18:00:57+00:00",
-        "state": "dry_run",
-        "event": 2
-      },
-      {
-        "kind": "squad_state_failure",
-        "severity": "important",
-        "title": "Gaffer cannot read your squad",
-        "deep_link": "#/my-team",
-        "created_at": "2026-08-21T17:47:50+00:00",
-        "state": "dry_run",
-        "event": 2
       }
     ]
   },
