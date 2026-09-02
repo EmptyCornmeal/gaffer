@@ -17,7 +17,7 @@ import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
-from gaffer import calendar, card, config, decision, snapshots
+from gaffer import calendar, card, config, decision, snapshots, squadrisk
 from gaffer import league as LG
 from gaffer.model import projection
 from gaffer.model import scenarios as SC
@@ -601,6 +601,16 @@ def snapshot_payload(
         "weekly_version": WEEKLY_VERSION,
         "calendar": cal,
         "wait_vs_act": calendar.wait_vs_act(dec_dict, cal),
+        # Structural risk: a squad can be made of individually good picks and
+        # still be badly built. Neither a dead bench slot nor eight players in
+        # two fixtures is visible anywhere in a points projection, and both are
+        # knowable weeks ahead -- which is why this is published beside the
+        # decision rather than folded into it.
+        "squad_risk": squadrisk.horizon_warnings(
+            conn,
+            list((held or {}).get("squad") or []),
+            list((held or {}).get("bench") or []),
+            from_gw),
         "decision_version": decision.DECISION_VERSION,
         "generated_at": generated_at,
         "gameweek": from_gw,

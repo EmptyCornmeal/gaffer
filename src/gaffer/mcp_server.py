@@ -722,6 +722,9 @@ def get_weekly_decision() -> dict[str, Any]:
         # questions.
         calendar=_thin_calendar(d.get("calendar")),
         wait_vs_act=d.get("wait_vs_act"),
+        # Structural problems, looked for three gameweeks ahead because that is
+        # how far a free transfer can still reach.
+        squad_risk=d.get("squad_risk"),
         squad_known=bool((d.get("squad_state") or {}).get("known")),
         limitations=[
             "The action bar (points and probability) is a policy choice, not "
@@ -730,6 +733,9 @@ def get_weekly_decision() -> dict[str, Any]:
             "team news, European fixtures or predicted lineups, and an empty "
             "calendar does not mean nothing is coming — see "
             "`calendar.does_not_cover`.",
+            "`squad_risk` is descriptive, not predictive: every warning is "
+            "read off the published fixture list and the squad as it stands. "
+            "Its thresholds are declared presentation choices, not fitted.",
             "`card.margin.interval_type` is Monte-Carlo error on the mean "
             "edge; `card.margin.realistic_range` is the far wider spread of "
             "football outcomes. They are different quantities.",

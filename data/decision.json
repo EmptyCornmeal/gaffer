@@ -2,14 +2,14 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-09-02T18:52:27.618142+00:00",
+    "generated_for": "2026-09-02T19:36:04.192205+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-09-04T17:30:00+00:00",
-        "in_hours": 46.6,
+        "in_hours": 45.9,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
@@ -24,25 +24,25 @@
           "price": 5.6
         },
         "direction": "rise",
-        "percent": 87.2,
+        "percent": 87.8,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "91.4",
+            "projected_percent": "90.9",
             "likelihood": 3
           },
           {
             "offset": 1,
-            "projected_percent": "114.4",
+            "projected_percent": "111.6",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "137.3",
+            "projected_percent": "132.3",
             "likelihood": 5
           }
         ],
-        "certainty": "87% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "88% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": false,
         "owned": true,
@@ -58,25 +58,25 @@
           "price": 8.0
         },
         "direction": "fall",
-        "percent": -80.2,
+        "percent": -80.6,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-81.9",
+            "projected_percent": "-82.1",
             "likelihood": -3
           },
           {
             "offset": 1,
-            "projected_percent": "-91.2",
+            "projected_percent": "-91.9",
             "likelihood": -3
           },
           {
             "offset": 2,
-            "projected_percent": "-100.4",
+            "projected_percent": "-101.7",
             "likelihood": -5
           }
         ],
-        "certainty": "80% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "81% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": false,
         "owned": true,
@@ -119,8 +119,8 @@
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
     "verdict": "money may be at stake",
     "reason": "Mbeumo is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
-    "hours_to_deadline": 46.6,
-    "edge_points": 1.95,
+    "hours_to_deadline": 45.9,
+    "edge_points": 1.45,
     "edge_interval_type": "monte_carlo",
     "money_cost_of_waiting_m": 0.0,
     "detail": [],
@@ -132,8 +132,50 @@
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
   },
+  "squad_risk": {
+    "available": true,
+    "version": "squadrisk-1",
+    "from_gameweek": 3,
+    "horizon": 3,
+    "warnings": [
+      {
+        "gameweek": 3,
+        "kind": "fixture_concentration",
+        "gameweeks_away": 0,
+        "detail": "4 of 15 players are in ARS v CHE (27% of the squad). 7 of 15 sit in two fixtures. 5 directly opposed pair(s) -- João Pedro scoring is a goal against Raya -- which cancels rather than compounds.",
+        "largest": "ARS v CHE",
+        "fixable_by": "this week's transfer, if you have not used it"
+      },
+      {
+        "gameweek": 4,
+        "kind": "fixture_concentration",
+        "gameweeks_away": 1,
+        "detail": "4 of 15 players are in SUN v ARS (27% of the squad). 8 of 15 sit in two fixtures. 3 directly opposed pair(s) -- E.Le Fée scoring is a goal against Raya -- which cancels rather than compounds.",
+        "largest": "SUN v ARS",
+        "fixable_by": "one free transfer, if you roll this week's"
+      },
+      {
+        "gameweek": 5,
+        "kind": "fixture_concentration",
+        "gameweeks_away": 2,
+        "detail": "5 of 15 players are in BHA v ARS (33% of the squad). 8 of 15 sit in two fixtures. 2 directly opposed pair(s) -- Tzolis scoring is a goal against De Cuyper -- which cancels rather than compounds.",
+        "largest": "BHA v ARS",
+        "fixable_by": "2 free transfers, which you have if you roll from now"
+      },
+      {
+        "gameweek": 3,
+        "kind": "dead_bench",
+        "gameweeks_away": 0,
+        "detail": "2 of 4 bench slots cannot score: Hughes, Dubravka. That is 1 fewer outfield autosub than the bench appears to offer, and a Bench Boost would pay for 2 players rather than 4.",
+        "fixable_by": "a transfer in any gameweek -- this does not resolve itself, and it costs a little every week until it is fixed"
+      }
+    ],
+    "clear": false,
+    "why_early": "looked for 3 gameweeks ahead because that is how far a free transfer can still reach. A structural problem announced on deadline day is a complaint; the same problem three weeks out is a plan.",
+    "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
+  },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-09-02T18:49:45+00:00",
+  "generated_at": "2026-09-02T19:35:34+00:00",
   "gameweek": 3,
   "horizon": 6,
   "squad_state": {
@@ -178,7 +220,7 @@
         "price": 5.6,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 5.02
+        "next_gw_xp": 5.0
       },
       {
         "id": 115,
@@ -248,7 +290,7 @@
         "price": 5.0,
         "code": 95658,
         "team_code": 1,
-        "next_gw_xp": 2.76
+        "next_gw_xp": 2.56
       },
       {
         "id": 426,
@@ -258,7 +300,7 @@
         "price": 12.0,
         "code": 141746,
         "team_code": 1,
-        "next_gw_xp": 5.87
+        "next_gw_xp": 5.8
       },
       {
         "id": 427,
@@ -268,7 +310,7 @@
         "price": 8.0,
         "code": 446008,
         "team_code": 1,
-        "next_gw_xp": 5.04
+        "next_gw_xp": 5.03
       },
       {
         "id": 497,
@@ -298,7 +340,7 @@
         "price": 5.9,
         "code": 484420,
         "team_code": 56,
-        "next_gw_xp": 3.84
+        "next_gw_xp": 3.53
       },
       {
         "id": 557,
@@ -313,305 +355,11 @@
     ]
   },
   "decision": {
-    "action": "transfer",
-    "headline": "Maguire, Tzolis → Guéhi, Gomez (BHA) (-4) — captain Haaland",
-    "reason": "+11.1 points over holding across the planning horizon (+1.9 next gameweek, where the projections are strongest), ahead in 56% of next-gameweek scenarios",
-    "transfers_out": [
-      {
-        "id": 418,
-        "name": "Maguire",
-        "team": "MUN",
-        "pos": "DEF",
-        "price": 5.0,
-        "code": 95658,
-        "team_code": 1,
-        "next_gw_xp": 2.76,
-        "confidence": 0.85,
-        "horizon_xp": 19.21,
-        "owned_by": 15.1,
-        "rationale": "Nailed defender with projected 2.8 pts next GW.",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~71'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "EVE",
-            "home": false,
-            "difficulty": 4,
-            "att": 4,
-            "def": 4
-          },
-          {
-            "gw": 4,
-            "opp": "MCI",
-            "home": true,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 5,
-            "opp": "FUL",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 6,
-            "opp": "TOT",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          },
-          {
-            "gw": 7,
-            "opp": "LEE",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          }
-        ]
-      },
-      {
-        "id": 557,
-        "name": "Tzolis",
-        "team": "ARS",
-        "pos": "MID",
-        "price": 6.5,
-        "code": 439509,
-        "team_code": 3,
-        "next_gw_xp": 3.02,
-        "confidence": 0.64,
-        "horizon_xp": 21.72,
-        "owned_by": 22.0,
-        "rationale": "Nailed midfielder with a soft fixture run.",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "soft fixtures",
-            "kind": "good"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~81'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "CHE",
-            "home": true,
-            "difficulty": 2,
-            "att": 4,
-            "def": 1
-          },
-          {
-            "gw": 4,
-            "opp": "SUN",
-            "home": false,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          },
-          {
-            "gw": 5,
-            "opp": "BHA",
-            "home": false,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          },
-          {
-            "gw": 6,
-            "opp": "LEE",
-            "home": true,
-            "difficulty": 2,
-            "att": 3,
-            "def": 1
-          },
-          {
-            "gw": 7,
-            "opp": "NFO",
-            "home": false,
-            "difficulty": 2,
-            "att": 4,
-            "def": 1
-          }
-        ]
-      }
-    ],
-    "transfers_in": [
-      {
-        "id": 388,
-        "name": "Guéhi",
-        "team": "MCI",
-        "pos": "DEF",
-        "price": 6.0,
-        "code": 209036,
-        "team_code": 43,
-        "next_gw_xp": 7.88,
-        "confidence": 0.91,
-        "horizon_xp": 35.8,
-        "owned_by": 19.0,
-        "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.0).",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "clean-sheet source",
-            "kind": "good"
-          },
-          {
-            "label": "in form",
-            "kind": "good"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~80'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "COV",
-            "home": true,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          },
-          {
-            "gw": 4,
-            "opp": "MUN",
-            "home": false,
-            "difficulty": 4,
-            "att": 5,
-            "def": 3
-          },
-          {
-            "gw": 5,
-            "opp": "SUN",
-            "home": true,
-            "difficulty": 2,
-            "att": 3,
-            "def": 1
-          },
-          {
-            "gw": 6,
-            "opp": "LIV",
-            "home": false,
-            "difficulty": 4,
-            "att": 5,
-            "def": 3
-          },
-          {
-            "gw": 7,
-            "opp": "IPS",
-            "home": true,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          }
-        ]
-      },
-      {
-        "id": 127,
-        "name": "Gomez",
-        "team": "BHA",
-        "pos": "MID",
-        "price": 5.0,
-        "code": 514254,
-        "team_code": 36,
-        "next_gw_xp": 4.23,
-        "confidence": 0.88,
-        "horizon_xp": 25.95,
-        "owned_by": 4.5,
-        "rationale": "Nailed midfielder with real underlying threat (0.62 xGI/90) and in form (5.5).",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "high xGI",
-            "kind": "good"
-          },
-          {
-            "label": "in form",
-            "kind": "good"
-          },
-          {
-            "label": "differential",
-            "kind": "info"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~75'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "LEE",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          },
-          {
-            "gw": 4,
-            "opp": "COV",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 5,
-            "opp": "ARS",
-            "home": true,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 6,
-            "opp": "SUN",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 7,
-            "opp": "CRY",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          }
-        ]
-      }
-    ],
+    "action": "too_close",
+    "headline": "Too close to call — captain Haaland",
+    "reason": "the move averages +9.2 points but only beats holding in 53% of scenarios — a coin flip with a good-looking mean",
+    "transfers_out": [],
+    "transfers_in": [],
     "captain": {
       "id": 411,
       "name": "Haaland",
@@ -696,30 +444,38 @@
       ]
     },
     "vice": {
-      "id": 388,
-      "name": "Guéhi",
-      "team": "MCI",
-      "pos": "DEF",
-      "price": 6.0,
-      "code": 209036,
-      "team_code": 43,
-      "next_gw_xp": 7.88,
+      "id": 426,
+      "name": "B.Fernandes",
+      "team": "MUN",
+      "pos": "MID",
+      "price": 12.0,
+      "code": 141746,
+      "team_code": 1,
+      "next_gw_xp": 5.8,
       "confidence": 0.91,
-      "horizon_xp": 35.8,
-      "owned_by": 19.0,
-      "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.0).",
+      "horizon_xp": 40.55,
+      "owned_by": 48.6,
+      "rationale": "Nailed midfielder with real underlying threat (1.42 xGI/90), on pens #1, FK #1, corners #1 and in form (12.5).",
       "tags": [
         {
           "label": "nailed",
           "kind": "good"
         },
         {
-          "label": "clean-sheet source",
+          "label": "high xGI",
           "kind": "good"
+        },
+        {
+          "label": "set-pieces",
+          "kind": "info"
         },
         {
           "label": "in form",
           "kind": "good"
+        },
+        {
+          "label": "template",
+          "kind": "info"
         }
       ],
       "xmins_badge": {
@@ -730,43 +486,43 @@
       "fixtures": [
         {
           "gw": 3,
-          "opp": "COV",
-          "home": true,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
+          "opp": "EVE",
+          "home": false,
+          "difficulty": 4,
+          "att": 4,
+          "def": 4
         },
         {
           "gw": 4,
-          "opp": "MUN",
-          "home": false,
-          "difficulty": 4,
+          "opp": "MCI",
+          "home": true,
+          "difficulty": 5,
           "att": 5,
-          "def": 3
+          "def": 5
         },
         {
           "gw": 5,
-          "opp": "SUN",
-          "home": true,
+          "opp": "FUL",
+          "home": false,
           "difficulty": 2,
-          "att": 3,
-          "def": 1
+          "att": 1,
+          "def": 2
         },
         {
           "gw": 6,
-          "opp": "LIV",
-          "home": false,
-          "difficulty": 4,
-          "att": 5,
+          "opp": "TOT",
+          "home": true,
+          "difficulty": 3,
+          "att": 3,
           "def": 3
         },
         {
           "gw": 7,
-          "opp": "IPS",
-          "home": true,
-          "difficulty": 1,
+          "opp": "LEE",
+          "home": false,
+          "difficulty": 2,
           "att": 1,
-          "def": 1
+          "def": 2
         }
       ]
     },
@@ -862,9 +618,9 @@
         "price": 5.6,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 5.02,
+        "next_gw_xp": 5.0,
         "confidence": 0.86,
-        "horizon_xp": 36.06,
+        "horizon_xp": 35.94,
         "owned_by": 43.5,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (10.0) and a soft fixture run.",
         "tags": [
@@ -938,81 +694,6 @@
         ]
       },
       {
-        "id": 388,
-        "name": "Guéhi",
-        "team": "MCI",
-        "pos": "DEF",
-        "price": 6.0,
-        "code": 209036,
-        "team_code": 43,
-        "next_gw_xp": 7.88,
-        "confidence": 0.91,
-        "horizon_xp": 35.8,
-        "owned_by": 19.0,
-        "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (6.0).",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "clean-sheet source",
-            "kind": "good"
-          },
-          {
-            "label": "in form",
-            "kind": "good"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~80'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "COV",
-            "home": true,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          },
-          {
-            "gw": 4,
-            "opp": "MUN",
-            "home": false,
-            "difficulty": 4,
-            "att": 5,
-            "def": 3
-          },
-          {
-            "gw": 5,
-            "opp": "SUN",
-            "home": true,
-            "difficulty": 2,
-            "att": 3,
-            "def": 1
-          },
-          {
-            "gw": 6,
-            "opp": "LIV",
-            "home": false,
-            "difficulty": 4,
-            "att": 5,
-            "def": 3
-          },
-          {
-            "gw": 7,
-            "opp": "IPS",
-            "home": true,
-            "difficulty": 1,
-            "att": 1,
-            "def": 1
-          }
-        ]
-      },
-      {
         "id": 115,
         "name": "De Cuyper",
         "team": "BHA",
@@ -1022,7 +703,7 @@
         "team_code": 36,
         "next_gw_xp": 4.28,
         "confidence": 0.83,
-        "horizon_xp": 25.26,
+        "horizon_xp": 25.24,
         "owned_by": 14.7,
         "rationale": "Likely-starting defender (rotation risk) with a genuine attacking threat from the back and in form (8.5).",
         "tags": [
@@ -1084,6 +765,73 @@
         ]
       },
       {
+        "id": 504,
+        "name": "Vuskovic",
+        "team": "BHA",
+        "pos": "DEF",
+        "price": 5.0,
+        "code": 610799,
+        "team_code": 36,
+        "next_gw_xp": 3.16,
+        "confidence": 0.58,
+        "horizon_xp": 17.83,
+        "owned_by": 2.4,
+        "rationale": "Nailed defender with strong clean-sheet odds.",
+        "tags": [
+          {
+            "label": "nailed",
+            "kind": "good"
+          }
+        ],
+        "xmins_badge": {
+          "label": "NAILED",
+          "kind": "good",
+          "hint": "~80'"
+        },
+        "fixtures": [
+          {
+            "gw": 3,
+            "opp": "LEE",
+            "home": true,
+            "difficulty": 3,
+            "att": 3,
+            "def": 3
+          },
+          {
+            "gw": 4,
+            "opp": "COV",
+            "home": false,
+            "difficulty": 2,
+            "att": 1,
+            "def": 2
+          },
+          {
+            "gw": 5,
+            "opp": "ARS",
+            "home": true,
+            "difficulty": 5,
+            "att": 5,
+            "def": 5
+          },
+          {
+            "gw": 6,
+            "opp": "SUN",
+            "home": false,
+            "difficulty": 2,
+            "att": 1,
+            "def": 2
+          },
+          {
+            "gw": 7,
+            "opp": "CRY",
+            "home": true,
+            "difficulty": 3,
+            "att": 3,
+            "def": 3
+          }
+        ]
+      },
+      {
         "id": 426,
         "name": "B.Fernandes",
         "team": "MUN",
@@ -1091,9 +839,9 @@
         "price": 12.0,
         "code": 141746,
         "team_code": 1,
-        "next_gw_xp": 5.87,
+        "next_gw_xp": 5.8,
         "confidence": 0.91,
-        "horizon_xp": 40.94,
+        "horizon_xp": 40.55,
         "owned_by": 48.6,
         "rationale": "Nailed midfielder with real underlying threat (1.42 xGI/90), on pens #1, FK #1, corners #1 and in form (12.5).",
         "tags": [
@@ -1174,9 +922,9 @@
         "price": 8.0,
         "code": 446008,
         "team_code": 1,
-        "next_gw_xp": 5.04,
+        "next_gw_xp": 5.03,
         "confidence": 0.9,
-        "horizon_xp": 35.66,
+        "horizon_xp": 35.65,
         "owned_by": 30.0,
         "rationale": "Nailed midfielder with real underlying threat (1.35 xGI/90), on pens #2, FK #2, corners #2 and in form (6.5).",
         "tags": [
@@ -1246,160 +994,6 @@
             "difficulty": 2,
             "att": 1,
             "def": 2
-          }
-        ]
-      },
-      {
-        "id": 127,
-        "name": "Gomez",
-        "team": "BHA",
-        "pos": "MID",
-        "price": 5.0,
-        "code": 514254,
-        "team_code": 36,
-        "next_gw_xp": 4.23,
-        "confidence": 0.88,
-        "horizon_xp": 25.95,
-        "owned_by": 4.5,
-        "rationale": "Nailed midfielder with real underlying threat (0.62 xGI/90) and in form (5.5).",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "high xGI",
-            "kind": "good"
-          },
-          {
-            "label": "in form",
-            "kind": "good"
-          },
-          {
-            "label": "differential",
-            "kind": "info"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~75'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "LEE",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          },
-          {
-            "gw": 4,
-            "opp": "COV",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 5,
-            "opp": "ARS",
-            "home": true,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 6,
-            "opp": "SUN",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 7,
-            "opp": "CRY",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          }
-        ]
-      },
-      {
-        "id": 542,
-        "name": "E.Le Fée",
-        "team": "SUN",
-        "pos": "MID",
-        "price": 5.9,
-        "code": 484420,
-        "team_code": 56,
-        "next_gw_xp": 3.84,
-        "confidence": 0.91,
-        "horizon_xp": 22.14,
-        "owned_by": 6.6,
-        "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          },
-          {
-            "label": "set-pieces",
-            "kind": "info"
-          },
-          {
-            "label": "tough run",
-            "kind": "warn"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~79'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "BRE",
-            "home": false,
-            "difficulty": 4,
-            "att": 4,
-            "def": 3
-          },
-          {
-            "gw": 4,
-            "opp": "ARS",
-            "home": true,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 5,
-            "opp": "MCI",
-            "home": false,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 6,
-            "opp": "BHA",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          },
-          {
-            "gw": 7,
-            "opp": "BOU",
-            "home": false,
-            "difficulty": 4,
-            "att": 4,
-            "def": 3
           }
         ]
       },
@@ -1496,8 +1090,8 @@
         "team_code": 8,
         "next_gw_xp": 3.88,
         "confidence": 0.9,
-        "horizon_xp": 30.61,
-        "owned_by": 69.9,
+        "horizon_xp": 30.58,
+        "owned_by": 69.8,
         "rationale": "Nailed forward with real underlying threat (0.98 xGI/90) and in form (10.0).",
         "tags": [
           {
@@ -1635,9 +1229,293 @@
             "def": 3
           }
         ]
+      },
+      {
+        "id": 557,
+        "name": "Tzolis",
+        "team": "ARS",
+        "pos": "MID",
+        "price": 6.5,
+        "code": 439509,
+        "team_code": 3,
+        "next_gw_xp": 3.02,
+        "confidence": 0.64,
+        "horizon_xp": 21.72,
+        "owned_by": 22.0,
+        "rationale": "Nailed midfielder with a soft fixture run.",
+        "tags": [
+          {
+            "label": "nailed",
+            "kind": "good"
+          },
+          {
+            "label": "soft fixtures",
+            "kind": "good"
+          }
+        ],
+        "xmins_badge": {
+          "label": "NAILED",
+          "kind": "good",
+          "hint": "~81'"
+        },
+        "fixtures": [
+          {
+            "gw": 3,
+            "opp": "CHE",
+            "home": true,
+            "difficulty": 2,
+            "att": 4,
+            "def": 1
+          },
+          {
+            "gw": 4,
+            "opp": "SUN",
+            "home": false,
+            "difficulty": 1,
+            "att": 1,
+            "def": 1
+          },
+          {
+            "gw": 5,
+            "opp": "BHA",
+            "home": false,
+            "difficulty": 1,
+            "att": 1,
+            "def": 1
+          },
+          {
+            "gw": 6,
+            "opp": "LEE",
+            "home": true,
+            "difficulty": 2,
+            "att": 3,
+            "def": 1
+          },
+          {
+            "gw": 7,
+            "opp": "NFO",
+            "home": false,
+            "difficulty": 2,
+            "att": 4,
+            "def": 1
+          }
+        ]
+      },
+      {
+        "id": 542,
+        "name": "E.Le Fée",
+        "team": "SUN",
+        "pos": "MID",
+        "price": 5.9,
+        "code": 484420,
+        "team_code": 56,
+        "next_gw_xp": 3.53,
+        "confidence": 0.91,
+        "horizon_xp": 20.33,
+        "owned_by": 6.6,
+        "rationale": "Nailed midfielder with on pens #2, FK #2, corners #1 and despite a tough run.",
+        "tags": [
+          {
+            "label": "nailed",
+            "kind": "good"
+          },
+          {
+            "label": "set-pieces",
+            "kind": "info"
+          },
+          {
+            "label": "tough run",
+            "kind": "warn"
+          }
+        ],
+        "xmins_badge": {
+          "label": "NAILED",
+          "kind": "good",
+          "hint": "~79'"
+        },
+        "fixtures": [
+          {
+            "gw": 3,
+            "opp": "BRE",
+            "home": false,
+            "difficulty": 4,
+            "att": 4,
+            "def": 3
+          },
+          {
+            "gw": 4,
+            "opp": "ARS",
+            "home": true,
+            "difficulty": 5,
+            "att": 5,
+            "def": 5
+          },
+          {
+            "gw": 5,
+            "opp": "MCI",
+            "home": false,
+            "difficulty": 5,
+            "att": 5,
+            "def": 5
+          },
+          {
+            "gw": 6,
+            "opp": "BHA",
+            "home": true,
+            "difficulty": 3,
+            "att": 3,
+            "def": 3
+          },
+          {
+            "gw": 7,
+            "opp": "BOU",
+            "home": false,
+            "difficulty": 4,
+            "att": 4,
+            "def": 3
+          }
+        ]
       }
     ],
     "bench": [
+      {
+        "id": 497,
+        "name": "Dubravka",
+        "team": "TOT",
+        "pos": "GKP",
+        "price": 4.0,
+        "code": 67089,
+        "team_code": 6,
+        "next_gw_xp": 0.68,
+        "confidence": 0.91,
+        "horizon_xp": 4.4,
+        "owned_by": 18.2,
+        "rationale": "Rotation/bench keeper with despite a tough run.",
+        "tags": [
+          {
+            "label": "rotation risk",
+            "kind": "warn"
+          },
+          {
+            "label": "tough run",
+            "kind": "warn"
+          }
+        ],
+        "xmins_badge": {
+          "label": "CAMEO?",
+          "kind": "bad",
+          "hint": "~22'"
+        },
+        "fixtures": [
+          {
+            "gw": 3,
+            "opp": "NFO",
+            "home": false,
+            "difficulty": 4,
+            "att": 4,
+            "def": 5
+          },
+          {
+            "gw": 4,
+            "opp": "EVE",
+            "home": true,
+            "difficulty": 4,
+            "att": 3,
+            "def": 4
+          },
+          {
+            "gw": 5,
+            "opp": "AVL",
+            "home": true,
+            "difficulty": 4,
+            "att": 4,
+            "def": 5
+          },
+          {
+            "gw": 6,
+            "opp": "MUN",
+            "home": false,
+            "difficulty": 5,
+            "att": 5,
+            "def": 5
+          },
+          {
+            "gw": 7,
+            "opp": "COV",
+            "home": true,
+            "difficulty": 2,
+            "att": 1,
+            "def": 2
+          }
+        ]
+      },
+      {
+        "id": 418,
+        "name": "Maguire",
+        "team": "MUN",
+        "pos": "DEF",
+        "price": 5.0,
+        "code": 95658,
+        "team_code": 1,
+        "next_gw_xp": 2.56,
+        "confidence": 0.85,
+        "horizon_xp": 18.01,
+        "owned_by": 15.1,
+        "rationale": "Nailed defender with projected 2.6 pts next GW.",
+        "tags": [
+          {
+            "label": "nailed",
+            "kind": "good"
+          }
+        ],
+        "xmins_badge": {
+          "label": "NAILED",
+          "kind": "good",
+          "hint": "~71'"
+        },
+        "fixtures": [
+          {
+            "gw": 3,
+            "opp": "EVE",
+            "home": false,
+            "difficulty": 4,
+            "att": 4,
+            "def": 4
+          },
+          {
+            "gw": 4,
+            "opp": "MCI",
+            "home": true,
+            "difficulty": 5,
+            "att": 5,
+            "def": 5
+          },
+          {
+            "gw": 5,
+            "opp": "FUL",
+            "home": false,
+            "difficulty": 2,
+            "att": 1,
+            "def": 2
+          },
+          {
+            "gw": 6,
+            "opp": "TOT",
+            "home": true,
+            "difficulty": 3,
+            "att": 3,
+            "def": 3
+          },
+          {
+            "gw": 7,
+            "opp": "LEE",
+            "home": false,
+            "difficulty": 2,
+            "att": 1,
+            "def": 2
+          }
+        ]
+      },
       {
         "id": 175,
         "name": "van Ewijk",
@@ -1775,165 +1653,27 @@
             "def": 2
           }
         ]
-      },
-      {
-        "id": 497,
-        "name": "Dubravka",
-        "team": "TOT",
-        "pos": "GKP",
-        "price": 4.0,
-        "code": 67089,
-        "team_code": 6,
-        "next_gw_xp": 0.68,
-        "confidence": 0.91,
-        "horizon_xp": 4.4,
-        "owned_by": 18.2,
-        "rationale": "Rotation/bench keeper with despite a tough run.",
-        "tags": [
-          {
-            "label": "rotation risk",
-            "kind": "warn"
-          },
-          {
-            "label": "tough run",
-            "kind": "warn"
-          }
-        ],
-        "xmins_badge": {
-          "label": "CAMEO?",
-          "kind": "bad",
-          "hint": "~22'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "NFO",
-            "home": false,
-            "difficulty": 4,
-            "att": 4,
-            "def": 5
-          },
-          {
-            "gw": 4,
-            "opp": "EVE",
-            "home": true,
-            "difficulty": 4,
-            "att": 3,
-            "def": 4
-          },
-          {
-            "gw": 5,
-            "opp": "AVL",
-            "home": true,
-            "difficulty": 4,
-            "att": 4,
-            "def": 5
-          },
-          {
-            "gw": 6,
-            "opp": "MUN",
-            "home": false,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 7,
-            "opp": "COV",
-            "home": true,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          }
-        ]
-      },
-      {
-        "id": 504,
-        "name": "Vuskovic",
-        "team": "BHA",
-        "pos": "DEF",
-        "price": 5.0,
-        "code": 610799,
-        "team_code": 36,
-        "next_gw_xp": 3.16,
-        "confidence": 0.58,
-        "horizon_xp": 17.83,
-        "owned_by": 2.4,
-        "rationale": "Nailed defender with strong clean-sheet odds.",
-        "tags": [
-          {
-            "label": "nailed",
-            "kind": "good"
-          }
-        ],
-        "xmins_badge": {
-          "label": "NAILED",
-          "kind": "good",
-          "hint": "~80'"
-        },
-        "fixtures": [
-          {
-            "gw": 3,
-            "opp": "LEE",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          },
-          {
-            "gw": 4,
-            "opp": "COV",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 5,
-            "opp": "ARS",
-            "home": true,
-            "difficulty": 5,
-            "att": 5,
-            "def": 5
-          },
-          {
-            "gw": 6,
-            "opp": "SUN",
-            "home": false,
-            "difficulty": 2,
-            "att": 1,
-            "def": 2
-          },
-          {
-            "gw": 7,
-            "opp": "CRY",
-            "home": true,
-            "difficulty": 3,
-            "att": 3,
-            "def": 3
-          }
-        ]
       }
     ],
     "chip": {
       "chips_version": "chips-1.1",
       "recommendation": "hold",
       "gameweek": null,
-      "expected_gain": 39.0,
+      "expected_gain": 39.91,
       "use_threshold": 4.0,
       "alternatives": [
         {
           "chip": "wildcard",
           "gameweek": 3,
-          "expected_gain": 39.0,
+          "expected_gain": 39.91,
           "ci95": [
-            37.09,
-            40.91
+            38.0,
+            41.81
           ],
-          "baseline_points": 256.82,
-          "with_chip_points": 295.82,
+          "baseline_points": 254.92,
+          "with_chip_points": 294.83,
           "horizon_gameweeks": 4,
-          "expected_gain_per_gameweek": 9.75,
+          "expected_gain_per_gameweek": 9.98,
           "assumptions": [
             "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
             "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -1946,15 +1686,15 @@
         {
           "chip": "freehit",
           "gameweek": 3,
-          "expected_gain": 14.18,
+          "expected_gain": 14.51,
           "ci95": [
-            13.49,
-            14.88
+            13.82,
+            15.21
           ],
-          "baseline_points": 59.77,
-          "with_chip_points": 73.95,
+          "baseline_points": 59.2,
+          "with_chip_points": 73.71,
           "horizon_gameweeks": 1,
-          "expected_gain_per_gameweek": 14.18,
+          "expected_gain_per_gameweek": 14.51,
           "assumptions": [
             "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
             "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1969,8 +1709,8 @@
             7.64,
             8.09
           ],
-          "baseline_points": 59.77,
-          "with_chip_points": 67.63,
+          "baseline_points": 59.2,
+          "with_chip_points": 67.06,
           "horizon_gameweeks": 1,
           "expected_gain_per_gameweek": 7.86,
           "assumptions": [
@@ -1982,15 +1722,15 @@
         {
           "chip": "bboost",
           "gameweek": 3,
-          "expected_gain": 5.61,
+          "expected_gain": 5.58,
           "ci95": [
-            5.43,
-            5.79
+            5.4,
+            5.76
           ],
-          "baseline_points": 60.94,
-          "with_chip_points": 66.55,
+          "baseline_points": 60.4,
+          "with_chip_points": 65.98,
           "horizon_gameweeks": 1,
-          "expected_gain_per_gameweek": 5.61,
+          "expected_gain_per_gameweek": 5.58,
           "assumptions": [
             "Bench points are simulated under the same fixtures as the XI.",
             "Autosubs ARE modelled in the baseline: the gain is what the chip adds beyond the substitutions the rules make for free.",
@@ -2034,15 +1774,15 @@
       "candidate": {
         "chip": "wildcard",
         "gameweek": 3,
-        "expected_gain": 39.0,
+        "expected_gain": 39.91,
         "ci95": [
-          37.09,
-          40.91
+          38.0,
+          41.81
         ],
-        "baseline_points": 256.82,
-        "with_chip_points": 295.82,
+        "baseline_points": 254.92,
+        "with_chip_points": 294.83,
         "horizon_gameweeks": 4,
-        "expected_gain_per_gameweek": 9.75,
+        "expected_gain_per_gameweek": 9.98,
         "assumptions": [
           "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
           "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -2097,14 +1837,14 @@
             "gameweeks": {
               "3": 8.04,
               "4": 6.91,
-              "5": 9.04,
-              "6": 6.41,
-              "7": 9.04,
-              "8": 6.41
+              "5": 8.97,
+              "6": 6.39,
+              "7": 8.97,
+              "8": 6.35
             },
             "now_gain": 8.04,
             "best_gameweek": 5,
-            "best_gain": 9.04,
+            "best_gain": 8.97,
             "note": "Timing checked over GW3-GW8; the window runs to GW19, so GW9-GW19 were NOT assessed."
           },
           "bboost": {
@@ -2361,11 +2101,11 @@
           }
         }
       },
-      "reason": "wildcard projects +39.0 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+      "reason": "wildcard projects +39.9 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
     },
     "league_note": "",
     "confidence": "high",
-    "biggest_risk": "this move is justified by gameweeks 2-6, where Gaffer's mean projections are materially weaker than its one-week ones",
+    "biggest_risk": "captaincy is the biggest single swing of the week: if Haaland blanks, the gain disappears regardless of the transfer",
     "assumptions": [
       "Move and hold are scored in the same 2000 fixture scenarios, with the same projections, objective and team state.",
       "The hold baseline re-optimises your XI and captain from the squad you already own (source: GW2), so it is the best version of doing nothing.",
@@ -2376,97 +2116,97 @@
       {
         "league_id": 271619,
         "name": "Crouch Potatoes",
-        "move_is_the_recommendation": true,
+        "move_is_the_recommendation": false,
         "rivals": [
           {
             "entry_id": 1094262,
             "name": "Kevin Colling",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.035,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.031,
             "d_p_above_ci95": [
-              0.0229,
-              0.0471
+              0.0192,
+              0.0428
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.83,
-            "p_above_after": 0.865,
-            "d_variance_of_gap": -19.018,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 408467,
-            "name": "Nat Uttley",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0295,
-            "d_p_above_ci95": [
-              0.0123,
-              0.0467
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": true,
-            "p_above_before": 0.668,
-            "p_above_after": 0.6975,
-            "d_variance_of_gap": 26.394,
+            "p_above_before": 0.832,
+            "p_above_after": 0.863,
+            "d_variance_of_gap": -20.273,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1711764,
             "name": "Hakan Duzel",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0185,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.016,
             "d_p_above_ci95": [
-              0.0108,
-              0.0262
+              0.0082,
+              0.0238
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.9585,
-            "p_above_after": 0.977,
-            "d_variance_of_gap": -13.85,
+            "p_above_before": 0.96,
+            "p_above_after": 0.976,
+            "d_variance_of_gap": -14.198,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 408467,
+            "name": "Nat Uttley",
+            "d_expected_points": 1.449,
+            "d_p_above": 0.014,
+            "d_p_above_ci95": [
+              -0.0033,
+              0.0313
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": false,
+            "p_above_before": 0.653,
+            "p_above_after": 0.667,
+            "d_variance_of_gap": 25.614,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3557534,
             "name": "Jarek Ettl",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.011,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.006,
             "d_p_above_ci95": [
-              0.0038,
-              0.0182
+              -0.0012,
+              0.0132
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": true,
-            "p_above_before": 0.9265,
-            "p_above_after": 0.9375,
-            "d_variance_of_gap": 11.579,
+            "resolved": false,
+            "p_above_before": 0.928,
+            "p_above_after": 0.934,
+            "d_variance_of_gap": 11.097,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 8346723,
             "name": "Nat Stubbs",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0005,
+            "d_expected_points": 1.449,
+            "d_p_above": -0.0005,
             "d_p_above_ci95": [
-              -0.0035,
-              0.0045
+              -0.0048,
+              0.0038
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
             "p_above_before": 0.9905,
-            "p_above_after": 0.991,
-            "d_variance_of_gap": 28.129,
+            "p_above_after": 0.99,
+            "d_variance_of_gap": 26.889,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 7419334,
             "name": "Dylan Llyr Morgan",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": -0.0005,
             "d_p_above_ci95": [
               -0.0015,
@@ -2476,7 +2216,7 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 0.9995,
-            "d_variance_of_gap": 28.303,
+            "d_variance_of_gap": 27.109,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           }
@@ -2491,250 +2231,233 @@
       {
         "league_id": 733241,
         "name": "Dale Fantasy Football",
-        "move_is_the_recommendation": true,
+        "move_is_the_recommendation": false,
         "rivals": [
           {
             "entry_id": 3807533,
             "name": "James Gosling",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0885,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.07,
             "d_p_above_ci95": [
-              0.0683,
-              0.1087
+              0.0503,
+              0.0897
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.2385,
-            "p_above_after": 0.327,
-            "d_variance_of_gap": 17.181,
+            "p_above_before": 0.23,
+            "p_above_after": 0.3,
+            "d_variance_of_gap": 16.291,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 5876996,
             "name": "Oliver Woodward",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.073,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.065,
             "d_p_above_ci95": [
-              0.0552,
-              0.0908
+              0.0476,
+              0.0824
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.288,
-            "p_above_after": 0.361,
-            "d_variance_of_gap": 34.619,
+            "p_above_before": 0.282,
+            "p_above_after": 0.347,
+            "d_variance_of_gap": 33.397,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 4186615,
             "name": "Finlay Ashburner",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.059,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.042,
             "d_p_above_ci95": [
-              0.0419,
-              0.0761
+              0.0251,
+              0.0589
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.6225,
-            "p_above_after": 0.6815,
-            "d_variance_of_gap": -8.383,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 4072984,
-            "name": "Daire Carragher",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0415,
-            "d_p_above_ci95": [
-              0.0282,
-              0.0548
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": true,
-            "p_above_before": 0.1295,
-            "p_above_after": 0.171,
-            "d_variance_of_gap": 18.643,
+            "p_above_before": 0.624,
+            "p_above_after": 0.666,
+            "d_variance_of_gap": -8.159,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3671505,
             "name": "Harry Hill",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.038,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.041,
             "d_p_above_ci95": [
-              0.0213,
-              0.0547
+              0.0245,
+              0.0575
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.62,
-            "p_above_after": 0.658,
-            "d_variance_of_gap": 27.133,
+            "p_above_before": 0.6085,
+            "p_above_after": 0.6495,
+            "d_variance_of_gap": 25.606,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 4072984,
+            "name": "Daire Carragher",
+            "d_expected_points": 1.449,
+            "d_p_above": 0.037,
+            "d_p_above_ci95": [
+              0.0239,
+              0.0501
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": true,
+            "p_above_before": 0.1195,
+            "p_above_after": 0.1565,
+            "d_variance_of_gap": 17.942,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 8183866,
             "name": "Matthew Sims",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0325,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.025,
             "d_p_above_ci95": [
-              0.0178,
-              0.0472
+              0.0106,
+              0.0394
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.285,
-            "p_above_after": 0.3175,
-            "d_variance_of_gap": -16.545,
+            "p_above_before": 0.286,
+            "p_above_after": 0.311,
+            "d_variance_of_gap": -17.612,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3678994,
             "name": "Richard Palmer",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.026,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.021,
             "d_p_above_ci95": [
-              0.0154,
-              0.0366
+              0.0109,
+              0.0311
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.064,
-            "p_above_after": 0.09,
-            "d_variance_of_gap": 17.553,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 3526777,
-            "name": "Mike Webber",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.024,
-            "d_p_above_ci95": [
-              0.0087,
-              0.0393
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": true,
-            "p_above_before": 0.7285,
-            "p_above_after": 0.7525,
-            "d_variance_of_gap": 32.596,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 4033143,
-            "name": "Tony Anderson",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0195,
-            "d_p_above_ci95": [
-              0.0121,
-              0.0269
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": true,
-            "p_above_before": 0.9445,
-            "p_above_after": 0.964,
-            "d_variance_of_gap": -24.587,
+            "p_above_before": 0.0585,
+            "p_above_after": 0.0795,
+            "d_variance_of_gap": 17.835,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 392228,
             "name": "Cassidy Day",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.019,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.017,
             "d_p_above_ci95": [
-              0.0097,
-              0.0283
+              0.0077,
+              0.0263
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.05,
-            "p_above_after": 0.069,
-            "d_variance_of_gap": 18.876,
+            "p_above_before": 0.0515,
+            "p_above_after": 0.0685,
+            "d_variance_of_gap": 17.789,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 4033143,
+            "name": "Tony Anderson",
+            "d_expected_points": 1.449,
+            "d_p_above": 0.016,
+            "d_p_above_ci95": [
+              0.0087,
+              0.0233
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": true,
+            "p_above_before": 0.946,
+            "p_above_after": 0.962,
+            "d_variance_of_gap": -25.302,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 2209432,
             "name": "Amar Sumaria",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.017,
-            "d_p_above_ci95": [
-              0.0098,
-              0.0242
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": true,
-            "p_above_before": 0.9505,
-            "p_above_after": 0.9675,
-            "d_variance_of_gap": -19.338,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 1506291,
-            "name": "Jason Mercer",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": 0.015,
             "d_p_above_ci95": [
-              0.0051,
-              0.0249
+              0.0085,
+              0.0215
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.8935,
-            "p_above_after": 0.9085,
-            "d_variance_of_gap": 24.77,
+            "p_above_before": 0.951,
+            "p_above_after": 0.966,
+            "d_variance_of_gap": -19.729,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 6570312,
             "name": "Neil Griffiths",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.013,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.0125,
             "d_p_above_ci95": [
-              0.0064,
-              0.0196
+              0.0057,
+              0.0193
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.953,
-            "p_above_after": 0.966,
-            "d_variance_of_gap": 11.098,
+            "p_above_before": 0.952,
+            "p_above_after": 0.9645,
+            "d_variance_of_gap": 10.151,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 1506291,
+            "name": "Jason Mercer",
+            "d_expected_points": 1.449,
+            "d_p_above": 0.011,
+            "d_p_above_ci95": [
+              0.0014,
+              0.0206
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": true,
+            "p_above_before": 0.8975,
+            "p_above_after": 0.9085,
+            "d_variance_of_gap": 23.537,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 7248283,
             "name": "Niamh O'Riordan-Mitchell",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": 0.0065,
             "d_p_above_ci95": [
-              0.0022,
-              0.0108
+              0.002,
+              0.011
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.988,
-            "p_above_after": 0.9945,
-            "d_variance_of_gap": -20.986,
+            "p_above_before": 0.9895,
+            "p_above_after": 0.996,
+            "d_variance_of_gap": -21.336,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1232046,
             "name": "chris martyn",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": -0.0035,
             "d_p_above_ci95": [
               -0.0064,
@@ -2744,82 +2467,82 @@
             "resolved": true,
             "p_above_before": 0.9995,
             "p_above_after": 0.996,
-            "d_variance_of_gap": 34.924,
+            "d_variance_of_gap": 33.447,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1444956,
             "name": "Archie Anderson",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.003,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.0025,
             "d_p_above_ci95": [
-              0.0006,
-              0.0054
+              0.0003,
+              0.0047
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
             "p_above_before": 0.0,
-            "p_above_after": 0.003,
-            "d_variance_of_gap": 22.362,
+            "p_above_after": 0.0025,
+            "d_variance_of_gap": 21.816,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 3526777,
+            "name": "Mike Webber",
+            "d_expected_points": 1.449,
+            "d_p_above": 0.012,
+            "d_p_above_ci95": [
+              -0.0034,
+              0.0274
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": false,
+            "p_above_before": 0.724,
+            "p_above_after": 0.736,
+            "d_variance_of_gap": 31.996,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 2341315,
             "name": "Richard Appleton",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0045,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.0025,
             "d_p_above_ci95": [
-              -0.0033,
-              0.0123
+              -0.005,
+              0.01
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.9445,
-            "p_above_after": 0.949,
-            "d_variance_of_gap": 34.41,
+            "p_above_before": 0.942,
+            "p_above_after": 0.9445,
+            "d_variance_of_gap": 33.166,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 2520259,
             "name": "Simon Brumfitt",
-            "d_expected_points": 1.948,
-            "d_p_above": 0.0045,
+            "d_expected_points": 1.449,
+            "d_p_above": 0.0015,
             "d_p_above_ci95": [
-              -0.0022,
-              0.0112
+              -0.0051,
+              0.0081
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.958,
-            "p_above_after": 0.9625,
-            "d_variance_of_gap": 29.685,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 6118958,
-            "name": "Harjinder Hayre",
-            "d_expected_points": 1.948,
-            "d_p_above": -0.001,
-            "d_p_above_ci95": [
-              -0.0047,
-              0.0027
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": false,
-            "p_above_before": 0.9895,
-            "p_above_after": 0.9885,
-            "d_variance_of_gap": 39.696,
+            "p_above_before": 0.956,
+            "p_above_after": 0.9575,
+            "d_variance_of_gap": 29.335,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 7905520,
             "name": "Rich Crowley",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": -0.0005,
             "d_p_above_ci95": [
               -0.0027,
@@ -2829,14 +2552,14 @@
             "resolved": false,
             "p_above_before": 0.9965,
             "p_above_after": 0.996,
-            "d_variance_of_gap": 20.33,
+            "d_variance_of_gap": 19.633,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3266016,
             "name": "arran wright",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": 0.0005,
             "d_p_above_ci95": [
               -0.0012,
@@ -2844,16 +2567,33 @@
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.997,
-            "p_above_after": 0.9975,
-            "d_variance_of_gap": -17.085,
+            "p_above_before": 0.9975,
+            "p_above_after": 0.998,
+            "d_variance_of_gap": -17.321,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 6118958,
+            "name": "Harjinder Hayre",
+            "d_expected_points": 1.449,
+            "d_p_above": 0.0,
+            "d_p_above_ci95": [
+              -0.0037,
+              0.0037
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": false,
+            "p_above_before": 0.9885,
+            "p_above_after": 0.9885,
+            "d_variance_of_gap": 39.068,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3846760,
             "name": "Daniel Taylor",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2863,14 +2603,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 17.554,
+            "d_variance_of_gap": 16.748,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 8209075,
             "name": "Joshua Knight",
-            "d_expected_points": 1.948,
+            "d_expected_points": 1.449,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2880,7 +2620,7 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 26.405,
+            "d_variance_of_gap": 26.39,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           }
@@ -2895,15 +2635,15 @@
     ],
     "evidence_quality": {
       "available": true,
-      "weak_evidence_share": 0.2747,
+      "weak_evidence_share": 0.2633,
       "share_by_status": {
-        "supported": 0.7253,
-        "weak_or_failed": 0.1506,
-        "insufficient_evidence": 0.1241
+        "supported": 0.7367,
+        "weak_or_failed": 0.137,
+        "insufficient_evidence": 0.1262
       },
       "largest_weak_component": {
         "component": "clean_sheet",
-        "share": 0.1506,
+        "share": 0.137,
         "status": "weak_or_failed",
         "evidence": "Brier 0.1899 against a league base rate of 0.1901 -- barely distinguishable from quoting the base rate to everybody -- and over-confident above 0.35, where a claimed 0.49 realises 0.29. A reconciled two-pass alternative was built and measured and lost on the decision metric",
         "where": "backtest.CLEAN_SHEET_CONTRADICTION"
@@ -2913,22 +2653,22 @@
       "of_xi": 11
     },
     "comparison": {
-      "move_expected": 62.11,
-      "hold_expected": 60.17,
-      "delta": 1.95,
+      "move_expected": 61.24,
+      "hold_expected": 59.79,
+      "delta": 1.45,
       "delta_ci95": [
-        1.66,
-        2.24
+        1.16,
+        1.74
       ],
-      "p_move_beats_hold": 0.5575,
+      "p_move_beats_hold": 0.526,
       "simulations": 2000,
-      "short_term_delta": 1.95,
-      "horizon_delta": 11.12,
+      "short_term_delta": 1.45,
+      "horizon_delta": 9.23,
       "hit_cost": 4,
       "delta_ci95_interval_type": "monte_carlo",
       "delta_range_p10_p90": [
         -6.0,
-        11.0
+        10.0
       ],
       "delta_range_interval_type": "prediction",
       "delta_range_means": "the spread of FOOTBALL outcomes for this move against this hold, across the same shared scenarios. Unlike delta_ci95 it does not shrink when more scenarios are drawn.",
@@ -2938,19 +2678,7 @@
         "measured_in": "2000 shared fixture scenarios"
       }
     },
-    "executability": {
-      "affordable": true,
-      "bank_before": 0,
-      "bank_after": 5,
-      "bank_before_m": 0.0,
-      "bank_after_m": 0.5,
-      "cost_m": 11.0,
-      "recouped_m": 11.5,
-      "free_transfers_before": 1,
-      "free_transfers_after": 1,
-      "paid_transfers": 1,
-      "reason": ""
-    },
+    "executability": null,
     "candidate_move": null,
     "threshold_status": {
       "fitted": false,
@@ -2965,37 +2693,11 @@
       "card_version": "decision-card-1",
       "gameweek": 3,
       "recommendation": {
-        "action": "transfer",
-        "headline": "Maguire, Tzolis → Guéhi, Gomez (BHA) (-4) — captain Haaland",
-        "reason": "+11.1 points over holding across the planning horizon (+1.9 next gameweek, where the projections are strongest), ahead in 56% of next-gameweek scenarios",
-        "transfers_out": [
-          {
-            "id": 418,
-            "name": "Maguire",
-            "team": "MUN",
-            "pos": "DEF"
-          },
-          {
-            "id": 557,
-            "name": "Tzolis",
-            "team": "ARS",
-            "pos": "MID"
-          }
-        ],
-        "transfers_in": [
-          {
-            "id": 388,
-            "name": "Guéhi",
-            "team": "MCI",
-            "pos": "DEF"
-          },
-          {
-            "id": 127,
-            "name": "Gomez (BHA)",
-            "team": "BHA",
-            "pos": "MID"
-          }
-        ],
+        "action": "too_close",
+        "headline": "Too close to call — captain Haaland",
+        "reason": "the move averages +9.2 points but only beats holding in 53% of scenarios — a coin flip with a good-looking mean",
+        "transfers_out": [],
+        "transfers_in": [],
         "captain": {
           "id": 411,
           "name": "Haaland",
@@ -3003,14 +2705,14 @@
           "pos": "FWD"
         },
         "vice": {
-          "id": 388,
-          "name": "Guéhi",
-          "team": "MCI",
-          "pos": "DEF"
+          "id": 426,
+          "name": "B.Fernandes",
+          "team": "MUN",
+          "pos": "MID"
         }
       },
       "strength": {
-        "action": "transfer",
+        "action": "too_close",
         "label": "high",
         "basis": "policy",
         "fitted": false,
@@ -3022,47 +2724,47 @@
         {
           "option": "hold",
           "label": "make no transfer",
-          "expected": 60.17,
-          "beaten_by": 1.95
+          "expected": 59.79,
+          "beaten_by": 1.45
         }
       ],
       "margin": {
         "available": true,
-        "value": 1.95,
+        "value": 1.45,
         "unit": "expected points",
         "ci95": [
-          1.66,
-          2.24
+          1.16,
+          1.74
         ],
         "interval_type": "monte_carlo",
         "interval_means": "simulation error on the mean edge; it shrinks as more scenarios are drawn",
-        "p_beats_hold": 0.5575,
+        "p_beats_hold": 0.526,
         "measured_in": "2000 shared fixture scenarios",
         "domain": "the next gameweek only",
         "realistic_range": [
           -6.0,
-          11.0
+          10.0
         ],
         "realistic_range_interval_type": "prediction"
       },
       "horizon": {
         "gameweeks": 6,
-        "delta": 11.12,
+        "delta": 9.23,
         "domain": "gameweeks 2 onward of the planning horizon, where the mean projections are materially weaker than the one-week ones"
       },
       "cost": {
         "hit_points": 4,
-        "paid_transfers": 1,
-        "free_transfers_before": 1,
-        "free_transfers_after": 1,
-        "bank_before": 0,
-        "bank_after": 5,
-        "affordable": true,
+        "paid_transfers": null,
+        "free_transfers_before": null,
+        "free_transfers_after": null,
+        "bank_before": null,
+        "bank_after": null,
+        "affordable": null,
         "note": ""
       },
       "upside": {
         "available": true,
-        "value": 11.0,
+        "value": 10.0,
         "means": "in the best tenth of weeks this move beats holding by about this much",
         "interval_type": "prediction"
       },
@@ -3074,7 +2776,7 @@
       },
       "sensitivity": {
         "available": true,
-        "biggest_risk": "this move is justified by gameweeks 2-6, where Gaffer's mean projections are materially weaker than its one-week ones",
+        "biggest_risk": "captaincy is the biggest single swing of the week: if Haaland blanks, the gain disappears regardless of the transfer",
         "assumptions": [
           "Move and hold are scored in the same 2000 fixture scenarios, with the same projections, objective and team state.",
           "The hold baseline re-optimises your XI and captain from the squad you already own (source: GW2), so it is the best version of doing nothing.",
@@ -3083,21 +2785,21 @@
         ]
       },
       "what_would_change_it": [
-        "this move is justified by gameweeks 2-6, where Gaffer's mean projections are materially weaker than its one-week ones"
+        "captaincy is the biggest single swing of the week: if Haaland blanks, the gain disappears regardless of the transfer"
       ],
       "league_effect": [
         {
           "league_id": 271619,
           "name": "Crouch Potatoes",
-          "is_the_recommendation": true,
+          "is_the_recommendation": false,
           "rivals_measured": 6,
-          "rivals_unresolved": 2,
+          "rivals_unresolved": 4,
           "best_case": {
             "rival": "Kevin Colling",
-            "d_p_above": 0.035
+            "d_p_above": 0.031
           },
           "worst_case": {
-            "rival": "Dylan Llyr Morgan",
+            "rival": "Nat Stubbs",
             "d_p_above": -0.0005
           },
           "detail": "per-rival detail: get_league_strategy, or the League page"
@@ -3105,12 +2807,12 @@
         {
           "league_id": 733241,
           "name": "Dale Fantasy Football",
-          "is_the_recommendation": true,
+          "is_the_recommendation": false,
           "rivals_measured": 23,
-          "rivals_unresolved": 7,
+          "rivals_unresolved": 8,
           "best_case": {
             "rival": "James Gosling",
-            "d_p_above": 0.0885
+            "d_p_above": 0.07
           },
           "worst_case": {
             "rival": "chris martyn",
@@ -3121,15 +2823,15 @@
       ],
       "evidence_quality": {
         "available": true,
-        "weak_evidence_share": 0.2747,
+        "weak_evidence_share": 0.2633,
         "share_by_status": {
-          "supported": 0.7253,
-          "weak_or_failed": 0.1506,
-          "insufficient_evidence": 0.1241
+          "supported": 0.7367,
+          "weak_or_failed": 0.137,
+          "insufficient_evidence": 0.1262
         },
         "largest_weak_component": {
           "component": "clean_sheet",
-          "share": 0.1506,
+          "share": 0.137,
           "status": "weak_or_failed",
           "evidence": "Brier 0.1899 against a league base rate of 0.1901 -- barely distinguishable from quoting the base rate to everybody -- and over-confident above 0.35, where a claimed 0.49 realises 0.29. A reconciled two-pass alternative was built and measured and lost on the decision metric",
           "where": "backtest.CLEAN_SHEET_CONTRADICTION"
@@ -3138,7 +2840,7 @@
         "players_scored": 11,
         "of_xi": 11
       },
-      "content_hash": "d698f5e512b6e26d"
+      "content_hash": "bcbd1e6ecbd16caa"
     }
   },
   "versions": {
@@ -3173,21 +2875,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 39.0,
+    "expected_gain": 39.91,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "wildcard",
         "gameweek": 3,
-        "expected_gain": 39.0,
+        "expected_gain": 39.91,
         "ci95": [
-          37.09,
-          40.91
+          38.0,
+          41.81
         ],
-        "baseline_points": 256.82,
-        "with_chip_points": 295.82,
+        "baseline_points": 254.92,
+        "with_chip_points": 294.83,
         "horizon_gameweeks": 4,
-        "expected_gain_per_gameweek": 9.75,
+        "expected_gain_per_gameweek": 9.98,
         "assumptions": [
           "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
           "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -3200,15 +2902,15 @@
       {
         "chip": "freehit",
         "gameweek": 3,
-        "expected_gain": 14.18,
+        "expected_gain": 14.51,
         "ci95": [
-          13.49,
-          14.88
+          13.82,
+          15.21
         ],
-        "baseline_points": 59.77,
-        "with_chip_points": 73.95,
+        "baseline_points": 59.2,
+        "with_chip_points": 73.71,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 14.18,
+        "expected_gain_per_gameweek": 14.51,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -3223,8 +2925,8 @@
           7.64,
           8.09
         ],
-        "baseline_points": 59.77,
-        "with_chip_points": 67.63,
+        "baseline_points": 59.2,
+        "with_chip_points": 67.06,
         "horizon_gameweeks": 1,
         "expected_gain_per_gameweek": 7.86,
         "assumptions": [
@@ -3236,15 +2938,15 @@
       {
         "chip": "bboost",
         "gameweek": 3,
-        "expected_gain": 5.61,
+        "expected_gain": 5.58,
         "ci95": [
-          5.43,
-          5.79
+          5.4,
+          5.76
         ],
-        "baseline_points": 60.94,
-        "with_chip_points": 66.55,
+        "baseline_points": 60.4,
+        "with_chip_points": 65.98,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 5.61,
+        "expected_gain_per_gameweek": 5.58,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs ARE modelled in the baseline: the gain is what the chip adds beyond the substitutions the rules make for free.",
@@ -3288,15 +2990,15 @@
     "candidate": {
       "chip": "wildcard",
       "gameweek": 3,
-      "expected_gain": 39.0,
+      "expected_gain": 39.91,
       "ci95": [
-        37.09,
-        40.91
+        38.0,
+        41.81
       ],
-      "baseline_points": 256.82,
-      "with_chip_points": 295.82,
+      "baseline_points": 254.92,
+      "with_chip_points": 294.83,
       "horizon_gameweeks": 4,
-      "expected_gain_per_gameweek": 9.75,
+      "expected_gain_per_gameweek": 9.98,
       "assumptions": [
         "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
         "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -3351,14 +3053,14 @@
           "gameweeks": {
             "3": 8.04,
             "4": 6.91,
-            "5": 9.04,
-            "6": 6.41,
-            "7": 9.04,
-            "8": 6.41
+            "5": 8.97,
+            "6": 6.39,
+            "7": 8.97,
+            "8": 6.35
           },
           "now_gain": 8.04,
           "best_gameweek": 5,
-          "best_gain": 9.04,
+          "best_gain": 8.97,
           "note": "Timing checked over GW3-GW8; the window runs to GW19, so GW9-GW19 were NOT assessed."
         },
         "bboost": {
@@ -3615,7 +3317,7 @@
         }
       }
     },
-    "reason": "wildcard projects +39.0 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+    "reason": "wildcard projects +39.9 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
   },
   "leagues": [
     {
@@ -3638,8 +3340,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-09-02T18:49:45+00:00",
-    "squad_retrieved_at": "2026-09-02T18:52:17+00:00",
+    "generated_at": "2026-09-02T19:35:34+00:00",
+    "squad_retrieved_at": "2026-09-02T19:35:57+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"

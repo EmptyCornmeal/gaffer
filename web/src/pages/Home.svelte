@@ -11,6 +11,7 @@
   import { modelLink } from '../lib/evidence'
   import DecisionCardView from '../components/DecisionCard.svelte'
   import CalendarView from '../components/Calendar.svelte'
+  import SquadRiskView from '../components/SquadRisk.svelte'
   import { nowState, STATE_COPY, timeToDeadline } from '../lib/now'
 
   let { bundle, onnav, onpick, now = Date.now() }: {
@@ -363,6 +364,11 @@
              anything. Placed after the card because it qualifies the timing of
              the answer rather than the answer itself. -->
         <CalendarView calendar={d?.calendar} wait={d?.wait_vs_act} />
+
+        <!-- Structural risk. Placed after the calendar because it is the
+             slower-moving problem: the calendar is about this deadline, this
+             is about how the squad is built over the next few. -->
+        <SquadRiskView risk={d?.squad_risk} />
 
         <!-- ── versus holding ─────────────────────────────────────── -->
         {#if cmp}

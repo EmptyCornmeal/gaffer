@@ -11,6 +11,25 @@
 
 /** 4.1 -- one object per weekly decision. Shape mirrors `gaffer.card`. */
 /** 5.1 -- the information calendar. Time and money; explicitly not football. */
+/** Structural risk in the squad. Descriptive, never a forecast. */
+export interface SquadRisk {
+  available?: boolean
+  version?: string
+  from_gameweek?: number
+  horizon: number
+  clear: boolean
+  warnings: Array<{
+    gameweek: number
+    kind: 'fixture_concentration' | 'dead_bench'
+    gameweeks_away: number
+    detail: string
+    largest?: string | null
+    fixable_by: string
+  }>
+  why_early?: string
+  not_a_projection?: string
+}
+
 export interface InfoCalendar {
   calendar_version: string
   window: string
@@ -212,6 +231,8 @@ export interface WeeklyDecision {
   calendar?: InfoCalendar
   /** 5.3 -- the wait-versus-act comparison built from that calendar. */
   wait_vs_act?: WaitVsAct
+  /** Structural problems, looked for as far ahead as a free transfer reaches. */
+  squad_risk?: SquadRisk
   generated_at: string
   gameweek: number
   horizon: number
