@@ -588,6 +588,81 @@ MINUTES_VERDICT = (
 )
 
 #: A18 — the variant that was measured alongside the shipped fix and REFUSED.
+#: Phase 2A.4 -- MEASURED AND REFUSED, 2026-09-02.
+#:
+#: After Release A the START PROBABILITY beats every baseline at every horizon.
+#: The MINUTES estimate does not: MAE 14.3 against 11.5 for a lagged start times
+#: ninety. The bimodal shape is the obvious suspect --
+#: ``p_start * START_MINUTES + cameo * CAMEO_MINUTES`` with both constants
+#: global, so every player is either about 78 minutes or about 3 and a reliable
+#: 60-minute player is in neither mode. Gaffer's own crossover programme named
+#: this in 2026-08, and OpenFPL's published method uses the two-stage
+#: alternative: appearance probability, then minutes CONDITIONAL on appearing.
+#:
+#: Built, and measured at all three levels the plan mandates, because a minutes
+#: model can be mechanically better while making worse decisions and MAE on
+#: minutes is not the objective:
+#:
+#:     level                       shipped   candidate
+#:     exp_minutes MAE h=1          14.31      13.83     better
+#:     points MAE h=1                1.048      1.046     level
+#:     XI points per gameweek        51.4       51.0      WORSE
+#:
+#: The pre-registered rule required all three, and the third is the one that
+#: decides. REFUSED, and reverted.
+#:
+#: This is the exact failure the three-level rule was written to catch, and it
+#: is the second time this project has seen it: E2 of the crossover programme
+#: demonstrated a better INPUT that did not become a better DECISION. A minutes
+#: estimate half a minute closer on average, spread across 626 players, moved
+#: the fifteen a squad is built from the wrong way.
+#:
+#: Honest caveat, recorded rather than used to soften the result: 0.4 points a
+#: gameweek over 38 gameweeks is not a large margin and could be noise. The
+#: rule was fixed before the number was read, and a rule that bends when the
+#: result is close is not a rule. If it is revisited, the revisit needs a
+#: paired test over gameweeks, not a re-reading of these means.
+#:
+#: DO NOT REOPEN by tuning MINUTES_SHRINK_N or the positional priors. A
+#: different constant is not a different hypothesis. What would be: a
+#: conditional-minutes model that also knows about substitution risk and game
+#: state, which is a different object from a shrunk mean.
+MINUTES_SHAPE_REFUSED = {
+    "candidate": "two_stage_conditional_minutes",
+    "decision": "measured, REFUSED",
+    "measured_on": "2026-09-02",
+    "change": ("replace the global START_MINUTES / CAMEO_MINUTES constants with "
+               "the player's own mean minutes when he starts and when he comes "
+               "on, each shrunk toward the constant it replaces"),
+    "rule": ("pre-registered: ship only if exp_minutes MAE improves on the test "
+             "season AND points MAE does not worsen AND XI points per gameweek "
+             "does not fall"),
+    "test_season": {
+        "exp_minutes_mae": {"shipped": 14.31, "candidate": 13.83},
+        "points_mae_h1": {"shipped": 1.048, "candidate": 1.046},
+        "xi_points_per_gw": {"shipped": 51.4, "candidate": 51.0},
+    },
+    "exp_minutes_mae_by_season": {
+        "2023-24": {"shipped": 15.195, "candidate": 14.765},
+        "2024-25": {"shipped": 15.678, "candidate": 15.236},
+        "2025-26": {"shipped": 14.701, "candidate": 14.235},
+    },
+    "refused_because": (
+        "it fails the decision metric. The minutes estimate improved in all "
+        "three seasons and the XI it produces got worse, which is the trade "
+        "the three-level rule exists to catch."),
+    "caveat": (
+        "0.4 points a gameweek is not a large margin and could be noise. The "
+        "rule was fixed before the number was read; a revisit needs a paired "
+        "test over gameweeks, not a re-reading of these means."),
+    "still_true": (
+        "exp_minutes remains the weakest published quantity: 14.3 MAE against "
+        "11.5 for a lagged start times ninety. The bimodal shape is untouched "
+        "and the loss to a one-line rule is real and unfixed."),
+    "harness": "scripts/run_minutes_shape.py",
+}
+
+
 #: Phase 1.6 -- MEASURED AND REFUSED, 2026-09-01.
 #:
 #: The shipped objective picks the starting XI on ``players[i].value``, a

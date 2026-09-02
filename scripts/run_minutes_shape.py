@@ -50,7 +50,6 @@ import pandas as pd
 
 from gaffer import backtest as BT
 from gaffer import histdata
-from gaffer.model import features as F
 
 SEASONS = ("2023-24", "2024-25", "2025-26")
 
