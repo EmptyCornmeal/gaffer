@@ -591,7 +591,17 @@ def build(
         if measurable and candidates else []
     )
     keys = [str(st.league_id) for st in measurable]
-    resolution = ML.resolve(options, None, keys) if options else {
+    # 3.8 -- the objective, as configured. `resolve` has always accepted a
+    # weighting and has always been called with None, so it published a
+    # shortlist and the conflicts and refused to name a winner: honest, and
+    # unusable as a decision. The weighting is now runtime state.
+    #
+    # An empty map keeps the old behaviour exactly, and that is the right
+    # default: with nothing configured there is no principled way to trade one
+    # league's probability against another's, and inventing one would be the
+    # same error as the inert three-way control that was hidden in 1.13.
+    weights = {str(k): float(v) for k, v in (settings.league_weights or {}).items()}
+    resolution = ML.resolve(options, weights or None, keys) if options else {
         "default": None,
         "reason": (
             "no league has a measurable placing probability yet, so there is "
@@ -625,7 +635,23 @@ def build(
         # contract would reject an unknown key that carried Python objects.
         "_states": states,
         "options": [o.as_dict() for o in options],
-        "resolution": resolution,
+        "resolution": {
+            **resolution,
+            # Say WHICH competition this answer is for. A recommendation that
+            # does not name its objective cannot be argued with.
+            "objective": {
+                "league_weights": weights,
+                "source": settings.sources.get("league_weights", "unset"),
+                "configured": bool(weights),
+                "note": (
+                    "weighted across the leagues named above"
+                    if weights else
+                    "no weighting configured: the shortlist and the conflicts "
+                    "are published, and no winner is invented. Set "
+                    "GAFFER_LEAGUE_WEIGHTS to 'id:weight,id:weight' to make "
+                    "this a calculation rather than a choice."),
+            },
+        },
         "chips": chips,
         "limitations": _limitations(scen, views, held is not None, gws_remaining,
                                     chips),

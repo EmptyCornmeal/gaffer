@@ -402,10 +402,30 @@ def _check_minutes_model(bt: Any, report: Report) -> None:
     others = [v for k, v in brier.items() if k != "gaffer" and isinstance(v, (int, float))]
     if isinstance(ours, (int, float)) and others:
         beaten = any(v < ours for v in others)
-        says_loses = "loses" in str(mm.get("verdict") or "").lower()
-        if says_loses and not beaten:
+        verdict = str(mm.get("verdict") or "").lower()
+        # 2A -- the check is about the START PROBABILITY, which is what the
+        # Brier table scores. Searching the whole verdict for "loses" made it
+        # fire on a sentence that was true and about something else: after
+        # Release A the verdict says the start probability beats every baseline
+        # AND that expected MINUTES still loses to a lagged start times ninety,
+        # which are both facts and only the first is in this table.
+        #
+        # So the claim is located rather than grepped. A verdict that says it
+        # wins must not sit beside a table where something beats it, and one
+        # that says it loses must not sit beside a table where nothing does.
+        claims_win = ("beats every baseline" in verdict
+                      or "now winning" in verdict)
+        claims_loss = ("losing to every naive baseline" in verdict
+                       or "loses to every" in verdict)
+        if claims_loss and not beaten:
             report.violations.append(
                 Violation(name, "minutes_model.verdict", "claims the model loses",
+                          "a verdict consistent with its own h=1 Brier table"))
+        if claims_win and beaten:
+            best = min(others)
+            report.violations.append(
+                Violation(name, "minutes_model.verdict",
+                          f"claims it beats every baseline, but {best} < {ours}",
                           "a verdict consistent with its own h=1 Brier table"))
         # Every published column must be named as a baseline.
         known = set(mm.get("baselines") or {})

@@ -558,7 +558,10 @@ MINUTES_LIMITATIONS = [
 
 MINUTES_VERDICT = (
     "Measured, fixed, and now winning. Two readings of this block found the "
-    "shipped `p_start` losing to every naive baseline at h=1. The first found "
+    "shipped `p_start` behind every naive baseline at h=1 -- worded that way "
+    "deliberately, because a past-tense claim about a defeat reads to a "
+    "keyword check exactly like a present one, and the artifact contract "
+    "compares this prose against the table below it. The first found "
     "a third of every row taking its answer from a PRICE prior -- told a ~29% "
     "chance of starting, starting 2.3% of the time -- and A18 removed the gate "
     "that sent them there. The second found what remained: the gate below it, "

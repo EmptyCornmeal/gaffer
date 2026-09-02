@@ -437,6 +437,48 @@ def _int_or_fail(raw: object, field_name: str, source: str) -> int:
         ) from exc
 
 
+def _league_weights_from(raw: object, source: str) -> dict[int, float]:
+    """Parse ``league_id:weight`` pairs into the objective's weighting.
+
+    3.8. Accepts ``"271619:1,733241:0.3"`` or a mapping. A malformed value
+    RAISES rather than defaulting to an even split: a weighting nobody chose
+    is exactly the invented winner the resolution layer already refuses to
+    produce, and it would be harder to notice here.
+    """
+    if isinstance(raw, dict):
+        items = list(raw.items())
+    elif isinstance(raw, str):
+        items = []
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if ":" not in part:
+                raise ConfigError(
+                    f"league_weights from {source} must be 'id:weight' pairs, "
+                    f"got {part!r}")
+            k, _, v = part.partition(":")
+            items.append((k.strip(), v.strip()))
+    else:
+        raise ConfigError(
+            f"league_weights from {source} must be a mapping or string, "
+            f"got {raw!r}")
+    out: dict[int, float] = {}
+    for k, v in items:
+        lid = _int_or_fail(k, "league_weights key", source)
+        try:
+            w = float(v)
+        except (TypeError, ValueError):
+            raise ConfigError(
+                f"league_weights[{lid}] from {source} must be a number, "
+                f"got {v!r}") from None
+        if w < 0:
+            raise ConfigError(
+                f"league_weights[{lid}] from {source} must not be negative")
+        out[lid] = w
+    return out
+
+
 def _league_ids_from(raw: object, source: str) -> list[int]:
     """Accept a TOML list or a comma/space-separated string. Always a list."""
     if raw is None:
@@ -525,6 +567,18 @@ class Settings:
     # Manual purchase-price overrides, player_id -> tenths. Only needed when the
     # public transfer history cannot recover a price.
     purchase_prices: dict[int, int] = field(default_factory=dict)
+    # 3.8 -- WHICH COMPETITION this is for, as runtime state rather
+    # than a project-level assumption. league_id -> relative
+    # importance; an absent or empty map means no weighting is
+    # configured, and the resolution then publishes a shortlist and
+    # the conflicts rather than inventing a winner.
+    #
+    # Deliberately a SETTING and not yet a UI control. The Planner's
+    # risk stance was hidden in 1.13 precisely because it offered
+    # three settings that solved to identical squads; a selector
+    # ships when the objective it selects already changes an answer,
+    # never before. This is the objective; the control follows it.
+    league_weights: dict[int, float] = field(default_factory=dict)
     # Where each value came from, for the pipeline log and the artifact contract.
     sources: dict[str, str] = field(default_factory=dict)
 
@@ -547,6 +601,7 @@ class Settings:
         entry_id: int | None = None
         league_ids: list[int] = []
         free_transfers = 1
+        league_weights: dict[int, float] = {}
         bank: int | None = None
         purchase_prices: dict[int, int] = {}
         sources: dict[str, str] = {
@@ -591,6 +646,11 @@ class Settings:
                 os.environ["GAFFER_LEAGUE_IDS"], "env:GAFFER_LEAGUE_IDS"
             )
             sources["league_ids"] = "env:GAFFER_LEAGUE_IDS"
+        raw_w = os.environ.get("GAFFER_LEAGUE_WEIGHTS")
+        if raw_w:
+            league_weights = _league_weights_from(
+                raw_w, "env:GAFFER_LEAGUE_WEIGHTS")
+            sources["league_weights"] = "env:GAFFER_LEAGUE_WEIGHTS"
         if os.environ.get("GAFFER_FREE_TRANSFERS", "").strip():
             free_transfers = _int_or_fail(
                 os.environ["GAFFER_FREE_TRANSFERS"], "free_transfers",
@@ -616,7 +676,8 @@ class Settings:
         return cls(
             entry_id=entry_id, league_ids=league_ids,
             free_transfers=free_transfers, bank=bank,
-            purchase_prices=purchase_prices, sources=sources,
+            purchase_prices=purchase_prices,
+            league_weights=league_weights, sources=sources,
         )
 
 
