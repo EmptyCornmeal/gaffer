@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-09-01T20:15:39+00:00",
+  "generated_at": "2026-09-02T06:05:34+00:00",
   "gameweek": 3,
   "gameweeks_remaining": 36,
   "simulation": {
@@ -33,7 +33,7 @@
         "price": 6.0,
         "code": 154561,
         "team_code": 3,
-        "next_gw_xp": 4.78
+        "next_gw_xp": 4.81
       },
       {
         "id": 8,
@@ -43,7 +43,7 @@
         "price": 5.6,
         "code": 466075,
         "team_code": 3,
-        "next_gw_xp": 3.41
+        "next_gw_xp": 5.02
       },
       {
         "id": 115,
@@ -53,17 +53,17 @@
         "price": 4.7,
         "code": 465730,
         "team_code": 36,
-        "next_gw_xp": 2.53
+        "next_gw_xp": 4.28
       },
       {
         "id": 165,
         "name": "João Pedro",
         "team": "CHE",
         "pos": "FWD",
-        "price": 7.6,
+        "price": 7.7,
         "code": 475168,
         "team_code": 8,
-        "next_gw_xp": 3.44
+        "next_gw_xp": 3.88
       },
       {
         "id": 346,
@@ -73,7 +73,7 @@
         "price": 6.0,
         "code": 177815,
         "team_code": 2,
-        "next_gw_xp": 4.88
+        "next_gw_xp": 5.63
       },
       {
         "id": 411,
@@ -83,7 +83,7 @@
         "price": 15.5,
         "code": 223094,
         "team_code": 43,
-        "next_gw_xp": 7.5
+        "next_gw_xp": 8.04
       },
       {
         "id": 418,
@@ -93,7 +93,7 @@
         "price": 5.0,
         "code": 95658,
         "team_code": 1,
-        "next_gw_xp": 1.6
+        "next_gw_xp": 2.76
       },
       {
         "id": 426,
@@ -103,7 +103,7 @@
         "price": 12.0,
         "code": 141746,
         "team_code": 1,
-        "next_gw_xp": 5.53
+        "next_gw_xp": 5.87
       },
       {
         "id": 427,
@@ -113,7 +113,7 @@
         "price": 8.0,
         "code": 446008,
         "team_code": 1,
-        "next_gw_xp": 4.45
+        "next_gw_xp": 5.04
       },
       {
         "id": 542,
@@ -123,7 +123,7 @@
         "price": 5.9,
         "code": 484420,
         "team_code": 56,
-        "next_gw_xp": 3.42
+        "next_gw_xp": 3.84
       },
       {
         "id": 557,
@@ -133,7 +133,7 @@
         "price": 6.5,
         "code": 439509,
         "team_code": 3,
-        "next_gw_xp": 1.63
+        "next_gw_xp": 3.02
       }
     ],
     "bench": [
@@ -145,7 +145,7 @@
         "price": 4.0,
         "code": 451284,
         "team_code": 9,
-        "next_gw_xp": 0.7
+        "next_gw_xp": 1.98
       },
       {
         "id": 212,
@@ -155,7 +155,7 @@
         "price": 4.5,
         "code": 108413,
         "team_code": 31,
-        "next_gw_xp": 2.1
+        "next_gw_xp": 0.94
       },
       {
         "id": 497,
@@ -165,7 +165,7 @@
         "price": 4.0,
         "code": 67089,
         "team_code": 6,
-        "next_gw_xp": 2.58
+        "next_gw_xp": 0.68
       },
       {
         "id": 504,
@@ -175,7 +175,7 @@
         "price": 5.0,
         "code": 610799,
         "team_code": 36,
-        "next_gw_xp": 1.25
+        "next_gw_xp": 3.16
       }
     ],
     "captain": {
@@ -186,7 +186,7 @@
       "price": 15.5,
       "code": 223094,
       "team_code": 43,
-      "next_gw_xp": 7.5
+      "next_gw_xp": 8.04
     },
     "source_event": 2
   },
@@ -204,12 +204,18 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.5755,
-        "p_target": 0.5755,
+        "p_first_after_gw": 0.638,
+        "p_target_after_gw": 0.638,
         "target_position": 1,
-        "expected_position": 1.62,
+        "expected_position_after_gw": 1.51,
+        "domain": {
+          "horizon": "next_gameweek",
+          "gameweek": null,
+          "measures": "the standings after the next gameweek, not the season",
+          "rivals_assumed": "rivals keep their current squads"
+        },
         "simulations": 2000,
-        "ci95_halfwidth": 0.0217,
+        "ci95_halfwidth": 0.0211,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -233,7 +239,7 @@
             "price": 15.5,
             "code": 223094,
             "team_code": 43,
-            "next_gw_xp": 7.5
+            "next_gw_xp": 8.04
           }
         },
         {
@@ -248,10 +254,10 @@
             "name": "João Pedro",
             "team": "CHE",
             "pos": "FWD",
-            "price": 7.6,
+            "price": 7.7,
             "code": 475168,
             "team_code": 8,
-            "next_gw_xp": 3.44
+            "next_gw_xp": 3.88
           }
         },
         {
@@ -269,7 +275,7 @@
             "price": 5.6,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 3.41
+            "next_gw_xp": 5.02
           }
         },
         {
@@ -287,7 +293,7 @@
             "price": 6.5,
             "code": 439509,
             "team_code": 3,
-            "next_gw_xp": 1.63
+            "next_gw_xp": 3.02
           }
         },
         {
@@ -305,7 +311,7 @@
             "price": 12.0,
             "code": 141746,
             "team_code": 1,
-            "next_gw_xp": 5.53
+            "next_gw_xp": 5.87
           }
         },
         {
@@ -323,7 +329,7 @@
             "price": 6.0,
             "code": 154561,
             "team_code": 3,
-            "next_gw_xp": 4.78
+            "next_gw_xp": 4.81
           }
         }
       ],
@@ -343,7 +349,7 @@
             "price": 6.0,
             "code": 177815,
             "team_code": 2,
-            "next_gw_xp": 4.88
+            "next_gw_xp": 5.63
           }
         },
         {
@@ -361,7 +367,7 @@
             "price": 4.7,
             "code": 465730,
             "team_code": 36,
-            "next_gw_xp": 2.53
+            "next_gw_xp": 4.28
           }
         }
       ],
@@ -381,7 +387,7 @@
             "price": 7.0,
             "code": 424876,
             "team_code": 14,
-            "next_gw_xp": 5.52
+            "next_gw_xp": 5.72
           }
         },
         {
@@ -399,7 +405,7 @@
             "price": 7.5,
             "code": 244850,
             "team_code": 8,
-            "next_gw_xp": 3.32
+            "next_gw_xp": 3.34
           }
         },
         {
@@ -417,7 +423,7 @@
             "price": 4.5,
             "code": 214225,
             "team_code": 2,
-            "next_gw_xp": 2.17
+            "next_gw_xp": 2.39
           }
         },
         {
@@ -432,10 +438,10 @@
             "name": "Wilson",
             "team": "LEE",
             "pos": "MID",
-            "price": 6.5,
+            "price": 6.4,
             "code": 153682,
             "team_code": 2,
-            "next_gw_xp": 4.22
+            "next_gw_xp": 2.71
           }
         },
         {
@@ -453,7 +459,7 @@
             "price": 8.0,
             "code": 226597,
             "team_code": 3,
-            "next_gw_xp": 4.39
+            "next_gw_xp": 5.37
           }
         },
         {
@@ -471,7 +477,7 @@
             "price": 6.0,
             "code": 209036,
             "team_code": 43,
-            "next_gw_xp": 7.39
+            "next_gw_xp": 7.88
           }
         },
         {
@@ -489,7 +495,7 @@
             "price": 9.0,
             "code": 219168,
             "team_code": 14,
-            "next_gw_xp": 1.89
+            "next_gw_xp": 4.77
           }
         },
         {
@@ -525,7 +531,7 @@
             "price": 4.5,
             "code": 485055,
             "team_code": 6,
-            "next_gw_xp": 0.4
+            "next_gw_xp": 1.51
           }
         },
         {
@@ -543,7 +549,7 @@
             "price": 4.5,
             "code": 159506,
             "team_code": 17,
-            "next_gw_xp": 1.79
+            "next_gw_xp": 3.13
           }
         }
       ],
@@ -575,12 +581,18 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first": 0.0,
-        "p_target": 0.0,
+        "p_first_after_gw": 0.0005,
+        "p_target_after_gw": 0.0005,
         "target_position": 1,
-        "expected_position": 8.33,
+        "expected_position_after_gw": 8.06,
+        "domain": {
+          "horizon": "next_gameweek",
+          "gameweek": null,
+          "measures": "the standings after the next gameweek, not the season",
+          "rivals_assumed": "rivals keep their current squads"
+        },
         "simulations": 2000,
-        "ci95_halfwidth": 0.0,
+        "ci95_halfwidth": 0.001,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -604,7 +616,7 @@
             "price": 15.5,
             "code": 223094,
             "team_code": 43,
-            "next_gw_xp": 7.5
+            "next_gw_xp": 8.04
           }
         },
         {
@@ -619,10 +631,10 @@
             "name": "João Pedro",
             "team": "CHE",
             "pos": "FWD",
-            "price": 7.6,
+            "price": 7.7,
             "code": 475168,
             "team_code": 8,
-            "next_gw_xp": 3.44
+            "next_gw_xp": 3.88
           }
         },
         {
@@ -640,7 +652,7 @@
             "price": 12.0,
             "code": 141746,
             "team_code": 1,
-            "next_gw_xp": 5.53
+            "next_gw_xp": 5.87
           }
         },
         {
@@ -658,7 +670,7 @@
             "price": 5.6,
             "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 3.41
+            "next_gw_xp": 5.02
           }
         }
       ],
@@ -679,7 +691,7 @@
             "price": 7.0,
             "code": 424876,
             "team_code": 14,
-            "next_gw_xp": 5.52
+            "next_gw_xp": 5.72
           }
         },
         {
@@ -697,7 +709,7 @@
             "price": 8.0,
             "code": 226597,
             "team_code": 3,
-            "next_gw_xp": 4.39
+            "next_gw_xp": 5.37
           }
         },
         {
@@ -733,7 +745,7 @@
             "price": 7.5,
             "code": 244850,
             "team_code": 8,
-            "next_gw_xp": 3.32
+            "next_gw_xp": 3.34
           }
         },
         {
@@ -751,7 +763,7 @@
             "price": 9.0,
             "code": 219168,
             "team_code": 14,
-            "next_gw_xp": 1.89
+            "next_gw_xp": 4.77
           }
         },
         {
@@ -769,7 +781,7 @@
             "price": 6.0,
             "code": 209036,
             "team_code": 43,
-            "next_gw_xp": 7.39
+            "next_gw_xp": 7.88
           }
         },
         {
@@ -787,7 +799,7 @@
             "price": 8.0,
             "code": 502500,
             "team_code": 94,
-            "next_gw_xp": 4.99
+            "next_gw_xp": 5.02
           }
         },
         {
@@ -805,7 +817,7 @@
             "price": 9.6,
             "code": 244851,
             "team_code": 8,
-            "next_gw_xp": 2.76
+            "next_gw_xp": 3.62
           }
         },
         {
@@ -823,7 +835,7 @@
             "price": 7.5,
             "code": 204480,
             "team_code": 3,
-            "next_gw_xp": 3.65
+            "next_gw_xp": 3.93
           }
         },
         {
@@ -841,7 +853,7 @@
             "price": 8.5,
             "code": 437730,
             "team_code": 43,
-            "next_gw_xp": 5.73
+            "next_gw_xp": 5.77
           }
         }
       ],
@@ -866,36 +878,36 @@
     {
       "key": "captain:411",
       "label": "Captain Haaland",
-      "expected_points": 51.022,
+      "expected_points": 60.713,
       "p_target": {
-        "271619": 0.5755,
-        "733241": 0.0
+        "271619": 0.638,
+        "733241": 0.0005
       }
     },
     {
       "key": "captain:426",
       "label": "Captain B.Fernandes",
-      "expected_points": 48.891,
+      "expected_points": 58.595,
       "p_target": {
-        "271619": 0.485,
+        "271619": 0.544,
         "733241": 0.0
       }
     },
     {
       "key": "captain:346",
       "label": "Captain Calvert-Lewin",
-      "expected_points": 48.311,
+      "expected_points": 58.341,
       "p_target": {
-        "271619": 0.4835,
-        "733241": 0.0
+        "271619": 0.5435,
+        "733241": 0.0005
       }
     },
     {
-      "key": "captain:1",
-      "label": "Captain Raya",
-      "expected_points": 48.246,
+      "key": "captain:8",
+      "label": "Captain Calafiori",
+      "expected_points": 57.735,
       "p_target": {
-        "271619": 0.479,
+        "271619": 0.535,
         "733241": 0.0
       }
     }
@@ -907,10 +919,10 @@
       {
         "key": "captain:411",
         "label": "Captain Haaland",
-        "expected_points": 51.022,
+        "expected_points": 60.713,
         "p_target": {
-          "271619": 0.5755,
-          "733241": 0.0
+          "271619": 0.638,
+          "733241": 0.0005
         }
       }
     ],
@@ -920,21 +932,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 45.34,
+    "expected_gain": 37.38,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "wildcard",
         "gameweek": 3,
-        "expected_gain": 45.34,
+        "expected_gain": 37.38,
         "ci95": [
-          43.48,
-          47.2
+          35.49,
+          39.27
         ],
-        "baseline_points": 224.7,
-        "with_chip_points": 270.04,
+        "baseline_points": 259.84,
+        "with_chip_points": 297.22,
         "horizon_gameweeks": 4,
-        "expected_gain_per_gameweek": 11.34,
+        "expected_gain_per_gameweek": 9.35,
         "assumptions": [
           "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
           "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -947,15 +959,15 @@
       {
         "chip": "freehit",
         "gameweek": 3,
-        "expected_gain": 16.49,
+        "expected_gain": 13.59,
         "ci95": [
-          15.81,
-          17.16
+          12.9,
+          14.28
         ],
-        "baseline_points": 51.02,
-        "with_chip_points": 67.51,
+        "baseline_points": 60.71,
+        "with_chip_points": 74.3,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 16.49,
+        "expected_gain_per_gameweek": 13.59,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -965,15 +977,15 @@
       {
         "chip": "3xc",
         "gameweek": 3,
-        "expected_gain": 7.61,
+        "expected_gain": 8.12,
         "ci95": [
-          7.36,
-          7.86
+          7.89,
+          8.36
         ],
-        "baseline_points": 51.02,
-        "with_chip_points": 58.63,
+        "baseline_points": 60.71,
+        "with_chip_points": 68.83,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 7.61,
+        "expected_gain_per_gameweek": 8.12,
         "assumptions": [
           "Assumes the captain plays; a blank or an early injury forfeits the chip.",
           "Evaluated on the captain the optimiser would pick, not a fixed choice.",
@@ -983,15 +995,15 @@
       {
         "chip": "bboost",
         "gameweek": 3,
-        "expected_gain": 6.56,
+        "expected_gain": 6.75,
         "ci95": [
-          6.39,
-          6.74
+          6.57,
+          6.94
         ],
-        "baseline_points": 51.02,
-        "with_chip_points": 57.58,
+        "baseline_points": 60.71,
+        "with_chip_points": 67.46,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 6.56,
+        "expected_gain_per_gameweek": 6.75,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs are not modelled, so a benched non-starter contributes his own simulated points rather than a replacement's.",
@@ -1034,15 +1046,15 @@
     "candidate": {
       "chip": "wildcard",
       "gameweek": 3,
-      "expected_gain": 45.34,
+      "expected_gain": 37.38,
       "ci95": [
-        43.48,
-        47.2
+        35.49,
+        39.27
       ],
-      "baseline_points": 224.7,
-      "with_chip_points": 270.04,
+      "baseline_points": 259.84,
+      "with_chip_points": 297.22,
       "horizon_gameweeks": 4,
-      "expected_gain_per_gameweek": 11.34,
+      "expected_gain_per_gameweek": 9.35,
       "assumptions": [
         "Measured over 4 gameweek(s): both point figures are 4-gameweek totals, not one week.",
         "Netted against the free-transfer path — 1 free transfer(s) a week would close the same gap unaided, so only the ACCELERATION is counted as the chip's gain.",
@@ -1095,16 +1107,16 @@
           "window_end": 19,
           "assessed_through": 8,
           "gameweeks": {
-            "3": 7.5,
-            "4": 6.1,
-            "5": 8.54,
-            "6": 6.05,
-            "7": 8.54,
-            "8": 6.05
+            "3": 8.04,
+            "4": 6.91,
+            "5": 9.04,
+            "6": 6.41,
+            "7": 9.04,
+            "8": 6.41
           },
-          "now_gain": 7.5,
+          "now_gain": 8.04,
           "best_gameweek": 5,
-          "best_gain": 8.54,
+          "best_gain": 9.04,
           "note": "Timing checked over GW3-GW8; the window runs to GW19, so GW9-GW19 were NOT assessed."
         },
         "bboost": {
@@ -1113,17 +1125,55 @@
           "window_end": 19,
           "assessed_through": 8,
           "gameweeks": {
-            "3": 6.62,
-            "4": 7.59,
-            "5": 6.16,
-            "6": 7.07,
-            "7": 7.74,
-            "8": 6.09
+            "3": 6.76,
+            "4": 9.6,
+            "5": 5.89,
+            "6": 9.4,
+            "7": 8.17,
+            "8": 6.6
           },
-          "now_gain": 6.62,
-          "best_gameweek": 7,
-          "best_gain": 7.74,
+          "now_gain": 6.76,
+          "best_gameweek": 4,
+          "best_gain": 9.6,
           "note": "Timing checked over GW3-GW8; the window runs to GW19, so GW9-GW19 were NOT assessed."
+        }
+      },
+      "expiry": {
+        "wildcard": {
+          "chip": "wildcard",
+          "stop_event": 19,
+          "gameweeks_left_including_this_one": 17,
+          "doubles_in_window": [],
+          "blanks_in_window": [],
+          "calendar_checked_through": 19,
+          "note": "expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+        },
+        "freehit": {
+          "chip": "freehit",
+          "stop_event": 19,
+          "gameweeks_left_including_this_one": 17,
+          "doubles_in_window": [],
+          "blanks_in_window": [],
+          "calendar_checked_through": 19,
+          "note": "expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+        },
+        "3xc": {
+          "chip": "3xc",
+          "stop_event": 19,
+          "gameweeks_left_including_this_one": 17,
+          "doubles_in_window": [],
+          "blanks_in_window": [],
+          "calendar_checked_through": 19,
+          "note": "expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+        },
+        "bboost": {
+          "chip": "bboost",
+          "stop_event": 19,
+          "gameweeks_left_including_this_one": 17,
+          "doubles_in_window": [],
+          "blanks_in_window": [],
+          "calendar_checked_through": 19,
+          "note": "expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
         }
       },
       "fixtures": {
@@ -1159,7 +1209,7 @@
         }
       }
     },
-    "reason": "wildcard projects +45.3 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed"
+    "reason": "wildcard projects +37.4 points in GW3, but Gaffer has not valued it in GW4-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 17 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW3-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",

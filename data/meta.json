@@ -7,10 +7,10 @@
   "projection_event": "3",
   "squad_source_event": "2",
   "squad_status_reason": "picks read for GW2 while projecting GW3",
-  "squad_retrieved_at": "2026-09-01T20:16:02+00:00",
+  "squad_retrieved_at": "2026-09-02T06:05:51+00:00",
   "bank_source": "entry_picks",
   "bank_exact": "True",
-  "free_transfers_source": "default",
+  "free_transfers_source": "derived_from_entry_history",
   "selling_price_confidence": "exact",
   "selling_prices_exact": "15",
   "selling_prices_total": "15",
@@ -39,12 +39,12 @@
   "ep_next_blend_weight": "0.0",
   "ep_next_sample": "366",
   "ep_next_ep_max": "12.5",
-  "ep_next_spread_ratio": "2.132",
+  "ep_next_spread_ratio": "1.961",
   "ep_next_form_match": "0.921",
   "ep_next_form_sample": "366",
   "ep_next_blend_weight_applied_mean": null,
   "model_version": "heuristic-0.6",
-  "generated_at": "2026-09-01T20:15:39+00:00",
+  "generated_at": "2026-09-02T06:05:34+00:00",
   "season": "2026-27",
   "build_mode": "personalised",
   "entry_id": 1066421,
@@ -52,6 +52,23 @@
     271619,
     733241
   ],
+  "projection_domain": {
+    "next_gw_xp": {
+      "horizon_gameweeks": 1,
+      "gameweek": "3",
+      "measures": "expected FPL points in the projected gameweek alone"
+    },
+    "horizon_xp": {
+      "horizon_gameweeks": 6,
+      "weighting": "undecayed sum over the horizon",
+      "measures": "expected FPL points summed across the projection horizon. Beyond the first gameweek this is Gaffer's component model alone and is materially weaker than its one-week figure"
+    },
+    "solver_value": {
+      "horizon_gameweeks": 6,
+      "weighting": "decayed at 0.84 per gameweek",
+      "measures": "what the optimiser maximises. The squad AND the starting XI are selected on this, not on the one-week figure: choosing the XI on one week was measured across three seasons and lost on the held-out one (backtest.XI_SELECTION_REFUSED)"
+    }
+  },
   "freshness_policy": {
     "pre_deadline_open_min": 360,
     "final_approach_min": 120,
