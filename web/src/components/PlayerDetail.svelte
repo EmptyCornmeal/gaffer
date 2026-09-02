@@ -93,6 +93,16 @@
   const evidenceClass: Record<string, string> = {
     good: 'text-muted', warn: 'text-amber', bad: 'text-red',
   }
+  // 5.2 -- read once, so the markup does not re-derive it four times.
+  const pricePct = $derived(
+    typeof player?.price_pred?.percent === 'number' && Number.isFinite(player.price_pred.percent)
+      ? player.price_pred.percent
+      : null,
+  )
+  const priceMoving = $derived(pricePct !== null && Math.abs(pricePct) >= 1)
+  const priceProjection = $derived(
+    (player?.price_pred?.projections ?? []).find((p) => p.offset === 2) ?? null,
+  )
   const kindClass: Record<string, string> = {
     good: 'chip-good', warn: 'chip-warn', bad: 'chip-bad', info: 'chip-info',
   }
@@ -332,26 +342,44 @@
             <div class="text-xs text-muted2">No Premier League history last season — the projection leans on a position/price prior.</div>
           {/if}
 
-          {#if player.set_pieces || player.price_pred.dir !== 'stable' || (player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0)}
+          <!-- 5.2 -- FPL's own price fields. The bar used to show "Est.
+               progress" against a threshold Gaffer guessed at; the guess could
+               not converge because it modelled net transfers, and the real
+               thresholds are not a function of them. This is published data. -->
+          {#if player.set_pieces || priceMoving}
             <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
               {#if player.set_pieces}<span class="chip chip-info">⚽ {player.set_pieces}</span>{/if}
-              {#if player.price_pred.dir === 'up'}
-                <span class="chip chip-good">▲ rising · {(player.price_pred.momentum / 1000).toFixed(0)}k in</span>
-              {:else if player.price_pred.dir === 'down'}
-                <span class="chip chip-bad">▼ falling · {(Math.abs(player.price_pred.momentum) / 1000).toFixed(0)}k out</span>
+              {#if pricePct !== null && pricePct > 0}
+                <span class="chip {player.price_pred.due ? 'chip-good' : 'chip-info'}">
+                  ▲ {player.price_pred.due ? 'rise due' : 'rising'} · {(player.price_pred.momentum / 1000).toFixed(0)}k in
+                </span>
+              {:else if pricePct !== null && pricePct < 0}
+                <span class="chip {player.price_pred.due ? 'chip-bad' : 'chip-warn'}">
+                  ▼ {player.price_pred.due ? 'fall due' : 'falling'} · {(Math.abs(player.price_pred.momentum) / 1000).toFixed(0)}k out
+                </span>
               {/if}
             </div>
-            {#if player.price_pred.progress && Math.abs(player.price_pred.momentum) > 0}
-              {@const up = player.price_pred.momentum > 0}
+            {#if pricePct !== null}
+              {@const up = pricePct > 0}
               <div class="mt-2">
                 <div class="flex items-center justify-between text-mini text-muted2 mb-1">
-                  <span>Est. progress to price {up ? 'rise' : 'fall'}</span>
-                  <span class="tabular-nums text-muted">{Math.round(player.price_pred.progress * 100)}%</span>
+                  <span>FPL progress to price {up ? 'rise' : 'fall'}</span>
+                  <span class="tabular-nums text-muted">{Math.round(Math.abs(pricePct))}%</span>
                 </div>
                 <div class="h-1.5 rounded-full bg-bg3 overflow-hidden">
-                  <div class="h-full {up ? 'bg-brand' : 'bg-red'}" style="width:{Math.min(100, player.price_pred.progress * 100)}%"></div>
+                  <div class="h-full {up ? 'bg-brand' : 'bg-red'}" style="width:{Math.min(100, Math.abs(pricePct))}%"></div>
                 </div>
+                {#if priceProjection}
+                  <!-- FPL's own three-day projection, with its own likelihood
+                       grade. Shown as FPL's claim, not as Gaffer's. -->
+                  <div class="text-mini text-muted2 mt-1">
+                    FPL projects {Math.round(Math.abs(priceProjection.percent ?? 0))}% in three days
+                    (likelihood {priceProjection.likelihood > 0 ? '+' : ''}{priceProjection.likelihood} of ±5)
+                  </div>
+                {/if}
               </div>
+            {:else if player.price_pred.available === false}
+              <p class="text-mini text-muted2 mt-2">{player.price_pred.reason}</p>
             {/if}
           {/if}
         </section>

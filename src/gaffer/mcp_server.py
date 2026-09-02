@@ -1135,14 +1135,29 @@ def _outlook(row: dict[str, Any], components: dict[str, Any] | None = None,
                        "ict": row.get("ict"),
                        "last_season": row.get("last_season")},
         "set_pieces": _set_piece_order(row.get("set_pieces")),
+        # 5.2 -- FPL's own published fields. The old block reported a
+        # `threshold_estimate` and said "FPL does not publish its real
+        # thresholds". It does, and the estimate was not merely imprecise: it
+        # modelled the wrong variable. This week Bailey is due to fall on
+        # -1,395 net transfers while Osula needs -28,786; no function of net
+        # transfers over owner base produces both.
         "price_signal": {
             "now": row.get("price"),
             "change_this_gw": row.get("cost_change_event"),
             "net_transfers_this_gw": row.get("net_transfers"),
             "direction": pp.get("dir"),
-            "progress_to_change": pp.get("progress"),
-            "threshold_estimate": pp.get("threshold"),
-            "basis": "estimated; FPL does not publish its real thresholds",
+            # Signed percentage of the way to the next change. Beyond +/-100
+            # the change is already due.
+            "percent_to_change": pp.get("percent"),
+            "change_is_due": pp.get("due"),
+            # FPL's own three-offset projection, each with its likelihood grade
+            # (-5 to +5). Carried whole: picking one offset would be an opinion
+            # this layer has no basis for.
+            "projections": pp.get("projections"),
+            "locked_until": pp.get("locked_until"),
+            "available": pp.get("available", True),
+            "unavailable_reason": pp.get("reason"),
+            "basis": pp.get("basis", "published by FPL"),
         },
         "ownership": {"global_pct": row.get("owned_by")},
         "holding": holding if holding is not None else {

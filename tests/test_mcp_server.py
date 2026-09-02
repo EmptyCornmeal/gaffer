@@ -964,15 +964,25 @@ def test_set_pieces_are_an_order_rather_than_a_label(note, expected):
     assert got["recorded"], "a null must say what it means"
 
 
-def test_the_price_signal_declares_that_it_is_an_estimate():
+def test_the_price_signal_is_fpls_own_and_no_longer_an_estimate():
+    """5.2 -- inverted deliberately.
+
+    This case used to assert the signal declared itself an estimate, which was
+    the honest thing to say about a guess. FPL now publishes the real fields,
+    and the guess was not merely imprecise: it modelled the wrong variable.
+    One player is due to fall on -1,395 net transfers while another needs
+    -28,786, and no function of net transfers over owner base gives both. So
+    the estimator is deleted, and this test holds that it stays deleted."""
     r = M.call("get_player_outlook", player="12")
     if r["status"] != M.STATUS_OK:
         pytest.skip("player 12 absent")
     signal = r["player"]["price_signal"]
     for field in ("change_this_gw", "net_transfers_this_gw", "direction",
-                  "progress_to_change"):
+                  "percent_to_change", "change_is_due", "projections"):
         assert field in signal
-    assert "estimated" in signal["basis"]
+    assert "threshold_estimate" not in signal
+    assert "estimated" not in signal["basis"]
+    assert "published by FPL" in signal["basis"]
 
 
 def test_a_component_stored_by_another_run_is_flagged_not_presented_as_this_one():

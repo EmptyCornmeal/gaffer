@@ -13,7 +13,7 @@ function p(id: number, pos: Pos, xp: number, owned: number, price = 5): Player {
     id, code: null, name: `P${id}`, full_name: `P${id}`, team: 'ARS', team_id: 1,
     team_code: 1, pos, price, owned_by: owned, net_transfers: 0,
     cost_change_event: 0,
-    price_pred: { dir: 'stable', momentum: 0, progress: 0, threshold: 0 },
+    price_pred: { dir: 'stable', momentum: 0, percent: 0, due: false },
     status: 'a', news: '', set_pieces: '', form: 0, ict: 0, last_season: null,
     dist: null, defcon: null, xgi90: 0, defcon90: 0, next_gw_xp: xp,
     horizon_xp: xp * 6, xp_window: xp * 6, gw_xp: [], p_start: 1, confidence: 1,

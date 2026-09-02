@@ -28,6 +28,14 @@ CREATE TABLE IF NOT EXISTS players (
     transfers_out_event INTEGER DEFAULT 0,
     cost_change_event   INTEGER DEFAULT 0,     -- price change this GW (tenths)
     cost_change_start   INTEGER DEFAULT 0,     -- cumulative change since GW1 (tenths)
+    -- 5.2 -- FPL's OWN price-change fields. It publishes these now; Gaffer used
+    -- to estimate a secret threshold from net transfers and could not converge
+    -- (one player read 51.2% progress on -30,812 net transfers).
+    price_change_percent      REAL,             -- signed progress to the next change; +/-100 = due
+    price_change_locked_until TEXT,             -- ISO 8601, or NULL when not locked
+    price_change_projections  TEXT,             -- JSON [{offset, projected_percent, likelihood}]
+    price_change_hourly_rate  REAL,             -- FPL's own rate field; unit undocumented
+    price_change_calibrating  INTEGER DEFAULT 0,
     minutes             INTEGER DEFAULT 0,     -- season-to-date
     starts              INTEGER DEFAULT 0,
     form                REAL DEFAULT 0,

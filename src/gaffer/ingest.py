@@ -145,6 +145,19 @@ def ingest_players(conn: sqlite3.Connection, bootstrap: dict[str, Any]) -> int:
                 "transfers_out_event": e.get("transfers_out_event", 0),
                 "cost_change_event": e.get("cost_change_event", 0),
                 "cost_change_start": e.get("cost_change_start", 0),
+                # 5.2 -- taken as published. `price_change_percent` arrives as
+                # a string; the projections are a list and are stored as JSON
+                # rather than flattened, because the offsets and the likelihood
+                # grade are the whole content and picking one would be an
+                # opinion this layer has no business having.
+                "price_change_percent": _f(e.get("price_change_percent")),
+                "price_change_locked_until": e.get("price_change_locked_until"),
+                "price_change_projections": (
+                    json.dumps(e["price_change_projections"])
+                    if e.get("price_change_projections") else None),
+                "price_change_hourly_rate": _f(e.get("price_change_hourly_rate")),
+                "price_change_calibrating": int(
+                    bool(e.get("price_change_calibrating"))),
                 "minutes": e.get("minutes", 0),
                 "starts": e.get("starts", 0),
                 "form": _f(e.get("form")),

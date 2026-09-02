@@ -33,11 +33,25 @@ export interface TeamFixture {
   def?: number
 }
 
+/**
+ * 5.2 -- FPL's own price-change fields, not an estimate of them.
+ *
+ * `progress` and `threshold` are gone. Gaffer used to approximate the secret
+ * threshold as a share of the owner base; the estimate could not converge
+ * because it modelled the wrong variable. FPL publishes the answer.
+ */
 export interface PricePred {
-  dir: 'up' | 'down' | 'stable'
+  available?: boolean
+  reason?: string
+  dir: 'rising' | 'falling' | 'up' | 'down' | 'stable' | 'unknown'
   momentum: number
-  progress?: number // 0..1 estimated share of the price-change threshold
-  threshold?: number
+  /** Signed percentage of the way to the next change. Beyond ±100 it is due. */
+  percent?: number
+  due?: boolean
+  /** FPL's three-offset projection, each with its own likelihood grade (−5…+5). */
+  projections?: Array<{ offset: number; percent: number | null; likelihood: number }>
+  locked_until?: string | null
+  basis?: string
 }
 
 export interface LastSeason {

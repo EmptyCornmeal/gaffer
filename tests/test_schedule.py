@@ -55,6 +55,11 @@ def test_the_window_shuts_before_the_deadline():
     projecting the NEXT gameweek — not the question being asked."""
     assert decide(0.4).window == "final_approach"       # 24 min out
     assert decide(0.25).window == "idle"                # 15 min out
+    # Still idle, and for a reason 5.4 made explicit: `decide` publishes at
+    # `now`, which is AFTER the deadline here, so the advice on screen already
+    # answers the next gameweek. The `locked` window added in 5.4 is for the
+    # other case -- pre-deadline advice still standing after the deadline --
+    # and tests/test_locked_window.py covers it.
     assert decide(-1).window == "idle"                  # deadline gone
 
 

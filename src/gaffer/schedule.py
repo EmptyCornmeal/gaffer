@@ -56,6 +56,21 @@ PRE_DEADLINE_CLOSE = timedelta(minutes=20)
 #: The last stretch, where team news lands and the bar tightens.
 FINAL_APPROACH = timedelta(hours=2)
 
+#: RM-G27 -- how long after a deadline the gameweek can be locked with no
+#: football being played yet.
+#:
+#: The gap between an FPL deadline and the first kick-off is usually about 90
+#: minutes, but it is set by the fixture list, not by a rule: a Friday 18:30
+#: deadline can precede a 20:00 kick-off, and an international-break gameweek
+#: can leave a longer gap. Four hours bounds every shape of it without being so
+#: wide that a genuinely idle mid-week afternoon is mistaken for one.
+#:
+#: This window self-closes: a run inside it republishes with the NEXT
+#: gameweek's deadline (`ingest` writes whatever `gameweek.projection_event`
+#: selects), so the state becomes `idle` again after one refresh. It costs one
+#: prompt run, which is exactly what it is for.
+LOCKED_WINDOW = timedelta(hours=4)
+
 #: Maximum tolerated age of the published artifacts, per window. These are the
 #: *loosest* bars. Inside the pre-deadline windows `_age_bar` tightens them as
 #: the deadline closes in; nothing ever loosens them.
@@ -63,6 +78,14 @@ MAX_AGE = {
     "final_approach": timedelta(minutes=20),
     "pre_deadline": timedelta(minutes=90),
     "live": timedelta(minutes=60),
+    # RM-G27. The deadline has passed and no ball has been kicked. Everything
+    # on the screen is now advice about a gameweek nobody can act on, and under
+    # the 6 h idle bar it could stand there for the whole gap.
+    #
+    # A tight bar is not about freshness for its own sake here: the refresh is
+    # what rolls the published event forward, so it is what makes the site stop
+    # offering a transfer for a locked squad.
+    "locked": timedelta(minutes=15),
     "idle": timedelta(hours=6),
 }
 
@@ -152,6 +175,11 @@ def _window(now: datetime, deadline: datetime | None,
             return "pre_deadline"
     if _football_is_on(now, fixture_states, fixture_kickoffs):
         return "live"
+    # RM-G27 -- deadline gone, football not started. Checked AFTER `live`, so a
+    # kick-off always wins: once the football is on, that is the more urgent
+    # number and the window says so.
+    if deadline is not None and -LOCKED_WINDOW <= (deadline - now) < timedelta(0):
+        return "locked"
     return "idle"
 
 
@@ -208,6 +236,14 @@ def should_refresh(
     """
     now = now or datetime.now(UTC)
     window = _window(now, deadline, fixture_states, fixture_kickoffs)
+    # RM-G27, refined. `locked` is a tight bar for one specific harm: advice
+    # written BEFORE a deadline still standing after it, for a squad nobody can
+    # change. A publish that already happened after the deadline has answered
+    # that -- it rolled the event forward -- so judging it on a 15-minute bar
+    # would be churn, not correctness.
+    if (window == "locked" and deadline is not None
+            and last_generated_at is not None and last_generated_at >= deadline):
+        window = "idle"
     limit = _age_bar(window, now, deadline)
     limit_min = limit.total_seconds() / 60
 

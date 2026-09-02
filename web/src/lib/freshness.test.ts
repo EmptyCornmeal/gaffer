@@ -63,9 +63,15 @@ describe('classifyFreshness bands are multiples of the published bar', () => {
 })
 
 describe('freshnessWindow', () => {
-  it('is idle with no deadline, or a passed one', () => {
+  it('is idle with no deadline, and LOCKED just after one', () => {
+    // Changed deliberately in 5.4. This case used to assert `idle` an hour
+    // after a deadline, which is RM-G27 written down as an expectation: the
+    // squad is locked, no football has started, and a six-hour staleness bar
+    // sat over advice nobody could act on. A passed deadline is now its own
+    // window until the gap closes.
     expect(freshnessWindow(NOW, null, FALLBACK_POLICY)).toBe('idle')
-    expect(freshnessWindow(NOW, NOW - HOUR, FALLBACK_POLICY)).toBe('idle')
+    expect(freshnessWindow(NOW, NOW - HOUR, FALLBACK_POLICY)).toBe('locked')
+    expect(freshnessWindow(NOW, NOW - 12 * HOUR, FALLBACK_POLICY)).toBe('idle')
   })
 
   it('tightens as the deadline closes in', () => {
@@ -172,5 +178,38 @@ describe('deadline awareness', () => {
     expect(classifyFreshness(at(1 * HOUR), NOW, 'not-a-date').state).toBe('fresh')
     expect(classifyFreshness(at(1 * HOUR), NOW, null).state).toBe('fresh')
     expect(classifyFreshness(at(1 * HOUR), NOW).state).toBe('fresh')
+  })
+})
+
+describe("the locked window (RM-G27)", () => {
+  const P = FALLBACK_POLICY
+  const D = Date.parse("2026-09-05T11:00:00Z")
+
+  it("names the gap between the deadline and the first kick-off", () => {
+    // The client half of the same regression: `until <= 0` fell straight to
+    // `idle`, so the browser put a six-hour bar over advice for a squad that
+    // was already locked.
+    expect(freshnessWindow(D + 60_000, D, P)).toBe("locked")
+    expect(freshnessWindow(D + 89 * 60_000, D, P)).toBe("locked")
+  })
+
+  it("ends rather than running forever", () => {
+    const past = D + (P.locked_window_min! + 1) * 60_000
+    expect(freshnessWindow(past, D, P)).toBe("idle")
+  })
+
+  it("leaves the pre-deadline windows exactly as they were", () => {
+    expect(freshnessWindow(D - 30 * 60_000, D, P)).toBe("final_approach")
+    expect(freshnessWindow(D - 3 * 60 * 60_000, D, P)).toBe("pre_deadline")
+    expect(freshnessWindow(D - 10 * 60 * 60_000, D, P)).toBe("idle")
+  })
+
+  it("carries a tighter bar than idle, which is the whole point", () => {
+    expect(P.max_age_min.locked).toBeLessThan(P.max_age_min.idle)
+  })
+
+  it("falls back safely when the artifact predates the published window", () => {
+    const old = { ...P, locked_window_min: undefined }
+    expect(freshnessWindow(D + 60_000, D, old)).toBe("locked")
   })
 })

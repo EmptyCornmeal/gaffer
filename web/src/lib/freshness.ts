@@ -44,12 +44,16 @@ export interface FreshnessPolicy {
   pre_deadline_open_min: number
   final_approach_min: number
   max_age_min: Record<string, number>
+  /** RM-G27 -- how long after a deadline the gameweek can be locked with no
+      football yet. Published by `gaffer.schedule.LOCKED_WINDOW`. */
+  locked_window_min?: number
 }
 
 export const FALLBACK_POLICY: FreshnessPolicy = {
   pre_deadline_open_min: 360,
   final_approach_min: 120,
-  max_age_min: { final_approach: 20, pre_deadline: 90, live: 60, idle: 360 },
+  max_age_min: { final_approach: 20, pre_deadline: 90, live: 60, locked: 15, idle: 360 },
+  locked_window_min: 240,
 }
 
 /** Which window a reader is in, from the deadline alone. */
@@ -57,10 +61,20 @@ export function freshnessWindow(
   now: number,
   deadline: number | null,
   policy: FreshnessPolicy,
-): 'final_approach' | 'pre_deadline' | 'idle' {
+): 'final_approach' | 'pre_deadline' | 'locked' | 'idle' {
   if (deadline == null || Number.isNaN(deadline)) return 'idle'
   const until = deadline - now
-  if (until <= 0) return 'idle'
+  if (until <= 0) {
+    // RM-G27 -- the deadline has gone and the squad is locked. Under the old
+    // `idle` fall-through the page kept a six-hour bar over advice nobody
+    // could act on, for the whole gap before the first kick-off.
+    //
+    // This mirrors `schedule._window` on the server. The two evaluate the same
+    // published policy, and the point of publishing it was that they cannot
+    // hold different opinions about staleness.
+    const lockedMs = (policy.locked_window_min ?? FALLBACK_POLICY.locked_window_min ?? 240) * 60_000
+    return -until <= lockedMs ? 'locked' : 'idle'
+  }
   if (until <= policy.final_approach_min * 60_000) return 'final_approach'
   if (until <= policy.pre_deadline_open_min * 60_000) return 'pre_deadline'
   return 'idle'
