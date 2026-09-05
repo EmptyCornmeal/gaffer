@@ -739,3 +739,98 @@ def test_the_percentile_basis_check_reads_the_key_the_artifact_publishes():
                      "snapshot_as_of": "2026-08-31T00:00:00+00:00"}, rep2)
     assert [v for v in rep2.violations if "percentile_basis" in v.field], (
         "a published percentile with no stated reference class must be rejected")
+
+
+# --- W14: model_xp against its own distribution ----------------------------
+# The strict `model_xp <= ceiling` test shipped with NO coverage here, and on
+# 2026-09-04 it failed 9 of 13 production refreshes on one fringe player.
+# `dist.ceiling` is `max(percentile(totals, 90), mean)`, so for a player who
+# scores 0 in ~90% of simulated weeks the p90 collapses below the mean and what
+# ships as "ceiling" IS the mean. Comparing the analytic point estimate to that
+# tests Monte-Carlo sampling error and nothing else. 266 of ~600 players were in
+# that state on the day it broke.
+
+def _with_dist(art, *, model_xp, dist):
+    players = json.loads((art / "players.json").read_text(encoding="utf-8"))
+    players[0] = {**players[0], "name": "Netz",
+                  "model_xp": model_xp, "next_gw_xp": model_xp, "dist": dist}
+    (art / "players.json").write_text(json.dumps(players), encoding="utf-8")
+    return art
+
+
+DEGENERATE_DIST = {"mean": 0.15, "floor": 0.0, "ceiling": 0.1, "std": 0.64}
+
+
+def test_the_2026_09_04_refresh_break_validates_clean(art):
+    """REGRESSION, from production. Netz (NFO, p_start 0.02) published
+    model_xp 0.18 against a collapsed ceiling of 0.1 and hard-failed the
+    deadline-day pipeline nine times over 0.03 expected points."""
+    _with_dist(art, model_xp=0.18, dist=DEGENERATE_DIST)
+    assert not validate(art).violations
+
+
+def test_a_collapsed_ceiling_still_catches_a_real_divergence(art):
+    """The replacement is TIGHTER, not weaker: against the mean (0.15) rather
+    than a meaningless ceiling, with a 5-sigma sampling tolerance of 0.058."""
+    _with_dist(art, model_xp=0.60, dist=DEGENERATE_DIST)
+    assert any(".model_xp" in f for f in fields(validate(art)))
+
+
+def test_a_real_ceiling_is_still_asserted_strictly(art):
+    """A13/A17 -- Armstrong published a point estimate of 2.17 above his own
+    simulated ceiling of 2.0 when the recency map was not threaded into the
+    sampler. That distribution is NOT degenerate (ceiling 2.0 > mean 1.1), so
+    the strict test still owns it and must still fire."""
+    _with_dist(art, model_xp=2.17,
+               dist={"mean": 1.1, "floor": 0.0, "ceiling": 2.0, "std": 2.4})
+    assert any(".model_xp" in f for f in fields(validate(art)))
+
+
+# W15. The clamp and the rounding that breaks it are BOTH two-sided, and the
+# tests above only ever named the ceiling. `_summarise` publishes `mean` at 2dp
+# and both quantiles at 1dp, so `round(min(floor, mean), 1)` lands ABOVE the
+# mean exactly as `round(max(ceiling, mean), 1)` lands below it. The floor half
+# was unguarded and untested from 2026-09-04 until it took the refresh down for
+# 24 hours on 2026-09-05, across a live gameweek.
+#
+# The lesson these four tests exist to enforce: when a root cause is a symmetry,
+# name BOTH ends explicitly or the untested end becomes the next incident.
+
+RAYA_FLOOR_DIST = {"mean": 5.68, "floor": 5.7, "ceiling": 7.0, "std": 1.75}
+
+
+def test_the_2026_09_05_refresh_break_validates_clean(art):
+    """REGRESSION, from production. Raya -- a first-choice goalkeeper, not a
+    fringe player -- published model_xp 5.61 against a floor of 5.70 that is
+    ABOVE his own published mean of 5.68, and hard-failed every refresh for
+    24 hours. min(5.7, 5.68) is 5.68; round(5.68, 1) is 5.7."""
+    _with_dist(art, model_xp=5.61, dist=RAYA_FLOOR_DIST)
+    assert not validate(art).violations
+
+
+def test_a_collapsed_floor_still_catches_a_real_divergence(art):
+    """Tighter, not weaker -- the same 5-sigma rule the ceiling branch uses.
+    Tolerance here is 5 * 1.75 / sqrt(3000) = 0.16, so 5.68 vs 3.00 must fire."""
+    _with_dist(art, model_xp=3.00, dist=RAYA_FLOOR_DIST)
+    assert any(".model_xp" in f for f in fields(validate(art)))
+
+
+def test_a_real_floor_is_still_asserted_strictly(art):
+    """A distribution whose floor is genuinely below its mean keeps the strict
+    test. floor 2.0 < mean 3.1, so a point estimate of 0.5 is a real
+    disagreement between the two code paths and must still fail."""
+    _with_dist(art, model_xp=0.5,
+               dist={"mean": 3.1, "floor": 2.0, "ceiling": 6.0, "std": 2.4})
+    assert any(".model_xp" in f for f in fields(validate(art)))
+
+
+def test_both_collapse_branches_are_reachable_and_named(art):
+    """The bug was that one end had a branch and the other did not. Assert the
+    message says WHICH end collapsed, so a future reader cannot mistake a floor
+    failure for a ceiling one the way the 09-04 fix did."""
+    _with_dist(art, model_xp=0.60, dist=DEGENERATE_DIST)
+    assert any("ceiling (0.1) collapsed below the mean" in v.expected
+               for v in validate(art).violations)
+    _with_dist(art, model_xp=3.00, dist=RAYA_FLOOR_DIST)
+    assert any("floor (5.7) collapsed above the mean" in v.expected
+               for v in validate(art).violations)

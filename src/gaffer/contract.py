@@ -1464,6 +1464,26 @@ def validate(
             # 90th percentile and seven players below their own 25th.
             # The 0.05 is publishing slack: `model_xp` carries 2dp and
             # floor/ceiling carry 1dp. It is not modelling slack.
+            # W14. The test above is only meaningful while `ceiling` is a real
+            # 90th percentile. For a near-degenerate player -- Netz, NFO,
+            # p_start 0.02, ~98% of draws exactly 0 -- the p90 collapses BELOW
+            # the mean, `_summarise` clamps it with `max(ceiling, mean)`, and
+            # what ships under the name `ceiling` is just the simulated mean.
+            # Comparing the ANALYTIC mean to it then tests nothing but
+            # Monte-Carlo sampling error, and 0.03 points of it failed the whole
+            # deadline-day refresh 9 times on 2026-09-04.
+            #
+            # Where the ceiling has collapsed, assert the invariant that is
+            # actually true instead of the one that is vacuous: `model_xp` and
+            # `dist.mean` are two estimates of the SAME rates, so they must
+            # agree to within the sampler's own error. That is a TIGHTER test
+            # than the one it replaces, not a weaker one -- for Netz it holds
+            # 0.18 against 0.17 with 0.07 of room, where the old test allowed
+            # 0.15 of unexplained drift on any player whose ceiling survived.
+            # A13/A17-class divergence (Armstrong, 2.17 against a ceiling of
+            # 2.0) has a non-degenerate ceiling and still meets the strict test,
+            # and is separately guarded by tests/test_recency_parity.py.
+            _N_SIM = 3000  # simulate.simulate_next_gw's default draw count
             for _p in players:
                 if not isinstance(_p, dict):
                     continue
@@ -1471,6 +1491,43 @@ def validate(
                 if isinstance(_dd, dict):
                     _m = _p.get("model_xp")
                     _lo, _hi = _dd.get("floor"), _dd.get("ceiling")
+                    _mu, _sd = _dd.get("mean"), _dd.get("std")
+                    # W15. The clamp is TWO-SIDED and so is the rounding that
+                    # breaks it. `_summarise` publishes `mean` at 2dp and BOTH
+                    # quantiles at 1dp, so `round(min(floor, mean), 1)` can land
+                    # ABOVE the mean it was just clamped to, exactly as
+                    # `round(max(ceiling, mean), 1)` can land below it.
+                    #
+                    # W14 diagnosed that asymmetry correctly and then guarded
+                    # only the ceiling, because the break that day came from the
+                    # ceiling. On 2026-09-05 the floor half took the refresh down
+                    # for 24 hours on Raya -- model_xp 5.61, dist.mean 5.68,
+                    # published floor 5.70 -- a first-choice goalkeeper, not a
+                    # fringe player. Whichever end has collapsed, the published
+                    # quantile is no longer a quantile and comparing a point
+                    # estimate to it tests nothing but rounding, so compare the
+                    # two estimates of the SAME rates directly instead.
+                    _collapsed = None
+                    if _mu is not None:
+                        if _hi is not None and float(_hi) <= float(_mu) + 1e-9:
+                            _collapsed = ("ceiling", _hi, "below")
+                        elif _lo is not None and float(_lo) >= float(_mu) - 1e-9:
+                            _collapsed = ("floor", _lo, "above")
+                    if _m is not None and _collapsed is not None:
+                        _end, _qval, _side = _collapsed
+                        _who = _p.get("name", _p.get("id"))
+                        # 5 standard errors, floored at the 0.05 publishing slack.
+                        _tol = max(0.05, 5.0 * float(_sd or 0.0) / (_N_SIM ** 0.5))
+                        if abs(float(_m) - float(_mu)) > _tol + 1e-9:
+                            report.violations.append(
+                                Violation("players.json", f"[{_who}].model_xp", _m,
+                                          f"within {_tol:.2f} of its own simulated "
+                                          f"mean {_mu} -- this player's {_end} "
+                                          f"({_qval}) collapsed {_side} the mean, so "
+                                          "the two point estimates are compared "
+                                          "directly; they are built from the same "
+                                          "rates and must agree"))
+                        continue
                     if _m is not None and _lo is not None and _hi is not None:
                         _who = _p.get("name", _p.get("id"))
                         if float(_m) > float(_hi) + 0.05 + 1e-9:
