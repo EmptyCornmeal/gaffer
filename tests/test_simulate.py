@@ -496,7 +496,8 @@ def test_rounding_outwards_moves_a_bound_by_at_most_one_display_step():
     guard against 'fixing' the invariant by inventing headroom."""
     rng = np.random.default_rng(99)
     for _ in range(2000):
-        totals = rng.poisson(rng.uniform(0.0, 6.0), 3000) * (rng.random(3000) < rng.uniform(0.0, 1.0))
+        totals = (rng.poisson(rng.uniform(0.0, 6.0), 3000)
+                  * (rng.random(3000) < rng.uniform(0.0, 1.0)))
         d = simulate._summarise(totals)
         raw_lo = min(float(np.percentile(totals, 25)), d["mean"])
         raw_hi = max(float(np.percentile(totals, 90)), d["mean"])
