@@ -232,15 +232,36 @@ def _sample_fixture(r: dict[str, float], n: int, rng: np.random.Generator) -> np
 
 
 def _summarise(totals: np.ndarray) -> dict[str, float]:
+    """Publish the distribution so that `floor <= mean <= ceiling` AS PUBLISHED.
+
+    W15b, 2026-09-05. `mean` publishes at 2dp and both quantiles at 1dp, and the
+    old code clamped first and then rounded TO NEAREST -- which put the rounded
+    value straight back across the mean it had just been clamped to:
+
+        mean 0.15, max(p90, mean) = 0.15, round(0.15, 1) = 0.1  -> ceiling < mean
+        mean 5.68, min(p25, mean) = 5.68, round(5.68, 1) = 5.7  -> floor > mean
+
+    The invariant held in the expression and was destroyed by the publication
+    format. It cost the refresh nine runs on 2026-09-04 (Netz, the ceiling end)
+    and then 24 hours across a live gameweek on 2026-09-05 (Raya, the floor end,
+    and J.Timber on a ceiling that had NOT collapsed -- 0.47 against a published
+    0.4, of which up to 0.055 is rounding alone against a contract slack of
+    exactly 0.05).
+
+    Rounding the interval OUTWARDS fixes all three at the source: the published
+    ceiling is never lower than the true one and the published floor never
+    higher, so a 1dp publication can no longer contradict a 2dp mean. It widens
+    each published bound by at most 0.1, which is one step of the precision it
+    is displayed at.
+    """
     mean = round(float(totals.mean()), 2)
-    floor = round(float(np.percentile(totals, 25)), 1)  # a bad-but-plausible week
-    ceiling = round(float(np.percentile(totals, 90)), 1)  # the upside you captain for
-    # For low-minutes players the percentiles collapse to a point and rounding can
-    # leave floor>mean or mean>ceiling; keep the invariant floor ≤ mean ≤ ceiling.
+    floor = float(np.percentile(totals, 25))  # a bad-but-plausible week
+    ceiling = float(np.percentile(totals, 90))  # the upside you captain for
+    # Clamp to the invariant, then round OUTWARDS so the rounding cannot undo it.
     return {
         "mean": mean,
-        "floor": round(min(floor, mean), 1),
-        "ceiling": round(max(ceiling, mean), 1),
+        "floor": math.floor(min(floor, mean) * 10) / 10,
+        "ceiling": math.ceil(max(ceiling, mean) * 10) / 10,
         "boom": round(float((totals >= 10).mean()) * 100, 1),  # P(double-digit haul)
         "std": round(float(totals.std()), 2),
     }

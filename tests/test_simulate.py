@@ -463,3 +463,44 @@ def test_the_tolerance_scales_with_the_players_own_spread():
         "a point mass still needs a floor"
     assert simulate.sampling_tolerance(5.0, N_SHIPPED) == pytest.approx(
         simulate.XP_SIM_SIGMAS * 5.0 / math.sqrt(N_SHIPPED))
+
+# W15b, 2026-09-05. THE bug of this codebase's first three gameweeks, three
+# separate outages: `_summarise` clamped to `floor <= mean <= ceiling` and then
+# rounded the clamped value TO NEAREST, which put it straight back across the
+# mean. It held in the expression and was destroyed by the publication format.
+#
+# 2026-09-04, ceiling end: Netz, mean 0.15 -> ceiling 0.1. Nine failed refreshes.
+# 2026-09-05, floor end:   Raya, mean 5.68 -> floor 5.70. 24 hours dark.
+# 2026-09-05, neither end collapsed: J.Timber, model_xp 0.47 against a published
+#             ceiling of 0.4, of which up to 0.055 is rounding alone, against a
+#             contract slack of exactly 0.05.
+#
+# There was no test asserting the invariant AS PUBLISHED. There is now.
+
+def test_the_published_interval_always_contains_the_published_mean():
+    """floor <= mean <= ceiling must hold on the numbers that SHIP, not on the
+    numbers before rounding. Measured on the old code this failed on ~4.5% of
+    shapes; it must now hold on every one."""
+    rng = np.random.default_rng(12345)
+    for _ in range(2000):
+        lam = rng.uniform(0.0, 6.0)
+        p_start = rng.uniform(0.0, 1.0)
+        totals = rng.poisson(lam, 3000) * (rng.random(3000) < p_start)
+        d = simulate._summarise(totals)
+        assert d["floor"] <= d["mean"] <= d["ceiling"], d
+
+
+def test_rounding_outwards_moves_a_bound_by_at_most_one_display_step():
+    """The fix widens the published interval rather than narrowing it, and by no
+    more than 0.1 -- one step of the precision it is displayed at. This is the
+    guard against 'fixing' the invariant by inventing headroom."""
+    rng = np.random.default_rng(99)
+    for _ in range(2000):
+        totals = rng.poisson(rng.uniform(0.0, 6.0), 3000) * (rng.random(3000) < rng.uniform(0.0, 1.0))
+        d = simulate._summarise(totals)
+        raw_lo = min(float(np.percentile(totals, 25)), d["mean"])
+        raw_hi = max(float(np.percentile(totals, 90)), d["mean"])
+        assert d["floor"] <= raw_lo + 1e-9
+        assert d["ceiling"] >= raw_hi - 1e-9
+        assert raw_lo - d["floor"] < 0.1 + 1e-9
+        assert d["ceiling"] - raw_hi < 0.1 + 1e-9
