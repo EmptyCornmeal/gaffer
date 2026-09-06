@@ -1,5 +1,6 @@
 {
   "schema_version": 8,
+  "construction_version": 2,
   "model_version": "heuristic-0.6",
   "dataset": "vaastav/Fantasy-Premier-League merged_gw",
   "season": "2025-26",
@@ -50,114 +51,171 @@
     "1": {
       "n": 29338,
       "mae": {
-        "gaffer": 1.048,
-        "naive": 1.075
+        "gaffer": 1.047,
+        "naive": 1.074,
+        "naive_fx": 1.074
       },
       "rank_corr": {
-        "gaffer": 0.675,
-        "naive": 0.692
+        "gaffer": 0.674,
+        "naive": 0.692,
+        "naive_fx": 0.692
       },
       "decisions": {
         "gaffer": {
-          "gameweeks_scored": 38,
-          "xi_points_per_gw": 51.4,
-          "xi_regret_per_gw": 86.3,
-          "captain_points_per_gw": 5.92,
-          "captain_regret_per_gw": 6.05,
-          "captain_accuracy_pct": 21.1
+          "gameweeks_scored": 37,
+          "xi_points_per_gw": 50.6,
+          "xi_regret_per_gw": 86.7,
+          "captain_points_per_gw": 5.86,
+          "captain_regret_per_gw": 6.08,
+          "captain_accuracy_pct": 21.6
         },
         "naive": {
-          "gameweeks_scored": 38,
-          "xi_points_per_gw": 44.8,
-          "xi_regret_per_gw": 92.9,
-          "captain_points_per_gw": 5.97,
-          "captain_regret_per_gw": 5.74,
-          "captain_accuracy_pct": 26.3
+          "gameweeks_scored": 37,
+          "xi_points_per_gw": 45.6,
+          "xi_regret_per_gw": 91.8,
+          "captain_points_per_gw": 6.14,
+          "captain_regret_per_gw": 5.68,
+          "captain_accuracy_pct": 27.0
+        },
+        "naive_fx": {
+          "gameweeks_scored": 37,
+          "xi_points_per_gw": 46.8,
+          "xi_regret_per_gw": 90.6,
+          "captain_points_per_gw": 6.59,
+          "captain_regret_per_gw": 5.35,
+          "captain_accuracy_pct": 29.7
         }
       },
       "transfers": {
         "gaffer": {
-          "with_transfers": 1411.0,
-          "hold_squad": 991.0,
-          "gain": 420.0,
-          "gameweeks": 36,
-          "transfers_made": 30,
+          "with_transfers": 1651.0,
+          "hold_squad": 1397.0,
+          "gain": 254.0,
+          "gameweeks": 35,
+          "transfers_made": 36,
           "transfers_blocked": {
-            "budget": 311,
-            "club": 1
+            "budget": 46,
+            "club": 3
           },
-          "bank_remaining_tenths": 40.0,
+          "bank_remaining_tenths": 2.0,
           "basis": "one free transfer per gameweek, budget/club-limit/bank enforced, both arms scored only on gameweeks where both could field a legal XI; sell price is current value"
         },
         "naive": {
-          "with_transfers": 1472.0,
-          "hold_squad": 847.0,
-          "gain": 625.0,
-          "gameweeks": 35,
-          "transfers_made": 27,
+          "with_transfers": 1562.0,
+          "hold_squad": 1063.0,
+          "gain": 499.0,
+          "gameweeks": 34,
+          "transfers_made": 32,
           "transfers_blocked": {
-            "budget": 51,
-            "club": 4
+            "budget": 32,
+            "club": 8
           },
           "bank_remaining_tenths": 12.0,
           "basis": "one free transfer per gameweek, budget/club-limit/bank enforced, both arms scored only on gameweeks where both could field a legal XI; sell price is current value"
+        },
+        "naive_fx": {
+          "with_transfers": 1568.0,
+          "hold_squad": 1063.0,
+          "gain": 505.0,
+          "gameweeks": 34,
+          "transfers_made": 32,
+          "transfers_blocked": {
+            "budget": 26,
+            "club": 9
+          },
+          "bank_remaining_tenths": 2.0,
+          "basis": "one free transfer per gameweek, budget/club-limit/bank enforced, both arms scored only on gameweeks where both could field a legal XI; sell price is current value"
         }
+      },
+      "decisions_exclude": {
+        "gameweek": 1,
+        "why": "the naive baseline is identically zero before any season-to-date evidence exists, so it cannot construct a squad to be compared against",
+        "gameweeks_scored": 37
       }
     },
     "2": {
       "n": 28088,
       "mae": {
-        "gaffer": 1.083,
-        "naive": 1.091
+        "gaffer": 1.082,
+        "naive": 1.09,
+        "naive_fx": 1.09
       },
       "rank_corr": {
-        "gaffer": 0.652,
-        "naive": 0.677
+        "gaffer": 0.651,
+        "naive": 0.677,
+        "naive_fx": 0.677
       }
     },
     "3": {
       "n": 27249,
       "mae": {
-        "gaffer": 1.106,
-        "naive": 1.104
+        "gaffer": 1.105,
+        "naive": 1.103,
+        "naive_fx": 1.104
       },
       "rank_corr": {
         "gaffer": 0.633,
-        "naive": 0.663
+        "naive": 0.663,
+        "naive_fx": 0.664
       }
     },
     "4": {
       "n": 26449,
       "mae": {
-        "gaffer": 1.134,
-        "naive": 1.126
+        "gaffer": 1.133,
+        "naive": 1.125,
+        "naive_fx": 1.126
       },
       "rank_corr": {
         "gaffer": 0.617,
-        "naive": 0.653
+        "naive": 0.653,
+        "naive_fx": 0.654
       }
     },
     "5": {
       "n": 25579,
       "mae": {
-        "gaffer": 1.147,
-        "naive": 1.133
+        "gaffer": 1.145,
+        "naive": 1.132,
+        "naive_fx": 1.133
       },
       "rank_corr": {
         "gaffer": 0.607,
-        "naive": 0.647
+        "naive": 0.647,
+        "naive_fx": 0.648
       }
     },
     "6": {
       "n": 24997,
       "mae": {
-        "gaffer": 1.154,
-        "naive": 1.138
+        "gaffer": 1.153,
+        "naive": 1.137,
+        "naive_fx": 1.138
       },
       "rank_corr": {
         "gaffer": 0.601,
-        "naive": 0.64
+        "naive": 0.64,
+        "naive_fx": 0.641
       }
+    }
+  },
+  "corrections": {
+    "construction_version": 2,
+    "prompted_by": "external technical review, 2026-09-06 (GPT-6 Astra), verified independently before any change was made",
+    "duplicate_rows_removed": 10,
+    "changes": [
+      "Exact duplicate archive rows are dropped before any cumulative feature is computed. Ten in 2025-26; they had been inflating games/points-to-date and double-counting both the target and the projection on the affected fixtures.",
+      "`naive_fx` is the naive baseline scaled by the number of fixtures it is forecasting. `pred` is summed across a double gameweek and `naive` was not, so on 419 player-gameweeks in 2025-26 the comparison was one match against two.",
+      "GW1 is excluded from the DECISION and TRANSFER metrics only. Its naive baseline is identically zero, so it cannot construct a squad. MAE and rank correlation still include it."
+    ],
+    "superseded": {
+      "construction": "schema 8, 38 decision gameweeks, unscaled naive, duplicates retained",
+      "xi_points_per_gw": {
+        "gaffer": 51.4,
+        "naive": 44.8
+      },
+      "headline_margin": 6.6,
+      "status": "WITHDRAWN as evidence of production-engine quality. Retained as the published series so the correction is auditable, not as a claim."
     }
   },
   "pre_season": {
@@ -165,16 +223,16 @@
     "n": 690,
     "regime": "prior-season rates and the price prior only — no season-to-date history exists yet",
     "mae": {
-      "gaffer": 1.679
+      "gaffer": 1.677
     },
     "rank_corr": {
-      "gaffer": 0.417
+      "gaffer": 0.418
     },
     "decisions": {
       "gaffer": {
         "gameweeks_scored": 1,
-        "xi_points_per_gw": 56.0,
-        "xi_regret_per_gw": 79.0,
+        "xi_points_per_gw": 47.0,
+        "xi_regret_per_gw": 88.0,
         "captain_points_per_gw": 8.0,
         "captain_regret_per_gw": 5.0,
         "captain_accuracy_pct": 0.0
@@ -201,14 +259,14 @@
       {
         "pred": 0.1,
         "actual": 0.09,
-        "haul_rate": 0.0,
-        "n": 3669
+        "haul_rate": 0.1,
+        "n": 3662
       },
       {
         "pred": 0.23,
-        "actual": 0.3,
+        "actual": 0.29,
         "haul_rate": 0.2,
-        "n": 3660
+        "n": 3667
       },
       {
         "pred": 0.83,
@@ -218,14 +276,14 @@
       },
       {
         "pred": 1.65,
-        "actual": 1.64,
-        "haul_rate": 2.0,
+        "actual": 1.63,
+        "haul_rate": 1.9,
         "n": 3667
       },
       {
         "pred": 2.68,
-        "actual": 2.73,
-        "haul_rate": 3.7,
+        "actual": 2.74,
+        "haul_rate": 3.8,
         "n": 3667
       },
       {
@@ -238,37 +296,37 @@
     "appeared": [
       {
         "pred": 0.29,
-        "actual": 1.75,
-        "haul_rate": 1.5,
+        "actual": 1.74,
+        "haul_rate": 1.4,
         "n": 1421
       },
       {
         "pred": 1.02,
         "actual": 2.15,
-        "haul_rate": 2.1,
+        "haul_rate": 2.0,
         "n": 1420
       },
       {
         "pred": 1.65,
-        "actual": 2.6,
+        "actual": 2.59,
         "haul_rate": 3.7,
         "n": 1420
       },
       {
         "pred": 2.21,
-        "actual": 2.81,
+        "actual": 2.82,
         "haul_rate": 3.5,
         "n": 1420
       },
       {
         "pred": 2.69,
-        "actual": 3.13,
+        "actual": 3.11,
         "haul_rate": 3.7,
         "n": 1420
       },
       {
         "pred": 3.11,
-        "actual": 3.47,
+        "actual": 3.48,
         "haul_rate": 5.1,
         "n": 1420
       },
@@ -280,8 +338,8 @@
       },
       {
         "pred": 4.71,
-        "actual": 4.56,
-        "haul_rate": 11.0,
+        "actual": 4.55,
+        "haul_rate": 10.9,
         "n": 1420
       }
     ],
@@ -321,32 +379,32 @@
       "FWD": [
         {
           "pred": 0.1,
-          "actual": 0.13,
-          "haul_rate": 0.0,
-          "n": 649
-        },
-        {
-          "pred": 0.12,
-          "actual": 0.21,
-          "haul_rate": 0.0,
-          "n": 645
-        },
-        {
-          "pred": 0.51,
-          "actual": 0.63,
-          "haul_rate": 0.6,
+          "actual": 0.16,
+          "haul_rate": 0.2,
           "n": 647
         },
         {
-          "pred": 1.7,
+          "pred": 0.12,
+          "actual": 0.2,
+          "haul_rate": 0.0,
+          "n": 647
+        },
+        {
+          "pred": 0.51,
+          "actual": 0.57,
+          "haul_rate": 0.3,
+          "n": 647
+        },
+        {
+          "pred": 1.69,
           "actual": 1.93,
           "haul_rate": 2.3,
           "n": 647
         },
         {
-          "pred": 3.56,
-          "actual": 3.65,
-          "haul_rate": 7.7,
+          "pred": 3.54,
+          "actual": 3.64,
+          "haul_rate": 7.6,
           "n": 647
         }
       ],
@@ -1046,7 +1104,7 @@
     "This artifact reports 2025-26; the one before it reported 2024-25. They are not two readings of one instrument. 2025-26 has a DEFCON column and 2024-25 has none, and zero-minute share is 61.4% against 58.0%. At heuristic-0.6 the model wins legal-XI points on both (50.1 to 44.8 here, 53.6 to 51.3 there) and leads at all six horizons on both, while still losing captaincy on this season (5.89 to 5.97) and winning it on 2024-25 (8.92 to 8.00). The naive baseline still beats it on MAE and rank correlation in both. At heuristic-0.5 the XI result INVERTED between the two seasons; A18 is what removed that, and a finding this artifact once led on turning out to be one projection change deep is itself worth knowing.",
     "GW1 is included, and the naive baseline does not exist there: it is cumulative season-to-date points-per-game, which is 0 for everyone before a ball is kicked. `rank_corr` skips zero-variance gameweeks, so the naive figure in `per_horizon` averages 37 gameweeks where the model's averages 38. Read `pre_season` for the GW1 regime on its own; do not read the two aggregates as a like-for-like comparison there."
   ],
-  "generated_at": "2026-09-02T06:37:55+00:00",
+  "generated_at": "2026-09-06T20:09:31+00:00",
   "minutes_model": {
     "measured": true,
     "target": "FPL `starts` == 1, per player-fixture. A post-match column, legal here as the evaluation target and never as a feature.",
@@ -1057,7 +1115,7 @@
     "why_these_metrics": "Brier because `p_start` is a multiplier, not a yes/no call, and a proper scoring rule is the only kind that cannot be gamed by shading the forecast. A skill score beside it because a raw Brier on a rare-event population is unreadable — 0.09 looks respectable until you notice that saying nothing scores 0.02. A calibration curve because it is the only form of the answer a reader can act on. The badge bands because the badge is the interface. Minutes MAE because `exp_minutes`, not `p_start`, is what multiplies through the rates.",
     "coverage": {
       "decision_gws": 38,
-      "rows": 164019,
+      "rows": 163979,
       "skipped_unpriced": 0,
       "start_rate": 0.2811,
       "zero_minute_share_pct": 61.5
@@ -1074,37 +1132,37 @@
     },
     "per_horizon": {
       "1": {
-        "n": 28913,
+        "n": 28905,
         "start_rate": 0.2812,
         "brier": {
           "gaffer": 0.0864,
           "start_rate_td": 0.11,
-          "started_lag": 0.1121,
-          "start_rate_r3": 0.0986
+          "started_lag": 0.112,
+          "start_rate_r3": 0.0985
         },
         "brier_skill": {
-          "gaffer": 0.5723,
-          "start_rate_td": 0.4559,
-          "started_lag": 0.4455,
-          "start_rate_r3": 0.5123
+          "gaffer": 0.5725,
+          "start_rate_td": 0.4558,
+          "started_lag": 0.4459,
+          "start_rate_r3": 0.5128
         },
         "auc": {
-          "gaffer": 0.9365,
+          "gaffer": 0.9366,
           "start_rate_td": 0.9074,
-          "started_lag": 0.8615,
-          "start_rate_r3": 0.9038
+          "started_lag": 0.8618,
+          "start_rate_r3": 0.904
         },
         "exp_minutes_mae": {
-          "gaffer": 14.31,
+          "gaffer": 14.3,
           "mins_avg_td": 14.89,
-          "started_lag_x90": 11.54
+          "started_lag_x90": 11.53
         },
         "paired_vs_baseline": {
           "start_rate_td": {
             "gameweeks": 37,
-            "diff": -0.0232,
+            "diff": -0.0233,
             "ci95": [
-              -0.0264,
+              -0.0265,
               -0.0201
             ],
             "gameweeks_model_better": 37,
@@ -1112,10 +1170,10 @@
           },
           "started_lag": {
             "gameweeks": 37,
-            "diff": -0.0256,
+            "diff": -0.0255,
             "ci95": [
               -0.0295,
-              -0.0221
+              -0.022
             ],
             "gameweeks_model_better": 36,
             "gameweeks_model_worse": 1
@@ -1125,7 +1183,7 @@
             "diff": -0.0121,
             "ci95": [
               -0.0136,
-              -0.0106
+              -0.0105
             ],
             "gameweeks_model_better": 37,
             "gameweeks_model_worse": 0
@@ -1133,34 +1191,34 @@
         }
       },
       "2": {
-        "n": 27662,
+        "n": 27655,
         "start_rate": 0.2811,
         "brier": {
           "gaffer": 0.1037,
-          "start_rate_td": 0.1193,
-          "started_lag": 0.1422,
-          "start_rate_r3": 0.1216
+          "start_rate_td": 0.1192,
+          "started_lag": 0.1424,
+          "start_rate_r3": 0.1215
         },
         "brier_skill": {
           "gaffer": 0.4867,
-          "start_rate_td": 0.4099,
-          "started_lag": 0.2963,
-          "start_rate_r3": 0.3983
+          "start_rate_td": 0.41,
+          "started_lag": 0.2956,
+          "start_rate_r3": 0.3986
         },
         "auc": {
-          "gaffer": 0.9154,
-          "start_rate_td": 0.8924,
+          "gaffer": 0.9155,
+          "start_rate_td": 0.8925,
           "started_lag": 0.8246,
-          "start_rate_r3": 0.8712
+          "start_rate_r3": 0.8713
         },
         "exp_minutes_mae": {
           "gaffer": 15.62,
           "mins_avg_td": 15.62,
-          "started_lag_x90": 13.92
+          "started_lag_x90": 13.93
         }
       },
       "3": {
-        "n": 26746,
+        "n": 26740,
         "start_rate": 0.281,
         "brier": {
           "gaffer": 0.1153,
@@ -1169,102 +1227,102 @@
           "start_rate_r3": 0.137
         },
         "brier_skill": {
-          "gaffer": 0.4292,
-          "start_rate_td": 0.3801,
-          "started_lag": 0.1957,
-          "start_rate_r3": 0.3218
+          "gaffer": 0.4294,
+          "start_rate_td": 0.3802,
+          "started_lag": 0.1959,
+          "start_rate_r3": 0.322
         },
         "auc": {
-          "gaffer": 0.9009,
-          "start_rate_td": 0.8827,
-          "started_lag": 0.7999,
-          "start_rate_r3": 0.8488
+          "gaffer": 0.901,
+          "start_rate_td": 0.8828,
+          "started_lag": 0.8001,
+          "start_rate_r3": 0.8489
         },
         "exp_minutes_mae": {
           "gaffer": 16.45,
           "mins_avg_td": 16.1,
-          "started_lag_x90": 15.39
+          "started_lag_x90": 15.38
         }
       },
       "4": {
-        "n": 26027,
-        "start_rate": 0.2811,
+        "n": 26022,
+        "start_rate": 0.281,
         "brier": {
-          "gaffer": 0.1239,
+          "gaffer": 0.1238,
           "start_rate_td": 0.1298,
-          "started_lag": 0.1775,
-          "start_rate_r3": 0.1482
+          "started_lag": 0.1773,
+          "start_rate_r3": 0.1481
         },
         "brier_skill": {
-          "gaffer": 0.3868,
+          "gaffer": 0.3872,
           "start_rate_td": 0.3578,
-          "started_lag": 0.1213,
-          "start_rate_r3": 0.2666
+          "started_lag": 0.1223,
+          "start_rate_r3": 0.2671
         },
         "auc": {
-          "gaffer": 0.8901,
-          "start_rate_td": 0.8754,
-          "started_lag": 0.7816,
-          "start_rate_r3": 0.8333
+          "gaffer": 0.8903,
+          "start_rate_td": 0.8755,
+          "started_lag": 0.782,
+          "start_rate_r3": 0.8334
         },
         "exp_minutes_mae": {
           "gaffer": 17.09,
           "mins_avg_td": 16.48,
-          "started_lag_x90": 16.6
+          "started_lag_x90": 16.59
         }
       },
       "5": {
-        "n": 25157,
-        "start_rate": 0.2811,
+        "n": 25153,
+        "start_rate": 0.281,
         "brier": {
           "gaffer": 0.1291,
-          "start_rate_td": 0.1325,
+          "start_rate_td": 0.1324,
           "started_lag": 0.1869,
-          "start_rate_r3": 0.1547
+          "start_rate_r3": 0.1545
         },
         "brier_skill": {
-          "gaffer": 0.361,
+          "gaffer": 0.3612,
           "start_rate_td": 0.3445,
-          "started_lag": 0.0749,
-          "start_rate_r3": 0.2347
+          "started_lag": 0.075,
+          "start_rate_r3": 0.2352
         },
         "auc": {
-          "gaffer": 0.8832,
-          "start_rate_td": 0.8711,
-          "started_lag": 0.7704,
-          "start_rate_r3": 0.824
+          "gaffer": 0.8833,
+          "start_rate_td": 0.8712,
+          "started_lag": 0.7705,
+          "start_rate_r3": 0.8242
         },
         "exp_minutes_mae": {
-          "gaffer": 17.51,
+          "gaffer": 17.5,
           "mins_avg_td": 16.71,
           "started_lag_x90": 17.41
         }
       },
       "6": {
-        "n": 24494,
+        "n": 24491,
         "start_rate": 0.281,
         "brier": {
           "gaffer": 0.1336,
           "start_rate_td": 0.1353,
           "started_lag": 0.1938,
-          "start_rate_r3": 0.1599
+          "start_rate_r3": 0.1598
         },
         "brier_skill": {
-          "gaffer": 0.3388,
+          "gaffer": 0.3389,
           "start_rate_td": 0.3303,
-          "started_lag": 0.041,
-          "start_rate_r3": 0.2085
+          "started_lag": 0.0408,
+          "start_rate_r3": 0.2089
         },
         "auc": {
-          "gaffer": 0.8775,
-          "start_rate_td": 0.8666,
+          "gaffer": 0.8776,
+          "start_rate_td": 0.8667,
           "started_lag": 0.7622,
-          "start_rate_r3": 0.817
+          "start_rate_r3": 0.8171
         },
         "exp_minutes_mae": {
-          "gaffer": 17.88,
+          "gaffer": 17.87,
           "mins_avg_td": 16.97,
-          "started_lag_x90": 18.0
+          "started_lag_x90": 18.01
         }
       }
     },
@@ -1274,7 +1332,7 @@
           "pred": 0.0,
           "actual": 0.025,
           "appear_rate": 0.092,
-          "n": 2907
+          "n": 2906
         },
         {
           "pred": 0.0,
@@ -1284,9 +1342,9 @@
         },
         {
           "pred": 0.0,
-          "actual": 0.008,
-          "appear_rate": 0.032,
-          "n": 2907
+          "actual": 0.007,
+          "appear_rate": 0.031,
+          "n": 2905
         },
         {
           "pred": 0.0,
@@ -1298,13 +1356,13 @@
           "pred": 0.023,
           "actual": 0.039,
           "appear_rate": 0.16,
-          "n": 2907
+          "n": 2906
         },
         {
           "pred": 0.121,
           "actual": 0.141,
           "appear_rate": 0.373,
-          "n": 2906
+          "n": 2905
         },
         {
           "pred": 0.302,
@@ -1314,9 +1372,9 @@
         },
         {
           "pred": 0.582,
-          "actual": 0.616,
-          "appear_rate": 0.786,
-          "n": 2907
+          "actual": 0.617,
+          "appear_rate": 0.787,
+          "n": 2905
         },
         {
           "pred": 0.825,
@@ -1328,45 +1386,45 @@
           "pred": 0.962,
           "actual": 0.896,
           "appear_rate": 0.933,
-          "n": 2907
+          "n": 2906
         }
       ],
       "considered": [
         {
           "pred": 0.0,
           "actual": 0.032,
-          "appear_rate": 0.093,
-          "n": 940
-        },
-        {
-          "pred": 0.1,
-          "actual": 0.131,
-          "appear_rate": 0.338,
+          "appear_rate": 0.091,
           "n": 939
         },
         {
-          "pred": 0.257,
-          "actual": 0.226,
+          "pred": 0.101,
+          "actual": 0.132,
+          "appear_rate": 0.34,
+          "n": 939
+        },
+        {
+          "pred": 0.258,
+          "actual": 0.225,
           "appear_rate": 0.499,
-          "n": 940
+          "n": 938
         },
         {
-          "pred": 0.422,
+          "pred": 0.423,
           "actual": 0.357,
-          "appear_rate": 0.609,
+          "appear_rate": 0.607,
           "n": 939
         },
         {
-          "pred": 0.612,
-          "actual": 0.674,
-          "appear_rate": 0.812,
-          "n": 940
+          "pred": 0.613,
+          "actual": 0.675,
+          "appear_rate": 0.815,
+          "n": 939
         },
         {
           "pred": 0.763,
-          "actual": 0.77,
-          "appear_rate": 0.895,
-          "n": 939
+          "actual": 0.771,
+          "appear_rate": 0.893,
+          "n": 938
         },
         {
           "pred": 0.862,
@@ -1376,13 +1434,13 @@
         },
         {
           "pred": 0.925,
-          "actual": 0.876,
-          "appear_rate": 0.924,
-          "n": 940
+          "actual": 0.875,
+          "appear_rate": 0.925,
+          "n": 938
         },
         {
           "pred": 0.969,
-          "actual": 0.904,
+          "actual": 0.905,
           "appear_rate": 0.927,
           "n": 939
         },
@@ -1390,7 +1448,7 @@
           "pred": 0.98,
           "actual": 0.929,
           "appear_rate": 0.952,
-          "n": 940
+          "n": 939
         }
       ],
       "considered_rank_cut": 250,
@@ -1400,16 +1458,16 @@
       "overall": [
         {
           "band": "NAILED",
-          "n": 4109,
+          "n": 4107,
           "claimed": 0.939,
           "start_rate": 0.884,
           "appear_rate": 0.925,
           "exp_minutes": 77.4,
-          "actual_minutes": 77.0
+          "actual_minutes": 77.1
         },
         {
           "band": "ROTATION",
-          "n": 3158,
+          "n": 3165,
           "claimed": 0.732,
           "start_rate": 0.752,
           "appear_rate": 0.876,
@@ -1418,39 +1476,39 @@
         },
         {
           "band": "CAMEO?",
-          "n": 22490,
+          "n": 22475,
           "claimed": 0.102,
           "start_rate": 0.105,
           "appear_rate": 0.219,
           "exp_minutes": 10.8,
-          "actual_minutes": 10.2
+          "actual_minutes": 10.1
         }
       ],
       "considered": [
         {
           "band": "NAILED",
-          "n": 3490,
+          "n": 3488,
           "claimed": 0.943,
-          "start_rate": 0.895,
+          "start_rate": 0.896,
           "appear_rate": 0.93,
           "exp_minutes": 77.6,
           "actual_minutes": 78.2
         },
         {
           "band": "ROTATION",
-          "n": 1871,
-          "claimed": 0.74,
+          "n": 1874,
+          "claimed": 0.739,
           "start_rate": 0.761,
           "appear_rate": 0.882,
-          "exp_minutes": 62.5,
-          "actual_minutes": 65.6
+          "exp_minutes": 62.4,
+          "actual_minutes": 65.7
         },
         {
           "band": "CAMEO?",
-          "n": 4285,
-          "claimed": 0.232,
-          "start_rate": 0.233,
-          "appear_rate": 0.425,
+          "n": 4275,
+          "claimed": 0.233,
+          "start_rate": 0.232,
+          "appear_rate": 0.424,
           "exp_minutes": 22.5,
           "actual_minutes": 22.0
         }
@@ -1458,28 +1516,28 @@
       "considered_400": [
         {
           "band": "NAILED",
-          "n": 3862,
+          "n": 3860,
           "claimed": 0.94,
           "start_rate": 0.889,
           "appear_rate": 0.927,
           "exp_minutes": 77.4,
-          "actual_minutes": 77.6
+          "actual_minutes": 77.7
         },
         {
           "band": "ROTATION",
-          "n": 2456,
-          "claimed": 0.736,
+          "n": 2463,
+          "claimed": 0.735,
           "start_rate": 0.76,
-          "appear_rate": 0.877,
+          "appear_rate": 0.876,
           "exp_minutes": 62.2,
           "actual_minutes": 65.0
         },
         {
           "band": "CAMEO?",
-          "n": 9101,
+          "n": 9087,
           "claimed": 0.165,
           "start_rate": 0.167,
-          "appear_rate": 0.325,
+          "appear_rate": 0.324,
           "exp_minutes": 16.3,
           "actual_minutes": 16.0
         }
@@ -1505,9 +1563,9 @@
         },
         {
           "band": "CAMEO?",
-          "n": 553,
+          "n": 551,
           "claimed": 0.311,
-          "start_rate": 0.231,
+          "start_rate": 0.232,
           "appear_rate": 0.354,
           "exp_minutes": 29.7,
           "actual_minutes": 21.1
@@ -1534,12 +1592,12 @@
         },
         {
           "band": "CAMEO?",
-          "n": 141,
+          "n": 140,
           "claimed": 0.334,
-          "start_rate": 0.433,
-          "appear_rate": 0.61,
+          "start_rate": 0.436,
+          "appear_rate": 0.607,
           "exp_minutes": 31.1,
-          "actual_minutes": 39.4
+          "actual_minutes": 39.7
         }
       ],
       "note": "`claimed` is the mean `p_start` of the players wearing that badge; `start_rate` is how often they then started. The thresholds live in `model.rationale.xmins_badge` and are mirrored here, never redefined."
@@ -1547,12 +1605,12 @@
     "branches": [
       {
         "branch": "current_season+last3+last_match",
-        "n": 17853,
+        "n": 17845,
         "share_pct": 60.0,
         "mean_p_start": 0.164,
         "start_rate": 0.168,
         "brier": 0.056,
-        "brier_skill": 0.5996
+        "brier_skill": 0.5998
       },
       {
         "branch": "shrunk_current_and_prior+last3+last_match",
@@ -1560,17 +1618,17 @@
         "share_pct": 37.2,
         "mean_p_start": 0.475,
         "start_rate": 0.463,
-        "brier": 0.1355,
-        "brier_skill": 0.4551
+        "brier": 0.1354,
+        "brier_skill": 0.4553
       },
       {
         "branch": "price_prior",
-        "n": 399,
+        "n": 397,
         "share_pct": 1.3,
         "mean_p_start": 0.314,
-        "start_rate": 0.18,
-        "brier": 0.154,
-        "brier_skill": -0.0415
+        "start_rate": 0.181,
+        "brier": 0.1543,
+        "brier_skill": -0.0392
       },
       {
         "branch": "prior_season",
@@ -1603,11 +1661,11 @@
     "branch_note": "Which arm of the shipped gate produced `p_start`. `price_prior` fires when a player has no minutes this season and no usable prior season, and it answers with a function of his PRICE. It is a third of the population and its skill score is deeply negative: not merely uninformative, but worse than quoting that group's own base rate to every one of them.",
     "pre_season": {
       "decision_gw": 1,
-      "n": 692,
+      "n": 690,
       "regime": "no season-to-date history exists, so `p_start` comes from last season's `starts / 38` or the price prior alone",
-      "brier": 0.1861,
-      "brier_skill": 0.1417,
-      "auc": 0.7541,
+      "brier": 0.1864,
+      "brier_skill": 0.1419,
+      "auc": 0.754,
       "naive_baseline": "does not exist. Every baseline here averages over completed fixtures and before GW1 there are none. The model's GW1 figure is unopposed and must not be read as a win."
     },
     "candidate_fix": {
@@ -1793,6 +1851,136 @@
       "The largest remaining error is the one this block can least see. Availability is pinned at 1.0 throughout, and `p_start` now answers exactly 0.00 for any player whose team has completed three fixtures he has not featured in. On the archive that is right about 99% of the time, but it is an absolute statement, so the ~1% it is wrong about are wrong by the whole probability. Live, a returning long-term absentee is exactly that case, and the status column the archive does not have is what should rescue him."
     ],
     "verdict": "Measured, fixed, and now winning. Two readings of this block found the shipped `p_start` behind every naive baseline at h=1 -- worded that way deliberately, because a past-tense claim about a defeat reads to a keyword check exactly like a present one, and the artifact contract compares this prose against the table below it. The first found a third of every row taking its answer from a PRICE prior -- told a ~29% chance of starting, starting 2.3% of the time -- and A18 removed the gate that sent them there. The second found what remained: the gate below it, `fixtures_played >= 3`, made the current season INVISIBLE until a team had played three fixtures, so at GW1-GW3 every player in the game was graded on last season. On 2026-09-01 that published a NAILED badge and a 0.90 start probability for a player with 0 starts and 11 minutes, while six ever-presents were flagged as rotation risks -- and at GW4 the ranking inverted on no new information beyond a counter reaching three. Phase 2A replaced the gate with SHRINKAGE (the current season enters from the first fixture, weighted by how much of it there is) plus RECENCY (the last-three start share, and whether he started his last fixture) -- the estimator this block had been reporting as the winner for two revisions while the model ignored it. It now beats every baseline at every horizon on both Brier and AUC. At h=1: Brier 0.086 against 0.099 for the three-game rolling rate, 0.110 for season-to-date and 0.112 for a lagged start; AUC 0.937 against 0.907. At h=6 the margin narrows to 0.134 against 0.135 and the honest reading is that the baselines converge on it there, not that it pulls away. The price-prior arm is 1.3% of rows, from 4.1% and originally 36.3%, and 97% of rows now take a recency-informed branch with a skill score above 0.45. Two things it still does NOT do. `exp_minutes` MAE is 14.3 against 11.5 for a lagged start times ninety, so the MINUTES estimate still loses to a one-line rule even though the start PROBABILITY no longer does -- the bimodal ~78'-or-~3' shape is untouched and is the next thing to attack. And NAILED remains over-confident: 0.939 claimed against 0.884 realised.",
+    "congestion_refused": {
+      "candidate": "congestion_and_load_in_p_start",
+      "decision": "measured, REFUSED (both ladders)",
+      "measured_on": "2026-09-02",
+      "rule": "pre-registered: ship the highest rung improving full-season h=1 Brier on 2025-26 by >= 0.002 and worsening neither hold-out season. Ties to the lower rung.",
+      "ladder_a_congestion": {
+        "change": "days since the club's last fixture, days to its next, and an easy-opponent-inside-a-tight-block interaction",
+        "brier_delta_vs_shipped": {
+          "turnaround": {
+            "2023-24": 0.00274,
+            "2024-25": 0.00297,
+            "2025-26": 0.00316
+          },
+          "forward_density": {
+            "2023-24": 0.01024,
+            "2024-25": 0.01101,
+            "2025-26": 0.01177
+          },
+          "interaction": {
+            "2023-24": 0.01024,
+            "2024-25": 0.01101,
+            "2025-26": 0.01177
+          }
+        },
+        "refused_because": "it makes the model WORSE, consistently, in all three seasons. The underlying association is absent before any model is fitted: among regulars in 2025-26 a <=3.5-day turnaround gives a 0.722 start rate against 0.753 at 5-8 days, the club-matches-in-14-days cut is flat to three decimals, and the interaction changes SIGN between seasons (-0.042, -0.013, +0.019).",
+        "interaction_never_fired": "the interaction rung scores identically to the one below it to five decimals, because an easy opponent inside a tight block is almost never observed in a Premier-League-only archive"
+      },
+      "ladder_b_load": {
+        "change": "minutes played in the prior 14 days, then consecutive starts",
+        "brier_delta_vs_shipped": {
+          "load": {
+            "2023-24": -0.00089,
+            "2024-25": -0.00107,
+            "2025-26": -0.00129
+          },
+          "load_plus_streak": {
+            "2023-24": -0.0009,
+            "2024-25": -0.00082,
+            "2025-26": -0.00129
+          }
+        },
+        "refused_because": "real, consistent, and too small. It improves every season and clears no bar that was set before it was measured: -0.00129 on the test season against a -0.002 rule.",
+        "weight_was_not_the_problem": "a second stage fitted the blend weight on the two hold-out seasons only and applied it ONCE to the untouched test season. The grid chose 0.15 -- the same value pre-registered by hand -- and the result was unchanged at -0.00129. The refusal is about the feature, not the tuning.",
+        "why_it_is_small": "the univariate association is enormous -- 0.537 / 0.859 / 0.921 start rate by 14-day minutes band, replicated across three seasons -- but the shipped model already reads `start_rate_r3` and `started_lag`, which capture nearly the same thing. This measures the MARGINAL contribution, which is what matters."
+      },
+      "retested_with_european_fixtures": {
+        "why": "the refusal above was measured on a Premier-League-only archive, in which a club playing Tuesday in Europe and Saturday in the league shows a seven-day gap. That falsifies a PROXY. `gaffer.competitions` makes the real fixtures visible, so the same ladder was re-run against a timeline that includes them.",
+        "harness": "scripts/run_euro_congestion.py",
+        "exposure": {
+          "note": "European-club rows, and how many had a tight turnaround once European fixtures were counted. The first experiment saw almost none of these.",
+          "2023-24": {
+            "euro_rows": 11236,
+            "tight": 5526
+          },
+          "2024-25": {
+            "euro_rows": 9956,
+            "tight": 5585
+          },
+          "2025-26": {
+            "euro_rows": 8517,
+            "tight": 4413
+          }
+        },
+        "brier_delta_on_european_club_rows": {
+          "true_turnaround": {
+            "2023-24": 0.00175,
+            "2024-25": 0.00142,
+            "2025-26": 0.00201
+          },
+          "true_forward_density": {
+            "2023-24": 0.00586,
+            "2024-25": 0.00492,
+            "2025-26": 0.00592
+          },
+          "true_14d_load": {
+            "2023-24": 0.00573,
+            "2024-25": 0.00461,
+            "2025-26": 0.00561
+          }
+        },
+        "decision": "REFUSED again, on the right data this time"
+      },
+      "why_it_fails_structurally": {
+        "finding": "ELEVEN PLAYERS START EVERY MATCH. Congestion cannot move the MEAN of p_start across a squad, because the mean is pinned by the laws of the game. It redistributes WHICH eleven.",
+        "evidence": "measured on European clubs, regulars only, after a European match in the prior seven days versus not. The mean start rate is flat -- 0.762 against 0.759 in 2023-24, 0.712 against 0.697 in 2024-25, 0.719 against 0.718 in 2025-26 -- while the ACROSS-PLAYER standard deviation rises in all three: 0.160 to 0.220, 0.162 to 0.188, 0.161 to 0.186.",
+        "so": "a blanket downward shift was guaranteed to lose. It predicts that fewer than eleven players will start, which is never true. The functional form was wrong, and it was wrong for a reason that is visible from the rules of football rather than from the data.",
+        "residual_hypothesis_NOT_tested": "congestion as a DISPERSION effect -- widening the gap between nailed starters and rotation risks while holding the squad mean fixed. That is a different functional form and a different experiment, and it is registered here rather than fished for after seeing this result. It needs its own pre-registration."
+      },
+      "the_finding_that_outlives_the_refusal": "the archive is Premier League only. A club playing Tuesday in Europe and Saturday in the league shows a SEVEN-day gap in this data. So ladder A falsifies the PL-internal PROXY and says nothing about European congestion -- the fixture that motivated the work is invisible to the data that would score it. The conclusion is not 'congestion does not matter'; it is that congestion is an INFORMATION problem before it is a modelling one, and the right response is to make the European and cup fixtures visible rather than to fit a term on a proxy that cannot see them. UPDATE, same day: the fixtures were made visible and the term was re-fitted on them, and it lost again -- see `retested_with_european_fixtures` and `why_it_fails_structurally`. Making them visible remains the right response; treating them as a p_start LEVEL effect does not.",
+      "reproduce": "PYTHONPATH=src python scripts/run_congestion_ablation.py"
+    },
+    "minutes_shape_refused": {
+      "candidate": "two_stage_conditional_minutes",
+      "decision": "measured, REFUSED",
+      "measured_on": "2026-09-02",
+      "change": "replace the global START_MINUTES / CAMEO_MINUTES constants with the player's own mean minutes when he starts and when he comes on, each shrunk toward the constant it replaces",
+      "rule": "pre-registered: ship only if exp_minutes MAE improves on the test season AND points MAE does not worsen AND XI points per gameweek does not fall",
+      "test_season": {
+        "exp_minutes_mae": {
+          "shipped": 14.31,
+          "candidate": 13.83
+        },
+        "points_mae_h1": {
+          "shipped": 1.048,
+          "candidate": 1.046
+        },
+        "xi_points_per_gw": {
+          "shipped": 51.4,
+          "candidate": 51.0
+        }
+      },
+      "exp_minutes_mae_by_season": {
+        "2023-24": {
+          "shipped": 15.195,
+          "candidate": 14.765
+        },
+        "2024-25": {
+          "shipped": 15.678,
+          "candidate": 15.236
+        },
+        "2025-26": {
+          "shipped": 14.701,
+          "candidate": 14.235
+        }
+      },
+      "refused_because": "it fails the decision metric. The minutes estimate improved in all three seasons and the XI it produces got worse, which is the trade the three-level rule exists to catch.",
+      "caveat": "0.4 points a gameweek is not a large margin and could be noise. The rule was fixed before the number was read; a revisit needs a paired test over gameweeks, not a re-reading of these means.",
+      "still_true": "exp_minutes remains the weakest published quantity: 14.3 MAE against 11.5 for a lagged start times ninety. The bimodal shape is untouched and the loss to a one-line rule is real and unfixed.",
+      "harness": "scripts/run_minutes_shape.py"
+    },
     "live_audit": {
       "status": "measured",
       "season": "2026-27",
