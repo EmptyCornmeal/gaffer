@@ -401,6 +401,13 @@ export function leakageClean(bt: BacktestV6): boolean {
 export const METHOD_LABELS: Record<string, string> = {
   gaffer: 'Gaffer (component model)',
   naive: 'Recent-form average',
+  // Construction 2. The same baseline, multiplied by the number of fixtures it
+  // is forecasting. `naive` is a per-FIXTURE rate and Gaffer's projection is
+  // summed across a double gameweek, so on a double the unscaled version was
+  // asked for one match while the model answered for two. This is the
+  // like-for-like column; `naive` is kept beside it so the previously published
+  // series stays readable.
+  naive_fx: 'Recent-form average (fixture-adjusted)',
   // Retained so a withdrawn baseline still has a name if it ever appears in a
   // `withdrawn_baselines` block. It must never appear in `per_horizon`.
   fpl_xp: "FPL's own xP",
