@@ -56,6 +56,26 @@ VERDICT_BAD_LUCKY = "bad_decision_lucky"
 VERDICT_BAD_UNLUCKY = "bad_decision_unlucky"
 VERDICT_BAD_NORMAL = "bad_decision"
 VERDICT_UNKNOWN = "not_assessable"
+#: A-C2. The action taken was NOT the action Gaffer priced, so no categorical
+#: decision verdict may be published for it.
+#:
+#: `positive_ev` is `move_expected >= hold_expected`, and both operands come
+#: from Gaffer's own candidate. It therefore cannot move when the reader's
+#: outcome moves: on the GW2 2026-27 review, replacing a realised 101 with a
+#: realised 20 leaves `positive_ev` at False and only swaps the luck half of
+#: the sentence. The verdict read `bad_decision_lucky` beside
+#: `followed_advice: false` -- two different subjects in one grade.
+#:
+#: The evidence is unchanged and still published: Gaffer's preference, its
+#: size, the realised total and the percentile. What is withdrawn is the word
+#: "bad", applied to a decision that was never evaluated on its own terms.
+#: External review, 2026-09-06 (GPT-6 Astra):
+#:
+#:     Do not turn model disagreement into "bad decision."
+#:
+#: Restoring the categorical verdict requires scoring the human's own action
+#: against the same frozen pre-deadline scenarios -- see `gaffer.candidate`.
+VERDICT_DIFFERENT_ACTION = "different_action_not_assessable"
 
 #: Outcome percentiles outside this band are called unusual. Inside it, the
 #: result is simply what the distribution said would probably happen.
@@ -234,6 +254,7 @@ def assess(
     *, expected: float | None, realised: float | None,
     percentile: float | None, hold_expected: float | None,
     has_snapshot: bool = True, missing_fields: list[str] | None = None,
+    followed_advice: bool | None = None,
 ) -> Quality:
     """Judge the decision on its EV and the outcome on its percentile.
 
@@ -273,6 +294,22 @@ def assess(
             missing_fields=missing)
 
     positive_ev = hold_expected is None or expected >= hold_expected
+    if followed_advice is False:
+        # A-C2. `positive_ev` describes GAFFER'S candidate. The realised total
+        # and the percentile describe a DIFFERENT action. Reporting both is
+        # right; joining them with "good" or "bad" is not.
+        preferred = "the move" if positive_ev else "holding"
+        gap = ("" if hold_expected is None or expected is None
+               else f" by {abs(expected - hold_expected):.1f} expected points")
+        return Quality(
+            expected, realised, percentile, positive_ev,
+            VERDICT_DIFFERENT_ACTION,
+            f"Under its frozen pre-deadline model Gaffer preferred {preferred}"
+            f"{gap}. You did something different, and your action was not "
+            "evaluated pre-deadline under those same assumptions, so its "
+            "decision quality is not independently assessable. "
+            f"What is known: {_luck_phrase(percentile)}.",
+            missing_fields=list(missing))
     lucky = percentile is not None and percentile >= LUCKY_ABOVE
     unlucky = percentile is not None and percentile <= UNLUCKY_BELOW
 
@@ -583,7 +620,7 @@ def build(
 
     quality = assess(expected=exp, realised=actual_pts, percentile=pctile,
                      hold_expected=hold_pts, has_snapshot=snap is not None,
-                     missing_fields=missing_fields)
+                     missing_fields=missing_fields, followed_advice=followed)
 
     prior = load_all(conn, entry_id, season)
     facts = [{"event": event, **_facts(actual, points, attribution, pctile)}] + [

@@ -80,6 +80,14 @@ from gaffer.model import projection
 #:       separates them, and it moved from heuristic-0.5 to heuristic-0.6.
 SCHEMA_VERSION = 8
 
+#: How the numbers were produced, independently of the shape they are in.
+#: 1 = as published through 2026-09-06: duplicate archive rows retained, an
+#:     unscaled naive baseline, and GW1 constructing a squad from an
+#:     identically-zero baseline.
+#: 2 = A-C3: duplicates dropped before any cumulative feature, `naive_fx`
+#:     scaled by fixture count, GW1 out of the decision metrics only.
+CONSTRUCTION_VERSION = 2
+
 #: The chronological split. Disjoint, ordered, and no season used twice.
 #:
 #:   train   2023-24
@@ -2646,6 +2654,19 @@ def build_evaluation(
             agg["naive"] = agg["element"].map(
                 feat["pts_td"] / feat["games_td"].replace(0, np.nan)
             ).fillna(0.0)
+            # A-C3. The same baseline, scaled by the fixtures it is actually
+            # being asked to forecast.
+            #
+            # `pred` is SUMMED across a double gameweek two lines above, because
+            # that is what the live projection does. `naive` is a per-FIXTURE
+            # points rate and was mapped once, so on the 419 (gameweek, player)
+            # pairs in 2025-26 that carry two fixtures the model was compared
+            # against a baseline forecasting one match while it forecast two.
+            # `naive` is retained unchanged so the published series stays
+            # reproducible; `naive_fx` is the like-for-like one.
+            # Raised by external review, 2026-09-06 (GPT-6 Astra).
+            nfx = tgt.groupby("element")["fixture"].nunique()
+            agg["naive_fx"] = agg["naive"] * agg["element"].map(nfx).fillna(1.0)
             records.append(agg)
             coverage["rows"] += len(agg)
 
@@ -2678,7 +2699,7 @@ def run(
     # archive's `xP`, which is not FPL's pre-deadline `ep_next` and carries
     # same-gameweek information. What ships at h=1 is still the ep_next blend —
     # it is simply no longer claimed to be measured. See `withdrawn_baselines`.
-    methods = {"gaffer": "pred", "naive": "naive"}
+    methods = {"gaffer": "pred", "naive": "naive", "naive_fx": "naive_fx"}
     have = {k: c for k, c in methods.items() if c in ev and ev[c].notna().any()}
 
     per_horizon: dict[str, Any] = {}
@@ -2700,11 +2721,33 @@ def run(
             "rank_corr": {k: round(_rank_corr(sub, c), 3) for k, c in usable.items()},
         }
         if h == 1:  # decision metrics are only meaningful for the imminent week
+            # A-C3. GW1 is excluded from the DECISION metrics, and only from
+            # them. Before the season's first deadline every season-to-date
+            # aggregate is empty, so the naive baseline is identically zero:
+            # measured here, 690 rows at GW1 with a naive maximum of 0.0
+            # against a projection maximum of 6.03. A zero column does not
+            # order players, so `_select_squad` maximising it returns whichever
+            # legal fifteen the solver reaches first. That is not a baseline
+            # squad, and differencing against it is not a comparison. The
+            # project already calls this baseline undefined in `pre_season`;
+            # it simply also let it build a squad in the headline.
+            #
+            # MAE and rank correlation keep GW1: there a zero forecast is a bad
+            # forecast rather than an absent one, and hiding it would flatter
+            # the baseline. Raised by external review, 2026-09-06 (GPT-6 Astra).
+            dsub = sub[sub["target_gw"] > FIRST_DECISION_GW]
             block["decisions"] = {
-                k: _decision_metrics(sub, c) for k, c in usable.items()
+                k: _decision_metrics(dsub, c) for k, c in usable.items()
             }
             block["transfers"] = {
-                k: _transfer_regret(sub, c) for k, c in usable.items()
+                k: _transfer_regret(dsub, c) for k, c in usable.items()
+            }
+            block["decisions_exclude"] = {
+                "gameweek": FIRST_DECISION_GW,
+                "why": "the naive baseline is identically zero before any "
+                       "season-to-date evidence exists, so it cannot construct "
+                       "a squad to be compared against",
+                "gameweeks_scored": int(dsub["target_gw"].nunique()),
             }
         per_horizon[str(h)] = block
 
@@ -2725,6 +2768,11 @@ def run(
 
     out: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
+        # A-C3. `schema_version` is the reader's contract about SHAPE. This is
+        # the contract about CONSTRUCTION: same shape, different method. A
+        # reader comparing two artifacts needs to know which of the two facts
+        # moved, and only one of them can break the page.
+        "construction_version": CONSTRUCTION_VERSION,
         "model_version": projection.MODEL_VERSION,
         "dataset": "vaastav/Fantasy-Premier-League merged_gw",
         "season": season,
@@ -2752,6 +2800,40 @@ def run(
             "policy": "features use shift(1) season-to-date aggregates only",
         },
         "per_horizon": per_horizon,
+        # A-C3. What changed at construction 2, so no reader has to diff two
+        # files to find out why a published number moved. The SHAPE is
+        # unchanged and `schema_version` stays 8 deliberately: the front end
+        # gates on it (`SUPPORTED_SCHEMA_VERSIONS = [7, 8]`), and bumping it
+        # for a corrected construction would have made the Accuracy page
+        # refuse the correction.
+        "corrections": {
+            "construction_version": CONSTRUCTION_VERSION,
+            "prompted_by": "external technical review, 2026-09-06 (GPT-6 Astra), "
+                           "verified independently before any change was made",
+            "duplicate_rows_removed": histdata.duplicate_rows_removed(season),
+            "changes": [
+                "Exact duplicate archive rows are dropped before any cumulative "
+                "feature is computed. Ten in 2025-26; they had been inflating "
+                "games/points-to-date and double-counting both the target and "
+                "the projection on the affected fixtures.",
+                "`naive_fx` is the naive baseline scaled by the number of "
+                "fixtures it is forecasting. `pred` is summed across a double "
+                "gameweek and `naive` was not, so on 419 player-gameweeks in "
+                "2025-26 the comparison was one match against two.",
+                "GW1 is excluded from the DECISION and TRANSFER metrics only. "
+                "Its naive baseline is identically zero, so it cannot construct "
+                "a squad. MAE and rank correlation still include it.",
+            ],
+            "superseded": {
+                "construction": "schema 8, 38 decision gameweeks, unscaled "
+                                "naive, duplicates retained",
+                "xi_points_per_gw": {"gaffer": 51.4, "naive": 44.8},
+                "headline_margin": 6.6,
+                "status": "WITHDRAWN as evidence of production-engine quality. "
+                          "Retained as the published series so the correction "
+                          "is auditable, not as a claim.",
+            },
+        },
         "pre_season": pre_season,
         # G20 — two curves, because the single one was a picture of the wrong
         # thing. `overall` runs over every player-gameweek including the ~61%

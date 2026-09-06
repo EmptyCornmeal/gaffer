@@ -1,0 +1,628 @@
+{
+ "pre_registered_sets": [
+  "all",
+  "top30",
+  "top50",
+  "top100",
+  "position_x_price_band",
+  "policy_disagreement"
+ ],
+ "not_implemented": {
+  "near_current_squad": "this harness re-selects a free squad every gameweek and holds no squad to be near; answering it needs the trajectory harness"
+ },
+ "season": "2025-26",
+ "arms": {
+  "shipped": {
+   "rows": 28648,
+   "gameweeks": 37,
+   "zero_minute_share": 0.6139,
+   "rank_correlation": {
+    "all": {
+     "pred": 0.6814,
+     "naive_fx": 0.6924
+    },
+    "top30": {
+     "pred": 0.1616,
+     "naive_fx": 0.0385
+    },
+    "top50": {
+     "pred": 0.1779,
+     "naive_fx": 0.0481
+    },
+    "top100": {
+     "pred": 0.2124,
+     "naive_fx": 0.0874
+    },
+    "GKP_0-50": {
+     "pred": 0.5561,
+     "naive_fx": 0.7054
+    },
+    "GKP_50-70": {
+     "pred": 0.4792,
+     "naive_fx": 0.3251
+    },
+    "GKP_70-1000": {
+     "pred": null,
+     "naive_fx": null
+    },
+    "DEF_0-50": {
+     "pred": 0.6219,
+     "naive_fx": 0.6249
+    },
+    "DEF_50-70": {
+     "pred": 0.5261,
+     "naive_fx": 0.4394
+    },
+    "DEF_70-1000": {
+     "pred": null,
+     "naive_fx": null
+    },
+    "MID_0-50": {
+     "pred": 0.5305,
+     "naive_fx": 0.6259
+    },
+    "MID_50-70": {
+     "pred": 0.6295,
+     "naive_fx": 0.5919
+    },
+    "MID_70-1000": {
+     "pred": 0.5276,
+     "naive_fx": 0.482
+    },
+    "FWD_0-50": {
+     "pred": 0.2914,
+     "naive_fx": 0.5921
+    },
+    "FWD_50-70": {
+     "pred": 0.5636,
+     "naive_fx": 0.6085
+    },
+    "FWD_70-1000": {
+     "pred": 0.5376,
+     "naive_fx": 0.5093
+    }
+   },
+   "policy_disagreement_pred_minus_naive_fx": {
+    "weeks": 37,
+    "mean_players_differing": 8.05,
+    "mean_paired_gain": 3.838,
+    "block_bootstrap_ci95": [
+     0.027,
+     7.0
+    ],
+    "weeks_a_better": 24,
+    "weeks_b_better": 13,
+    "per_gw": [
+     {
+      "gw": 2,
+      "n_differ": 8,
+      "a_points": 14.0,
+      "b_points": 33.0
+     },
+     {
+      "gw": 3,
+      "n_differ": 9,
+      "a_points": 63.0,
+      "b_points": 27.0
+     },
+     {
+      "gw": 4,
+      "n_differ": 8,
+      "a_points": 31.0,
+      "b_points": 43.0
+     },
+     {
+      "gw": 5,
+      "n_differ": 9,
+      "a_points": 40.0,
+      "b_points": 33.0
+     },
+     {
+      "gw": 6,
+      "n_differ": 6,
+      "a_points": 15.0,
+      "b_points": 20.0
+     },
+     {
+      "gw": 7,
+      "n_differ": 6,
+      "a_points": 31.0,
+      "b_points": 10.0
+     },
+     {
+      "gw": 8,
+      "n_differ": 8,
+      "a_points": 43.0,
+      "b_points": 39.0
+     },
+     {
+      "gw": 9,
+      "n_differ": 7,
+      "a_points": 42.0,
+      "b_points": 30.0
+     },
+     {
+      "gw": 10,
+      "n_differ": 9,
+      "a_points": 47.0,
+      "b_points": 45.0
+     },
+     {
+      "gw": 11,
+      "n_differ": 9,
+      "a_points": 28.0,
+      "b_points": 17.0
+     },
+     {
+      "gw": 12,
+      "n_differ": 8,
+      "a_points": 15.0,
+      "b_points": 35.0
+     },
+     {
+      "gw": 13,
+      "n_differ": 9,
+      "a_points": 53.0,
+      "b_points": 14.0
+     },
+     {
+      "gw": 14,
+      "n_differ": 11,
+      "a_points": 34.0,
+      "b_points": 50.0
+     },
+     {
+      "gw": 15,
+      "n_differ": 9,
+      "a_points": 52.0,
+      "b_points": 42.0
+     },
+     {
+      "gw": 16,
+      "n_differ": 9,
+      "a_points": 38.0,
+      "b_points": 34.0
+     },
+     {
+      "gw": 17,
+      "n_differ": 8,
+      "a_points": 33.0,
+      "b_points": 19.0
+     },
+     {
+      "gw": 18,
+      "n_differ": 9,
+      "a_points": 16.0,
+      "b_points": 25.0
+     },
+     {
+      "gw": 19,
+      "n_differ": 10,
+      "a_points": 51.0,
+      "b_points": 28.0
+     },
+     {
+      "gw": 20,
+      "n_differ": 10,
+      "a_points": 29.0,
+      "b_points": 68.0
+     },
+     {
+      "gw": 21,
+      "n_differ": 9,
+      "a_points": 41.0,
+      "b_points": 46.0
+     },
+     {
+      "gw": 22,
+      "n_differ": 10,
+      "a_points": 41.0,
+      "b_points": 38.0
+     },
+     {
+      "gw": 23,
+      "n_differ": 8,
+      "a_points": 21.0,
+      "b_points": 29.0
+     },
+     {
+      "gw": 24,
+      "n_differ": 9,
+      "a_points": 52.0,
+      "b_points": 26.0
+     },
+     {
+      "gw": 25,
+      "n_differ": 9,
+      "a_points": 40.0,
+      "b_points": 38.0
+     },
+     {
+      "gw": 26,
+      "n_differ": 7,
+      "a_points": 31.0,
+      "b_points": 38.0
+     },
+     {
+      "gw": 27,
+      "n_differ": 8,
+      "a_points": 37.0,
+      "b_points": 22.0
+     },
+     {
+      "gw": 28,
+      "n_differ": 9,
+      "a_points": 41.0,
+      "b_points": 36.0
+     },
+     {
+      "gw": 29,
+      "n_differ": 9,
+      "a_points": 55.0,
+      "b_points": 44.0
+     },
+     {
+      "gw": 30,
+      "n_differ": 8,
+      "a_points": 37.0,
+      "b_points": 27.0
+     },
+     {
+      "gw": 31,
+      "n_differ": 7,
+      "a_points": 30.0,
+      "b_points": 21.0
+     },
+     {
+      "gw": 32,
+      "n_differ": 8,
+      "a_points": 29.0,
+      "b_points": 31.0
+     },
+     {
+      "gw": 33,
+      "n_differ": 6,
+      "a_points": 38.0,
+      "b_points": 39.0
+     },
+     {
+      "gw": 34,
+      "n_differ": 5,
+      "a_points": 28.0,
+      "b_points": 15.0
+     },
+     {
+      "gw": 35,
+      "n_differ": 7,
+      "a_points": 43.0,
+      "b_points": 26.0
+     },
+     {
+      "gw": 36,
+      "n_differ": 5,
+      "a_points": 20.0,
+      "b_points": 19.0
+     },
+     {
+      "gw": 37,
+      "n_differ": 6,
+      "a_points": 25.0,
+      "b_points": 12.0
+     },
+     {
+      "gw": 38,
+      "n_differ": 6,
+      "a_points": 8.0,
+      "b_points": 31.0
+     }
+    ]
+   }
+  },
+  "defcon_off": {
+   "rows": 28648,
+   "gameweeks": 37,
+   "zero_minute_share": 0.6139,
+   "rank_correlation": {
+    "all": {
+     "pred": 0.6802,
+     "naive_fx": 0.6924
+    },
+    "top30": {
+     "pred": 0.1327,
+     "naive_fx": 0.0472
+    },
+    "top50": {
+     "pred": 0.1554,
+     "naive_fx": 0.0552
+    },
+    "top100": {
+     "pred": 0.1954,
+     "naive_fx": 0.0946
+    },
+    "GKP_0-50": {
+     "pred": 0.5561,
+     "naive_fx": 0.7054
+    },
+    "GKP_50-70": {
+     "pred": 0.4792,
+     "naive_fx": 0.3251
+    },
+    "GKP_70-1000": {
+     "pred": null,
+     "naive_fx": null
+    },
+    "DEF_0-50": {
+     "pred": 0.6195,
+     "naive_fx": 0.6249
+    },
+    "DEF_50-70": {
+     "pred": 0.5116,
+     "naive_fx": 0.4394
+    },
+    "DEF_70-1000": {
+     "pred": null,
+     "naive_fx": null
+    },
+    "MID_0-50": {
+     "pred": 0.5305,
+     "naive_fx": 0.6259
+    },
+    "MID_50-70": {
+     "pred": 0.6227,
+     "naive_fx": 0.5919
+    },
+    "MID_70-1000": {
+     "pred": 0.5216,
+     "naive_fx": 0.482
+    },
+    "FWD_0-50": {
+     "pred": 0.2914,
+     "naive_fx": 0.5921
+    },
+    "FWD_50-70": {
+     "pred": 0.5638,
+     "naive_fx": 0.6085
+    },
+    "FWD_70-1000": {
+     "pred": 0.5328,
+     "naive_fx": 0.5093
+    }
+   },
+   "policy_disagreement_pred_minus_naive_fx": {
+    "weeks": 37,
+    "mean_players_differing": 8.43,
+    "mean_paired_gain": 2.432,
+    "block_bootstrap_ci95": [
+     -2.109,
+     6.649
+    ],
+    "weeks_a_better": 20,
+    "weeks_b_better": 16,
+    "per_gw": [
+     {
+      "gw": 2,
+      "n_differ": 8,
+      "a_points": 17.0,
+      "b_points": 33.0
+     },
+     {
+      "gw": 3,
+      "n_differ": 10,
+      "a_points": 69.0,
+      "b_points": 27.0
+     },
+     {
+      "gw": 4,
+      "n_differ": 8,
+      "a_points": 32.0,
+      "b_points": 41.0
+     },
+     {
+      "gw": 5,
+      "n_differ": 9,
+      "a_points": 39.0,
+      "b_points": 35.0
+     },
+     {
+      "gw": 6,
+      "n_differ": 8,
+      "a_points": 23.0,
+      "b_points": 24.0
+     },
+     {
+      "gw": 7,
+      "n_differ": 8,
+      "a_points": 37.0,
+      "b_points": 20.0
+     },
+     {
+      "gw": 8,
+      "n_differ": 9,
+      "a_points": 57.0,
+      "b_points": 41.0
+     },
+     {
+      "gw": 9,
+      "n_differ": 8,
+      "a_points": 36.0,
+      "b_points": 35.0
+     },
+     {
+      "gw": 10,
+      "n_differ": 8,
+      "a_points": 41.0,
+      "b_points": 43.0
+     },
+     {
+      "gw": 11,
+      "n_differ": 9,
+      "a_points": 36.0,
+      "b_points": 17.0
+     },
+     {
+      "gw": 12,
+      "n_differ": 8,
+      "a_points": 33.0,
+      "b_points": 35.0
+     },
+     {
+      "gw": 13,
+      "n_differ": 9,
+      "a_points": 55.0,
+      "b_points": 14.0
+     },
+     {
+      "gw": 14,
+      "n_differ": 11,
+      "a_points": 35.0,
+      "b_points": 50.0
+     },
+     {
+      "gw": 15,
+      "n_differ": 9,
+      "a_points": 53.0,
+      "b_points": 42.0
+     },
+     {
+      "gw": 16,
+      "n_differ": 9,
+      "a_points": 32.0,
+      "b_points": 34.0
+     },
+     {
+      "gw": 17,
+      "n_differ": 8,
+      "a_points": 26.0,
+      "b_points": 19.0
+     },
+     {
+      "gw": 18,
+      "n_differ": 9,
+      "a_points": 30.0,
+      "b_points": 25.0
+     },
+     {
+      "gw": 19,
+      "n_differ": 11,
+      "a_points": 52.0,
+      "b_points": 30.0
+     },
+     {
+      "gw": 20,
+      "n_differ": 10,
+      "a_points": 27.0,
+      "b_points": 68.0
+     },
+     {
+      "gw": 21,
+      "n_differ": 8,
+      "a_points": 42.0,
+      "b_points": 40.0
+     },
+     {
+      "gw": 22,
+      "n_differ": 10,
+      "a_points": 31.0,
+      "b_points": 38.0
+     },
+     {
+      "gw": 23,
+      "n_differ": 6,
+      "a_points": 7.0,
+      "b_points": 18.0
+     },
+     {
+      "gw": 24,
+      "n_differ": 10,
+      "a_points": 42.0,
+      "b_points": 29.0
+     },
+     {
+      "gw": 25,
+      "n_differ": 9,
+      "a_points": 58.0,
+      "b_points": 38.0
+     },
+     {
+      "gw": 26,
+      "n_differ": 8,
+      "a_points": 51.0,
+      "b_points": 50.0
+     },
+     {
+      "gw": 27,
+      "n_differ": 8,
+      "a_points": 39.0,
+      "b_points": 20.0
+     },
+     {
+      "gw": 28,
+      "n_differ": 10,
+      "a_points": 39.0,
+      "b_points": 36.0
+     },
+     {
+      "gw": 29,
+      "n_differ": 9,
+      "a_points": 32.0,
+      "b_points": 51.0
+     },
+     {
+      "gw": 30,
+      "n_differ": 8,
+      "a_points": 21.0,
+      "b_points": 35.0
+     },
+     {
+      "gw": 31,
+      "n_differ": 9,
+      "a_points": 33.0,
+      "b_points": 35.0
+     },
+     {
+      "gw": 32,
+      "n_differ": 7,
+      "a_points": 17.0,
+      "b_points": 29.0
+     },
+     {
+      "gw": 33,
+      "n_differ": 7,
+      "a_points": 45.0,
+      "b_points": 45.0
+     },
+     {
+      "gw": 34,
+      "n_differ": 6,
+      "a_points": 28.0,
+      "b_points": 27.0
+     },
+     {
+      "gw": 35,
+      "n_differ": 7,
+      "a_points": 35.0,
+      "b_points": 26.0
+     },
+     {
+      "gw": 36,
+      "n_differ": 7,
+      "a_points": 30.0,
+      "b_points": 37.0
+     },
+     {
+      "gw": 37,
+      "n_differ": 7,
+      "a_points": 37.0,
+      "b_points": 17.0
+     },
+     {
+      "gw": 38,
+      "n_differ": 7,
+      "a_points": 10.0,
+      "b_points": 33.0
+     }
+    ]
+   }
+  }
+ }
+}

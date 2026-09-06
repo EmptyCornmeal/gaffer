@@ -246,6 +246,15 @@ def _prior_season(season: str) -> str:
     return f"{start - 1}-{str(start)[-2:]}"
 
 
+#: Rows removed as exact duplicates, per season, so the count can be published
+#: rather than assumed to be zero.
+_DEDUPED: dict[str, int] = {}
+
+
+def duplicate_rows_removed(season: str) -> int:
+    return int(_DEDUPED.get(season, 0))
+
+
 def _season_to_date(df: pd.DataFrame) -> pd.DataFrame:
     """Attach shift(1) season-to-date aggregates. Never sees the current row."""
     df = df.sort_values(["element", "GW", "fixture"]).copy()
@@ -329,6 +338,25 @@ def load_season(season: str) -> SeasonHistory:
     df["team_id"] = df["team"].map(name_to_id)
     if "fixture" not in df:
         df["fixture"] = df.groupby(["element", "GW"]).cumcount()
+    # A-C3. EXACT duplicate rows, dropped before anything cumulative reads them.
+    #
+    # `merged_gw_2025-26.csv` carries ten byte-identical (element, fixture)
+    # pairs -- nine Junior Kroupi and one Ben Gannon-Doak -- and they are not a
+    # cosmetic blemish. `_season_to_date` counts games with `cumcount()` and
+    # sums minutes and points with `shift(1).cumsum()`, so a repeated row
+    # inflates that player's games-to-date and points-to-date for the whole
+    # rest of the season, which is also the denominator of the naive baseline.
+    # Downstream, `backtest.build_evaluation` de-duplicates the FEATURE frame
+    # and not the TARGET frame, so the same fixture's points, minutes and
+    # projection are all summed twice: Kroupi's GW8 twelve became twenty-four.
+    #
+    # Found by external review, 2026-09-06 (GPT-6 Astra); confirmed here
+    # against the raw CSV, where all ten groups are identical in all 46
+    # columns. Dropping full-row duplicates is the narrowest possible fix and
+    # is applied at the point the corruption starts.
+    before_rows = len(df)
+    df = df.drop_duplicates()
+    _DEDUPED[season] = before_rows - len(df)
     df = _season_to_date(df)
 
     base = _prior_season_baseline(season)

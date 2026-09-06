@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from gaffer import availability, calendar, card, config, decision, snapshots, squadrisk
+from gaffer import candidate as CAND
 from gaffer import league as LG
 from gaffer.model import projection
 from gaffer.model import scenarios as SC
@@ -299,6 +300,15 @@ def build(
             horizon_driven if is_transfer else False,
         )
 
+    # A-C1 -- one decision, one world. Built here because this is the first
+    # point at which BOTH candidates and the selection are known: `hold` and
+    # `mv` above, and `is_transfer` immediately above that. Anywhere earlier
+    # would have to guess which one is selected; anywhere later would have to
+    # re-derive one of them, and that is exactly the drift this prevents.
+    cand_set = _candidate_set(
+        held=held, hold=hold, mv=mv, from_gw=from_gw, ft=ft, bank=bank,
+        conn=conn, scen=scen, params=params, is_transfer=is_transfer,
+        move_expected=cmp_.move_expected, hold_expected=cmp_.hold_expected)
     return decision.Decision(
         action=action, headline=headline, reason=reason,
         transfers_out=list(mv["transfers_out"]) if is_transfer else [],
@@ -315,6 +325,7 @@ def build(
         biggest_risk=risk,
         assumptions=_assumptions(conn, scen, horizon, hold, held),
         candidate_move=candidate,
+        candidate_set=cand_set,
     )
 
 
@@ -576,6 +587,88 @@ def _assumptions(
 # Snapshot
 # ---------------------------------------------------------------------------
 
+def _candidate_set(
+    *, held: dict[str, Any], hold: dict[str, Any], mv: dict[str, Any],
+    from_gw: int, ft: int | None, bank: int | None,
+    conn: sqlite3.Connection, scen: Any, params: OBJ.ObjectiveParams,
+    is_transfer: bool, move_expected: float | None = None,
+    hold_expected: float | None = None,
+) -> dict[str, Any]:
+    """The hold and the move as two candidates on ONE before-state.
+
+    Returns the serialised set, or a recorded failure. It does NOT raise into
+    the pipeline. The invariants are enforced as a type in `gaffer.candidate`
+    and proven by `tests/test_candidate.py`; here they are *observed* against
+    live state first, because a first slice that can take the site down on an
+    accounting disagreement is not a safety improvement. What the failure branch
+    buys is the thing the old payload could not do at all: say out loud that the
+    decision does not reconcile.
+    """
+    try:
+        before = CAND.BeforeState(
+            known=True,
+            squad=tuple(held["squad"]),
+            bank=bank,
+            free_transfers=ft,
+            source=_meta(conn, "squad_status") or "entry_picks",
+            source_event=held.get("source_event"),
+            unresolved=tuple(
+                k for k, v in (("bank", bank), ("free_transfers", ft))
+                if v is None),
+        )
+        scen_id = (f"{getattr(scen, 'seed', '')}:{getattr(scen, 'n_sims', '')}"
+                   if scen is not None else None)
+        hold_action = CAND.Action(kind=CAND.KIND_HOLD)
+        hold_cand = CAND.Candidate.create(
+            candidate_id=CAND.candidate_id_for(hold_action, before),
+            before=before, action=hold_action,
+            xi=hold["starting"], bench=hold["bench"],
+            captain=hold["captain"], vice=hold["vice"],
+            scenario_set_id=scen_id, label="Hold", basis="hold_baseline",
+            expectation=hold_expected)
+        move_action = CAND.Action(
+            kind=CAND.KIND_TRANSFER if mv["transfers_in"] else CAND.KIND_HOLD,
+            transfers_out=tuple(mv["transfers_out"]),
+            transfers_in=tuple(mv["transfers_in"]))
+        cands = {hold_cand.candidate_id: hold_cand}
+        selected = hold_cand.candidate_id
+        if move_action.n_transfers:
+            move_cand = CAND.Candidate.create(
+                candidate_id=CAND.candidate_id_for(move_action, before),
+                before=before, action=move_action,
+                xi=mv["starting"], bench=mv["bench"],
+                captain=mv["captain"] or None, vice=mv["vice"] or None,
+                scenario_set_id=scen_id, label="Move",
+                basis=mv.get("source", ""), expectation=move_expected)
+            # The solver counts hits; the candidate derives them. If they ever
+            # disagree the derivation is not merely redundant, it is catching
+            # something -- so say which two numbers disagreed.
+            solver_hit = int(mv["hits"] or 0) * params.hit_cost
+            if move_cand.hit != solver_hit:
+                raise CAND.CandidateError(
+                    f"solver hit {solver_hit} disagrees with the derived hit "
+                    f"{move_cand.hit} for {move_action.n_transfers} transfers "
+                    f"on {ft} free")
+            cands[move_cand.candidate_id] = move_cand
+            # THE rule that the GW2 payload broke: the selected candidate is
+            # the action the decision publishes. A priced-and-declined move
+            # stays in the set as evidence and is NOT the selection, so nothing
+            # downstream can read its expected value as "the decision's".
+            if is_transfer:
+                selected = move_cand.candidate_id
+        return CAND.CandidateSet(
+            before=before, candidates=cands,
+            baseline_id=hold_cand.candidate_id, selected_id=selected,
+            gameweek=from_gw, season=_meta(conn, "season") or "",
+            scenario_set_id=scen_id,
+            versions={"model_version": projection.MODEL_VERSION,
+                      "objective_version": OBJ.OBJECTIVE_VERSION},
+        ).as_dict()
+    except CAND.CandidateError as exc:
+        return {"candidate_version": CAND.CANDIDATE_VERSION,
+                "built": False, "error": str(exc)}
+
+
 def snapshot_payload(
     conn: sqlite3.Connection, dec: decision.Decision, *, from_gw: int,
     horizon: int, scen: Any, settings: config.Settings,
@@ -651,6 +744,10 @@ def snapshot_payload(
             "vice": (held or {}).get("vice"),
         },
         "decision": dec_dict,
+        # A-C1 -- a SIBLING of the decision, not a field inside it. Everything
+        # the review needs in order to score the action that was actually
+        # selected, rather than fields collected from three places.
+        "candidate_set": getattr(dec, "candidate_set", None) or {},
         "versions": {
             "model_version": projection.MODEL_VERSION,
             "objective_version": OBJ.OBJECTIVE_VERSION,

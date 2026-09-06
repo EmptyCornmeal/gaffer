@@ -4,6 +4,12 @@
 today's crossover programme proved about its models, and what should and should
 not happen next.
 
+> [!warning] Corrected 2026-09-06 — read §0 before quoting anything in §3 or §4
+> An external technical review (GPT-6 Astra), independently verified here,
+> withdrew this document's headline evidence and made §3a stale. The 2026-08-23
+> text below is UNCHANGED and is still the record of what was believed then.
+> **§0 says what replaced it.**
+
 Verified against the repository and the committed evidence documents on
 2026-08-23. Approximate values say so. Unresolved questions say UNKNOWN.
 
@@ -14,6 +20,129 @@ Verified against the repository and the committed evidence documents on
 | ruff / deps | clean / OK — 51 locked packages, Python 3.13.15 |
 | season | **live, mid-season** — leave the running product alone |
 | this commit changed | documentation and `scripts/` only. `src/` untouched. |
+
+---
+
+## 0. Corrections — 2026-09-06
+
+An external review by **GPT-6 Astra** on 2026-09-06 examined this repository,
+the evidence supplement and the live artifacts. **The findings are its own.**
+Twelve of its new claims were reproduced here before anything was changed: ten
+confirmed, two confirmed with a correction, none refuted. Full matrix:
+`Desktop\GAFFER_PRE_ASTRA_EVIDENCE.md` §12. Decision record:
+`08 Decisions/2026-09-06 — Gaffer's decision gets one identity and its review
+stops grading actions it never priced`.
+
+### 0a. The legal-XI headline is WITHDRAWN as evidence of engine quality
+
+`+6.6` legal-XI points per gameweek over the naive baseline is no longer a
+supportable claim about the production engine. Three evaluation defects, all
+verified here:
+
+| construction | Gaffer | baseline | margin |
+|---|---:|---:|---:|
+| as published (38 GWs, unscaled naive, duplicates retained) | 51.4 | 44.8 | **+6.6** |
+| exact duplicate archive rows removed | 50.6 | 45.1 | +5.5 |
+| + GW2-38 only, fixture-aware naive | 50.6 | 46.8 | **+3.8** |
+| + XI-specific optimisation | 51.5 | 47.3 | +4.1 |
+
+Block-bootstrap 95% interval on the last row: **[+0.81, +7.38]** shipped and
+**[-0.70, +5.51]** with DEFCON disabled — the second includes zero.
+
+- **Ten byte-identical duplicate rows** in `merged_gw_2025-26.csv` (nine Junior
+  Kroupi, one Ben Gannon-Doak). `_season_to_date` counted the fixture twice, so
+  games- and points-to-date were inflated for the rest of the season — and that
+  is the naive baseline's own denominator. `build_evaluation` de-duplicated the
+  FEATURE frame and not the TARGET frame, so points, minutes and the projection
+  were all summed twice.
+- **The naive baseline was never scaled by fixture count.** `pred` is summed
+  across a double gameweek; `naive` was mapped once. 419 player-gameweeks.
+- **GW1's naive baseline is identically zero** (690 rows, maximum 0.0) and still
+  constructed a squad in the headline.
+
+All three are fixed. The artifact carries `construction_version: 2` and a
+`corrections` block naming what it supersedes; the superseded artifact is kept
+at `lab/backtest_construction_v1_superseded.json`.
+
+**What survives** is a smaller positive diagnostic advantage on a season that
+has now been consulted repeatedly and should be treated as a re-used development
+benchmark rather than a holdout.
+
+### 0b. §3a is STALE — `p_start` now beats every baseline it is measured against
+
+The 2026-08-23 shootout below (Brier 0.1403 against 0.0965) was measured at
+`heuristic-0.5`, before the recency-and-shrinkage work of 2026-09-02. Current
+published h=1 evidence, `data/backtest.json` -> `minutes_model`, n = 28,913:
+
+| estimator | Brier | AUC |
+|---|---:|---:|
+| **Gaffer `p_start`** | **0.0864** | **0.9365** |
+| last-three start rate | 0.0986 | 0.9038 |
+| season-to-date start rate | 0.1100 | 0.9074 |
+| started last match | 0.1121 | 0.8615 |
+
+Paired by gameweek, Gaffer is better in **37 of 37**, **36 of 37** and **37 of
+37** respectively, every interval excluding zero.
+
+These are different populations from the crossover, so this **supersedes by
+model change, not by refutation**: the shootout was not wrong about the model it
+measured. **Do not revert the current start estimator on the strength of §3a**,
+and do not re-quote §3a as current.
+
+Expected minutes: Gaffer MAE **14.31**, running average 14.89, `last start x 90`
+**11.54**. The binary rule still wins MAE — and MAE is minimised by a conditional
+median, so a 0/90 rule can win it while being a worse estimate of expected
+minutes. Judge minutes at the points level, not on MAE.
+
+### 0c. DEFCON must not be judged on MAE
+
+Removing DEFCON *improves* MAE at every horizon. That is not evidence against
+forecasting it. For `X = 2B`, `B ~ Bernoulli(p)`, `p < 0.5`:
+`MAE(0) = 2p` and `MAE(2p) = 4p(1-p) > 2p` — predicting zero wins absolute error
+by construction while discarding real expected points. Assess the threshold
+probability with Brier / log loss and expected-point calibration instead.
+
+Re-measured at `heuristic-0.6`, DEFCON is worth **+1.7** legal-XI points per
+gameweek (51.4 -> 49.7), **not** the +3.4 recorded in `backtest.py`'s
+`defcon_ablation_h1`, which is stamped `heuristic-0.5` and was never
+re-measured. Its captaincy claim is also reversed: at 0.6, captain accuracy goes
+21.1% -> 23.7% *without* DEFCON — which is 8/38 -> 9/38, one week, worth one
+point across a season.
+
+### 0d. The decision now has one identity, and the review has less authority
+
+- **`gaffer.candidate`** — a candidate derives its own after-state and hit and
+  refuses to exist if the eleven, bench, captain or money do not reconcile with
+  the action. The real GW2 2026-27 payload (sell six, field four of them) can no
+  longer be constructed. Replaying all 132 stored snapshots: **66 fail the
+  contract, and every failure is dated on or before 2026-09-01T20:21Z** — the
+  Revision-2 work closed it.
+- **The review no longer publishes `bad_decision_*` for an action Gaffer did not
+  price.** `positive_ev` is `move_expected >= hold_expected`, both from Gaffer's
+  own candidate, so it cannot move when the reader's outcome moves. Evidence
+  unchanged; the categorical word withdrawn. It returns when the human's action
+  is scored against the same frozen pre-deadline scenarios.
+- **`comparison` still describes the candidate being priced, not necessarily the
+  action selected.** Verified live on 2026-09-06: `action: roll` with
+  `move_expected 58.77 / hold_expected 59.86`. Read the candidate set, not
+  `comparison`, for the selected action's expectation.
+
+### 0e. Scenario coherence is measured, and the claim is overstated
+
+A GW4 draw holds **479,016** player-scenarios with no appearance, of which
+**13,346 score points** (3,767 positive, 9,579 negative): conceded points, saves
+and DEFCON are not gated on the appearance draw. The clean-sheet contradiction
+diagnostic reads mean **0.0555**, max **0.2727**. Pinned by
+`tests/test_scenario_invariants.py` as four `xfail(strict)` invariants and two
+bounds. **Do not describe the scenario set as coherent joint football** until
+those flip.
+
+### 0f. `p_target` is next-gameweek placing, not season-winning
+
+`league.placing_probabilities` adds ONE simulated gameweek to current standings;
+`gameweeks_remaining` only widens the band for rivals whose squads are unknown.
+The artifact already labels this `horizon: "next_gameweek"`. **Activating the
+resolver is not implementing a season-winning objective.**
 
 ---
 
@@ -75,6 +204,11 @@ Full record: `docs/MODEL-EVALUATION.md` and the exchange's
 `CROSSOVER-EVIDENCE.md`.
 
 ### 3a. `p_start` loses to "he started last week" — BOTH MODELS REJECTED
+
+> [!warning] STALE — superseded 2026-09-06, see §0b
+> Measured at `heuristic-0.5`. The current estimator scores Brier **0.0864**
+> against started-last-match's 0.1121 and beats it in 36 of 37 gameweeks. The
+> text below is kept as the record of what was measured then.
 
 Retrospective shootout on **113,592 archive rows**, ESTABLISHED regime
 (100,392 rows, 88% of the population):
@@ -269,7 +403,8 @@ sophisticated version of the same idea.
 - **The availability-denominator correction (M6)** — REJECTED at t≈+23.90,
   replicated on held-out data
 - **Choosing either current expected-XI model as canonical** — both lost to a
-  one-line baseline
+  one-line baseline *(measured at `heuristic-0.5`; Gaffer's `p_start` now beats
+  every baseline it is measured against — see §0b)*
 - **GBM / ridge / `xP`-based points models** — rejected, inconclusive and invalid
   respectively; the deleted architecture is kept out by test
 - **A shared Football Intelligence service, monorepo, shared ORM, shared runtime

@@ -80,6 +80,17 @@ def _load(data_dir: Path, name: str) -> Any:
 def build_context(data_dir: Path) -> dict[str, Any]:
     meta = _load(data_dir, "meta.json") or {}
     rec = _load(data_dir, "recommendation.json") or {}
+    # A-C1. `recommendation.json` is the SINGLE-WINDOW solver's optimum;
+    # `decision.json` is the week's action, and since G-1.4 the two are
+    # deliberately different questions -- the decision evaluates the
+    # multi-period path's first step. Narrating the solver produced a live
+    # contradiction on 2026-09-06: `decision.json` said "Roll your transfer"
+    # at 17:54:11 and `verdict.json` announced a five-transfer -16 move at
+    # 17:54:31, from the same run, on the same squad. The briefing now takes
+    # the ACTION from the decision and may only describe transfers the
+    # decision actually selected.
+    dec_doc = _load(data_dir, "decision.json") or {}
+    decided = (dec_doc.get("decision") or {}) if isinstance(dec_doc, dict) else {}
     players = _load(data_dir, "players.json") or []
 
     def slim(p: dict) -> dict:
@@ -154,15 +165,25 @@ def build_context(data_dir: Path) -> dict[str, Any]:
         "recommendation": {
             "mode": rec.get("mode"),
             "formation": rec.get("formation"),
-            "summary": rec.get("summary"),
+            # The decision's own headline when it has one: the solver's summary
+            # describes the solver's move, which is not necessarily the action.
+            "summary": decided.get("headline") or rec.get("summary"),
+            "decided_action": decided.get("action"),
             "squad_value": rec.get("squad_value"),
             "xi_expected": rec.get("xi_expected"),
             "captain": {
                 "name": cap_card.get("name"),
                 "why": cap_card.get("rationale"),
             },
-            "transfers_in": [t.get("name") for t in rec.get("transfers_in", [])],
-            "transfers_out": [t.get("name") for t in rec.get("transfers_out", [])],
+            # Empty unless the DECISION selected a transfer. A solver plan that
+            # was priced and declined is evidence, and the reader-facing
+            # briefing is not where evidence gets to look like an instruction.
+            "transfers_in": (
+                [t.get("name") for t in rec.get("transfers_in", [])]
+                if decided.get("action") == "transfer" else []),
+            "transfers_out": (
+                [t.get("name") for t in rec.get("transfers_out", [])]
+                if decided.get("action") == "transfer" else []),
         },
         "note_on_context": (
             "top_players and differentials are league-wide context and are NOT in "
@@ -318,6 +339,12 @@ def _template_briefing(ctx: dict[str, Any]) -> str:
         outs = ", ".join(rec["transfers_out"])
         ins = ", ".join(rec["transfers_in"])
         lines.append(f"- Out {outs} → in {ins}.")
+    elif rec.get("decided_action") in ("roll", "too_close", "unavailable"):
+        lines.append({
+            "roll": "- Nothing beats a -4 — roll the transfer.",
+            "too_close": "- Too close to call: no transfer is being recommended.",
+            "unavailable": "- No transfer advice is possible this week.",
+        }[rec["decided_action"]])
     else:
         lines.append("- Nothing beats a -4 — roll the transfer.")
     lines.append("")

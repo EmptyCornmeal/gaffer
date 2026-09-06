@@ -277,6 +277,12 @@ class Decision:
     biggest_risk: str = ""
     assumptions: list[str] = field(default_factory=list)
     candidate_move: CandidateMove | None = None
+    #: A-C1. The candidate set this action was selected from, already
+    #: serialised. Deliberately EXCLUDED from `as_dict`: the card and the
+    #: artifact contract compare the decision dict across three surfaces, and
+    #: the candidate set is a SIBLING of the decision in the snapshot rather
+    #: than a field inside it. See `gaffer.candidate`.
+    candidate_set: dict[str, Any] = field(default_factory=dict)
     #: 3.3/3.7 -- what this move does to each named rival's contest, beside
     #: what it does to expected points. Rival-optimal and rank-optimal are
     #: shown SEPARATELY and never merged into one score: they are different
@@ -291,7 +297,8 @@ class Decision:
 
     def as_dict(self) -> dict[str, Any]:
         d = {k: v for k, v in asdict(self).items()
-             if k not in ("comparison", "executability", "candidate_move")}
+             if k not in ("comparison", "executability", "candidate_move",
+                          "candidate_set")}
         d["comparison"] = self.comparison.as_dict() if self.comparison else None
         d["executability"] = (
             self.executability.as_dict() if self.executability else None)
