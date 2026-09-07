@@ -188,6 +188,53 @@ def run(
     log["decision"] = f"{dec.action} ({dec.confidence} confidence)"
     log["snapshot"] = snap["outcome"]
 
+    # A-C6 -- freeze the football, once, before the deadline.
+    #
+    # `outcome_distribution` above stores 500 samples of ONE squad's total. It
+    # is a summary, so a second action can only be scored by drawing new
+    # worlds, and two draws are not comparable. This stores the per-player
+    # matrix instead, which any legal candidate can be indexed into -- which is
+    # what makes "how did Gaffer's choice and mine compare, under the model
+    # Gaffer actually had" a question with an answer.
+    #
+    # Attached to the existing pre-deadline snapshot rather than given its own
+    # scheduler: it runs at the same point, after the decision is final and
+    # before the deadline. The FIRST run inside the window writes it and every
+    # later run declines, so a gameweek has one matrix rather than one per
+    # refresh. Wrapped for the same reason the ledger below is: a missing week
+    # of evidence is a bad day, a pipeline that stops publishing is a bad
+    # season.
+    try:
+        from gaffer import evidence as EV
+
+        deadline = db.get_meta(conn, "deadline")
+        season = db.get_meta(conn, "season") or ""
+        ok, why = EV.should_freeze(now, deadline, season, from_gw)
+        if not ok:
+            log["evidence"] = f"not frozen: {why}"
+        else:
+            cs_payload = payload.get("candidate_set") or {}
+            if not cs_payload or cs_payload.get("error"):
+                log["evidence"] = (
+                    "not frozen: the decision has no coherent candidate set "
+                    f"({cs_payload.get('error', 'absent')})")
+            else:
+                _t, positions, _n = _team_and_positions(conn)
+                ev = EV.freeze(
+                    scen, EV.candidate_set_from_payload(cs_payload),
+                    season=season, gameweek=from_gw, deadline=deadline or "",
+                    information_cutoff=generated_at, positions=positions,
+                    model_version=projection.MODEL_VERSION,
+                    rules_version=db.get_meta(conn, "rule_scoring_source")
+                    or "fpl",
+                    limitations=EV.SCENARIO_LIMITATIONS)
+                path = ev.save(EV.path_for(season, from_gw))
+                log["evidence"] = (
+                    f"frozen {ev.evidence_id} -> {path.name} "
+                    f"({len(ev.player_ids)}x{ev.n_sims}); {why}")
+    except Exception as exc:  # noqa: BLE001 - evidence is optional, never fatal
+        log["evidence"] = f"FAILED {type(exc).__name__}: {exc}"
+
     # The prediction ledger: rival candidate squads, frozen before the deadline
     # so the gameweek can settle which method was right. `weekly.persist` above
     # snapshots what GAFFER said; this snapshots what the alternatives said, and

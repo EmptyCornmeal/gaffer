@@ -189,6 +189,12 @@ class Review:
     #: Stored with the review so a later lesson can read history without
     #: recomputing it from raw results.
     facts: dict[str, Any] = field(default_factory=dict)
+    #: A-C6. Gaffer's selection and the action actually taken, scored against
+    #: ONE frozen pre-deadline scenario matrix. Quantities only. It does NOT
+    #: feed `quality`, and must not: the categorical verdict is suspended
+    #: because the model producing these expectations may itself be wrong, and
+    #: scoring both actions under it does not change that.
+    evidence: dict[str, Any] = field(default_factory=dict)
     schema_version: int = REVIEW_SCHEMA_VERSION
 
     def as_dict(self) -> dict[str, Any]:
@@ -203,6 +209,7 @@ class Review:
             "has_snapshot": self.snapshot_as_of is not None,
             "comparison": self.comparison.as_dict(),
             "attribution": self.attribution.as_dict(),
+            "evidence": dict(self.evidence),
             "quality": self.quality.as_dict(),
             "lesson": self.lesson,
             "league": self.league,
@@ -634,6 +641,18 @@ def build(
         "results; it was not knowable before the deadline and is never used to "
         "score a decision.")
 
+    # A-C6. Present only when a frozen matrix AND a recorded action both
+    # exist. `paired_comparison` returns its own reason when either is absent,
+    # so a missing comparison says which half is missing.
+    ev_block: dict[str, Any] = {}
+    try:
+        from gaffer import evidence as EV
+
+        ev_block = EV.paired_comparison(
+            season, event, snap.payload if snap else {}) or {}
+    except Exception as exc:  # noqa: BLE001 - a review must still publish
+        ev_block = {"available": False, "why": f"{type(exc).__name__}: {exc}"}
+
     review = Review(
         season=season, entry_id=entry_id, event=event,
         generated_at=now.astimezone(UTC).isoformat(timespec="seconds"),
@@ -648,7 +667,8 @@ def build(
                   "No recommendation was recorded for this gameweek.")),
         attribution=attribution, quality=quality, lesson=lesson,
         league=league or [], limitations=limits,
-        facts=_facts(actual, points, attribution, pctile))
+        facts=_facts(actual, points, attribution, pctile),
+        evidence=ev_block)
     return review
 
 

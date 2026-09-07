@@ -144,6 +144,78 @@ those flip.
 The artifact already labels this `horizon: "next_gameweek"`. **Activating the
 resolver is not implementing a season-winning objective.**
 
+### 0g. The football is frozen before the deadline — 2026-09-07 (A-C6)
+
+`outcome_distribution` stored 500 samples of ONE squad's total. It is a
+summary, so a second action could only be scored by drawing new worlds, and two
+draws are not comparable — which is why "how did Gaffer's choice and mine
+compare, under the model Gaffer actually had" had no answer.
+
+`gaffer.evidence` freezes the per-player matrix instead: points and the
+appearance mask for every player across all 2,000 scenarios, written once
+before the deadline. Any legal candidate is scored by indexing into it, so
+Gaffer's selection and the action actually taken share one set of worlds by
+construction rather than by care.
+
+| | |
+|---|---|
+| format | NDJSON, `data/state/evidence/<season>-gw<NN>.ndjson`, beside the rest of the longitudinal state |
+| measured, real GW4 draw | 495 players x 2,000 scenarios; **3.03 MB on disk, 0.471 MB as git stores it**, ~17.9 MB a season |
+| why not `.npz` | the binary equivalent is 0.454 MB — three per cent — and `ci.yml` polices tracked binaries. Text diffs, greps and reviews |
+| points dtype | `int16`. FPL scores are whole numbers; freezing **refuses** a matrix whose values are not, rather than rounding |
+| timings | freeze 87 ms, load 155 ms, reload byte-exact and digest-checked |
+| identity | `scenario_set_id` is a content digest. The old `seed:n_sims` was the same string every gameweek because the seed is fixed |
+
+**Scoring is the production path.** The frozen object rehydrates into a real
+`ScenarioSet`, so autosubs use `points_with_autosubs` rather than a private
+copy that could drift. One thing IS added: `points_with_autosubs` says in its
+own docstring that it does not move the armband, which is acceptable for a chip
+valuation and not for this. The appearance mask already records whether the
+captain played, so the rule is applied rather than estimated — the armband
+passes to the vice exactly when the captain records no minutes.
+
+**Those two additions are worth a number.** On the GW4 draw, the same eleven
+scores 57.286 under `decision.compare`'s `squad_points`, 59.602 with autosubs,
+and 60.311 with the armband as well. So **a `comparison.move_expected` and an
+`evidence.score` mean are not interchangeable** — the live comparison is about
+three points lower on every candidate, and comparing one against the other
+would read as a difference between actions when it is a difference between
+scoring rules.
+
+**One freeze per gameweek**, written by the first scheduled run inside the six
+hours before the deadline; every later run declines. Two consequences, both
+measured rather than assumed:
+
+- The scheduler's observed gap between refreshes has a **median of 140 minutes
+  and a maximum of 51 hours**. A stalled scheduler can miss the window
+  entirely, and then no evidence exists. Nothing is substituted: the review
+  says which half is missing.
+- The freeze is one run and the reviewed snapshot is the *last* run before the
+  deadline. When a later run moves the squad or the selection, the frozen
+  matrix describes a real belief that is not the one being reviewed.
+  `paired_comparison` refuses on a before-state or candidate-id mismatch rather
+  than mixing two worlds.
+
+**This freezes belief, not truth.** Every file carries
+`evidence.SCENARIO_LIMITATIONS` — the appearance-gating defect (13,346 of
+479,016 no-appearance player-scenarios scored points), the clean-sheet
+contradiction, independently drawn starts, the bonus proxy. **§0e is not
+repaired**, deliberately: a frozen record of a model later found wrong is
+exactly what is needed to ask what that model implied; a frozen record of a
+silently different model is worth nothing.
+
+**The review gained quantities, not a verdict.** `Review.evidence` carries the
+expectations, the paired delta, P(each beats the other) and the delta
+percentiles. It does not feed `quality`, and must not: being able to score both
+actions under one model does not settle whether either was right, because the
+model may be wrong. §0d's suspension stands.
+
+**Prospective from GW4's deadline.** GW1–GW3 have no frozen evidence and will
+not be given any. Actions reconstructed from FPL's published picks are recorded
+as `reconstructed_postdeadline` and may be scored against a frozen model —
+FPL choices do not change the football — but they are never evidence about what
+Myles knew.
+
 ---
 
 ## 1. What Gaffer optimises
