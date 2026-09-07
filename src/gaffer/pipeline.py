@@ -209,7 +209,8 @@ def run(
 
         deadline = db.get_meta(conn, "deadline")
         season = db.get_meta(conn, "season") or ""
-        ok, why = EV.should_freeze(now, deadline, season, from_gw)
+        ok, why = EV.should_freeze(
+            now or datetime.now(UTC), deadline, season, from_gw)
         if not ok:
             log["evidence"] = f"not frozen: {why}"
         else:

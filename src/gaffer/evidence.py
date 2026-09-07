@@ -563,6 +563,15 @@ def should_freeze(now: Any, deadline: str | None, season: str, gameweek: int,
     """
     from datetime import datetime
 
+    # A missing clock names itself. `pipeline.run` takes `now` as an optional
+    # argument and every other caller in that file guards it with
+    # `now or datetime.now(UTC)`; this one did not, so the first production run
+    # after A-C6 raised `datetime - None` inside the try/except and reported a
+    # green pipeline that had frozen nothing. The wrapper is right to keep
+    # publishing -- but a fault it swallows has to be legible on the way out,
+    # and a refusal with a reason is legible where a TypeError is not.
+    if now is None:
+        return False, "no clock was supplied, so the freeze window cannot be judged"
     if not deadline:
         return False, "no deadline is known for this gameweek"
     if exists(season, gameweek, data_dir):

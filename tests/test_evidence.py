@@ -707,3 +707,40 @@ def test_a_recommendation_that_changed_after_the_freeze_refuses_to_be_compared(t
     out = EV.paired_comparison("2026-27", 4, pay, data_dir=tmp_path)
     assert out["available"] is False
     assert "not among the candidates frozen" in out["why"]
+
+
+def test_a_missing_clock_is_a_named_refusal_not_a_TypeError(tmp_path):
+    """The first production run after A-C6 froze nothing and looked healthy.
+
+    `pipeline.run` takes `now` as an optional argument; every other caller in
+    that file guards it with `now or datetime.now(UTC)` and the freeze call did
+    not. `datetime - None` raised inside the try/except that exists to keep the
+    pipeline publishing, so the run went green having frozen nothing, and the
+    only trace was a truncated TypeError in a log nobody reads.
+
+    The wrapper is right to keep publishing. A fault it swallows still has to
+    be legible on the way out, which a refusal with a reason is and a TypeError
+    is not.
+    """
+    ok, why = EV.should_freeze(None, "2026-09-12T12:30:00+00:00", "2026-27", 4,
+                               data_dir=tmp_path)
+    assert ok is False
+    assert "no clock" in why
+
+
+def test_the_pipeline_hands_the_freeze_a_real_clock():
+    """Pins the call site, not just the callee: a guard in `should_freeze`
+    stops a crash, and only the caller stops the freeze silently never
+    happening."""
+    import inspect
+
+    from gaffer import pipeline
+
+    src = inspect.getsource(pipeline.run)
+    assert "EV.should_freeze(" in src
+    call = src[src.index("EV.should_freeze("):]
+    call = call[:call.index(")") + 1]
+    assert "now or datetime.now(UTC)" in call, (
+        f"the freeze is judged against {call!r}; `now` is optional in "
+        "`pipeline.run` and must be defaulted here as it is everywhere else "
+        "in that file")
