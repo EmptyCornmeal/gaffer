@@ -1,15 +1,26 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-09-11T12:24:17+00:00",
+  "generated_at": "2026-09-11T16:25:19+00:00",
   "result": {
-    "considered": 1,
-    "new": 1,
+    "considered": 2,
+    "new": 2,
     "duplicates": 0,
     "suppressed": 0,
-    "delivered": 1,
+    "delivered": 2,
     "failed": 0,
     "dry_run": true,
     "alerts": [
+      {
+        "kind": "deadline",
+        "title": "GW4 deadline tomorrow",
+        "body": "20.1 hours left. Check your transfer, captain and bench order.",
+        "severity": "important",
+        "event": 4,
+        "deep_link": "#/overview",
+        "dedupe_key": "deadline:c1cc77248d38",
+        "created_at": "2026-09-11T16:25:43+00:00",
+        "state": "dry_run"
+      },
       {
         "kind": "league_swing",
         "title": "A differential is winning you the week",
@@ -18,7 +29,7 @@
         "event": 4,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:4746895e1e12",
-        "created_at": "2026-09-11T12:24:44+00:00",
+        "created_at": "2026-09-11T16:25:43+00:00",
         "state": "dry_run"
       }
     ],
@@ -41,15 +52,24 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 1
+      "dry_run": 2
     },
     "recent": [
+      {
+        "kind": "deadline",
+        "severity": "important",
+        "title": "GW4 deadline tomorrow",
+        "deep_link": "#/overview",
+        "created_at": "2026-09-11T16:25:43+00:00",
+        "state": "dry_run",
+        "event": 4
+      },
       {
         "kind": "league_swing",
         "severity": "info",
         "title": "A differential is winning you the week",
         "deep_link": "#/live",
-        "created_at": "2026-09-11T12:24:44+00:00",
+        "created_at": "2026-09-11T16:25:43+00:00",
         "state": "dry_run",
         "event": 4
       }
