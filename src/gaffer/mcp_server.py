@@ -3100,6 +3100,17 @@ def internal_clashes(squad: list[dict], fixtures: Any, gw: Any) -> list[dict]:
     return sorted(out, key=lambda c: -c["players"])
 
 
+#: The brief orients and then points elsewhere, in every state it can be in.
+BRIEF_WHERE_TO_LOOK: dict[str, str] = {
+    "the arithmetic behind any total": "get_live_scorecard",
+    "a rival's fifteen": "get_live_scorecard(entry_id=...)",
+    "this week's single action": "get_weekly_decision",
+    "ownership, shields and placing": "get_league_strategy",
+    "what moved since the last snapshot": "what_changed",
+    "how much to trust a projection": "get_calibration",
+}
+
+
 def get_gameweek_brief() -> dict[str, Any]:
     """Where you stand against your league right now, and what is deciding it.
 
@@ -3108,11 +3119,39 @@ def get_gameweek_brief() -> dict[str, Any]:
     tool to call for depth. It does not recommend a move.
     """
     meta = _meta()
-    live = load_artifact("live.json", required=False) or {}
+    live = load_artifact("live.json", required=False)
+    if live is None:
+        raise ToolError(STATUS_UNAVAILABLE, "no live artifact has been published")
+    gameweek = {"number": live.get("gameweek"),
+                "deadline": meta.get("deadline"),
+                "projecting": meta.get("current_gw")}
+    # W16. Between a deadline and the first kickoff `live.json` is legitimately
+    # `available: false` and carries no table. This tool used to answer `ok`
+    # anyway, with `you: null` -- an answer to "how am I doing?" that contains
+    # no answer. Published at 2026-09-12T13:51Z, that artifact failed the
+    # `gameweek-brief` eval on every refresh for more than a day, because the
+    # blocking tests read the committed artifacts and the only thing that could
+    # replace them was the refresh they were blocking. Say it is unavailable,
+    # and why, exactly as `get_live_gameweek` and `get_live_scorecard` do.
+    if not live.get("available"):
+        return envelope("live.json", meta, blob=live, status=STATUS_UNAVAILABLE,
+                        available=False,
+                        unavailable_reason=live.get("unavailable_reason"),
+                        detail=live.get("note") or "no live data to orient against",
+                        gameweek=gameweek, where_to_look=BRIEF_WHERE_TO_LOOK)
     strat = load_artifact("strategy.json", required=False) or {}
     rivals = [r for r in (live.get("rivals") or []) if isinstance(r, dict)]
     me = next((r for r in rivals if r.get("you")), None)
     others = [r for r in rivals if not r.get("you")]
+    if me is None:
+        # `live.assemble` always writes the manager's own row when it is
+        # available, so this is a malformed or generic artifact, not a state.
+        # Still not an `ok`: there is no position to report.
+        return envelope("live.json", meta, blob=live, status=STATUS_UNAVAILABLE,
+                        available=True, unavailable_reason="not_in_table",
+                        detail="the live table has no row for your entry, so "
+                               "there is no position to report",
+                        gameweek=gameweek, where_to_look=BRIEF_WHERE_TO_LOOK)
 
     closest = None
     if me and others:
@@ -3125,6 +3164,14 @@ def get_gameweek_brief() -> dict[str, Any]:
             "you_are": "ahead" if gap > 0 else "behind" if gap < 0 else "level",
             "their_players_yet_to_play": near.get("yet_to_play"),
         }
+    elif not others:
+        # A manager with no rival in the table still has a position; he has no
+        # gap. Publish the fields as null with the reason, rather than dropping
+        # the object and leaving "how are the others doing" silently unanswered.
+        closest = {"name": None, "entry_id": None, "their_total": None,
+                   "gap": None, "you_are": None,
+                   "their_players_yet_to_play": None,
+                   "unavailable_reason": "no_rivals_in_table"}
 
     lg = (strat.get("leagues") or [{}])[0] if strat.get("leagues") else {}
     top = lambda k, n=3: [  # noqa: E731
@@ -3134,18 +3181,16 @@ def get_gameweek_brief() -> dict[str, Any]:
 
     return envelope(
         "live.json", meta, blob=live,
-        gameweek={"number": live.get("gameweek"),
-                  "deadline": meta.get("deadline"),
-                  "projecting": meta.get("current_gw"),
+        gameweek={**gameweek,
                   # `fixtures` is the per-fixture LIST; the counts live in
                   # `fixture_summary`.
                   "fixtures": (live.get("fixture_summary") or {}).get("by_state"),
                   "bonus_final": (live.get("fixture_summary") or {}).get(
                       "bonus_final")},
-        you=({"position": me.get("provisional_position"),
-              "gameweek_points": me.get("gw_points"),
-              "season_total": me.get("current"),
-              "players_yet_to_play": me.get("yet_to_play")} if me else None),
+        you={"position": me.get("provisional_position"),
+             "gameweek_points": me.get("gw_points"),
+             "season_total": me.get("current"),
+             "players_yet_to_play": me.get("yet_to_play")},
         closest_rival=closest,
         deciding_player=live.get("largest_swing"),
         table=[{"position": r.get("provisional_position"), "name": r.get("name"),
@@ -3164,14 +3209,7 @@ def get_gameweek_brief() -> dict[str, Any]:
             meta.get("projection_event") or meta.get("current_gw")),
         threats=top("threats"),
         differentials=top("differentials"),
-        where_to_look={
-            "the arithmetic behind any total": "get_live_scorecard",
-            "a rival's fifteen": "get_live_scorecard(entry_id=...)",
-            "this week's single action": "get_weekly_decision",
-            "ownership, shields and placing": "get_league_strategy",
-            "what moved since the last snapshot": "what_changed",
-            "how much to trust a projection": "get_calibration",
-        },
+        where_to_look=BRIEF_WHERE_TO_LOOK,
         limitations=[
             "Positions are provisional while any fixture is unfinished, and this "
             "is an orientation, not a recommendation.",

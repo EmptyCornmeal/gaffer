@@ -7,7 +7,8 @@ name: Refresh Gaffer data
 # ~17:00 UTC keep projections/news current through the day and before the typical
 # Friday/Saturday deadlines. Trigger manually any time via "Run workflow".
 #
-# Publishing is gated: tests -> lint -> pipeline -> artifact contract -> commit.
+# Publishing is gated: lint -> pipeline -> artifact contract -> tests -> commit.
+# The tests run on the freshly generated artifacts, never the committed ones (W16).
 # A scheduled run that produces no publishable diff FAILS rather than reporting
 # success, because a valid run always advances `generated_at`.
 on:
@@ -133,6 +134,40 @@ jobs:
           echo "generated_at=${prev}" >> "$GITHUB_OUTPUT"
           echo "Last published generated_at: ${prev:-<none>}"
 
+      - name: Lint
+        run: python -m ruff check .
+
+      - name: Run pipeline
+        env:
+          # Only used when GAFFER_AI_NARRATION is on (see the env block above).
+          # Without either, the pipeline ships deterministic templates.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python -m gaffer.pipeline
+
+      - name: Validate artifact contract
+        id: contract
+        run: |
+          python -m gaffer.contract --data-dir data
+          echo "generated_at=$(jq -r '.generated_at' data/meta.json)" >> "$GITHUB_OUTPUT"
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      # W16 -- THE TESTS RUN ON THE ARTIFACTS THIS RUN IS ABOUT TO PUBLISH.
+      #
+      # They used to run before the pipeline, which meant ~90 of them were
+      # asserting on the artifacts the PREVIOUS run had committed. On
+      # 2026-09-12 the refresh at 13:51Z published a legitimate state -- the
+      # GW4 deadline had passed and nothing had kicked off -- that one MCP eval
+      # did not handle. Every later run then failed on that same stale file,
+      # before its own pipeline could replace it: 21+ consecutive failures and
+      # a dark site through a live gameweek, with nothing that could ever clear
+      # it on its own. A gate that reads the old data can never let the new
+      # data through.
+      #
+      # Tested here, after the pipeline and the contract, a failure still stops
+      # a bad publish -- but it is a failure about THIS run's output, and the
+      # next run starts from fresh data instead of inheriting the deadlock.
+      # tests/test_schedule.py holds this order in place.
+
       # TIER 1 -- BLOCKING. Correctness. A failure here means the artifacts
       # would be wrong, so nothing publishes.
       - name: Backend tests (blocking)
@@ -153,23 +188,6 @@ jobs:
         if: steps.advisory.outcome == 'failure'
         run: |
           echo "::warning title=Advisory checks failed::Interface ergonomics regressed. Publishing continued deliberately -- see the 'Interface ergonomics' step. Fix it before it reaches a hard cap."
-
-      - name: Lint
-        run: python -m ruff check .
-
-      - name: Run pipeline
-        env:
-          # Only used when GAFFER_AI_NARRATION is on (see the env block above).
-          # Without either, the pipeline ships deterministic templates.
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python -m gaffer.pipeline
-
-      - name: Validate artifact contract
-        id: contract
-        run: |
-          python -m gaffer.contract --data-dir data
-          echo "generated_at=$(jq -r '.generated_at' data/meta.json)" >> "$GITHUB_OUTPUT"
-          echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - name: Stage artifacts for the front-end
         run: |

@@ -578,6 +578,34 @@ def test_the_publish_gate_is_tiered_and_only_correctness_blocks():
                for s in steps), "an advisory failure must be surfaced"
 
 
+def test_the_tests_gate_the_data_this_run_made_not_the_data_it_inherited():
+    """W16. The regression guard for 2026-09-12/13.
+
+    ~90 blocking tests read `data/`. Run before the pipeline, they grade the
+    artifacts the PREVIOUS refresh committed, so a published state they do not
+    handle fails every later run before its own pipeline can replace it -- a
+    deadlock no amount of re-running clears. Run after the pipeline and the
+    contract, and before anything is committed, they grade what is about to be
+    published and nothing else.
+    """
+    steps = _load("refresh.yml")["jobs"]["refresh"]["steps"]
+    names = [s.get("name", "") for s in steps]
+
+    def at(prefix: str) -> int:
+        return next(i for i, n in enumerate(names) if n.startswith(prefix))
+
+    pipeline = at("Run pipeline")
+    contract = at("Validate artifact contract")
+    commit = at("Commit + push")
+    for tier in ("Backend tests", "Interface ergonomics",
+                 "Surface advisory failures"):
+        assert pipeline < at(tier), (
+            f"'{tier}' runs before the pipeline, so it is grading the last "
+            "run's committed artifacts and can lock the refresh out (W16)")
+        assert contract < at(tier) < commit, (
+            f"'{tier}' must sit between the contract and the commit")
+
+
 # --- the pull-request gate ---------------------------------------------------
 #
 # Before ci.yml existed, `deploy.yml` ran only on pushes to main and

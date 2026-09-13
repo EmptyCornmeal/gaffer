@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -81,6 +82,23 @@ ALERT_SCHEDULE_SILENT_MINUTES = 240
 # survivable because the watchdog rescues it, but a failing PIPELINE cannot be
 # rescued by dispatching more of it, so it needs a person.
 ALERT_NO_SUCCESS_MINUTES = 150
+
+# W16 -- the alert that said "this needs a person" did not say what for.
+#
+# On 2026-09-12/13 refresh.yml failed 21+ times on ONE test
+# (`test_mcp_evals.py::test_eval_case[gameweek-brief]`). This job alerted once
+# -- "has not SUCCEEDED for N hours" -- and then kept dispatching a forced run
+# every hour into the same red gate, each one another identical failure. The
+# failing test id was sitting in the run log the whole time.
+#
+# So a failing pipeline is now announced WITH what it is failing on, announced
+# again if that changes (a second, different fault is news), and dispatched
+# into on a slower clock. Not never: since W16 the tests grade the data each
+# run generates, so a failure tied to one gameweek state can clear on its own
+# when the state moves on, and a rare dispatch is how a stalled scheduler still
+# finds that out.
+FAILING_AFTER_CONSECUTIVE = 3
+FAILING_DISPATCH_COOLDOWN_MINUTES = 180
 
 
 def log(msg):
@@ -207,6 +225,95 @@ def consecutive_failures():
     return n
 
 
+def failure_reason_from_log(text):
+    """One line naming what a failed run failed on, from `gh run view --log-failed`.
+
+    A failing pytest id wins; otherwise the first `##[error]` that is not the
+    generic exit-code line; otherwise that line. None when nothing is legible.
+    """
+    tests, errors = [], []
+    for line in (text or "").splitlines():
+        body = line.split("\t")[-1]
+        hit = re.search(r"FAILED (tests/\S+)", body)
+        if hit:
+            tests.append(hit.group(1))
+        elif "##[error]" in body:
+            errors.append(body.split("##[error]", 1)[1].strip())
+    if tests:
+        unique = list(dict.fromkeys(tests))
+        more = f" (+{len(unique) - 1} more)" if len(unique) > 1 else ""
+        return f"test {unique[0]}{more}"
+    specific = [e for e in errors if not e.startswith("Process completed")]
+    chosen = (specific or errors or [None])[0]
+    return chosen[:200] if chosen else None
+
+
+def latest_failure_reason():
+    """What the newest completed, failed refresh run failed on, or None."""
+    proc = run(
+        "gh", "run", "list",
+        "--workflow=refresh.yml", "--limit", "20",
+        "--json", "databaseId,status,conclusion",
+    )
+    if proc.returncode != 0:
+        return None
+    try:
+        runs = json.loads(proc.stdout)
+    except ValueError:
+        return None
+    failed = next((r for r in runs if r.get("status") == "completed"
+                   and r.get("conclusion") == "failure"), None)
+    if not failed or failed.get("databaseId") is None:
+        return None
+    logs = run("gh", "run", "view", str(failed["databaseId"]), "--log-failed")
+    if logs.returncode != 0:
+        return None
+    return failure_reason_from_log(logs.stdout)
+
+
+def dispatch_cooldown_minutes(fails):
+    """A failing pipeline is dispatched into on a slower clock, never a stopped one."""
+    if fails is not None and fails >= FAILING_AFTER_CONSECUTIVE:
+        return FAILING_DISPATCH_COOLDOWN_MINUTES
+    return DISPATCH_COOLDOWN_MINUTES
+
+
+def publish_health(state, ok_age, fails, reason):
+    """Decide what to announce about publishing. Mutates ``state``; returns messages.
+
+    Pure apart from ``state`` so every branch is testable without gh or Discord.
+    """
+    out = []
+    if ok_age is None:
+        return out
+    if ok_age > ALERT_NO_SUCCESS_MINUTES:
+        why = f" Failing on: {reason}." if reason else ""
+        if not state.get("publish_alerted"):
+            hours = ("more than 12" if ok_age == float("inf")
+                     else f"{ok_age / 60.0:.1f}")
+            out.append(
+                f"Gaffer: refresh.yml has not SUCCEEDED for {hours} hours"
+                + (f" ({fails} consecutive failures)" if fails else "")
+                + f".{why} The site is serving stale artifacts and dispatching "
+                  "more runs will not fix it. This needs a person."
+            )
+            state["publish_alerted"] = True
+            state["publish_alert_reason"] = reason
+        elif reason and reason != state.get("publish_alert_reason"):
+            out.append(
+                f"Gaffer: refresh.yml is still failing, now on something else."
+                f" Failing on: {reason}."
+                + (f" ({fails} consecutive failures)" if fails else "")
+            )
+            state["publish_alert_reason"] = reason
+    elif state.get("publish_alerted"):
+        out.append("Gaffer: refresh.yml is publishing again. "
+                   "Stale-data alert cleared.")
+        state["publish_alerted"] = False
+        state["publish_alert_reason"] = None
+    return out
+
+
 def sync_checkout():
     """Fast-forward this tree to origin/main so the MCP reads what the site does.
 
@@ -249,14 +356,22 @@ def main():
     age = last_run_age_minutes()
     stalled = age is not None and age > STALE_RUN_MINUTES
 
+    # Read before the dispatch decision, which now depends on it.
+    ok_age = last_success_age_minutes()
+    fails = consecutive_failures()
+    reason = latest_failure_reason() if fails else None
+
     if stalled:
         last = state.get("last_dispatch")
         cooling = False
         if last:
             since = (now - datetime.fromisoformat(last)).total_seconds() / 60.0
-            cooling = since < DISPATCH_COOLDOWN_MINUTES
+            cooling = since < dispatch_cooldown_minutes(fails)
         if cooling:
-            log(f"scheduler stalled ({age:.0f}m) but within dispatch cooldown")
+            log(f"scheduler stalled ({age:.0f}m) but within dispatch cooldown"
+                + (f" (slowed: {fails} consecutive failures)"
+                   if dispatch_cooldown_minutes(fails) != DISPATCH_COOLDOWN_MINUTES
+                   else ""))
         else:
             proc = run("gh", "workflow", "run", "refresh.yml")
             if proc.returncode == 0:
@@ -295,29 +410,15 @@ def main():
     # Asked on every pass, stalled or not, because a failing pipeline and a
     # stalled scheduler are independent faults and the dangerous one is the
     # fault that dispatching more runs cannot fix.
-    ok_age = last_success_age_minutes()
-    fails = consecutive_failures()
     if ok_age is None:
         log("publish health: UNKNOWN (could not read run conclusions)")
     else:
         shown = "never in the last 50 runs" if ok_age == float("inf") else f"{ok_age:.0f}m ago"
         log(f"publish health: last SUCCESS {shown}"
-            + (f", {fails} consecutive failures" if fails else ""))
-        if ok_age > ALERT_NO_SUCCESS_MINUTES:
-            if not state.get("publish_alerted"):
-                hours = ("more than 12" if ok_age == float("inf")
-                         else f"{ok_age / 60.0:.1f}")
-                announce(
-                    f"Gaffer: refresh.yml has not SUCCEEDED for {hours} hours"
-                    + (f" ({fails} consecutive failures)" if fails else "")
-                    + ". The site is serving stale artifacts and dispatching "
-                      "more runs will not fix it. This needs a person."
-                )
-                state["publish_alerted"] = True
-        elif state.get("publish_alerted"):
-            announce("Gaffer: refresh.yml is publishing again. "
-                     "Stale-data alert cleared.")
-            state["publish_alerted"] = False
+            + (f", {fails} consecutive failures" if fails else "")
+            + (f", failing on {reason}" if reason else ""))
+    for msg in publish_health(state, ok_age, fails, reason):
+        announce(msg)
 
     # Sync after the dispatch decision: a run dispatched just now is still in
     # flight, so this pass collects the PREVIOUS one and the next wake-up
