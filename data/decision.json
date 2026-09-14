@@ -2,20 +2,20 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-09-14T03:58:49.495088+00:00",
+    "generated_for": "2026-09-14T05:27:40.587729+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-09-18T17:30:00+00:00",
-        "in_hours": 109.5,
+        "in_hours": 108.0,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 212,
@@ -24,29 +24,28 @@
           "price": 4.5
         },
         "direction": "fall",
-        "percent": -99.8,
+        "percent": -100.1,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-101.6",
+            "projected_percent": "-102.1",
             "likelihood": -5
           },
           {
             "offset": 1,
-            "projected_percent": "-103.7",
+            "projected_percent": "-104.8",
             "likelihood": -5
           },
           {
             "offset": 2,
-            "projected_percent": "-105.9",
+            "projected_percent": "-107.6",
             "likelihood": -5
           }
         ],
-        "certainty": "100% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": false,
         "owned": true,
-        "changes": "Hughes may move 0.1m before the deadline"
+        "changes": "Hughes sells for 0.1m less if you wait"
       },
       {
         "kind": "price_change_near",
@@ -58,21 +57,21 @@
           "price": 15.5
         },
         "direction": "rise",
-        "percent": 77.9,
+        "percent": 78.1,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "80.9",
+            "projected_percent": "81.5",
             "likelihood": 3
           },
           {
             "offset": 1,
-            "projected_percent": "84.7",
+            "projected_percent": "86.0",
             "likelihood": 3
           },
           {
             "offset": 2,
-            "projected_percent": "88.5",
+            "projected_percent": "90.5",
             "likelihood": 3
           }
         ],
@@ -145,16 +144,16 @@
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
     "verdict": "nothing to wait on",
     "reason": "this week's answer is not a transfer, so there is no purchase whose timing matters",
-    "hours_to_deadline": 109.5,
+    "hours_to_deadline": 108.0,
     "edge_points": -1.33,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.0,
-    "detail": [],
-    "pending_price_changes": 0,
-    "near_price_changes": 2,
-    "near_at_risk_if_you_wait": [
-      "Hughes"
+    "money_cost_of_waiting_m": 0.1,
+    "detail": [
+      "Hughes is due to fall and you own him: his selling price drops 0.1m while you wait"
     ],
+    "pending_price_changes": 1,
+    "near_price_changes": 1,
+    "near_at_risk_if_you_wait": [],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
   },
@@ -226,7 +225,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-09-14T03:58:20+00:00",
+  "generated_at": "2026-09-14T05:27:14+00:00",
   "gameweek": 5,
   "horizon": 6,
   "squad_state": {
@@ -593,7 +592,7 @@
         "next_gw_xp": 5.25,
         "confidence": 0.92,
         "horizon_xp": 27.68,
-        "owned_by": 39.8,
+        "owned_by": 39.9,
         "rationale": "Nailed keeper with strong clean-sheet odds, in form (7.2) and a soft fixture run.",
         "tags": [
           {
@@ -2712,7 +2711,7 @@
           "next_gw_xp": 5.25,
           "confidence": 0.92,
           "horizon_xp": 27.68,
-          "owned_by": 39.8,
+          "owned_by": 39.9,
           "rationale": "Nailed keeper with strong clean-sheet odds, in form (7.2) and a soft fixture run.",
           "tags": [
             {
@@ -4107,8 +4106,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-09-14T03:58:20+00:00",
-    "squad_retrieved_at": "2026-09-14T03:58:41+00:00",
+    "generated_at": "2026-09-14T05:27:14+00:00",
+    "squad_retrieved_at": "2026-09-14T05:27:31+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
