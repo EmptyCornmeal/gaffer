@@ -1,12 +1,12 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-09-19T14:06:19+00:00",
+  "generated_at": "2026-09-19T15:37:09+00:00",
   "result": {
-    "considered": 1,
-    "new": 1,
+    "considered": 2,
+    "new": 2,
     "duplicates": 0,
     "suppressed": 0,
-    "delivered": 1,
+    "delivered": 2,
     "failed": 0,
     "dry_run": true,
     "alerts": [
@@ -18,7 +18,18 @@
         "event": 6,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:82ca7852bd42",
-        "created_at": "2026-09-19T14:06:35+00:00",
+        "created_at": "2026-09-19T15:37:32+00:00",
+        "state": "dry_run"
+      },
+      {
+        "kind": "league_swing",
+        "title": "A rival's differential is hurting you",
+        "body": "Groß: -14 points against your closest rival.",
+        "severity": "info",
+        "event": 6,
+        "deep_link": "#/live",
+        "dedupe_key": "league_swing:7d694e9eb7c8",
+        "created_at": "2026-09-19T15:37:32+00:00",
         "state": "dry_run"
       }
     ],
@@ -41,7 +52,7 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 1
+      "dry_run": 2
     },
     "recent": [
       {
@@ -49,7 +60,16 @@
         "severity": "important",
         "title": "João Pedro is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-09-19T14:06:35+00:00",
+        "created_at": "2026-09-19T15:37:32+00:00",
+        "state": "dry_run",
+        "event": 6
+      },
+      {
+        "kind": "league_swing",
+        "severity": "info",
+        "title": "A rival's differential is hurting you",
+        "deep_link": "#/live",
+        "created_at": "2026-09-19T15:37:32+00:00",
         "state": "dry_run",
         "event": 6
       }
