@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-09-25T19:02:16+00:00",
+  "generated_at": "2026-09-25T21:42:57+00:00",
   "gameweek": 6,
   "gameweeks_remaining": 33,
   "simulation": {
@@ -692,8 +692,8 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first_after_gw": 0.002,
-        "p_target_after_gw": 0.388,
+        "p_first_after_gw": 0.0015,
+        "p_target_after_gw": 0.3875,
         "target_position": 3,
         "expected_position_after_gw": 4.15,
         "domain": {
@@ -1081,28 +1081,12 @@
           "entry_id": 5876996,
           "name": "Oliver Woodward",
           "points_gap": 28.0,
-          "difference_mean": 27.98,
-          "difference_std": 11.25,
-          "p_above_after_gw": 0.993,
+          "difference_mean": 28.0,
+          "difference_std": 11.31,
+          "p_above_after_gw": 0.9925,
           "p_above_ci95": [
-            0.9883,
-            0.9958
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 1444956,
-          "name": "Archie Anderson",
-          "points_gap": -30.0,
-          "difference_mean": -28.14,
-          "difference_std": 11.42,
-          "p_above_after_gw": 0.0105,
-          "p_above_ci95": [
-            0.0069,
-            0.016
+            0.9877,
+            0.9954
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1123,6 +1107,22 @@
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
           "squad_overlap": 2,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 1444956,
+          "name": "Archie Anderson",
+          "points_gap": -30.0,
+          "difference_mean": -28.19,
+          "difference_std": 11.42,
+          "p_above_after_gw": 0.0085,
+          "p_above_ci95": [
+            0.0053,
+            0.0136
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 5,
           "squad_inferred": false
         },
         {
@@ -1359,16 +1359,16 @@
         {
           "player_id": 453,
           "leverage_points": 1.172,
-          "leverage_spread_across_rivals": 0.21,
+          "leverage_spread_across_rivals": 0.208,
           "correlation_with_gap": 0.301,
           "own_std": 3.891,
           "captained": false
         },
         {
           "player_id": 68,
-          "leverage_points": 0.575,
-          "leverage_spread_across_rivals": 0.095,
-          "correlation_with_gap": 0.206,
+          "leverage_points": 0.573,
+          "leverage_spread_across_rivals": 0.094,
+          "correlation_with_gap": 0.205,
           "own_std": 2.796,
           "captained": false
         }
@@ -1386,7 +1386,7 @@
       "expected_points": 53.554,
       "p_target": {
         "271619": 0.4145,
-        "733241": 0.446
+        "733241": 0.447
       }
     },
     {
@@ -1395,7 +1395,7 @@
       "expected_points": 52.917,
       "p_target": {
         "271619": 0.39,
-        "733241": 0.4215
+        "733241": 0.422
       }
     },
     {
@@ -1404,7 +1404,7 @@
       "expected_points": 52.319,
       "p_target": {
         "271619": 0.3795,
-        "733241": 0.4105
+        "733241": 0.411
       }
     },
     {
@@ -1413,7 +1413,7 @@
       "expected_points": 52.097,
       "p_target": {
         "271619": 0.358,
-        "733241": 0.3855
+        "733241": 0.3845
       }
     }
   ],
@@ -1427,7 +1427,7 @@
         "expected_points": 53.554,
         "p_target": {
           "271619": 0.4145,
-          "733241": 0.446
+          "733241": 0.447
         }
       }
     ],
