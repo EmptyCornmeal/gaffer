@@ -23,6 +23,10 @@ EVALS = json.loads(
     (Path(__file__).parent / "mcp_evals.json").read_text(encoding="utf-8"))
 CASES = EVALS["cases"]
 
+# W17: this module grades the MCP server, a consumer of the artifacts. It runs
+# on every refresh and is reported, but never blocks the data publish.
+pytestmark = pytest.mark.mcp_surface
+
 #: Arguments a client would plausibly send for each tool in a case.
 ARGS: dict[str, dict[str, Any]] = {
     "find_players": {"query": "a", "limit": 5},

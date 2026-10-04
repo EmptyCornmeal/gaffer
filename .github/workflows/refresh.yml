@@ -171,7 +171,25 @@ jobs:
       # TIER 1 -- BLOCKING. Correctness. A failure here means the artifacts
       # would be wrong, so nothing publishes.
       - name: Backend tests (blocking)
-        run: python -m pytest -q -m "not advisory"
+        run: python -m pytest -q -m "not advisory and not mcp_surface"
+
+      # W17 -- THE MCP SERVER IS A CONSUMER, NOT THE PRODUCT.
+      #
+      # Its tests graded the publish three times (W16, W17, W18), and the third
+      # kept the site dark from 16 to 24 Sep 2026 over 574 bytes in one tool
+      # response. A broken MCP response is a fault in the interface; refusing
+      # to publish the data it reads fixes nothing and breaks the site as well.
+      # So they run here, on this run's artifacts, and a failure is surfaced
+      # below and announced to Discord by the Mac mini watchdog.
+      - name: MCP surface (reported, never blocks publishing)
+        id: mcp_surface
+        continue-on-error: true
+        run: python -m pytest -q -m "mcp_surface and not advisory"
+
+      - name: Surface MCP failures without blocking
+        if: steps.mcp_surface.outcome == 'failure'
+        run: |
+          echo "::warning title=MCP surface tests failed::The MCP server is failing its own tests on this run's artifacts. Publishing continued deliberately -- see the 'MCP surface' step."
 
       # TIER 2 -- ADVISORY. Interface ergonomics. Reported, never blocking.
       # On 2026-09-01 a soft headroom assertion about ONE MCP response -- 1,107

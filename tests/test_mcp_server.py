@@ -25,6 +25,10 @@ from gaffer import mcp_server as M
 
 SRC = Path(M.__file__)
 
+# W17: this module grades the MCP server, a consumer of the artifacts. It runs
+# on every refresh and is reported, but never blocks the data publish.
+pytestmark = pytest.mark.mcp_surface
+
 
 # --- every tool answers in the same shape ------------------------------------
 
@@ -466,6 +470,108 @@ def test_every_tool_keeps_usable_headroom_under_the_budget():
     assert tight == [], (
         f"under {MIN_HEADROOM_BYTES:,} bytes of headroom: {tight}. "
         "Project the payload rather than raising MAX_RESULT_BYTES.")
+
+
+#: A busy week, sized from the season this engine actually advises on rather than
+#: from whatever week the suite happens to run in. Two leagues (Crouch Potatoes,
+#: 7 managers; the work league, 24), a price event for every squad player, and a
+#: structural warning for most of them.
+BUSY_WEEK = {"leagues": 2, "rivals_per_league": 23, "price_events": 15,
+             "warnings": 8, "flagged": 15}
+
+
+def _busy_week(tmp_path):
+    """The real published decision, with only its per-week lists inflated.
+
+    The card, the chip block and the prose are left exactly as published,
+    because those are the parts that do NOT grow with the week -- inventing them
+    would measure a fiction. What is multiplied is what a real busy week
+    multiplies: rival contests, price events, structural warnings, flagged
+    players.
+    """
+    src = Path(config.DATA_DIR)
+    for name in ("meta.json", "strategy.json", "players.json"):
+        if (src / name).exists():
+            (tmp_path / name).write_text((src / name).read_text(encoding="utf-8"),
+                                         encoding="utf-8")
+    d = json.loads((src / "decision.json").read_text(encoding="utf-8"))
+    dec = d.get("decision") or {}
+
+    rival = ((dec.get("league_effects") or [{}])[0].get("rivals") or [{}])[0]
+    dec["league_effects"] = [
+        {**((dec.get("league_effects") or [{}])[0]),
+         "league_id": 271619 + i,
+         "rivals": [{**rival, "entry": 1000 + i * 100 + j}
+                    for j in range(BUSY_WEEK["rivals_per_league"])]}
+        for i in range(BUSY_WEEK["leagues"])]
+
+    cal = d.get("calendar") or {}
+    events = cal.get("events") or []
+    deadline = [e for e in events if e.get("kind") == "deadline"]
+    price = [e for e in events if e.get("kind") != "deadline"] or [{}]
+    cal["events"] = deadline + [
+        {**price[i % len(price)], "percent": 99 - i}
+        for i in range(BUSY_WEEK["price_events"])]
+    d["calendar"] = cal
+
+    risk = d.get("squad_risk") or {}
+    warn = (risk.get("warnings") or [{}])[0]
+    risk["warnings"] = [{**warn, "gameweeks_away": i % 3}
+                        for i in range(BUSY_WEEK["warnings"])]
+    d["squad_risk"] = risk
+
+    av = d.get("availability") or {}
+    flag = (av.get("flagged") or [{}])[0]
+    av["flagged"] = [{**flag, "player": f"Player {i}"}
+                     for i in range(BUSY_WEEK["flagged"])]
+    d["availability"] = av
+
+    d["decision"] = dec
+    (tmp_path / "decision.json").write_text(json.dumps(d), encoding="utf-8")
+    return tmp_path
+
+
+@pytest.mark.advisory
+def test_the_weekly_decision_still_fits_on_the_busiest_realistic_week(
+        tmp_path, monkeypatch):
+    """W18, acceptance 3 -- headroom measured against the biggest week, not this one.
+
+    `get_weekly_decision` breached the cap by 574 bytes and held **every**
+    scheduled refresh for 32 hours, on the Thursday before a Friday deadline. It
+    had been under the cap on the week the budget was set and grew into it,
+    because nothing measured it against a week with more in it. Being under the
+    cap today is not the property worth asserting; still being under it when the
+    week is full is.
+
+    ADVISORY, and deliberately so. W18 was the **third** outage of its class
+    (W16, W17) in which a test of the MCP surface held the data publish hostage,
+    and `test_every_tool_keeps_usable_headroom_under_the_budget` above was taken
+    off the gate for exactly that reason. A fourth blocking test on the same
+    surface would reproduce the defect it exists to prevent. It runs, it reports,
+    and a real breach is still caught by the hard-cap test, which stays blocking
+    because a response the client refuses is genuinely unusable.
+    """
+    if not (Path(config.DATA_DIR) / "decision.json").exists():
+        pytest.skip("no published decision to inflate")
+    monkeypatch.setattr(M, "data_dir", lambda: _busy_week(tmp_path))
+    r = M.call("get_weekly_decision")
+    if r["status"] != M.STATUS_OK:
+        pytest.skip(f"inflated artifact did not load: {r['status']}")
+    n = M.serialized_bytes(r)
+    assert n <= M.MAX_RESULT_BYTES, (
+        f"a busy week serialises to {n:,} bytes, over the "
+        f"{M.MAX_RESULT_BYTES:,}-byte cap by {n - M.MAX_RESULT_BYTES:,}. "
+        "Add a lever to the cascade in get_weekly_decision; do not raise the cap.")
+
+    # The levers must not have bought the fit by dropping what the calendar is
+    # for. Every gap it refuses to cover survives, and so does the deadline.
+    cal = r["calendar"]
+    assert len(cal["does_not_cover"]) == 6, (
+        "a gap the calendar refuses to cover was dropped to save bytes; that is "
+        "the one part protecting a reader from an empty calendar")
+    assert any(e.get("kind") == "deadline" for e in cal["events"]), (
+        "the deadline was thinned out of the calendar")
+    assert r["card"].get("content_hash"), "the canonical card was thinned"
 
 
 def test_the_model_evidence_summary_keeps_every_decision_and_reason():

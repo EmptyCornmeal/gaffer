@@ -495,6 +495,94 @@ def _thin_calendar(cal: Any) -> Any:
     return out
 
 
+def _thin_calendar_prose(cal: Any) -> Any:
+    """The calendar's static prose, reduced to what it actually tells a reader.
+
+    W18 -- `get_weekly_decision` breached the 20,000-byte cap by 574 bytes and
+    held every scheduled refresh hostage for 32 hours, on the Thursday before a
+    Friday deadline. `calendar` was the largest block in the response at 4,408
+    bytes and was the only large block with no lever on it at all.
+
+    Three things go, and none of them is information:
+
+    * `does_not_cover[].why` -- **every item is kept**, because the list is what
+      stops an empty calendar being read as "the coast is clear". Only the prose
+      explaining *why* each gap exists goes, and the site reads `decision.json`
+      rather than this response, so its own rendering is untouched. It already
+      shows `what` alone (`Calendar.svelte`).
+    * `european_coverage` -- which European feeds 404'd is build diagnostics. The
+      reader is already told European fixtures are not covered, by name, in
+      `does_not_cover`.
+    * a price event's `certainty` -- it restates `percent`, which sits beside it
+      in the same object. Two statements of one number is the Cardinality
+      violation the chip lever above exists to close.
+
+    Nothing here scales with the week, so this lever is cheap every week and
+    free of information loss. It runs before anything that drops a row.
+    """
+    if not isinstance(cal, dict):
+        return cal
+    out = dict(cal)
+    dnc = cal.get("does_not_cover")
+    if isinstance(dnc, list) and any(isinstance(x, dict) and x.get("why")
+                                     for x in dnc):
+        out["does_not_cover"] = [
+            {"what": x.get("what")} if isinstance(x, dict) else x for x in dnc]
+        out["does_not_cover_thinned"] = (
+            f"all {len(dnc)} gap(s) kept; the `why` prose behind each one is in "
+            "decision.json")
+    if cal.get("european_coverage") is not None:
+        out["european_coverage"] = (
+            "not available for this season; see `does_not_cover`. "
+            "decision.json carries which feeds were tried")
+    events = out.get("events")
+    if isinstance(events, list):
+        out["events"] = [
+            {k: v for k, v in e.items()
+             if not (k == "certainty" and e.get("percent") is not None)}
+            if isinstance(e, dict) else e
+            for e in events]
+    return out
+
+
+#: A calendar event that must survive every lever. The deadline is the one thing
+#: the calendar exists to state; a response that trimmed it to fit would answer
+#: "what is still to come?" by omitting the only certainty in the week.
+CALENDAR_ALWAYS_KEPT = ("deadline",)
+
+
+def _thin_calendar_events(cal: Any, keep: int) -> Any:
+    """The nearest `keep` price events, plus the deadline, always.
+
+    W18, acceptance 3 -- the levers above do not grow with the week, and this
+    one does, so it is what gives the response headroom on a busy week rather
+    than on the week the budget was set. Price events are dropped **furthest
+    from locking first** (`percent` ascending), so what goes is what is least
+    likely to actually move before the deadline. An event list that has been cut
+    always says so, because a silently truncated calendar is the failure
+    `does_not_cover` exists to prevent.
+    """
+    if not isinstance(cal, dict):
+        return cal
+    events = cal.get("events")
+    if not isinstance(events, list):
+        return cal
+    pinned = [e for e in events
+              if isinstance(e, dict) and e.get("kind") in CALENDAR_ALWAYS_KEPT]
+    rest = [e for e in events if e not in pinned]
+    if len(rest) <= keep:
+        return cal
+    kept = sorted(rest, key=lambda e: -(e.get("percent") or 0)
+                  if isinstance(e, dict) else 0)[:keep]
+    out = dict(cal)
+    out["events"] = pinned + [e for e in rest if e in kept]
+    out["events_thinned"] = (
+        f"the {len(kept)} of {len(rest)} nearest to locking, ordered by how far "
+        "through FPL's own threshold they are, plus the deadline; "
+        "decision.json carries every event")
+    return out
+
+
 def _payload(row: Any) -> dict[str, Any] | None:
     """The stored payload, which the snapshot store writes as a JSON STRING.
 
@@ -792,6 +880,13 @@ def get_weekly_decision() -> dict[str, Any]:
     # spent the new capability to save a fraction of that.
     if serialized_bytes(out) > budget:
         out["chip"] = _chips_pointer(d.get("chip"))
+    # Then the calendar's static prose. This comes before anything that drops a
+    # ROW, because it drops no information at all -- the `why` behind each gap,
+    # which European feeds 404'd, and a `certainty` string that restates the
+    # `percent` beside it. W18: `calendar` was 4,408 bytes, the largest block in
+    # the response, and the only large one with no lever on it.
+    if serialized_bytes(out) > budget:
+        out["calendar"] = _thin_calendar_prose(out.get("calendar"))
     # Only then the rival rows, ordered by the change in P(ahead of him), so
     # what goes is what this move affects least.
     rows = 3
@@ -832,6 +927,19 @@ def get_weekly_decision() -> dict[str, Any]:
                     "response budget; the reading above summarises them and "
                     "decision.json carries each one"),
             }
+    # Last, and graded: the price events, furthest from locking first. This is
+    # the only lever here that scales with the week, which is why it is the one
+    # that has to still have room on a busy week (W18 acceptance 3). The
+    # deadline is never dropped.
+    # Each pass thins the SAME starting calendar rather than the one the last
+    # pass produced, so "the 2 of 5 nearest" counts against what the week really
+    # had. Re-thinning an already-thinned list reports a shrinking total and
+    # quietly tells the reader the week was quieter than it was.
+    base_cal = out.get("calendar")
+    price_rows = 4
+    while serialized_bytes(out) > budget and price_rows > 0:
+        price_rows -= 1
+        out["calendar"] = _thin_calendar_events(base_cal, price_rows)
     return out
 
 

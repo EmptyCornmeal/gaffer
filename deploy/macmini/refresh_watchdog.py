@@ -317,13 +317,18 @@ def publish_health(state, ok_age, fails, reason):
 def sync_checkout():
     """Fast-forward this tree to origin/main so the MCP reads what the site does.
 
-    Refuses to touch a dirty or diverged tree -- unpushed work here has been
-    stranded before, and quietly rebasing it under a cron is how you lose it.
-    """
-    dirty = run("git", "status", "--porcelain").stdout.strip()
-    if dirty:
-        return f"dirty: {len(dirty.splitlines())} uncommitted path(s), not syncing"
+    Never rebases and never touches a diverged tree -- unpushed work here has
+    been stranded before, and quietly rewriting it under a cron is how you lose
+    it.
 
+    A DIRTY tree is fast-forwarded anyway. It used to be refused outright, and
+    from 2026-09-16 to 2026-10-04 that froze the MCP for eighteen days: two
+    uncommitted source files sat here waiting for a commit, every refresh
+    commit touched only `data/`, and this function logged "dirty, not syncing"
+    1,371 times while the site stayed current. `git merge --ff-only` already
+    draws the line that matters -- it refuses, and changes nothing, only when
+    an incoming commit would overwrite an uncommitted path.
+    """
     ahead = run("git", "rev-list", "--count", "origin/main..HEAD").stdout.strip()
     if ahead not in ("", "0"):
         return f"diverged: {ahead} local commit(s) not on origin/main, not syncing"
@@ -332,13 +337,113 @@ def sync_checkout():
     if behind in ("", "0"):
         return "already current"
 
+    dirty = len(run("git", "status", "--porcelain").stdout.strip().splitlines())
     proc = run("git", "merge", "--ff-only", "origin/main")
     if proc.returncode != 0:
+        if dirty:
+            return (f"dirty: {dirty} uncommitted path(s) collide with "
+                    f"origin/main, {behind} commit(s) behind, not syncing")
         return f"ff-only merge failed: {proc.stderr.strip()[:200]}"
-    return f"pulled {behind} commit(s)"
+    return (f"pulled {behind} commit(s)"
+            + (f" past {dirty} uncommitted path(s)" if dirty else ""))
 
 
 BAD_SYNC = ("dirty", "diverged", "ff-only")
+# The one sync alert of 2026-09-17 scrolled away and nothing spoke again for
+# eighteen days. An unresolved fault that needs a person is repeated daily.
+SYNC_REALERT_HOURS = 24
+
+
+def sync_health(state, result, now):
+    """Decide what to announce about the checkout. Mutates ``state``."""
+    out = []
+    if result.startswith(BAD_SYNC):
+        since = state.setdefault("sync_bad_since", now.isoformat(timespec="seconds"))
+        last = state.get("sync_alerted_at")
+        due = (not state.get("sync_alerted") or not last
+               or (now - datetime.fromisoformat(last)).total_seconds()
+               >= SYNC_REALERT_HOURS * 3600)
+        if due:
+            hours = (now - datetime.fromisoformat(since)).total_seconds() / 3600.0
+            out.append(
+                f"Gaffer: the Mac mini checkout is not tracking origin/main "
+                f"({result}). The MCP has been serving stale artifacts for "
+                f"{hours:.0f} hours and will until this is resolved."
+            )
+            state["sync_alerted"] = True
+            state["sync_alerted_at"] = now.isoformat(timespec="seconds")
+    else:
+        if state.get("sync_alerted"):
+            out.append("Gaffer: the Mac mini checkout is tracking origin/main "
+                       "again. The MCP is serving current artifacts.")
+        state["sync_alerted"] = False
+        state.pop("sync_bad_since", None)
+        state.pop("sync_alerted_at", None)
+    return out
+
+
+def nonblocking_failures_from_jobs(payload):
+    """Names of the non-blocking tiers that failed in one run, or None.
+
+    refresh.yml runs each non-blocking tier with `continue-on-error` and
+    follows it with a `Surface ...` step conditioned on that failure, so the
+    surfacing step having RUN is the signal. None means the run never reached
+    the pipeline -- a gate no-op -- and says nothing either way.
+    """
+    steps = [s for job in (payload or {}).get("jobs", [])
+             for s in job.get("steps", [])]
+    if not any(s.get("name") == "Run pipeline" and s.get("conclusion") == "success"
+               for s in steps):
+        return None
+    return sorted(s.get("name", "") for s in steps
+                  if s.get("name", "").startswith("Surface ")
+                  and s.get("conclusion") == "success")
+
+
+def latest_nonblocking_failures():
+    """What the newest run that actually published is failing quietly on."""
+    proc = run(
+        "gh", "run", "list",
+        "--workflow=refresh.yml", "--limit", "30",
+        "--json", "databaseId,status,conclusion",
+    )
+    if proc.returncode != 0:
+        return None
+    try:
+        runs = json.loads(proc.stdout)
+    except ValueError:
+        return None
+    ok = [r for r in runs if r.get("conclusion") == "success"]
+    for r in ok[:6]:
+        view = run("gh", "run", "view", str(r["databaseId"]), "--json", "jobs")
+        if view.returncode != 0:
+            return None
+        try:
+            names = nonblocking_failures_from_jobs(json.loads(view.stdout))
+        except ValueError:
+            return None
+        if names is not None:
+            return names
+    return None
+
+
+def nonblocking_health(state, names):
+    """Announce a tier that fails without blocking. Mutates ``state``.
+
+    Taking a test off the publish gate must not make it silent: a warning
+    annotation on a green run is read by nobody.
+    """
+    if names is None:
+        return []
+    before = state.get("nonblocking_failing") or []
+    state["nonblocking_failing"] = names
+    if names and names != before:
+        return ["Gaffer: refresh.yml is publishing, but a non-blocking check is "
+                "failing: " + "; ".join(names) + ". The site's data is current. "
+                "The interface that check covers is not healthy."]
+    if before and not names:
+        return ["Gaffer: the non-blocking checks in refresh.yml are passing again."]
+    return []
 
 
 def main():
@@ -425,16 +530,14 @@ def main():
     # collects today's.
     result = sync_checkout()
     log(f"checkout: {result}")
-    if result.startswith(BAD_SYNC):
-        if not state.get("sync_alerted"):
-            announce(
-                f"Gaffer: the Mac mini checkout is not tracking origin/main "
-                f"({result}). The MCP will serve stale artifacts until this is "
-                f"resolved."
-            )
-            state["sync_alerted"] = True
-    else:
-        state["sync_alerted"] = False
+    for msg in sync_health(state, result, now):
+        announce(msg)
+
+    quiet = latest_nonblocking_failures()
+    if quiet:
+        log("non-blocking checks failing: " + "; ".join(quiet))
+    for msg in nonblocking_health(state, quiet):
+        announce(msg)
 
     state["last_check"] = now.isoformat(timespec="seconds")
     save_state(state)

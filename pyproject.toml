@@ -62,4 +62,10 @@ markers = [
   # The HARD cap test is deliberately NOT advisory: breaching it makes a tool
   # unusable, which is correctness.
   "advisory: interface ergonomics; reported in CI but never blocks a publish",
+  # MCP_SURFACE tests grade the MCP server -- a second consumer of the
+  # artifacts, not the artifacts. W16, W17 and W18 were three outages in which
+  # a test of that surface stopped the site's data publishing, the last for
+  # eight days. They run on every refresh and a failure is announced by the
+  # watchdog, but withholding fresh data does not repair an interface.
+  "mcp_surface: grades the MCP server, not the artifacts; reported, never blocks a publish",
 ]

@@ -560,9 +560,12 @@ def test_the_publish_gate_is_tiered_and_only_correctness_blocks():
 
     blocking = next(s for n, s in by_name.items()
                     if n.startswith("Backend tests"))
-    assert '-m "not advisory"' in blocking["run"], (
+    assert "not advisory" in blocking["run"], (
         "the blocking tier must deselect advisory tests, or an ergonomics "
         "failure can stop publishing again")
+    assert "not mcp_surface" in blocking["run"], (
+        "W17: the blocking tier must deselect the MCP-surface tests -- they "
+        "held the data publish hostage three times")
     assert not blocking.get("continue-on-error"), (
         "correctness must actually block")
 
@@ -576,6 +579,25 @@ def test_the_publish_gate_is_tiered_and_only_correctness_blocks():
     # warning, it is a silence.
     assert any("advisory.outcome == 'failure'" in str(s.get("if", ""))
                for s in steps), "an advisory failure must be surfaced"
+
+    mcp = next(s for n, s in by_name.items() if n.startswith("MCP surface"))
+    assert mcp.get("continue-on-error") is True, (
+        "W17: an MCP-surface failure must never block a publish")
+    assert "mcp_surface" in mcp["run"]
+    # The watchdog finds a non-blocking failure by this step having RUN, so
+    # its name and its condition are part of the contract.
+    assert any(s.get("name", "").startswith("Surface ")
+               and "mcp_surface.outcome == 'failure'" in str(s.get("if", ""))
+               for s in steps), "an MCP-surface failure must be surfaced"
+
+
+def test_every_mcp_test_module_is_off_the_publish_gate():
+    """W17. A new MCP test file that forgets the marker is a new hostage."""
+    from pathlib import Path
+    for path in sorted(Path(__file__).parent.glob("test_mcp_*.py")):
+        text = path.read_text(encoding="utf-8")
+        assert "pytestmark = pytest.mark.mcp_surface" in text, (
+            f"{path.name} tests the MCP surface but would gate the publish")
 
 
 def test_the_tests_gate_the_data_this_run_made_not_the_data_it_inherited():

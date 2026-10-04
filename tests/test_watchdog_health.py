@@ -160,3 +160,82 @@ def test_a_healthy_pipeline_announces_nothing():
     wd = _load()
     assert wd.publish_health({}, 5.0, 0, None) == []
     assert wd.publish_health({}, None, None, None) == []
+
+
+# --- 2026-10-04: eighteen days of "dirty, not syncing" -----------------------
+
+def _git(answers):
+    def fake(*args, cwd=None):
+        for key, out in answers.items():
+            if key in args:
+                return out if isinstance(out, _Proc) else _Proc(out)
+        return _Proc("")
+    return fake
+
+
+class _Fail(_Proc):
+    def __init__(self, err):
+        super().__init__("")
+        self.returncode, self.stderr = 1, err
+
+
+def test_a_dirty_tree_is_still_fast_forwarded(monkeypatch):
+    wd = _load()
+    monkeypatch.setattr(wd, "run", _git({
+        "origin/main..HEAD": "0", "HEAD..origin/main": "152",
+        "--porcelain": " M src/gaffer/mcp_server.py\n M tests/test_mcp_server.py",
+        "--ff-only": "",
+    }))
+    result = wd.sync_checkout()
+    assert result.startswith("pulled 152"), result
+    assert not result.startswith(wd.BAD_SYNC)
+
+
+def test_a_colliding_dirty_tree_is_reported_not_forced(monkeypatch):
+    wd = _load()
+    monkeypatch.setattr(wd, "run", _git({
+        "origin/main..HEAD": "0", "HEAD..origin/main": "3",
+        "--porcelain": " M data/meta.json",
+        "--ff-only": _Fail("error: Your local changes would be overwritten"),
+    }))
+    assert wd.sync_checkout().startswith("dirty")
+
+
+def test_an_unresolved_sync_fault_is_repeated_daily_not_said_once():
+    from datetime import UTC, datetime, timedelta
+    wd = _load()
+    t0 = datetime(2026, 9, 17, 8, 0, tzinfo=UTC)
+    state = {}
+    assert len(wd.sync_health(state, "diverged: 1 local commit(s)", t0)) == 1
+    assert wd.sync_health(state, "diverged: 1 local commit(s)",
+                          t0 + timedelta(hours=1)) == []
+    again = wd.sync_health(state, "diverged: 1 local commit(s)",
+                           t0 + timedelta(hours=25))
+    assert len(again) == 1 and "25 hours" in again[0]
+    cleared = wd.sync_health(state, "pulled 4 commit(s)", t0 + timedelta(hours=26))
+    assert len(cleared) == 1 and "again" in cleared[0]
+    assert wd.sync_health(state, "already current", t0 + timedelta(hours=27)) == []
+
+
+def test_a_non_blocking_failure_is_announced_not_buried_in_a_green_run():
+    wd = _load()
+    ran = {"name": "Run pipeline", "conclusion": "success"}
+    surfaced = {"name": "Surface MCP failures without blocking",
+                "conclusion": "success"}
+    skipped = {"name": "Surface MCP failures without blocking",
+               "conclusion": "skipped"}
+
+    def jobs(*steps):
+        return {"jobs": [{"steps": list(steps)}]}
+
+    assert wd.nonblocking_failures_from_jobs(jobs(skipped)) is None, (
+        "a gate no-op never reached the tests and proves nothing")
+    assert wd.nonblocking_failures_from_jobs(jobs(ran, skipped)) == []
+    names = wd.nonblocking_failures_from_jobs(jobs(ran, surfaced))
+    assert names == ["Surface MCP failures without blocking"]
+
+    state = {}
+    assert len(wd.nonblocking_health(state, names)) == 1
+    assert wd.nonblocking_health(state, names) == [], "said once per fault"
+    assert wd.nonblocking_health(state, None) == [], "unknown clears nothing"
+    assert len(wd.nonblocking_health(state, [])) == 1
