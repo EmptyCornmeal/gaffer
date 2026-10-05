@@ -1,15 +1,26 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-10-05T07:07:00+00:00",
+  "generated_at": "2026-10-05T10:48:45+00:00",
   "result": {
-    "considered": 3,
-    "new": 3,
+    "considered": 4,
+    "new": 4,
     "duplicates": 0,
     "suppressed": 0,
-    "delivered": 3,
+    "delivered": 4,
     "failed": 0,
     "dry_run": true,
     "alerts": [
+      {
+        "kind": "availability",
+        "title": "Konsa is flagged",
+        "body": "Unspecified injury - 75% chance of playing (75% chance to play)",
+        "severity": "important",
+        "event": 6,
+        "deep_link": "#/my-team",
+        "dedupe_key": "availability:82a50689f350",
+        "created_at": "2026-10-05T10:50:32+00:00",
+        "state": "dry_run"
+      },
       {
         "kind": "availability",
         "title": "João Pedro is flagged",
@@ -18,7 +29,7 @@
         "event": 6,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:82ca7852bd42",
-        "created_at": "2026-10-05T07:07:34+00:00",
+        "created_at": "2026-10-05T10:50:32+00:00",
         "state": "dry_run"
       },
       {
@@ -29,7 +40,7 @@
         "event": 6,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:be4be4957b0f",
-        "created_at": "2026-10-05T07:07:34+00:00",
+        "created_at": "2026-10-05T10:50:32+00:00",
         "state": "dry_run"
       },
       {
@@ -40,7 +51,7 @@
         "event": 6,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:7d694e9eb7c8",
-        "created_at": "2026-10-05T07:07:34+00:00",
+        "created_at": "2026-10-05T10:50:32+00:00",
         "state": "dry_run"
       }
     ],
@@ -63,15 +74,24 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 3
+      "dry_run": 4
     },
     "recent": [
       {
         "kind": "availability",
         "severity": "important",
+        "title": "Konsa is flagged",
+        "deep_link": "#/my-team",
+        "created_at": "2026-10-05T10:50:32+00:00",
+        "state": "dry_run",
+        "event": 6
+      },
+      {
+        "kind": "availability",
+        "severity": "important",
         "title": "João Pedro is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-05T07:07:34+00:00",
+        "created_at": "2026-10-05T10:50:32+00:00",
         "state": "dry_run",
         "event": 6
       },
@@ -80,7 +100,7 @@
         "severity": "important",
         "title": "Mykolenko is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-05T07:07:34+00:00",
+        "created_at": "2026-10-05T10:50:32+00:00",
         "state": "dry_run",
         "event": 6
       },
@@ -89,7 +109,7 @@
         "severity": "info",
         "title": "A rival's differential is hurting you",
         "deep_link": "#/live",
-        "created_at": "2026-10-05T07:07:34+00:00",
+        "created_at": "2026-10-05T10:50:32+00:00",
         "state": "dry_run",
         "event": 6
       }
