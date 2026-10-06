@@ -2,20 +2,20 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-06T12:01:04.060864+00:00",
+    "generated_for": "2026-10-06T15:01:56.395614+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-10T10:00:00+00:00",
-        "in_hours": 94.0,
+        "in_hours": 91.0,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 40,
@@ -24,29 +24,28 @@
           "price": 7.7
         },
         "direction": "rise",
-        "percent": 99.8,
+        "percent": 100.4,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "101.4",
+            "projected_percent": "101.7",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "104.7",
+            "projected_percent": "105.4",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "108.0",
+            "projected_percent": "109.1",
             "likelihood": 5
           }
         ],
-        "certainty": "100% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": false,
         "owned": true,
-        "changes": "Rogers may move 0.1m before the deadline"
+        "changes": "Rogers's price moves 0.1m"
       },
       {
         "kind": "price_change_near",
@@ -58,7 +57,7 @@
           "price": 5.7
         },
         "direction": "rise",
-        "percent": 86.5,
+        "percent": 86.6,
         "projections": [
           {
             "offset": 0,
@@ -67,16 +66,16 @@
           },
           {
             "offset": 1,
-            "projected_percent": "87.6",
+            "projected_percent": "87.4",
             "likelihood": 3
           },
           {
             "offset": 2,
-            "projected_percent": "88.4",
+            "projected_percent": "88.0",
             "likelihood": 3
           }
         ],
-        "certainty": "86% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "87% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": false,
         "owned": true,
@@ -145,13 +144,13 @@
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
     "verdict": "nothing to wait on",
     "reason": "this week's answer is not a transfer, so there is no purchase whose timing matters",
-    "hours_to_deadline": 94.0,
+    "hours_to_deadline": 91.0,
     "edge_points": -0.39,
     "edge_interval_type": "monte_carlo",
     "money_cost_of_waiting_m": 0.0,
     "detail": [],
-    "pending_price_changes": 0,
-    "near_price_changes": 2,
+    "pending_price_changes": 1,
+    "near_price_changes": 1,
     "near_at_risk_if_you_wait": [],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
@@ -168,7 +167,7 @@
         "chance_of_playing": 75,
         "news": "Unspecified injury - 75% chance of playing",
         "news_added": "2026-10-05T09:30:09.853316+00:00",
-        "news_age_days": 1.1,
+        "news_age_days": 1.2,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -180,7 +179,7 @@
         "chance_of_playing": 75,
         "news": "Knee injury - 75% chance of playing",
         "news_added": "2026-09-16T19:00:09.919929+00:00",
-        "news_age_days": 19.7,
+        "news_age_days": 19.8,
         "matches_since_news": 1,
         "outdated_by_a_match": true
       },
@@ -192,7 +191,7 @@
         "chance_of_playing": 75,
         "news": "Leg injury - 75% chance of playing",
         "news_added": "2026-10-01T19:30:09.402881+00:00",
-        "news_age_days": 4.7,
+        "news_age_days": 4.8,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -208,7 +207,7 @@
         "chance_of_playing": 75,
         "news": "Knee injury - 75% chance of playing",
         "news_added": "2026-09-16T19:00:09.919929+00:00",
-        "news_age_days": 19.7,
+        "news_age_days": 19.8,
         "matches_since_news": 1,
         "outdated_by_a_match": true
       }
@@ -267,7 +266,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-06T12:00:11+00:00",
+  "generated_at": "2026-10-06T15:01:36+00:00",
   "gameweek": 6,
   "horizon": 6,
   "squad_state": {
@@ -1529,7 +1528,7 @@
         "confidence": 0.7,
         "horizon_xp": 13.97,
         "owned_by": 4.1,
-        "rationale": "Likely-starting defender (rotation risk) with strong clean-sheet odds, in form (5.7) and but note: Leg injury - 75% chance of playing.",
+        "rationale": "Likely-starting defender (rotation risk) with strong clean-sheet odds, in form (8.0) and but note: Leg injury - 75% chance of playing.",
         "tags": [
           {
             "label": "fitness doubt",
@@ -1603,7 +1602,7 @@
         "next_gw_xp": 2.89,
         "confidence": 0.7,
         "horizon_xp": 16.59,
-        "owned_by": 19.3,
+        "owned_by": 19.2,
         "rationale": "Likely-starting defender (rotation risk) with strong clean-sheet odds and but note: Unspecified injury - 75% chance of playing.",
         "tags": [
           {
@@ -3340,8 +3339,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-06T12:00:11+00:00",
-    "squad_retrieved_at": "2026-10-06T12:00:53+00:00",
+    "generated_at": "2026-10-06T15:01:36+00:00",
+    "squad_retrieved_at": "2026-10-06T15:01:50+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
