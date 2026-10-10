@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 6,
-  "as_of": "2026-10-10T17:43:32+00:00",
+  "as_of": "2026-10-10T19:44:24+00:00",
   "fixtures": [
     {
       "id": 51,
@@ -88,10 +88,10 @@
       "event": 6,
       "team_h": 16,
       "team_a": 19,
-      "state": "live",
-      "minutes": 51,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-10-10T16:30:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 60,
@@ -107,12 +107,11 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 5,
-      "live": 1,
+      "awaiting_bonus": 6,
       "scheduled": 4
     },
     "all_finished": false,
-    "bonus_final": false
+    "bonus_final": true
   },
   "available": true,
   "unavailable_reason": null,
@@ -466,10 +465,10 @@
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "you": false,
-      "current": 341,
-      "projected": 341.0,
-      "gw_points": 40,
-      "yet_to_play": 7,
+      "current": 343,
+      "projected": 343.0,
+      "gw_points": 42,
+      "yet_to_play": 6,
       "provisional_position": 4
     },
     {
@@ -499,7 +498,7 @@
       "current": 297,
       "projected": 297.0,
       "gw_points": 25,
-      "yet_to_play": 6,
+      "yet_to_play": 5,
       "provisional_position": 7
     }
   ],
@@ -980,9 +979,9 @@
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "provisional_position": 4,
-      "gw_points": 40,
+      "gw_points": 42,
       "hits": 0,
-      "yet_to_play": 7,
+      "yet_to_play": 6,
       "autosubs": {
         "xi": [
           1,
@@ -1052,12 +1051,12 @@
           "element": 423,
           "name": "Shaw",
           "pos": "DEF",
-          "minutes": 54,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 3,
           "yet_to_play": false
         },
         {
@@ -1154,7 +1153,7 @@
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 469,
@@ -1534,7 +1533,7 @@
           "element": 426,
           "name": "B.Fernandes",
           "pos": "MID",
-          "minutes": 54,
+          "minutes": 90,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1692,15 +1691,15 @@
       "provisional_position": 7,
       "gw_points": 25,
       "hits": 0,
-      "yet_to_play": 6,
+      "yet_to_play": 5,
       "autosubs": {
         "xi": [
           1,
           358,
           8,
-          502,
-          282,
           605,
+          282,
+          557,
           40,
           426,
           397,
@@ -1709,7 +1708,7 @@
         ],
         "bench": [
           496,
-          557,
+          502,
           175,
           272
         ],
@@ -1717,7 +1716,7 @@
           605
         ],
         "subs_out": [
-          557
+          502
         ],
         "captain": 411,
         "captain_source": "captain",
@@ -1763,16 +1762,16 @@
           "yet_to_play": false
         },
         {
-          "element": 502,
-          "name": "Robertson",
-          "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "element": 605,
+          "name": "Yalcouyé",
+          "pos": "MID",
+          "minutes": 22,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 282,
@@ -1787,15 +1786,15 @@
           "yet_to_play": true
         },
         {
-          "element": 605,
-          "name": "Yalcouyé",
+          "element": 557,
+          "name": "Tzolis",
           "pos": "MID",
-          "minutes": 22,
-          "confirmed": 1,
+          "minutes": 0,
+          "confirmed": 0,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 0,
           "yet_to_play": false
         },
         {
@@ -1814,7 +1813,7 @@
           "element": 426,
           "name": "B.Fernandes",
           "pos": "MID",
-          "minutes": 54,
+          "minutes": 90,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1862,8 +1861,8 @@
           "element": 496,
           "name": "Kinsky",
           "pos": "GKP",
-          "minutes": 54,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1871,9 +1870,9 @@
           "yet_to_play": false
         },
         {
-          "element": 557,
-          "name": "Tzolis",
-          "pos": "MID",
+          "element": 502,
+          "name": "Robertson",
+          "pos": "DEF",
           "minutes": 0,
           "confirmed": 0,
           "provisional": 0,
@@ -1920,7 +1919,7 @@
         426,
         453,
         480,
-        502,
+        557,
         605
       ]
     }
@@ -1977,6 +1976,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-10-10T17:43:32+00:00",
+  "generated_at": "2026-10-10T19:44:24+00:00",
   "season": "2026-27"
 }
