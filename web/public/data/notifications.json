@@ -1,26 +1,25 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-10-10T06:18:58+00:00",
+  "generated_at": "2026-10-10T08:05:04+00:00",
   "result": {
     "considered": 4,
     "new": 4,
     "duplicates": 0,
-    "suppressed": 4,
-    "delivered": 0,
+    "suppressed": 0,
+    "delivered": 4,
     "failed": 0,
     "dry_run": true,
     "alerts": [
       {
         "kind": "deadline",
-        "title": "GW6 deadline tomorrow",
-        "body": "3.7 hours left. Check your transfer, captain and bench order.",
-        "severity": "important",
+        "title": "GW6 deadline in under 3 hours",
+        "body": "1.9 hours left. Check your transfer, captain and bench order.",
+        "severity": "critical",
         "event": 6,
         "deep_link": "#/overview",
-        "dedupe_key": "deadline:7a46d05ca11f",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
-        "reason": "quiet hours (Europe/London)"
+        "dedupe_key": "deadline:92d9424074bb",
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run"
       },
       {
         "kind": "availability",
@@ -30,9 +29,8 @@
         "event": 6,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:82a50689f350",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
-        "reason": "quiet hours (Europe/London)"
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run"
       },
       {
         "kind": "availability",
@@ -42,9 +40,8 @@
         "event": 6,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:be4be4957b0f",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
-        "reason": "quiet hours (Europe/London)"
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run"
       },
       {
         "kind": "league_swing",
@@ -54,9 +51,8 @@
         "event": 6,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:7d694e9eb7c8",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
-        "reason": "quiet hours (Europe/London)"
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run"
       }
     ],
     "errors": []
@@ -78,16 +74,16 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "suppressed": 4
+      "dry_run": 4
     },
     "recent": [
       {
         "kind": "deadline",
-        "severity": "important",
-        "title": "GW6 deadline tomorrow",
+        "severity": "critical",
+        "title": "GW6 deadline in under 3 hours",
         "deep_link": "#/overview",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run",
         "event": 6
       },
       {
@@ -95,8 +91,8 @@
         "severity": "important",
         "title": "Konsa is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run",
         "event": 6
       },
       {
@@ -104,8 +100,8 @@
         "severity": "important",
         "title": "Mykolenko is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run",
         "event": 6
       },
       {
@@ -113,8 +109,8 @@
         "severity": "info",
         "title": "A rival's differential is hurting you",
         "deep_link": "#/live",
-        "created_at": "2026-10-10T06:19:16+00:00",
-        "state": "suppressed",
+        "created_at": "2026-10-10T08:06:13+00:00",
+        "state": "dry_run",
         "event": 6
       }
     ]
