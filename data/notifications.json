@@ -1,12 +1,12 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-10-10T13:01:33+00:00",
+  "generated_at": "2026-10-10T15:42:33+00:00",
   "result": {
-    "considered": 1,
-    "new": 1,
+    "considered": 2,
+    "new": 2,
     "duplicates": 0,
     "suppressed": 0,
-    "delivered": 1,
+    "delivered": 2,
     "failed": 0,
     "dry_run": true,
     "alerts": [
@@ -18,7 +18,18 @@
         "event": 7,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:9ea474cf9a47",
-        "created_at": "2026-10-10T13:04:24+00:00",
+        "created_at": "2026-10-10T15:42:58+00:00",
+        "state": "dry_run"
+      },
+      {
+        "kind": "league_swing",
+        "title": "A rival's differential is hurting you",
+        "body": "De Cuyper: -15 points against your closest rival.",
+        "severity": "info",
+        "event": 7,
+        "deep_link": "#/live",
+        "dedupe_key": "league_swing:4b3535ce187b",
+        "created_at": "2026-10-10T15:42:58+00:00",
         "state": "dry_run"
       }
     ],
@@ -41,7 +52,7 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 1
+      "dry_run": 2
     },
     "recent": [
       {
@@ -49,7 +60,16 @@
         "severity": "important",
         "title": "Mykolenko is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-10T13:04:24+00:00",
+        "created_at": "2026-10-10T15:42:58+00:00",
+        "state": "dry_run",
+        "event": 7
+      },
+      {
+        "kind": "league_swing",
+        "severity": "info",
+        "title": "A rival's differential is hurting you",
+        "deep_link": "#/live",
+        "created_at": "2026-10-10T15:42:58+00:00",
         "state": "dry_run",
         "event": 7
       }
