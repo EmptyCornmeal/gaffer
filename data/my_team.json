@@ -1,7 +1,7 @@
 {
-  "gw": 5,
-  "source_event": 5,
-  "projection_event": 6,
+  "gw": 6,
+  "source_event": 6,
+  "projection_event": 7,
   "status": "loaded",
   "players": [
     {
@@ -13,42 +13,42 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "GKP",
-      "net_transfers": 227424,
-      "cost_change_event": 1,
+      "net_transfers": 224,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 8.3,
+        "percent": 7.0,
         "due": false,
-        "momentum": 227424,
+        "momentum": 224,
         "projections": [
           {
             "offset": 0,
-            "percent": 18.6,
-            "likelihood": 1
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 36.7,
-            "likelihood": 2
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 54.8,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 3012.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 6.1,
-      "owned_by": 43.8,
+      "owned_by": 43.7,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 7.5,
+      "form": 5.0,
       "ict": 10.6,
       "last_season": {
         "season": "2025/26",
@@ -59,61 +59,53 @@
         "xa90": 0.0
       },
       "dist": {
-        "mean": 4.54,
-        "floor": 2.0,
+        "mean": 2.8,
+        "floor": 0.0,
         "ceiling": 7.0,
-        "boom": 1.2,
-        "std": 2.4
+        "boom": 0.8,
+        "std": 2.77
       },
       "defcon": null,
       "xgi90": 0.0,
       "defcon90": 0.0,
-      "next_gw_xp": 4.43,
-      "horizon_xp": 25.47,
-      "xp_window": 25.47,
+      "next_gw_xp": 2.71,
+      "horizon_xp": 15.91,
+      "xp_window": 15.91,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 4.43
-        },
-        {
           "gw": 7,
-          "xp": 4.06
+          "xp": 2.71
         },
         {
           "gw": 8,
-          "xp": 4.43
+          "xp": 2.95
         },
         {
           "gw": 9,
-          "xp": 3.14
+          "xp": 2.11
         },
         {
           "gw": 10,
-          "xp": 5.34
+          "xp": 3.54
         },
         {
           "gw": 11,
-          "xp": 4.06
+          "xp": 2.71
+        },
+        {
+          "gw": 12,
+          "xp": 1.9
         }
       ],
-      "p_start": 0.98,
+      "p_start": 0.66,
       "confidence": 0.92,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~80'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~54'"
       },
-      "rationale": "Nailed keeper with strong clean-sheet odds and in form (7.5).",
+      "rationale": "Likely-starting keeper (rotation risk) with strong clean-sheet odds and in form (5.0).",
       "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
-        },
-        {
-          "label": "clean-sheet source",
-          "kind": "good"
-        },
         {
           "label": "in form",
           "kind": "good"
@@ -124,14 +116,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "LEE",
-          "home": true,
-          "difficulty": 2,
-          "att": 3,
-          "def": 1
-        },
         {
           "gw": 7,
           "opp": "NFO",
@@ -163,22 +147,30 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 11,
+          "opp": "NEW",
+          "home": false,
+          "difficulty": 3,
+          "att": 4,
+          "def": 2
         }
       ],
-      "model_xp": 4.43,
-      "ep_next_xp": 7.5,
+      "model_xp": 2.71,
+      "ep_next_xp": 5.0,
       "breakdown": {
-        "appearance": 1.95,
+        "appearance": 1.31,
         "goals": 0,
         "assists": 0.0,
-        "clean_sheet": 1.98,
+        "clean_sheet": 1.13,
         "defcon": 0,
-        "bonus": 0.28,
-        "saves": 0.23,
+        "bonus": 0.18,
+        "saves": 0.1,
         "other": -0.01
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.5618,
+        "weak_evidence_share": 0.5201,
         "largest_weak_component": "clean_sheet",
         "largest_weak_status": "weak_or_failed"
       }
@@ -192,34 +184,34 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "DEF",
-      "net_transfers": 119180,
-      "cost_change_event": 1,
+      "net_transfers": 238,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 9.6,
+        "percent": 8.2,
         "due": false,
-        "momentum": 119180,
+        "momentum": 238,
         "projections": [
           {
             "offset": 0,
-            "percent": 24.9,
-            "likelihood": 2
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 51.7,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 78.6,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 4461.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.9,
@@ -227,7 +219,7 @@
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 3.5,
+      "form": 2.3,
       "ict": 19.1,
       "last_season": {
         "season": "2025/26",
@@ -238,65 +230,61 @@
         "xa90": 0.04
       },
       "dist": {
-        "mean": 5.0,
-        "floor": 2.0,
-        "ceiling": 10.0,
-        "boom": 10.3,
-        "std": 3.75
+        "mean": 3.03,
+        "floor": 0.0,
+        "ceiling": 7.0,
+        "boom": 5.1,
+        "std": 3.52
       },
       "defcon": {
-        "p_hit": 0.032,
+        "p_hit": 0.003,
         "per90": 5.4,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.27,
       "defcon90": 5.41,
-      "next_gw_xp": 4.99,
-      "horizon_xp": 28.78,
-      "xp_window": 28.78,
+      "next_gw_xp": 2.97,
+      "horizon_xp": 17.62,
+      "xp_window": 17.62,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 4.99
-        },
-        {
           "gw": 7,
-          "xp": 4.5
+          "xp": 2.97
         },
         {
           "gw": 8,
-          "xp": 4.99
+          "xp": 3.28
         },
         {
           "gw": 9,
-          "xp": 3.25
+          "xp": 2.18
         },
         {
           "gw": 10,
-          "xp": 6.57
+          "xp": 4.29
         },
         {
           "gw": 11,
-          "xp": 4.5
-        }
-      ],
-      "p_start": 0.92,
-      "confidence": 0.86,
-      "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~76'"
-      },
-      "rationale": "Nailed defender with strong clean-sheet odds and a genuine attacking threat from the back.",
-      "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
+          "xp": 2.97
         },
         {
-          "label": "clean-sheet source",
-          "kind": "good"
+          "gw": 12,
+          "xp": 1.93
+        }
+      ],
+      "p_start": 0.59,
+      "confidence": 0.86,
+      "xmins_badge": {
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~50'"
+      },
+      "rationale": "Rotation/bench defender with strong clean-sheet odds and a genuine attacking threat from the back.",
+      "tags": [
+        {
+          "label": "rotation risk",
+          "kind": "warn"
         },
         {
           "label": "template",
@@ -304,14 +292,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "LEE",
-          "home": true,
-          "difficulty": 2,
-          "att": 3,
-          "def": 1
-        },
         {
           "gw": 7,
           "opp": "NFO",
@@ -343,22 +323,30 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 11,
+          "opp": "NEW",
+          "home": false,
+          "difficulty": 3,
+          "att": 4,
+          "def": 2
         }
       ],
-      "model_xp": 4.99,
-      "ep_next_xp": 3.5,
+      "model_xp": 2.97,
+      "ep_next_xp": 2.3,
       "breakdown": {
-        "appearance": 1.81,
-        "goals": 0.94,
-        "assists": 0.22,
-        "clean_sheet": 1.78,
-        "defcon": 0.06,
-        "bonus": 0.28,
+        "appearance": 1.25,
+        "goals": 0.54,
+        "assists": 0.13,
+        "clean_sheet": 0.96,
+        "defcon": 0.01,
+        "bonus": 0.17,
         "saves": 0,
-        "other": -0.12
+        "other": -0.08
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.4299,
+        "weak_evidence_share": 0.3885,
         "largest_weak_component": "clean_sheet",
         "largest_weak_status": "weak_or_failed"
       }
@@ -372,42 +360,42 @@
       "team_id": 1,
       "team_code": 3,
       "pos": "DEF",
-      "net_transfers": -164263,
-      "cost_change_event": 1,
+      "net_transfers": -441,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "down",
-        "percent": -17.2,
+        "percent": -16.7,
         "due": false,
-        "momentum": -164263,
+        "momentum": -441,
         "projections": [
           {
             "offset": 0,
-            "percent": -42.7,
-            "likelihood": -3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": -87.6,
-            "likelihood": -3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": -132.4,
-            "likelihood": -5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": -8405.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.6,
-      "owned_by": 17.1,
-      "status": "d",
-      "news": "Unspecified injury - 75% chance of playing",
+      "owned_by": 17.3,
+      "status": "a",
+      "news": "",
       "set_pieces": "",
-      "form": 3.5,
+      "form": 2.3,
       "ict": 7.3,
       "last_season": {
         "season": "2025/26",
@@ -418,76 +406,64 @@
         "xa90": 0.02
       },
       "dist": {
-        "mean": 2.97,
+        "mean": 2.17,
         "floor": 0.0,
-        "ceiling": 7.0,
-        "boom": 2.5,
-        "std": 3.1
+        "ceiling": 6.0,
+        "boom": 1.1,
+        "std": 2.71
       },
       "defcon": {
-        "p_hit": 0.007,
+        "p_hit": 0.002,
         "per90": 5.8,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.08,
       "defcon90": 5.81,
-      "next_gw_xp": 2.89,
-      "horizon_xp": 16.59,
-      "xp_window": 16.59,
+      "next_gw_xp": 2.19,
+      "horizon_xp": 12.94,
+      "xp_window": 12.94,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 2.89
-        },
-        {
           "gw": 7,
-          "xp": 2.62
+          "xp": 2.19
         },
         {
           "gw": 8,
-          "xp": 2.89
+          "xp": 2.41
         },
         {
           "gw": 9,
-          "xp": 1.95
+          "xp": 1.65
         },
         {
           "gw": 10,
-          "xp": 3.63
+          "xp": 3.02
         },
         {
           "gw": 11,
-          "xp": 2.62
-        }
-      ],
-      "p_start": 0.64,
-      "confidence": 0.7,
-      "xmins_badge": {
-        "label": "ROTATION",
-        "kind": "warn",
-        "hint": "~54'"
-      },
-      "rationale": "Likely-starting defender (rotation risk) with strong clean-sheet odds and but note: Unspecified injury - 75% chance of playing.",
-      "tags": [
-        {
-          "label": "fitness doubt",
-          "kind": "bad"
+          "xp": 2.19
         },
         {
-          "label": "clean-sheet source",
-          "kind": "good"
+          "gw": 12,
+          "xp": 1.47
+        }
+      ],
+      "p_start": 0.52,
+      "confidence": 0.91,
+      "xmins_badge": {
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~45'"
+      },
+      "rationale": "Rotation/bench defender with strong clean-sheet odds.",
+      "tags": [
+        {
+          "label": "rotation risk",
+          "kind": "warn"
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "LEE",
-          "home": true,
-          "difficulty": 2,
-          "att": 3,
-          "def": 1
-        },
         {
           "gw": 7,
           "opp": "NFO",
@@ -519,22 +495,30 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 11,
+          "opp": "NEW",
+          "home": false,
+          "difficulty": 3,
+          "att": 4,
+          "def": 2
         }
       ],
-      "model_xp": 2.89,
-      "ep_next_xp": 2.6,
+      "model_xp": 2.19,
+      "ep_next_xp": 2.3,
       "breakdown": {
-        "appearance": 1.32,
-        "goals": 0.2,
-        "assists": 0.03,
-        "clean_sheet": 1.25,
-        "defcon": 0.01,
-        "bonus": 0.14,
+        "appearance": 1.14,
+        "goals": 0.14,
+        "assists": 0.02,
+        "clean_sheet": 0.86,
+        "defcon": 0.0,
+        "bonus": 0.09,
         "saves": 0,
-        "other": -0.06
+        "other": -0.07
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.485,
+        "weak_evidence_share": 0.4397,
         "largest_weak_component": "clean_sheet",
         "largest_weak_status": "weak_or_failed"
       }
@@ -548,42 +532,42 @@
       "team_id": 6,
       "team_code": 8,
       "pos": "MID",
-      "net_transfers": 315745,
-      "cost_change_event": 1,
+      "net_transfers": 535,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 22.6,
+        "percent": 19.2,
         "due": false,
-        "momentum": 315745,
+        "momentum": 535,
         "projections": [
           {
             "offset": 0,
-            "percent": 55.5,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 113.3,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 171.1,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 9612.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 7.8,
-      "owned_by": 42.8,
+      "owned_by": 42.7,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 5.0,
+      "form": 3.3,
       "ict": 43.9,
       "last_season": {
         "season": "2025/26",
@@ -594,68 +578,60 @@
         "xa90": 0.12
       },
       "dist": {
-        "mean": 4.06,
-        "floor": 2.0,
-        "ceiling": 8.0,
-        "boom": 6.5,
-        "std": 3.22
+        "mean": 2.78,
+        "floor": 1.0,
+        "ceiling": 7.0,
+        "boom": 3.4,
+        "std": 2.89
       },
       "defcon": {
-        "p_hit": 0.026,
+        "p_hit": 0.003,
         "per90": 6.3,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.6,
       "defcon90": 6.31,
-      "next_gw_xp": 4.09,
-      "horizon_xp": 23.05,
-      "xp_window": 23.05,
+      "next_gw_xp": 2.73,
+      "horizon_xp": 16.39,
+      "xp_window": 16.39,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 4.09
-        },
-        {
           "gw": 7,
-          "xp": 3.78
+          "xp": 2.73
         },
         {
           "gw": 8,
-          "xp": 4.09
+          "xp": 2.95
         },
         {
           "gw": 9,
-          "xp": 3.21
+          "xp": 2.32
         },
         {
           "gw": 10,
-          "xp": 3.78
+          "xp": 2.73
         },
         {
           "gw": 11,
-          "xp": 4.09
+          "xp": 2.95
+        },
+        {
+          "gw": 12,
+          "xp": 2.73
         }
       ],
-      "p_start": 0.98,
+      "p_start": 0.66,
       "confidence": 0.92,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~81'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~57'"
       },
-      "rationale": "Nailed midfielder with real underlying threat (0.60 xGI/90) and in form (5.0).",
+      "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.60 xGI/90).",
       "tags": [
         {
-          "label": "nailed",
-          "kind": "good"
-        },
-        {
           "label": "high xGI",
-          "kind": "good"
-        },
-        {
-          "label": "in form",
           "kind": "good"
         },
         {
@@ -664,14 +640,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "BOU",
-          "home": true,
-          "difficulty": 3,
-          "att": 3,
-          "def": 3
-        },
         {
           "gw": 7,
           "opp": "EVE",
@@ -703,22 +671,30 @@
           "difficulty": 4,
           "att": 4,
           "def": 4
+        },
+        {
+          "gw": 11,
+          "opp": "LEE",
+          "home": true,
+          "difficulty": 3,
+          "att": 3,
+          "def": 3
         }
       ],
-      "model_xp": 4.09,
-      "ep_next_xp": 5.0,
+      "model_xp": 2.73,
+      "ep_next_xp": 3.3,
       "breakdown": {
-        "appearance": 1.88,
-        "goals": 1.31,
-        "assists": 0.53,
-        "clean_sheet": 0.21,
-        "defcon": 0.05,
-        "bonus": 0.29,
+        "appearance": 1.42,
+        "goals": 0.81,
+        "assists": 0.33,
+        "clean_sheet": 0.1,
+        "defcon": 0.01,
+        "bonus": 0.19,
         "saves": 0,
-        "other": -0.18
+        "other": -0.13
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.164,
+        "weak_evidence_share": 0.1438,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -732,42 +708,42 @@
       "team_id": 3,
       "team_code": 91,
       "pos": "MID",
-      "net_transfers": 88765,
+      "net_transfers": 255,
       "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 48.3,
+        "percent": 49.8,
         "due": false,
-        "momentum": 88765,
+        "momentum": 255,
         "projections": [
           {
             "offset": 0,
-            "percent": 69.6,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 107.1,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 144.6,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 2300.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 6.1,
-      "owned_by": 7.2,
+      "owned_by": 7.3,
       "status": "a",
       "news": "",
       "set_pieces": "FK #1, corners #1",
-      "form": 5.0,
+      "form": 3.3,
       "ict": 45.5,
       "last_season": {
         "season": "2025/26",
@@ -778,62 +754,58 @@
         "xa90": 0.15
       },
       "dist": {
-        "mean": 3.62,
-        "floor": 2.0,
+        "mean": 3.27,
+        "floor": 1.0,
         "ceiling": 8.0,
-        "boom": 3.8,
-        "std": 2.71
+        "boom": 4.9,
+        "std": 3.37
       },
       "defcon": {
-        "p_hit": 0.1,
+        "p_hit": 0.014,
         "per90": 8.3,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.56,
       "defcon90": 8.27,
-      "next_gw_xp": 3.59,
-      "horizon_xp": 28.16,
-      "xp_window": 28.16,
+      "next_gw_xp": 3.32,
+      "horizon_xp": 21.22,
+      "xp_window": 21.22,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 3.59
-        },
-        {
           "gw": 7,
-          "xp": 4.85
+          "xp": 3.32
         },
         {
           "gw": 8,
-          "xp": 3.59
+          "xp": 2.46
         },
         {
           "gw": 9,
-          "xp": 4.85
+          "xp": 3.32
         },
         {
           "gw": 10,
-          "xp": 6.42
+          "xp": 4.4
         },
         {
           "gw": 11,
-          "xp": 4.85
+          "xp": 3.32
+        },
+        {
+          "gw": 12,
+          "xp": 4.4
         }
       ],
-      "p_start": 0.97,
+      "p_start": 0.63,
       "confidence": 0.9,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~79'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~55'"
       },
-      "rationale": "Nailed midfielder with real underlying threat (0.56 xGI/90), on FK #1, corners #1 and in form (5.0).",
+      "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.56 xGI/90) and on FK #1, corners #1.",
       "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
-        },
         {
           "label": "high xGI",
           "kind": "good"
@@ -841,21 +813,9 @@
         {
           "label": "set-pieces",
           "kind": "info"
-        },
-        {
-          "label": "in form",
-          "kind": "good"
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "CHE",
-          "home": false,
-          "difficulty": 5,
-          "att": 5,
-          "def": 5
-        },
         {
           "gw": 7,
           "opp": "SUN",
@@ -887,22 +847,30 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 11,
+          "opp": "NFO",
+          "home": true,
+          "difficulty": 2,
+          "att": 3,
+          "def": 2
         }
       ],
-      "model_xp": 3.59,
-      "ep_next_xp": 5.0,
+      "model_xp": 3.32,
+      "ep_next_xp": 3.3,
       "breakdown": {
-        "appearance": 1.86,
-        "goals": 0.87,
-        "assists": 0.28,
-        "clean_sheet": 0.08,
-        "defcon": 0.2,
-        "bonus": 0.59,
+        "appearance": 1.38,
+        "goals": 1.13,
+        "assists": 0.36,
+        "clean_sheet": 0.18,
+        "defcon": 0.03,
+        "bonus": 0.44,
         "saves": 0,
-        "other": -0.28
+        "other": -0.2
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.2764,
+        "weak_evidence_share": 0.2285,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -916,42 +884,42 @@
       "team_id": 6,
       "team_code": 8,
       "pos": "FWD",
-      "net_transfers": -245373,
-      "cost_change_event": -1,
+      "net_transfers": 2340,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
-        "dir": "down",
-        "percent": -0.5,
+        "dir": "up",
+        "percent": 3.6,
         "due": false,
-        "momentum": -245373,
+        "momentum": 2340,
         "projections": [
           {
             "offset": 0,
-            "percent": 181.5,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 509.1,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 836.7,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 20098.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 7.7,
-      "owned_by": 65.5,
+      "owned_by": 66.2,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 6.0,
+      "form": 4.0,
       "ict": 37.0,
       "last_season": {
         "season": "2025/26",
@@ -962,11 +930,11 @@
         "xa90": 0.07
       },
       "dist": {
-        "mean": 3.26,
-        "floor": 1.0,
+        "mean": 2.67,
+        "floor": 0.0,
         "ceiling": 7.0,
-        "boom": 7.4,
-        "std": 3.5
+        "boom": 5.4,
+        "std": 3.16
       },
       "defcon": {
         "p_hit": 0.0,
@@ -976,43 +944,43 @@
       },
       "xgi90": 0.59,
       "defcon90": 4.67,
-      "next_gw_xp": 3.14,
-      "horizon_xp": 17.82,
-      "xp_window": 17.82,
+      "next_gw_xp": 2.6,
+      "horizon_xp": 15.58,
+      "xp_window": 15.58,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 3.14
-        },
-        {
           "gw": 7,
-          "xp": 2.94
+          "xp": 2.6
         },
         {
           "gw": 8,
-          "xp": 3.14
+          "xp": 2.77
         },
         {
           "gw": 9,
-          "xp": 2.54
+          "xp": 2.25
         },
         {
           "gw": 10,
-          "xp": 2.94
+          "xp": 2.6
         },
         {
           "gw": 11,
-          "xp": 3.14
+          "xp": 2.77
+        },
+        {
+          "gw": 12,
+          "xp": 2.6
         }
       ],
-      "p_start": 0.57,
+      "p_start": 0.48,
       "confidence": 0.9,
       "xmins_badge": {
         "label": "CAMEO?",
         "kind": "bad",
-        "hint": "~51'"
+        "hint": "~44'"
       },
-      "rationale": "Rotation/bench forward with real underlying threat (0.59 xGI/90) and in form (6.0).",
+      "rationale": "Rotation/bench forward with real underlying threat (0.59 xGI/90).",
       "tags": [
         {
           "label": "rotation risk",
@@ -1023,23 +991,11 @@
           "kind": "good"
         },
         {
-          "label": "in form",
-          "kind": "good"
-        },
-        {
           "label": "template",
           "kind": "info"
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "BOU",
-          "home": true,
-          "difficulty": 3,
-          "att": 3,
-          "def": 3
-        },
         {
           "gw": 7,
           "opp": "EVE",
@@ -1071,22 +1027,30 @@
           "difficulty": 4,
           "att": 4,
           "def": 4
+        },
+        {
+          "gw": 11,
+          "opp": "LEE",
+          "home": true,
+          "difficulty": 3,
+          "att": 3,
+          "def": 3
         }
       ],
-      "model_xp": 3.14,
-      "ep_next_xp": 6.0,
+      "model_xp": 2.6,
+      "ep_next_xp": 4.0,
       "breakdown": {
-        "appearance": 1.3,
-        "goals": 1.33,
-        "assists": 0.12,
+        "appearance": 1.17,
+        "goals": 1.01,
+        "assists": 0.09,
         "clean_sheet": 0,
         "defcon": 0,
-        "bonus": 0.51,
+        "bonus": 0.43,
         "saves": 0,
-        "other": -0.12
+        "other": -0.1
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.1864,
+        "weak_evidence_share": 0.1893,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -1100,42 +1064,42 @@
       "team_id": 9,
       "team_code": 11,
       "pos": "DEF",
-      "net_transfers": -44478,
-      "cost_change_event": 1,
+      "net_transfers": -153,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "down",
-        "percent": -20.6,
+        "percent": -6.6,
         "due": false,
-        "momentum": -44478,
+        "momentum": -153,
         "projections": [
           {
             "offset": 0,
-            "percent": -56.5,
-            "likelihood": -3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": -119.5,
-            "likelihood": -5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": -182.5,
-            "likelihood": -5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": -2425.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.6,
-      "owned_by": 3.5,
+      "owned_by": 3.6,
       "status": "d",
       "news": "Leg injury - 75% chance of playing",
       "set_pieces": "",
-      "form": 8.0,
+      "form": 5.3,
       "ict": 15.5,
       "last_season": {
         "season": "2025/26",
@@ -1146,65 +1110,65 @@
         "xa90": 0.07
       },
       "dist": {
-        "mean": 3.15,
-        "floor": 1.0,
-        "ceiling": 7.0,
-        "boom": 1.8,
-        "std": 2.89
+        "mean": 1.14,
+        "floor": 0.0,
+        "ceiling": 3.0,
+        "boom": 0.3,
+        "std": 1.84
       },
       "defcon": {
-        "p_hit": 0.039,
+        "p_hit": 0.004,
         "per90": 7.0,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.04,
       "defcon90": 7.03,
-      "next_gw_xp": 3.18,
-      "horizon_xp": 13.97,
-      "xp_window": 13.97,
+      "next_gw_xp": 1.18,
+      "horizon_xp": 8.53,
+      "xp_window": 8.53,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 3.18
-        },
-        {
           "gw": 7,
-          "xp": 1.71
+          "xp": 1.18
         },
         {
           "gw": 8,
-          "xp": 1.38
+          "xp": 0.97
         },
         {
           "gw": 9,
-          "xp": 2.14
+          "xp": 1.46
         },
         {
           "gw": 10,
-          "xp": 3.43
+          "xp": 2.28
         },
         {
           "gw": 11,
-          "xp": 2.14
+          "xp": 1.46
+        },
+        {
+          "gw": 12,
+          "xp": 1.18
         }
       ],
-      "p_start": 0.73,
+      "p_start": 0.48,
       "confidence": 0.7,
       "xmins_badge": {
-        "label": "ROTATION",
-        "kind": "warn",
-        "hint": "~61'"
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~41'"
       },
-      "rationale": "Likely-starting defender (rotation risk) with strong clean-sheet odds, in form (8.0) and but note: Leg injury - 75% chance of playing.",
+      "rationale": "Rotation/bench defender with in form (5.3) and but note: Leg injury - 75% chance of playing.",
       "tags": [
         {
           "label": "fitness doubt",
           "kind": "bad"
         },
         {
-          "label": "clean-sheet source",
-          "kind": "good"
+          "label": "rotation risk",
+          "kind": "warn"
         },
         {
           "label": "in form",
@@ -1212,14 +1176,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "HUL",
-          "home": false,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
-        },
         {
           "gw": 7,
           "opp": "CHE",
@@ -1251,24 +1207,32 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 11,
+          "opp": "BRE",
+          "home": false,
+          "difficulty": 4,
+          "att": 4,
+          "def": 3
         }
       ],
-      "model_xp": 3.18,
-      "ep_next_xp": 6.0,
+      "model_xp": 1.18,
+      "ep_next_xp": 4.0,
       "breakdown": {
-        "appearance": 1.48,
-        "goals": 0.07,
-        "assists": 0.21,
-        "clean_sheet": 1.34,
-        "defcon": 0.08,
-        "bonus": 0.23,
+        "appearance": 1.03,
+        "goals": 0.02,
+        "assists": 0.05,
+        "clean_sheet": 0.27,
+        "defcon": 0.01,
+        "bonus": 0.11,
         "saves": 0,
-        "other": -0.22
+        "other": -0.32
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.5152,
-        "largest_weak_component": "clean_sheet",
-        "largest_weak_status": "weak_or_failed"
+        "weak_evidence_share": 0.3923,
+        "largest_weak_component": "other",
+        "largest_weak_status": "insufficient_evidence"
       }
     },
     {
@@ -1280,42 +1244,42 @@
       "team_id": 9,
       "team_code": 11,
       "pos": "FWD",
-      "net_transfers": 86600,
-      "cost_change_event": 1,
+      "net_transfers": 72,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 7.3,
+        "percent": 6.1,
         "due": false,
-        "momentum": 86600,
+        "momentum": 72,
         "projections": [
           {
             "offset": 0,
-            "percent": 16.1,
-            "likelihood": 1
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 31.5,
-            "likelihood": 2
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 47.0,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 2569.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.7,
-      "owned_by": 8.8,
+      "owned_by": 8.6,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1",
-      "form": 4.0,
+      "form": 2.7,
       "ict": 36.5,
       "last_season": {
         "season": "2025/26",
@@ -1326,61 +1290,61 @@
         "xa90": 0.02
       },
       "dist": {
-        "mean": 5.69,
-        "floor": 2.0,
-        "ceiling": 11.0,
-        "boom": 21.0,
-        "std": 4.3
+        "mean": 2.37,
+        "floor": 1.0,
+        "ceiling": 6.0,
+        "boom": 2.8,
+        "std": 2.52
       },
       "defcon": {
-        "p_hit": 0.001,
+        "p_hit": 0.0,
         "per90": 3.5,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.79,
       "defcon90": 3.51,
-      "next_gw_xp": 5.71,
-      "horizon_xp": 25.96,
-      "xp_window": 25.96,
+      "next_gw_xp": 2.4,
+      "horizon_xp": 16.65,
+      "xp_window": 16.65,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 5.71
-        },
-        {
           "gw": 7,
-          "xp": 3.39
+          "xp": 2.4
         },
         {
           "gw": 8,
-          "xp": 3.21
+          "xp": 2.27
         },
         {
           "gw": 9,
-          "xp": 3.98
+          "xp": 2.8
         },
         {
           "gw": 10,
-          "xp": 5.71
+          "xp": 3.97
         },
         {
           "gw": 11,
-          "xp": 3.98
+          "xp": 2.8
+        },
+        {
+          "gw": 12,
+          "xp": 2.4
         }
       ],
-      "p_start": 0.92,
+      "p_start": 0.58,
       "confidence": 0.87,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~76'"
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~52'"
       },
-      "rationale": "Nailed forward with real underlying threat (0.79 xGI/90) and on pens #1.",
+      "rationale": "Rotation/bench forward with real underlying threat (0.79 xGI/90) and on pens #1.",
       "tags": [
         {
-          "label": "nailed",
-          "kind": "good"
+          "label": "rotation risk",
+          "kind": "warn"
         },
         {
           "label": "high xGI",
@@ -1393,14 +1357,6 @@
       ],
       "fixtures": [
         {
-          "gw": 6,
-          "opp": "HUL",
-          "home": false,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
-        },
-        {
           "gw": 7,
           "opp": "CHE",
           "home": true,
@@ -1431,22 +1387,30 @@
           "difficulty": 1,
           "att": 1,
           "def": 1
+        },
+        {
+          "gw": 11,
+          "opp": "BRE",
+          "home": false,
+          "difficulty": 4,
+          "att": 4,
+          "def": 3
         }
       ],
-      "model_xp": 5.71,
-      "ep_next_xp": 4.0,
+      "model_xp": 2.4,
+      "ep_next_xp": 2.7,
       "breakdown": {
-        "appearance": 1.79,
-        "goals": 3.37,
-        "assists": 0.12,
+        "appearance": 1.32,
+        "goals": 0.87,
+        "assists": 0.03,
         "clean_sheet": 0,
-        "defcon": 0.0,
-        "bonus": 0.42,
+        "defcon": 0,
+        "bonus": 0.19,
         "saves": 0,
         "other": 0
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.0737,
+        "weak_evidence_share": 0.0788,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -1460,42 +1424,42 @@
       "team_id": 13,
       "team_code": 2,
       "pos": "DEF",
-      "net_transfers": 196533,
+      "net_transfers": 411,
       "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 88.1,
+        "percent": 90.0,
         "due": false,
-        "momentum": 196533,
+        "momentum": 411,
         "projections": [
           {
             "offset": 0,
-            "percent": 115.8,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 164.6,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 213.3,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 2990.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.6,
-      "owned_by": 8.3,
+      "owned_by": 8.2,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 10.0,
+      "form": 6.7,
       "ict": 26.2,
       "last_season": {
         "season": "2025/26",
@@ -1506,62 +1470,58 @@
         "xa90": 0.1
       },
       "dist": {
-        "mean": 2.55,
-        "floor": 1.0,
-        "ceiling": 7.0,
-        "boom": 2.0,
-        "std": 2.73
+        "mean": 2.02,
+        "floor": 0.0,
+        "ceiling": 6.0,
+        "boom": 1.5,
+        "std": 2.71
       },
       "defcon": {
-        "p_hit": 0.053,
+        "p_hit": 0.006,
         "per90": 5.7,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.36,
       "defcon90": 5.73,
-      "next_gw_xp": 2.51,
-      "horizon_xp": 20.29,
-      "xp_window": 20.29,
+      "next_gw_xp": 2.08,
+      "horizon_xp": 16.33,
+      "xp_window": 16.33,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 2.51
-        },
-        {
           "gw": 7,
-          "xp": 3.03
+          "xp": 2.08
         },
         {
           "gw": 8,
-          "xp": 3.88
+          "xp": 2.63
         },
         {
           "gw": 9,
-          "xp": 3.88
+          "xp": 2.63
         },
         {
           "gw": 10,
-          "xp": 4.46
+          "xp": 3.0
         },
         {
           "gw": 11,
-          "xp": 2.51
+          "xp": 1.74
+        },
+        {
+          "gw": 12,
+          "xp": 4.25
         }
       ],
-      "p_start": 0.97,
+      "p_start": 0.63,
       "confidence": 0.9,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~80'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~54'"
       },
-      "rationale": "Nailed defender with a genuine attacking threat from the back, in form (10.0) and despite a tough run.",
+      "rationale": "Likely-starting defender (rotation risk) with in form (6.7) and despite a tough run.",
       "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
-        },
         {
           "label": "in form",
           "kind": "good"
@@ -1572,14 +1532,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "ARS",
-          "home": false,
-          "difficulty": 5,
-          "att": 5,
-          "def": 5
-        },
         {
           "gw": 7,
           "opp": "MUN",
@@ -1611,22 +1563,30 @@
           "difficulty": 2,
           "att": 3,
           "def": 2
+        },
+        {
+          "gw": 11,
+          "opp": "CHE",
+          "home": false,
+          "difficulty": 5,
+          "att": 5,
+          "def": 5
         }
       ],
-      "model_xp": 2.51,
-      "ep_next_xp": 10.0,
+      "model_xp": 2.08,
+      "ep_next_xp": 6.7,
       "breakdown": {
-        "appearance": 1.9,
-        "goals": 0.55,
-        "assists": 0.11,
+        "appearance": 1.33,
+        "goals": 0.43,
+        "assists": 0.09,
         "clean_sheet": 0.43,
-        "defcon": 0.11,
-        "bonus": 0.41,
+        "defcon": 0.01,
+        "bonus": 0.28,
         "saves": 0,
-        "other": -0.99
+        "other": -0.49
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.4311,
+        "weak_evidence_share": 0.3954,
         "largest_weak_component": "other",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -1640,42 +1600,42 @@
       "team_id": 15,
       "team_code": 43,
       "pos": "DEF",
-      "net_transfers": 157859,
+      "net_transfers": 532,
       "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "rising",
-        "percent": 100.7,
+        "percent": 102.1,
         "due": true,
-        "momentum": 157859,
+        "momentum": 532,
         "projections": [
           {
             "offset": 0,
-            "percent": 116.2,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 143.3,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 170.5,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 1668.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 5.7,
-      "owned_by": 27.3,
+      "owned_by": 27.5,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 7.5,
+      "form": 5.0,
       "ict": 24.0,
       "last_season": {
         "season": "2025/26",
@@ -1686,61 +1646,61 @@
         "xa90": 0.05
       },
       "dist": {
-        "mean": 2.04,
-        "floor": 1.0,
-        "ceiling": 5.0,
-        "boom": 1.0,
-        "std": 2.33
+        "mean": 3.44,
+        "floor": 0.0,
+        "ceiling": 9.0,
+        "boom": 8.1,
+        "std": 3.92
       },
       "defcon": {
-        "p_hit": 0.08,
+        "p_hit": 0.009,
         "per90": 6.8,
         "threshold": 10,
         "near_hit": false
       },
       "xgi90": 0.2,
       "defcon90": 6.77,
-      "next_gw_xp": 2.11,
-      "horizon_xp": 20.35,
-      "xp_window": 20.35,
+      "next_gw_xp": 3.42,
+      "horizon_xp": 13.13,
+      "xp_window": 13.13,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 2.11
-        },
-        {
           "gw": 7,
-          "xp": 5.38
+          "xp": 3.42
         },
         {
           "gw": 8,
-          "xp": 3.27
+          "xp": 2.11
         },
         {
           "gw": 9,
-          "xp": 2.56
+          "xp": 1.67
         },
         {
           "gw": 10,
-          "xp": 3.27
+          "xp": 2.11
         },
         {
           "gw": 11,
-          "xp": 3.76
+          "xp": 2.42
+        },
+        {
+          "gw": 12,
+          "xp": 1.39
         }
       ],
-      "p_start": 0.89,
+      "p_start": 0.56,
       "confidence": 0.83,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~74'"
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~48'"
       },
-      "rationale": "Nailed defender with in form (7.5).",
+      "rationale": "Rotation/bench defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.0).",
       "tags": [
         {
-          "label": "nailed",
-          "kind": "good"
+          "label": "rotation risk",
+          "kind": "warn"
         },
         {
           "label": "in form",
@@ -1748,14 +1708,6 @@
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "LIV",
-          "home": false,
-          "difficulty": 5,
-          "att": 5,
-          "def": 5
-        },
         {
           "gw": 7,
           "opp": "IPS",
@@ -1787,24 +1739,32 @@
           "difficulty": 4,
           "att": 4,
           "def": 3
+        },
+        {
+          "gw": 11,
+          "opp": "FUL",
+          "home": true,
+          "difficulty": 3,
+          "att": 3,
+          "def": 3
         }
       ],
-      "model_xp": 2.11,
-      "ep_next_xp": 7.5,
+      "model_xp": 3.42,
+      "ep_next_xp": 5.0,
       "breakdown": {
-        "appearance": 1.76,
-        "goals": 0.32,
-        "assists": 0.13,
-        "clean_sheet": 0.3,
-        "defcon": 0.16,
-        "bonus": 0.35,
+        "appearance": 1.2,
+        "goals": 0.63,
+        "assists": 0.27,
+        "clean_sheet": 1.16,
+        "defcon": 0.02,
+        "bonus": 0.3,
         "saves": 0,
-        "other": -0.92
+        "other": -0.15
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.4391,
-        "largest_weak_component": "other",
-        "largest_weak_status": "insufficient_evidence"
+        "weak_evidence_share": 0.437,
+        "largest_weak_component": "clean_sheet",
+        "largest_weak_status": "weak_or_failed"
       }
     },
     {
@@ -1816,42 +1776,42 @@
       "team_id": 15,
       "team_code": 43,
       "pos": "MID",
-      "net_transfers": 62184,
+      "net_transfers": 979,
       "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "down",
-        "percent": -38.9,
+        "percent": -37.8,
         "due": false,
-        "momentum": 62184,
+        "momentum": 979,
         "projections": [
           {
             "offset": 0,
-            "percent": -44.3,
-            "likelihood": -3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": -53.8,
-            "likelihood": -3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": -63.3,
-            "likelihood": -3
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": -585.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 7.8,
-      "owned_by": 28.6,
+      "owned_by": 28.7,
       "status": "a",
       "news": "",
       "set_pieces": "FK #1, corners #1",
-      "form": 4.5,
+      "form": 3.0,
       "ict": 47.3,
       "last_season": {
         "season": "2025/26",
@@ -1862,61 +1822,61 @@
         "xa90": 0.45
       },
       "dist": {
-        "mean": 3.27,
-        "floor": 2.0,
-        "ceiling": 7.0,
-        "boom": 2.7,
-        "std": 2.65
+        "mean": 4.0,
+        "floor": 0.0,
+        "ceiling": 10.0,
+        "boom": 12.7,
+        "std": 4.43
       },
       "defcon": {
-        "p_hit": 0.02,
+        "p_hit": 0.001,
         "per90": 6.9,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.67,
       "defcon90": 6.86,
-      "next_gw_xp": 3.21,
-      "horizon_xp": 25.43,
-      "xp_window": 25.43,
+      "next_gw_xp": 4.07,
+      "horizon_xp": 17.08,
+      "xp_window": 17.08,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 3.21
-        },
-        {
           "gw": 7,
-          "xp": 6.12
+          "xp": 4.07
         },
         {
           "gw": 8,
-          "xp": 4.1
+          "xp": 2.76
         },
         {
           "gw": 9,
-          "xp": 3.44
+          "xp": 2.32
         },
         {
           "gw": 10,
-          "xp": 4.1
+          "xp": 2.76
         },
         {
           "gw": 11,
-          "xp": 4.47
+          "xp": 3.0
+        },
+        {
+          "gw": 12,
+          "xp": 2.18
         }
       ],
-      "p_start": 0.85,
+      "p_start": 0.51,
       "confidence": 0.86,
       "xmins_badge": {
-        "label": "ROTATION",
-        "kind": "warn",
-        "hint": "~71'"
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~46'"
       },
-      "rationale": "Nailed midfielder with real underlying threat (0.67 xGI/90) and on FK #1, corners #1.",
+      "rationale": "Rotation/bench midfielder with real underlying threat (0.67 xGI/90) and on FK #1, corners #1.",
       "tags": [
         {
-          "label": "nailed",
-          "kind": "good"
+          "label": "rotation risk",
+          "kind": "warn"
         },
         {
           "label": "high xGI",
@@ -1929,14 +1889,6 @@
       ],
       "fixtures": [
         {
-          "gw": 6,
-          "opp": "LIV",
-          "home": false,
-          "difficulty": 5,
-          "att": 5,
-          "def": 5
-        },
-        {
           "gw": 7,
           "opp": "IPS",
           "home": true,
@@ -1967,22 +1919,30 @@
           "difficulty": 4,
           "att": 4,
           "def": 3
+        },
+        {
+          "gw": 11,
+          "opp": "FUL",
+          "home": true,
+          "difficulty": 3,
+          "att": 3,
+          "def": 3
         }
       ],
-      "model_xp": 3.21,
-      "ep_next_xp": 4.5,
+      "model_xp": 4.07,
+      "ep_next_xp": 3.0,
       "breakdown": {
-        "appearance": 1.68,
-        "goals": 0.51,
-        "assists": 0.65,
-        "clean_sheet": 0.07,
-        "defcon": 0.04,
-        "bonus": 0.44,
+        "appearance": 1.21,
+        "goals": 1.02,
+        "assists": 1.3,
+        "clean_sheet": 0.26,
+        "defcon": 0.0,
+        "bonus": 0.41,
         "saves": 0,
-        "other": -0.2
+        "other": -0.13
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.2089,
+        "weak_evidence_share": 0.1848,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -1996,42 +1956,42 @@
       "team_id": 15,
       "team_code": 43,
       "pos": "FWD",
-      "net_transfers": 119757,
+      "net_transfers": 373,
       "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 33.0,
+        "percent": 33.6,
         "due": false,
-        "momentum": 119757,
+        "momentum": 373,
         "projections": [
           {
             "offset": 0,
-            "percent": 40.1,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 52.7,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 65.3,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 771.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 15.6,
-      "owned_by": 74.3,
+      "owned_by": 74.4,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1",
-      "form": 7.5,
+      "form": 5.0,
       "ict": 46.5,
       "last_season": {
         "season": "2025/26",
@@ -2042,11 +2002,11 @@
         "xa90": 0.08
       },
       "dist": {
-        "mean": 4.63,
-        "floor": 3.0,
-        "ceiling": 7.0,
-        "boom": 8.7,
-        "std": 3.1
+        "mean": 6.26,
+        "floor": 1.0,
+        "ceiling": 15.0,
+        "boom": 29.4,
+        "std": 5.71
       },
       "defcon": {
         "p_hit": 0.0,
@@ -2056,48 +2016,44 @@
       },
       "xgi90": 0.99,
       "defcon90": 3.17,
-      "next_gw_xp": 4.65,
-      "horizon_xp": 36.91,
-      "xp_window": 36.91,
+      "next_gw_xp": 6.28,
+      "horizon_xp": 26.25,
+      "xp_window": 26.25,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 4.65
-        },
-        {
           "gw": 7,
-          "xp": 8.89
+          "xp": 6.28
         },
         {
           "gw": 8,
-          "xp": 5.97
+          "xp": 4.25
         },
         {
           "gw": 9,
-          "xp": 4.96
+          "xp": 3.55
         },
         {
           "gw": 10,
-          "xp": 5.97
+          "xp": 4.25
         },
         {
           "gw": 11,
-          "xp": 6.47
+          "xp": 4.6
+        },
+        {
+          "gw": 12,
+          "xp": 3.33
         }
       ],
-      "p_start": 0.98,
+      "p_start": 0.64,
       "confidence": 0.91,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~81'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~56'"
       },
-      "rationale": "Nailed forward with real underlying threat (0.99 xGI/90), on pens #1 and in form (7.5).",
+      "rationale": "Likely-starting forward (rotation risk) with real underlying threat (0.99 xGI/90), on pens #1 and in form (5.0).",
       "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
-        },
         {
           "label": "high xGI",
           "kind": "good"
@@ -2117,14 +2073,6 @@
       ],
       "fixtures": [
         {
-          "gw": 6,
-          "opp": "LIV",
-          "home": false,
-          "difficulty": 5,
-          "att": 5,
-          "def": 5
-        },
-        {
           "gw": 7,
           "opp": "IPS",
           "home": true,
@@ -2155,22 +2103,30 @@
           "difficulty": 4,
           "att": 4,
           "def": 3
+        },
+        {
+          "gw": 11,
+          "opp": "FUL",
+          "home": true,
+          "difficulty": 3,
+          "att": 3,
+          "def": 3
         }
       ],
-      "model_xp": 4.65,
-      "ep_next_xp": 7.5,
+      "model_xp": 6.28,
+      "ep_next_xp": 5.0,
       "breakdown": {
-        "appearance": 1.89,
-        "goals": 1.79,
-        "assists": 0.15,
+        "appearance": 1.41,
+        "goals": 3.79,
+        "assists": 0.32,
         "clean_sheet": 0,
         "defcon": 0,
-        "bonus": 0.82,
+        "bonus": 0.77,
         "saves": 0,
         "other": 0
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.1763,
+        "weak_evidence_share": 0.1224,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -2184,42 +2140,42 @@
       "team_id": 17,
       "team_code": 4,
       "pos": "MID",
-      "net_transfers": 394152,
-      "cost_change_event": 1,
+      "net_transfers": 287,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 55.4,
+        "percent": 45.6,
         "due": false,
-        "momentum": 394152,
+        "momentum": 287,
         "projections": [
           {
             "offset": 0,
-            "percent": 112.9,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 214.0,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 315.0,
-            "likelihood": 5
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 16804.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 6.1,
-      "owned_by": 8.3,
+      "owned_by": 8.1,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 5.5,
+      "form": 3.7,
       "ict": 28.2,
       "last_season": {
         "season": "2025/26",
@@ -2230,76 +2186,64 @@
         "xa90": 0.12
       },
       "dist": {
-        "mean": 4.77,
-        "floor": 2.0,
-        "ceiling": 9.0,
-        "boom": 9.5,
-        "std": 3.75
+        "mean": 2.55,
+        "floor": 1.0,
+        "ceiling": 7.0,
+        "boom": 2.4,
+        "std": 2.81
       },
       "defcon": {
-        "p_hit": 0.002,
+        "p_hit": 0.0,
         "per90": 4.6,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.22,
       "defcon90": 4.61,
-      "next_gw_xp": 4.75,
-      "horizon_xp": 24.24,
-      "xp_window": 24.24,
+      "next_gw_xp": 2.57,
+      "horizon_xp": 16.03,
+      "xp_window": 16.03,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 4.75
-        },
-        {
           "gw": 7,
-          "xp": 3.67
+          "xp": 2.57
         },
         {
           "gw": 8,
-          "xp": 4.75
+          "xp": 3.3
         },
         {
           "gw": 9,
-          "xp": 3.67
+          "xp": 2.57
         },
         {
           "gw": 10,
-          "xp": 4.75
+          "xp": 3.3
         },
         {
           "gw": 11,
-          "xp": 2.66
-        }
-      ],
-      "p_start": 0.91,
-      "confidence": 0.87,
-      "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~75'"
-      },
-      "rationale": "Nailed midfielder with in form (5.5).",
-      "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
+          "xp": 1.9
         },
         {
-          "label": "in form",
-          "kind": "good"
+          "gw": 12,
+          "xp": 2.4
+        }
+      ],
+      "p_start": 0.57,
+      "confidence": 0.87,
+      "xmins_badge": {
+        "label": "CAMEO?",
+        "kind": "bad",
+        "hint": "~51'"
+      },
+      "rationale": "Rotation/bench midfielder with projected 2.6 pts next GW.",
+      "tags": [
+        {
+          "label": "rotation risk",
+          "kind": "warn"
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "COV",
-          "home": false,
-          "difficulty": 2,
-          "att": 1,
-          "def": 2
-        },
         {
           "gw": 7,
           "opp": "AVL",
@@ -2331,22 +2275,30 @@
           "difficulty": 2,
           "att": 1,
           "def": 2
+        },
+        {
+          "gw": 11,
+          "opp": "ARS",
+          "home": true,
+          "difficulty": 5,
+          "att": 5,
+          "def": 5
         }
       ],
-      "model_xp": 4.75,
-      "ep_next_xp": 5.5,
+      "model_xp": 2.57,
+      "ep_next_xp": 3.7,
       "breakdown": {
-        "appearance": 1.77,
-        "goals": 1.79,
-        "assists": 0.53,
-        "clean_sheet": 0.3,
-        "defcon": 0.0,
-        "bonus": 0.35,
+        "appearance": 1.3,
+        "goals": 0.75,
+        "assists": 0.22,
+        "clean_sheet": 0.1,
+        "defcon": 0,
+        "bonus": 0.2,
         "saves": 0,
         "other": 0
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.1371,
+        "weak_evidence_share": 0.1167,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -2360,42 +2312,42 @@
       "team_id": 18,
       "team_code": 17,
       "pos": "MID",
-      "net_transfers": -5838,
+      "net_transfers": -61,
       "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 60.0,
+        "percent": 60.5,
         "due": false,
-        "momentum": -5838,
+        "momentum": -61,
         "projections": [
           {
             "offset": 0,
-            "percent": 63.4,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 69.3,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 75.2,
-            "likelihood": 3
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 364.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 8.0,
-      "owned_by": 15.9,
+      "owned_by": 15.8,
       "status": "a",
       "news": "",
       "set_pieces": "pens #1, FK #1",
-      "form": 5.0,
+      "form": 3.3,
       "ict": 40.6,
       "last_season": {
         "season": "2025/26",
@@ -2406,62 +2358,58 @@
         "xa90": 0.08
       },
       "dist": {
-        "mean": 6.46,
-        "floor": 3.0,
-        "ceiling": 12.0,
-        "boom": 17.4,
-        "std": 4.25
+        "mean": 2.43,
+        "floor": 1.0,
+        "ceiling": 6.0,
+        "boom": 0.9,
+        "std": 2.24
       },
       "defcon": {
-        "p_hit": 0.007,
+        "p_hit": 0.001,
         "per90": 5.2,
         "threshold": 12,
         "near_hit": false
       },
       "xgi90": 0.59,
       "defcon90": 5.17,
-      "next_gw_xp": 6.44,
-      "horizon_xp": 28.74,
-      "xp_window": 28.74,
+      "next_gw_xp": 2.44,
+      "horizon_xp": 18.76,
+      "xp_window": 18.76,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 6.44
-        },
-        {
           "gw": 7,
-          "xp": 3.38
+          "xp": 2.44
         },
         {
           "gw": 8,
-          "xp": 6.44
+          "xp": 4.58
         },
         {
           "gw": 9,
-          "xp": 4.55
+          "xp": 3.25
         },
         {
           "gw": 10,
-          "xp": 3.38
+          "xp": 2.44
         },
         {
           "gw": 11,
-          "xp": 4.55
+          "xp": 3.25
+        },
+        {
+          "gw": 12,
+          "xp": 2.79
         }
       ],
-      "p_start": 0.98,
+      "p_start": 0.65,
       "confidence": 0.91,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~81'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~56'"
       },
-      "rationale": "Nailed midfielder with real underlying threat (0.59 xGI/90), on pens #1, FK #1 and in form (5.0).",
+      "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.59 xGI/90) and on pens #1, FK #1.",
       "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
-        },
         {
           "label": "high xGI",
           "kind": "good"
@@ -2469,21 +2417,9 @@
         {
           "label": "set-pieces",
           "kind": "info"
-        },
-        {
-          "label": "in form",
-          "kind": "good"
         }
       ],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "CRY",
-          "home": false,
-          "difficulty": 1,
-          "att": 1,
-          "def": 1
-        },
         {
           "gw": 7,
           "opp": "ARS",
@@ -2515,22 +2451,30 @@
           "difficulty": 4,
           "att": 5,
           "def": 4
+        },
+        {
+          "gw": 11,
+          "opp": "BOU",
+          "home": false,
+          "difficulty": 3,
+          "att": 4,
+          "def": 2
         }
       ],
-      "model_xp": 6.44,
-      "ep_next_xp": 5.0,
+      "model_xp": 2.44,
+      "ep_next_xp": 3.3,
       "breakdown": {
-        "appearance": 1.88,
-        "goals": 2.58,
-        "assists": 0.83,
-        "clean_sheet": 0.53,
-        "defcon": 0.01,
-        "bonus": 0.59,
+        "appearance": 1.41,
+        "goals": 0.49,
+        "assists": 0.16,
+        "clean_sheet": 0.08,
+        "defcon": 0.0,
+        "bonus": 0.3,
         "saves": 0,
         "other": 0
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.176,
+        "weak_evidence_share": 0.1557,
         "largest_weak_component": "bonus",
         "largest_weak_status": "insufficient_evidence"
       }
@@ -2544,106 +2488,93 @@
       "team_id": 11,
       "team_code": 88,
       "pos": "GKP",
-      "net_transfers": 160311,
-      "cost_change_event": 1,
+      "net_transfers": 126,
+      "cost_change_event": 0,
       "price_pred": {
         "available": true,
         "dir": "up",
-        "percent": 4.4,
+        "percent": 3.7,
         "due": false,
-        "momentum": 160311,
+        "momentum": 126,
         "projections": [
           {
             "offset": 0,
-            "percent": 9.5,
-            "likelihood": 1
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 1,
-            "percent": 18.5,
-            "likelihood": 1
+            "percent": 0.0,
+            "likelihood": 0
           },
           {
             "offset": 2,
-            "percent": 27.4,
-            "likelihood": 2
+            "percent": 0.0,
+            "likelihood": 0
           }
         ],
         "locked_until": null,
-        "hourly_rate": 1486.0,
-        "calibrating": false,
+        "hourly_rate": 0.0,
+        "calibrating": true,
         "basis": "published by FPL: `price_change_percent` is a signed percentage of the way to the next change, and each projection carries FPL's own likelihood grade (-5 to +5). Gaffer does not estimate this."
       },
       "price": 4.7,
-      "owned_by": 13.4,
+      "owned_by": 13.3,
       "status": "a",
       "news": "",
       "set_pieces": "",
-      "form": 4.0,
+      "form": 2.7,
       "ict": 15.0,
       "last_season": null,
       "dist": {
-        "mean": 3.84,
-        "floor": 2.0,
+        "mean": 3.17,
+        "floor": 1.0,
         "ceiling": 7.0,
-        "boom": 1.9,
-        "std": 2.55
+        "boom": 1.7,
+        "std": 3.0
       },
       "defcon": null,
       "xgi90": 0.0,
       "defcon90": 0.0,
-      "next_gw_xp": 3.87,
-      "horizon_xp": 22.99,
-      "xp_window": 22.99,
+      "next_gw_xp": 3.17,
+      "horizon_xp": 15.85,
+      "xp_window": 15.85,
       "gw_xp": [
         {
-          "gw": 6,
-          "xp": 3.87
-        },
-        {
           "gw": 7,
-          "xp": 4.79
+          "xp": 3.17
         },
         {
           "gw": 8,
-          "xp": 3.87
+          "xp": 2.56
         },
         {
           "gw": 9,
-          "xp": 5.15
+          "xp": 3.41
         },
         {
           "gw": 10,
-          "xp": 2.44
+          "xp": 1.62
         },
         {
           "gw": 11,
-          "xp": 2.87
+          "xp": 1.91
+        },
+        {
+          "gw": 12,
+          "xp": 3.17
         }
       ],
-      "p_start": 0.98,
+      "p_start": 0.66,
       "confidence": 0.69,
       "xmins_badge": {
-        "label": "NAILED",
-        "kind": "good",
-        "hint": "~80'"
+        "label": "ROTATION",
+        "kind": "warn",
+        "hint": "~54'"
       },
-      "rationale": "Nailed keeper with strong clean-sheet odds.",
-      "tags": [
-        {
-          "label": "nailed",
-          "kind": "good"
-        }
-      ],
+      "rationale": "Likely-starting keeper (rotation risk) with strong clean-sheet odds.",
+      "tags": [],
       "fixtures": [
-        {
-          "gw": 6,
-          "opp": "EVE",
-          "home": true,
-          "difficulty": 3,
-          "att": 3,
-          "def": 3
-        },
         {
           "gw": 7,
           "opp": "FUL",
@@ -2675,22 +2606,30 @@
           "difficulty": 5,
           "att": 5,
           "def": 5
+        },
+        {
+          "gw": 11,
+          "opp": "BHA",
+          "home": true,
+          "difficulty": 4,
+          "att": 4,
+          "def": 5
         }
       ],
-      "model_xp": 3.87,
-      "ep_next_xp": 4.0,
+      "model_xp": 3.17,
+      "ep_next_xp": 2.7,
       "breakdown": {
-        "appearance": 1.95,
-        "goals": 0.06,
+        "appearance": 1.32,
+        "goals": 0.07,
         "assists": 0.02,
-        "clean_sheet": 1.09,
+        "clean_sheet": 1.19,
         "defcon": 0,
-        "bonus": 0.39,
-        "saves": 0.68,
-        "other": -0.32
+        "bonus": 0.29,
+        "saves": 0.36,
+        "other": -0.07
       },
       "evidence_quality": {
-        "weak_evidence_share": 0.5499,
+        "weak_evidence_share": 0.5753,
         "largest_weak_component": "clean_sheet",
         "largest_weak_status": "weak_or_failed"
       }
