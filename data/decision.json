@@ -2,20 +2,20 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-11T19:33:45.989614+00:00",
+    "generated_for": "2026-10-11T20:43:28.528898+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-17T10:00:00+00:00",
-        "in_hours": 134.4,
+        "in_hours": 133.3,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 40,
@@ -24,29 +24,28 @@
           "price": 7.8
         },
         "direction": "rise",
-        "percent": 98.4,
+        "percent": 102.3,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "111.2",
+            "projected_percent": "109.3",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "195.3",
+            "projected_percent": "179.4",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "279.5",
+            "projected_percent": "249.4",
             "likelihood": 5
           }
         ],
-        "certainty": "98% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": true,
         "owned": true,
-        "changes": "Rogers may move 0.1m before the deadline"
+        "changes": "Rogers costs 0.1m more if you wait"
       },
       {
         "kind": "price_change_due",
@@ -58,21 +57,21 @@
           "price": 7.7
         },
         "direction": "rise",
-        "percent": 137.4,
+        "percent": 142.9,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "157.6",
+            "projected_percent": "152.4",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "290.5",
+            "projected_percent": "246.6",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "423.5",
+            "projected_percent": "340.9",
             "likelihood": 5
           }
         ],
@@ -91,21 +90,21 @@
           "price": 4.6
         },
         "direction": "rise",
-        "percent": 104.4,
+        "percent": 105.3,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "106.8",
+            "projected_percent": "106.7",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "122.4",
+            "projected_percent": "120.5",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "138.0",
+            "projected_percent": "134.4",
             "likelihood": 5
           }
         ],
@@ -175,18 +174,18 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "money may be at stake",
-    "reason": "Rogers is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
-    "hours_to_deadline": 134.4,
+    "verdict": "act",
+    "reason": "waiting costs 0.1m of team value on changes FPL says are already due",
+    "hours_to_deadline": 133.3,
     "edge_points": 4.81,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.0,
-    "detail": [],
-    "pending_price_changes": 2,
-    "near_price_changes": 1,
-    "near_at_risk_if_you_wait": [
-      "Rogers"
+    "money_cost_of_waiting_m": 0.1,
+    "detail": [
+      "Rogers is due to rise: waiting costs 0.1m"
     ],
+    "pending_price_changes": 3,
+    "near_price_changes": 0,
+    "near_at_risk_if_you_wait": [],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
   },
@@ -202,7 +201,7 @@
         "chance_of_playing": 75,
         "news": "Leg injury - 75% chance of playing",
         "news_added": "2026-10-01T19:30:09.402881+00:00",
-        "news_age_days": 10.0,
+        "news_age_days": 10.1,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -256,7 +255,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-11T19:33:24+00:00",
+  "generated_at": "2026-10-11T20:43:12+00:00",
   "gameweek": 7,
   "horizon": 6,
   "squad_state": {
@@ -530,7 +529,7 @@
         "next_gw_xp": 3.76,
         "confidence": 0.92,
         "horizon_xp": 22.65,
-        "owned_by": 43.9,
+        "owned_by": 44.0,
         "rationale": "Nailed midfielder with real underlying threat (0.55 xGI/90) and in form (6.3).",
         "tags": [
           {
@@ -991,7 +990,7 @@
       "next_gw_xp": 6.94,
       "confidence": 0.86,
       "horizon_xp": 28.76,
-      "owned_by": 29.5,
+      "owned_by": 29.6,
       "rationale": "Nailed midfielder with real underlying threat (0.74 xGI/90), on FK #1, corners #1 and in form (6.3).",
       "tags": [
         {
@@ -1513,7 +1512,7 @@
         "next_gw_xp": 6.94,
         "confidence": 0.86,
         "horizon_xp": 28.76,
-        "owned_by": 29.5,
+        "owned_by": 29.6,
         "rationale": "Nailed midfielder with real underlying threat (0.74 xGI/90), on FK #1, corners #1 and in form (6.3).",
         "tags": [
           {
@@ -1750,7 +1749,7 @@
         "next_gw_xp": 4.24,
         "confidence": 0.9,
         "horizon_xp": 25.46,
-        "owned_by": 68.1,
+        "owned_by": 68.2,
         "rationale": "Nailed forward with real underlying threat (0.64 xGI/90) and in form (8.0).",
         "tags": [
           {
@@ -2973,23 +2972,6 @@
             "simulations": 2000
           },
           {
-            "entry_id": 7905520,
-            "name": "Rich Crowley",
-            "d_expected_points": 4.811,
-            "d_p_above": 0.0,
-            "d_p_above_ci95": [
-              0.0,
-              0.0
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": false,
-            "p_above_before": 1.0,
-            "p_above_after": 1.0,
-            "d_variance_of_gap": 23.815,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
             "entry_id": 1506291,
             "name": "Jason Mercer",
             "d_expected_points": 4.811,
@@ -3003,6 +2985,23 @@
             "p_above_before": 1.0,
             "p_above_after": 1.0,
             "d_variance_of_gap": 52.132,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 7905520,
+            "name": "Rich Crowley",
+            "d_expected_points": 4.811,
+            "d_p_above": 0.0,
+            "d_p_above_ci95": [
+              0.0,
+              0.0
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": false,
+            "p_above_before": 1.0,
+            "p_above_after": 1.0,
+            "d_variance_of_gap": 23.815,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
@@ -3817,8 +3816,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-11T19:33:24+00:00",
-    "squad_retrieved_at": "2026-10-11T19:33:35+00:00",
+    "generated_at": "2026-10-11T20:43:12+00:00",
+    "squad_retrieved_at": "2026-10-11T20:43:23+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
