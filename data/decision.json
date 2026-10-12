@@ -2,17 +2,51 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-12T15:22:46.796864+00:00",
+    "generated_for": "2026-10-12T17:43:46.162085+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-17T10:00:00+00:00",
-        "in_hours": 114.6,
+        "in_hours": 112.3,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
+      },
+      {
+        "kind": "price_change_near",
+        "at": null,
+        "player": {
+          "id": 399,
+          "name": "Cherki",
+          "team": "MCI",
+          "price": 7.8
+        },
+        "direction": "rise",
+        "percent": 71.8,
+        "projections": [
+          {
+            "offset": 0,
+            "projected_percent": "81.6",
+            "likelihood": 3
+          },
+          {
+            "offset": 1,
+            "projected_percent": "125.0",
+            "likelihood": 5
+          },
+          {
+            "offset": 2,
+            "projected_percent": "168.4",
+            "likelihood": 5
+          }
+        ],
+        "certainty": "72% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "in_this_move": false,
+        "owned": true,
+        "changes": "Cherki may move 0.1m before the deadline"
       }
     ],
     "schedule_shape": [
@@ -77,13 +111,13 @@
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
     "verdict": "no money either way",
     "reason": "no price change in this move is due",
-    "hours_to_deadline": 114.6,
+    "hours_to_deadline": 112.3,
     "edge_points": 4.95,
     "edge_interval_type": "monte_carlo",
     "money_cost_of_waiting_m": 0.0,
     "detail": [],
     "pending_price_changes": 0,
-    "near_price_changes": 0,
+    "near_price_changes": 1,
     "near_at_risk_if_you_wait": [],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
@@ -100,7 +134,7 @@
         "chance_of_playing": 75,
         "news": "Leg injury - 75% chance of playing",
         "news_added": "2026-10-01T19:30:09.402881+00:00",
-        "news_age_days": 10.8,
+        "news_age_days": 10.9,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -154,7 +188,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-12T15:22:15+00:00",
+  "generated_at": "2026-10-12T17:43:17+00:00",
   "gameweek": 7,
   "horizon": 6,
   "squad_state": {
@@ -508,7 +542,7 @@
         "confidence": 0.7,
         "horizon_xp": 8.55,
         "owned_by": 3.3,
-        "rationale": "Rotation/bench defender with in form (5.3) and but note: Leg injury - 75% chance of playing.",
+        "rationale": "Rotation/bench defender with but note: Leg injury - 75% chance of playing.",
         "tags": [
           {
             "label": "fitness doubt",
@@ -517,10 +551,6 @@
           {
             "label": "rotation risk",
             "kind": "warn"
-          },
-          {
-            "label": "in form",
-            "kind": "good"
           }
         ],
         "xmins_badge": {
@@ -889,7 +919,7 @@
       "next_gw_xp": 6.75,
       "confidence": 0.86,
       "horizon_xp": 28.12,
-      "owned_by": 30.3,
+      "owned_by": 30.4,
       "rationale": "Nailed midfielder with real underlying threat (0.69 xGI/90), on FK #1, corners #1 and in form (6.3).",
       "tags": [
         {
@@ -1044,7 +1074,7 @@
         "next_gw_xp": 5.05,
         "confidence": 0.86,
         "horizon_xp": 29.95,
-        "owned_by": 52.0,
+        "owned_by": 52.1,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (5.3).",
         "tags": [
           {
@@ -1415,7 +1445,7 @@
         "next_gw_xp": 6.75,
         "confidence": 0.86,
         "horizon_xp": 28.12,
-        "owned_by": 30.3,
+        "owned_by": 30.4,
         "rationale": "Nailed midfielder with real underlying threat (0.69 xGI/90), on FK #1, corners #1 and in form (6.3).",
         "tags": [
           {
@@ -1582,7 +1612,7 @@
         "confidence": 0.87,
         "horizon_xp": 25.48,
         "owned_by": 8.6,
-        "rationale": "Nailed forward with real underlying threat (0.82 xGI/90) and on pens #1.",
+        "rationale": "Nailed forward with real underlying threat (0.82 xGI/90), on pens #1 and in form (6.0).",
         "tags": [
           {
             "label": "nailed",
@@ -1595,6 +1625,10 @@
           {
             "label": "set-pieces",
             "kind": "info"
+          },
+          {
+            "label": "in form",
+            "kind": "good"
           }
         ],
         "xmins_badge": {
@@ -1656,7 +1690,7 @@
         "next_gw_xp": 4.24,
         "confidence": 0.9,
         "horizon_xp": 25.46,
-        "owned_by": 68.7,
+        "owned_by": 68.8,
         "rationale": "Nailed forward with real underlying threat (0.64 xGI/90) and in form (6.0).",
         "tags": [
           {
@@ -3719,8 +3753,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-12T15:22:15+00:00",
-    "squad_retrieved_at": "2026-10-12T15:22:41+00:00",
+    "generated_at": "2026-10-12T17:43:17+00:00",
+    "squad_retrieved_at": "2026-10-12T17:43:34+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
