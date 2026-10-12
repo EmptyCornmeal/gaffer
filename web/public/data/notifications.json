@@ -1,12 +1,12 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-10-12T19:23:50+00:00",
+  "generated_at": "2026-10-12T21:44:50+00:00",
   "result": {
     "considered": 2,
     "new": 2,
     "duplicates": 0,
-    "suppressed": 0,
-    "delivered": 2,
+    "suppressed": 2,
+    "delivered": 0,
     "failed": 0,
     "dry_run": true,
     "alerts": [
@@ -18,8 +18,9 @@
         "event": 7,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:9ea474cf9a47",
-        "created_at": "2026-10-12T19:24:23+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-12T21:45:23+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       },
       {
         "kind": "league_swing",
@@ -29,8 +30,9 @@
         "event": 7,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:4b3535ce187b",
-        "created_at": "2026-10-12T19:24:23+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-12T21:45:23+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       }
     ],
     "errors": []
@@ -52,7 +54,7 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 2
+      "suppressed": 2
     },
     "recent": [
       {
@@ -60,8 +62,8 @@
         "severity": "important",
         "title": "Mykolenko is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-12T19:24:23+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-12T21:45:23+00:00",
+        "state": "suppressed",
         "event": 7
       },
       {
@@ -69,8 +71,8 @@
         "severity": "info",
         "title": "A rival's differential is hurting you",
         "deep_link": "#/live",
-        "created_at": "2026-10-12T19:24:23+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-12T21:45:23+00:00",
+        "state": "suppressed",
         "event": 7
       }
     ]
