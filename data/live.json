@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 7,
-  "as_of": "2026-10-19T18:55:18+00:00",
+  "as_of": "2026-10-19T21:18:23+00:00",
   "fixtures": [
     {
       "id": 61,
@@ -98,17 +98,16 @@
       "event": 7,
       "team_h": 19,
       "team_a": 7,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-10-19T19:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     }
   ],
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 9,
-      "scheduled": 1
+      "awaiting_bonus": 10
     },
     "all_finished": false,
     "bonus_final": true
@@ -118,17 +117,17 @@
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 76,
+    "confirmed": 77,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
-    "current": 76,
-    "projected": 76.0,
-    "bench_points": 5,
-    "players_played": 13,
-    "players_yet_to_play": 1,
+    "current": 77,
+    "projected": 77.0,
+    "bench_points": 7,
+    "players_played": 14,
+    "players_yet_to_play": 0,
     "hits": 0,
     "season_total_before": 417,
-    "season_total_projected": 493.0,
+    "season_total_projected": 494.0,
     "autosubs": {
       "xi": [
         1,
@@ -139,18 +138,18 @@
         165,
         249,
         391,
-        330,
+        173,
         411,
         427
       ],
       "bench": [
-        173,
         399,
+        330,
         453,
         572
       ],
       "subs_in": [
-        330
+        173
       ],
       "subs_out": [
         399
@@ -158,7 +157,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -308,19 +307,19 @@
       "is_captain": false
     },
     {
-      "id": 330,
+      "id": 173,
       "minutes": 90,
-      "confirmed": 2,
+      "confirmed": 3,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 2.0,
+      "total": 3.0,
       "played": true,
       "finished": true,
       "yet_to_play": false,
       "fixture_states": [
         "awaiting_bonus"
       ],
-      "name": "Bogle",
+      "name": "Thomas",
       "pos": "DEF",
       "in_xi": true,
       "is_captain": false
@@ -362,24 +361,6 @@
       "is_captain": false
     },
     {
-      "id": 173,
-      "minutes": 0,
-      "confirmed": 0,
-      "provisional": 0,
-      "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
-      "finished": false,
-      "yet_to_play": true,
-      "fixture_states": [
-        "scheduled"
-      ],
-      "name": "Thomas",
-      "pos": "DEF",
-      "in_xi": false,
-      "is_captain": false
-    },
-    {
       "id": 399,
       "minutes": 0,
       "confirmed": 0,
@@ -394,6 +375,24 @@
       ],
       "name": "Cherki",
       "pos": "MID",
+      "in_xi": false,
+      "is_captain": false
+    },
+    {
+      "id": 330,
+      "minutes": 90,
+      "confirmed": 2,
+      "provisional": 0,
+      "predicted": 0.0,
+      "total": 2.0,
+      "played": true,
+      "finished": true,
+      "yet_to_play": false,
+      "fixture_states": [
+        "awaiting_bonus"
+      ],
+      "name": "Bogle",
+      "pos": "DEF",
       "in_xi": false,
       "is_captain": false
     },
@@ -449,10 +448,10 @@
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 493,
-      "projected": 493.0,
-      "gw_points": 76,
-      "yet_to_play": 1,
+      "current": 494,
+      "projected": 494.0,
+      "gw_points": 77,
+      "yet_to_play": 0,
       "provisional_position": 2
     },
     {
@@ -472,7 +471,7 @@
       "current": 435,
       "projected": 435.0,
       "gw_points": 65,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "provisional_position": 4
     },
     {
@@ -489,10 +488,10 @@
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 379,
-      "projected": 379.0,
-      "gw_points": 58,
-      "yet_to_play": 3,
+      "current": 384,
+      "projected": 384.0,
+      "gw_points": 63,
+      "yet_to_play": 0,
       "provisional_position": 6
     },
     {
@@ -734,8 +733,8 @@
         115,
         124,
         154,
+        173,
         249,
-        330,
         346,
         391,
         427,
@@ -975,8 +974,8 @@
         106,
         115,
         138,
+        173,
         249,
-        330,
         362,
         391,
         411,
@@ -990,7 +989,7 @@
       "provisional_position": 4,
       "gw_points": 65,
       "hits": 0,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -1022,7 +1021,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1168,7 +1167,7 @@
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 423,
@@ -1210,8 +1209,8 @@
       "differential": [
         68,
         124,
+        173,
         249,
-        330,
         368,
         388,
         391,
@@ -1444,8 +1443,8 @@
         68,
         115,
         124,
+        173,
         249,
-        330,
         346,
         391,
         397,
@@ -1458,9 +1457,9 @@
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "provisional_position": 6,
-      "gw_points": 58,
+      "gw_points": 63,
       "hits": 0,
-      "yet_to_play": 3,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -1490,7 +1489,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1534,13 +1533,13 @@
           "element": 502,
           "name": "Robertson",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 68,
+          "confirmed": 5,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 5,
+          "yet_to_play": false
         },
         {
           "element": 282,
@@ -1630,13 +1629,13 @@
           "element": 496,
           "name": "Kinsky",
           "pos": "GKP",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 557,
@@ -1654,13 +1653,13 @@
           "element": 175,
           "name": "van Ewijk",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 272,
@@ -1679,9 +1678,9 @@
         31,
         68,
         165,
+        173,
         249,
         282,
-        330,
         346,
         358,
         391,
@@ -1922,12 +1921,12 @@
         82,
         106,
         154,
+        173,
         212,
         249,
         279,
         282,
         304,
-        330,
         387,
         391,
         426,
@@ -1937,10 +1936,10 @@
   ],
   "me": {
     "entry_id": 1066421,
-    "current": 493,
-    "projected": 493.0,
-    "gw_points": 76,
-    "yet_to_play": 1,
+    "current": 494,
+    "projected": 494.0,
+    "gw_points": 77,
+    "yet_to_play": 0,
     "provisional_position": 2,
     "substitutions": {
       "xi": [
@@ -1952,18 +1951,18 @@
         165,
         249,
         391,
-        330,
+        173,
         411,
         427
       ],
       "bench": [
-        173,
         399,
+        330,
         453,
         572
       ],
       "subs_in": [
-        330
+        173
       ],
       "subs_out": [
         399
@@ -1971,7 +1970,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -1984,13 +1983,13 @@
     "note": "a differential you own"
   },
   "separation": {
-    "confirmed": 76,
+    "confirmed": 77,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-10-19T18:55:18+00:00",
+  "generated_at": "2026-10-19T21:18:23+00:00",
   "season": "2026-27"
 }
