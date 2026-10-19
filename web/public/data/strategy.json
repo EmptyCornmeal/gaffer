@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-10-19T21:18:23+00:00",
+  "generated_at": "2026-10-19T22:57:45+00:00",
   "gameweek": 8,
   "gameweeks_remaining": 31,
   "simulation": {
@@ -585,7 +585,7 @@
           "entry_id": 1094262,
           "name": "Kevin Colling",
           "points_gap": 55.0,
-          "difference_mean": 56.64,
+          "difference_mean": 56.63,
           "difference_std": 13.69,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
@@ -633,8 +633,8 @@
           "entry_id": 7419334,
           "name": "Dylan Llyr Morgan",
           "points_gap": 108.0,
-          "difference_mean": 118.78,
-          "difference_std": 10.84,
+          "difference_mean": 119.12,
+          "difference_std": 10.71,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -670,25 +670,25 @@
       "differential_leverage": [
         {
           "player_id": 427,
-          "leverage_points": 1.478,
-          "leverage_spread_across_rivals": 0.184,
-          "correlation_with_gap": 0.35,
+          "leverage_points": 1.472,
+          "leverage_spread_across_rivals": 0.192,
+          "correlation_with_gap": 0.349,
           "own_std": 4.224,
           "captained": false
         },
         {
           "player_id": 391,
-          "leverage_points": 0.64,
-          "leverage_spread_across_rivals": 0.062,
-          "correlation_with_gap": 0.23,
+          "leverage_points": 0.639,
+          "leverage_spread_across_rivals": 0.063,
+          "correlation_with_gap": 0.229,
           "own_std": 2.784,
           "captained": false
         },
         {
           "player_id": 249,
-          "leverage_points": 0.271,
-          "leverage_spread_across_rivals": 0.256,
-          "correlation_with_gap": 0.112,
+          "leverage_points": 0.266,
+          "leverage_spread_across_rivals": 0.255,
+          "correlation_with_gap": 0.11,
           "own_std": 2.412,
           "captained": false
         }
@@ -1023,10 +1023,10 @@
           "points_gap": -14.0,
           "difference_mean": -5.13,
           "difference_std": 9.08,
-          "p_above_after_gw": 0.2655,
+          "p_above_after_gw": 0.2645,
           "p_above_ci95": [
-            0.2466,
-            0.2853
+            0.2456,
+            0.2843
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1119,10 +1119,10 @@
           "points_gap": 21.0,
           "difference_mean": 24.66,
           "difference_std": 11.55,
-          "p_above_after_gw": 0.9865,
+          "p_above_after_gw": 0.985,
           "p_above_ci95": [
-            0.9804,
-            0.9907
+            0.9787,
+            0.9895
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1165,12 +1165,12 @@
           "entry_id": 5876996,
           "name": "Oliver Woodward",
           "points_gap": 33.0,
-          "difference_mean": 35.04,
-          "difference_std": 10.37,
-          "p_above_after_gw": 0.9985,
+          "difference_mean": 34.95,
+          "difference_std": 10.35,
+          "p_above_after_gw": 0.9995,
           "p_above_ci95": [
-            0.9956,
-            0.9995
+            0.9972,
+            0.9999
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1229,8 +1229,8 @@
           "entry_id": 3266016,
           "name": "arran wright",
           "points_gap": 62.0,
-          "difference_mean": 64.44,
-          "difference_std": 12.0,
+          "difference_mean": 64.41,
+          "difference_std": 12.06,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1357,8 +1357,8 @@
           "entry_id": 4033143,
           "name": "Tony Anderson",
           "points_gap": 116.0,
-          "difference_mean": 119.25,
-          "difference_std": 16.58,
+          "difference_mean": 119.29,
+          "difference_std": 16.52,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1405,7 +1405,7 @@
       "expected_points": 49.946,
       "p_target": {
         "271619": 0.1365,
-        "733241": 0.259
+        "733241": 0.263
       }
     },
     {
@@ -1414,7 +1414,7 @@
       "expected_points": 49.896,
       "p_target": {
         "271619": 0.1085,
-        "733241": 0.2615
+        "733241": 0.261
       }
     },
     {
@@ -1423,7 +1423,7 @@
       "expected_points": 49.096,
       "p_target": {
         "271619": 0.093,
-        "733241": 0.2265
+        "733241": 0.2275
       }
     },
     {
@@ -1437,8 +1437,8 @@
     }
   ],
   "resolution": {
-    "default": null,
-    "reason": "no league weights configured, and no option dominates. Set [leagues].weights to express which league matters most; until then this is a genuine choice, not a calculation.",
+    "default": "captain:427",
+    "reason": "one option dominates on every objective",
     "shortlist": [
       {
         "key": "captain:427",
@@ -1446,16 +1446,7 @@
         "expected_points": 49.946,
         "p_target": {
           "271619": 0.1365,
-          "733241": 0.259
-        }
-      },
-      {
-        "key": "captain:8",
-        "label": "Captain Calafiori",
-        "expected_points": 49.896,
-        "p_target": {
-          "271619": 0.1085,
-          "733241": 0.2615
+          "733241": 0.263
         }
       }
     ],
@@ -1471,21 +1462,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 16.96,
+    "expected_gain": 16.35,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "freehit",
         "gameweek": 8,
-        "expected_gain": 16.96,
+        "expected_gain": 16.35,
         "ci95": [
-          16.09,
-          17.84
+          15.5,
+          17.21
         ],
         "baseline_points": 49.05,
-        "with_chip_points": 66.01,
+        "with_chip_points": 65.4,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 16.96,
+        "expected_gain_per_gameweek": 16.35,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1536,15 +1527,15 @@
     "candidate": {
       "chip": "freehit",
       "gameweek": 8,
-      "expected_gain": 16.96,
+      "expected_gain": 16.35,
       "ci95": [
-        16.09,
-        17.84
+        15.5,
+        17.21
       ],
       "baseline_points": 49.05,
-      "with_chip_points": 66.01,
+      "with_chip_points": 65.4,
       "horizon_gameweeks": 1,
-      "expected_gain_per_gameweek": 16.96,
+      "expected_gain_per_gameweek": 16.35,
       "assumptions": [
         "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
         "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1771,7 +1762,7 @@
         }
       }
     },
-    "reason": "freehit projects +17.0 points in GW8, but Gaffer has not valued it in GW9-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 12 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW8-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+    "reason": "freehit projects +16.4 points in GW8, but Gaffer has not valued it in GW9-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 12 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW8-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
