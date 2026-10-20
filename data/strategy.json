@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-10-20T05:20:18+00:00",
+  "generated_at": "2026-10-20T06:52:37+00:00",
   "gameweek": 8,
   "gameweeks_remaining": 31,
   "simulation": {
@@ -195,19 +195,19 @@
       "league_id": 271619,
       "name": "Crouch Potatoes",
       "league_type": "x",
-      "classification": "tiny_private",
-      "size": 7,
-      "target_position": 1,
+      "classification": "small_private",
+      "size": 10,
+      "target_position": 3,
       "posture": {
         "stance": "neutral",
-        "reason": "within 15 points with 31 GW(s) left: expected points is the right objective",
+        "reason": "within 0 points with 31 GW(s) left: expected points is the right objective",
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first_after_gw": 0.0775,
-        "p_target_after_gw": 0.0775,
-        "target_position": 1,
-        "expected_position_after_gw": 1.92,
+        "p_first_after_gw": 0.0,
+        "p_target_after_gw": 0.0,
+        "target_position": 3,
+        "expected_position_after_gw": 11.0,
         "domain": {
           "horizon": "next_gameweek",
           "gameweek": null,
@@ -215,7 +215,7 @@
           "rivals_assumed": "rivals keep their current squads"
         },
         "simulations": 2000,
-        "ci95_halfwidth": 0.0117,
+        "ci95_halfwidth": 0.0,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -226,11 +226,11 @@
       "shields": [
         {
           "player_id": 411,
-          "owners": 5,
-          "n_rivals": 6,
-          "ownership_pct": 83.3,
-          "effective_ownership_pct": 166.7,
-          "captain_eo_pct": 83.3,
+          "owners": 10,
+          "n_rivals": 10,
+          "ownership_pct": 100.0,
+          "effective_ownership_pct": 200.0,
+          "captain_eo_pct": 100.0,
           "player": {
             "id": 411,
             "name": "Haaland",
@@ -243,29 +243,29 @@
           }
         },
         {
-          "player_id": 1,
-          "owners": 5,
-          "n_rivals": 6,
-          "ownership_pct": 83.3,
-          "effective_ownership_pct": 83.3,
+          "player_id": 8,
+          "owners": 10,
+          "n_rivals": 10,
+          "ownership_pct": 100.0,
+          "effective_ownership_pct": 100.0,
           "captain_eo_pct": 0.0,
           "player": {
-            "id": 1,
-            "name": "Raya",
+            "id": 8,
+            "name": "Calafiori",
             "team": "ARS",
-            "pos": "GKP",
-            "price": 6.1,
-            "code": 154561,
+            "pos": "DEF",
+            "price": 6.0,
+            "code": 466075,
             "team_code": 3,
-            "next_gw_xp": 4.62
+            "next_gw_xp": 5.52
           }
         },
         {
           "player_id": 165,
-          "owners": 5,
-          "n_rivals": 6,
-          "ownership_pct": 83.3,
-          "effective_ownership_pct": 83.3,
+          "owners": 10,
+          "n_rivals": 10,
+          "ownership_pct": 100.0,
+          "effective_ownership_pct": 100.0,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 165,
@@ -280,10 +280,10 @@
         },
         {
           "player_id": 40,
-          "owners": 4,
-          "n_rivals": 6,
-          "ownership_pct": 66.7,
-          "effective_ownership_pct": 66.7,
+          "owners": 7,
+          "n_rivals": 10,
+          "ownership_pct": 70.0,
+          "effective_ownership_pct": 70.0,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 40,
@@ -297,11 +297,458 @@
           }
         },
         {
-          "player_id": 8,
-          "owners": 3,
-          "n_rivals": 6,
+          "player_id": 31,
+          "owners": 5,
+          "n_rivals": 10,
           "ownership_pct": 50.0,
           "effective_ownership_pct": 50.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 31,
+            "name": "Konsa",
+            "team": "ARS",
+            "pos": "DEF",
+            "price": 4.6,
+            "code": 199798,
+            "team_code": 3,
+            "next_gw_xp": 4.15
+          }
+        }
+      ],
+      "differentials": [
+        {
+          "player_id": 399,
+          "owners": 0,
+          "n_rivals": 10,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 399,
+            "name": "Cherki",
+            "team": "MCI",
+            "pos": "MID",
+            "price": 8.0,
+            "code": 466052,
+            "team_code": 43,
+            "next_gw_xp": 2.93
+          }
+        }
+      ],
+      "threats": [
+        {
+          "player_id": 124,
+          "owners": 8,
+          "n_rivals": 10,
+          "ownership_pct": 80.0,
+          "effective_ownership_pct": 80.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 124,
+            "name": "Groß",
+            "team": "BHA",
+            "pos": "MID",
+            "price": 6.2,
+            "code": 60307,
+            "team_code": 36,
+            "next_gw_xp": 3.15
+          }
+        },
+        {
+          "player_id": 115,
+          "owners": 5,
+          "n_rivals": 10,
+          "ownership_pct": 50.0,
+          "effective_ownership_pct": 50.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 115,
+            "name": "De Cuyper",
+            "team": "BHA",
+            "pos": "DEF",
+            "price": 5.3,
+            "code": 465730,
+            "team_code": 36,
+            "next_gw_xp": 2.4
+          }
+        },
+        {
+          "player_id": 569,
+          "owners": 5,
+          "n_rivals": 10,
+          "ownership_pct": 50.0,
+          "effective_ownership_pct": 50.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 569,
+            "name": "Gonzalo",
+            "team": "FUL",
+            "pos": "FWD",
+            "price": 6.1,
+            "code": 551466,
+            "team_code": 54,
+            "next_gw_xp": 5.36
+          }
+        },
+        {
+          "player_id": 154,
+          "owners": 5,
+          "n_rivals": 10,
+          "ownership_pct": 50.0,
+          "effective_ownership_pct": 50.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 154,
+            "name": "Palmer",
+            "team": "CHE",
+            "pos": "MID",
+            "price": 9.7,
+            "code": 244851,
+            "team_code": 8,
+            "next_gw_xp": 4.4
+          }
+        },
+        {
+          "player_id": 12,
+          "owners": 4,
+          "n_rivals": 10,
+          "ownership_pct": 40.0,
+          "effective_ownership_pct": 40.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 12,
+            "name": "Saka",
+            "team": "ARS",
+            "pos": "MID",
+            "price": 9.6,
+            "code": 223340,
+            "team_code": 3,
+            "next_gw_xp": 5.81
+          }
+        },
+        {
+          "player_id": 496,
+          "owners": 4,
+          "n_rivals": 10,
+          "ownership_pct": 40.0,
+          "effective_ownership_pct": 40.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 496,
+            "name": "Kinsky",
+            "team": "TOT",
+            "pos": "GKP",
+            "price": 4.5,
+            "code": 485055,
+            "team_code": 6,
+            "next_gw_xp": 1.85
+          }
+        },
+        {
+          "player_id": 112,
+          "owners": 3,
+          "n_rivals": 10,
+          "ownership_pct": 30.0,
+          "effective_ownership_pct": 30.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 112,
+            "name": "Van Hecke",
+            "team": "TOT",
+            "pos": "DEF",
+            "price": 4.9,
+            "code": 469142,
+            "team_code": 6,
+            "next_gw_xp": 2.58
+          }
+        },
+        {
+          "player_id": 236,
+          "owners": 3,
+          "n_rivals": 10,
+          "ownership_pct": 30.0,
+          "effective_ownership_pct": 30.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 236,
+            "name": "Dewsbury-Hall",
+            "team": "EVE",
+            "pos": "MID",
+            "price": 6.6,
+            "code": 215413,
+            "team_code": 11,
+            "next_gw_xp": 3.12
+          }
+        },
+        {
+          "player_id": 453,
+          "owners": 2,
+          "n_rivals": 10,
+          "ownership_pct": 20.0,
+          "effective_ownership_pct": 20.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 453,
+            "name": "Barnes",
+            "team": "NEW",
+            "pos": "MID",
+            "price": 6.1,
+            "code": 201666,
+            "team_code": 4,
+            "next_gw_xp": 5.19
+          }
+        },
+        {
+          "player_id": 346,
+          "owners": 2,
+          "n_rivals": 10,
+          "ownership_pct": 20.0,
+          "effective_ownership_pct": 20.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 346,
+            "name": "Calvert-Lewin",
+            "team": "LEE",
+            "pos": "FWD",
+            "price": 6.0,
+            "code": 177815,
+            "team_code": 2,
+            "next_gw_xp": 4.13
+          }
+        }
+      ],
+      "my_captain_eo_pct": 100.0,
+      "data_quality": {
+        "rivals": 10,
+        "with_picks": 10,
+        "coverage_pct": 100.0,
+        "cohort_truncated": false,
+        "picks_source_event": 7,
+        "statuses": [
+          "revealed"
+        ]
+      },
+      "rival_gaps": [
+        {
+          "entry_id": 6495,
+          "name": "Marcus Irestam",
+          "points_gap": -6518.0,
+          "difference_mean": -6521.51,
+          "difference_std": 9.41,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 6,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6506,
+          "name": "Islam Ibrahim",
+          "points_gap": -6523.0,
+          "difference_mean": -6522.66,
+          "difference_std": 11.11,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 4,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6500,
+          "name": "Daniel Hall",
+          "points_gap": -6523.0,
+          "difference_mean": -6524.83,
+          "difference_std": 9.86,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 6,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6509,
+          "name": "Pritesh Wagjiani",
+          "points_gap": -6530.0,
+          "difference_mean": -6532.06,
+          "difference_std": 10.1,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 6,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6511,
+          "name": "Arther Morgen",
+          "points_gap": -6534.0,
+          "difference_mean": -6532.44,
+          "difference_std": 9.95,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 5,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6513,
+          "name": "Khaled Moustafa",
+          "points_gap": -6534.0,
+          "difference_mean": -6533.01,
+          "difference_std": 12.62,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 3,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6514,
+          "name": "Ross Lang",
+          "points_gap": -6537.0,
+          "difference_mean": -6533.17,
+          "difference_std": 8.38,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 6,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6517,
+          "name": "Gautam Mohanty",
+          "points_gap": -6539.0,
+          "difference_mean": -6541.04,
+          "difference_std": 10.24,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 6,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6516,
+          "name": "Declan Byrnes",
+          "points_gap": -6539.0,
+          "difference_mean": -6542.75,
+          "difference_std": 9.22,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 6,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 6518,
+          "name": "James Forde",
+          "points_gap": -6541.0,
+          "difference_mean": -6543.28,
+          "difference_std": 10.79,
+          "p_above_after_gw": 0.0,
+          "p_above_ci95": [
+            0.0,
+            0.0019
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 5,
+          "squad_inferred": false
+        }
+      ],
+      "rival_gaps_domain": {
+        "horizon": "next_gameweek",
+        "measures": "whether you are ahead of this manager once the next gameweek has been played, not at the end of the season",
+        "basis": "shared fixture scenarios"
+      },
+      "differential_leverage": [
+        {
+          "player_id": 399,
+          "leverage_points": 1.114,
+          "leverage_spread_across_rivals": 0.14,
+          "correlation_with_gap": 0.33,
+          "own_std": 3.377,
+          "captained": false
+        }
+      ],
+      "differs_from_neutral": false,
+      "difference_reason": "",
+      "differentials_ranked_by": "next_gw_xp"
+    },
+    {
+      "league_id": 733241,
+      "name": "Dale Fantasy Football",
+      "league_type": "x",
+      "classification": "medium",
+      "size": null,
+      "target_position": 3,
+      "posture": {
+        "stance": "neutral",
+        "reason": "too little rival data to justify departing from expected points",
+        "variance_preference": 0.0
+      },
+      "placing": {
+        "p_first_after_gw": 0.0,
+        "p_target_after_gw": 0.0,
+        "target_position": 3,
+        "expected_position_after_gw": 0.0,
+        "domain": {
+          "horizon": "next_gameweek",
+          "gameweek": null,
+          "measures": "the standings after the next gameweek, not the season",
+          "rivals_assumed": "rivals keep their current squads"
+        },
+        "simulations": 2000,
+        "ci95_halfwidth": 1.0,
+        "basis": "unavailable",
+        "available": false,
+        "rival_coverage_pct": 0.0,
+        "caveats": [
+          "no rivals are published in this league yet, so there is no field to place against"
+        ]
+      },
+      "shields": [],
+      "differentials": [
+        {
+          "player_id": 8,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 8,
@@ -313,13 +760,11 @@
             "team_code": 3,
             "next_gw_xp": 5.52
           }
-        }
-      ],
-      "differentials": [
+        },
         {
           "player_id": 427,
           "owners": 0,
-          "n_rivals": 6,
+          "n_rivals": 0,
           "ownership_pct": 0.0,
           "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
@@ -335,408 +780,30 @@
           }
         },
         {
-          "player_id": 249,
+          "player_id": 1,
           "owners": 0,
-          "n_rivals": 6,
+          "n_rivals": 0,
           "ownership_pct": 0.0,
           "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
           "player": {
-            "id": 249,
-            "name": "Barry",
-            "team": "EVE",
-            "pos": "FWD",
-            "price": 5.7,
-            "code": 586309,
-            "team_code": 11,
-            "next_gw_xp": 3.34
-          }
-        },
-        {
-          "player_id": 391,
-          "owners": 0,
-          "n_rivals": 6,
-          "ownership_pct": 0.0,
-          "effective_ownership_pct": 0.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 391,
-            "name": "Gvardiol",
-            "team": "MCI",
-            "pos": "DEF",
-            "price": 5.8,
-            "code": 477424,
-            "team_code": 43,
-            "next_gw_xp": 1.67
-          }
-        }
-      ],
-      "threats": [
-        {
-          "player_id": 115,
-          "owners": 3,
-          "n_rivals": 6,
-          "ownership_pct": 50.0,
-          "effective_ownership_pct": 50.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 115,
-            "name": "De Cuyper",
-            "team": "BHA",
-            "pos": "DEF",
-            "price": 5.3,
-            "code": 465730,
-            "team_code": 36,
-            "next_gw_xp": 2.4
-          }
-        },
-        {
-          "player_id": 124,
-          "owners": 3,
-          "n_rivals": 6,
-          "ownership_pct": 50.0,
-          "effective_ownership_pct": 50.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 124,
-            "name": "Groß",
-            "team": "BHA",
-            "pos": "MID",
-            "price": 6.2,
-            "code": 60307,
-            "team_code": 36,
-            "next_gw_xp": 3.15
-          }
-        },
-        {
-          "player_id": 346,
-          "owners": 3,
-          "n_rivals": 6,
-          "ownership_pct": 50.0,
-          "effective_ownership_pct": 50.0,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 346,
-            "name": "Calvert-Lewin",
-            "team": "LEE",
-            "pos": "FWD",
-            "price": 6.0,
-            "code": 177815,
-            "team_code": 2,
-            "next_gw_xp": 4.13
-          }
-        },
-        {
-          "player_id": 449,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 449,
-            "name": "Hall",
-            "team": "NEW",
-            "pos": "DEF",
-            "price": 5.3,
-            "code": 487838,
-            "team_code": 4,
-            "next_gw_xp": 4.85
-          }
-        },
-        {
-          "player_id": 480,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 480,
-            "name": "Gibbs-White",
-            "team": "NFO",
-            "pos": "MID",
-            "price": 7.9,
-            "code": 222531,
-            "team_code": 17,
-            "next_gw_xp": 3.5
-          }
-        },
-        {
-          "player_id": 154,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 154,
-            "name": "Palmer",
-            "team": "CHE",
-            "pos": "MID",
-            "price": 9.7,
-            "code": 244851,
-            "team_code": 8,
-            "next_gw_xp": 4.4
-          }
-        },
-        {
-          "player_id": 4,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 4,
-            "name": "Gabriel",
+            "id": 1,
+            "name": "Raya",
             "team": "ARS",
-            "pos": "DEF",
-            "price": 7.9,
-            "code": 226597,
+            "pos": "GKP",
+            "price": 6.1,
+            "code": 154561,
             "team_code": 3,
-            "next_gw_xp": 5.25
+            "next_gw_xp": 4.62
           }
         },
-        {
-          "player_id": 106,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 106,
-            "name": "Thiago",
-            "team": "BRE",
-            "pos": "FWD",
-            "price": 7.8,
-            "code": 502500,
-            "team_code": 94,
-            "next_gw_xp": 6.03
-          }
-        },
-        {
-          "player_id": 397,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 397,
-            "name": "Semenyo",
-            "team": "MCI",
-            "pos": "MID",
-            "price": 8.3,
-            "code": 437730,
-            "team_code": 43,
-            "next_gw_xp": 0.0
-          }
-        },
-        {
-          "player_id": 282,
-          "owners": 2,
-          "n_rivals": 6,
-          "ownership_pct": 33.3,
-          "effective_ownership_pct": 33.3,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 282,
-            "name": "Giles",
-            "team": "HUL",
-            "pos": "DEF",
-            "price": 4.0,
-            "code": 232351,
-            "team_code": 88,
-            "next_gw_xp": 1.77
-          }
-        }
-      ],
-      "my_captain_eo_pct": 83.3,
-      "data_quality": {
-        "rivals": 6,
-        "with_picks": 6,
-        "coverage_pct": 100.0,
-        "cohort_truncated": false,
-        "picks_source_event": 7,
-        "statuses": [
-          "revealed"
-        ]
-      },
-      "rival_gaps": [
-        {
-          "entry_id": 408467,
-          "name": "Nat Uttley",
-          "points_gap": -15.0,
-          "difference_mean": -16.27,
-          "difference_std": 11.29,
-          "p_above_after_gw": 0.0675,
-          "p_above_ci95": [
-            0.0573,
-            0.0793
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 1094262,
-          "name": "Kevin Colling",
-          "points_gap": 55.0,
-          "difference_mean": 56.94,
-          "difference_std": 13.73,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 1711764,
-          "name": "Hakan Duzel",
-          "points_gap": 60.0,
-          "difference_mean": 62.45,
-          "difference_std": 9.52,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 6,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 8346723,
-          "name": "Nat Stubbs",
-          "points_gap": 63.0,
-          "difference_mean": 68.2,
-          "difference_std": 10.62,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 7419334,
-          "name": "Dylan Llyr Morgan",
-          "points_gap": 108.0,
-          "difference_mean": 119.08,
-          "difference_std": 10.47,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3557534,
-          "name": "Jarek Ettl",
-          "points_gap": 119.0,
-          "difference_mean": 124.4,
-          "difference_std": 13.29,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 2,
-          "squad_inferred": false
-        }
-      ],
-      "rival_gaps_domain": {
-        "horizon": "next_gameweek",
-        "measures": "whether you are ahead of this manager once the next gameweek has been played, not at the end of the season",
-        "basis": "shared fixture scenarios"
-      },
-      "differential_leverage": [
-        {
-          "player_id": 427,
-          "leverage_points": 1.492,
-          "leverage_spread_across_rivals": 0.189,
-          "correlation_with_gap": 0.343,
-          "own_std": 4.349,
-          "captained": false
-        },
-        {
-          "player_id": 391,
-          "leverage_points": 0.644,
-          "leverage_spread_across_rivals": 0.089,
-          "correlation_with_gap": 0.236,
-          "own_std": 2.728,
-          "captained": false
-        },
-        {
-          "player_id": 249,
-          "leverage_points": 0.255,
-          "leverage_spread_across_rivals": 0.233,
-          "correlation_with_gap": 0.104,
-          "own_std": 2.447,
-          "captained": false
-        }
-      ],
-      "differs_from_neutral": false,
-      "difference_reason": "",
-      "differentials_ranked_by": "next_gw_xp"
-    },
-    {
-      "league_id": 733241,
-      "name": "Dale Fantasy Football",
-      "league_type": "x",
-      "classification": "small_private",
-      "size": 24,
-      "target_position": 3,
-      "posture": {
-        "stance": "neutral",
-        "reason": "within 20 points with 31 GW(s) left: expected points is the right objective",
-        "variance_preference": 0.0
-      },
-      "placing": {
-        "p_first_after_gw": 0.0085,
-        "p_target_after_gw": 0.1805,
-        "target_position": 3,
-        "expected_position_after_gw": 4.56,
-        "domain": {
-          "horizon": "next_gameweek",
-          "gameweek": null,
-          "measures": "the standings after the next gameweek, not the season",
-          "rivals_assumed": "rivals keep their current squads"
-        },
-        "simulations": 2000,
-        "ci95_halfwidth": 0.0169,
-        "basis": "shared fixture scenarios",
-        "available": true,
-        "rival_coverage_pct": 100.0,
-        "caveats": [
-          "Gaffer's multi-week mean projections are materially weaker than its one-week ones, so probabilities beyond the next gameweek are directional only"
-        ]
-      },
-      "shields": [
         {
           "player_id": 411,
-          "owners": 19,
-          "n_rivals": 23,
-          "ownership_pct": 82.6,
-          "effective_ownership_pct": 156.5,
-          "captain_eo_pct": 73.9,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
           "player": {
             "id": 411,
             "name": "Haaland",
@@ -750,11 +817,11 @@
         },
         {
           "player_id": 165,
-          "owners": 22,
-          "n_rivals": 23,
-          "ownership_pct": 95.7,
-          "effective_ownership_pct": 100.0,
-          "captain_eo_pct": 4.3,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
           "player": {
             "id": 165,
             "name": "João Pedro",
@@ -767,29 +834,29 @@
           }
         },
         {
-          "player_id": 8,
-          "owners": 15,
-          "n_rivals": 23,
-          "ownership_pct": 65.2,
-          "effective_ownership_pct": 65.2,
+          "player_id": 31,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
           "player": {
-            "id": 8,
-            "name": "Calafiori",
+            "id": 31,
+            "name": "Konsa",
             "team": "ARS",
             "pos": "DEF",
-            "price": 6.0,
-            "code": 466075,
+            "price": 4.6,
+            "code": 199798,
             "team_code": 3,
-            "next_gw_xp": 5.52
+            "next_gw_xp": 4.15
           }
         },
         {
           "player_id": 40,
-          "owners": 14,
-          "n_rivals": 23,
-          "ownership_pct": 60.9,
-          "effective_ownership_pct": 60.9,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
           "player": {
             "id": 40,
@@ -801,13 +868,29 @@
             "team_code": 8,
             "next_gw_xp": 3.97
           }
-        }
-      ],
-      "differentials": [
+        },
+        {
+          "player_id": 68,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
+          "captain_eo_pct": 0.0,
+          "player": {
+            "id": 68,
+            "name": "Tavernier",
+            "team": "BOU",
+            "pos": "MID",
+            "price": 6.2,
+            "code": 201658,
+            "team_code": 91,
+            "next_gw_xp": 3.78
+          }
+        },
         {
           "player_id": 249,
           "owners": 0,
-          "n_rivals": 23,
+          "n_rivals": 0,
           "ownership_pct": 0.0,
           "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
@@ -821,571 +904,39 @@
             "team_code": 11,
             "next_gw_xp": 3.34
           }
-        }
-      ],
-      "threats": [
-        {
-          "player_id": 124,
-          "owners": 17,
-          "n_rivals": 23,
-          "ownership_pct": 73.9,
-          "effective_ownership_pct": 82.6,
-          "captain_eo_pct": 8.7,
-          "player": {
-            "id": 124,
-            "name": "Groß",
-            "team": "BHA",
-            "pos": "MID",
-            "price": 6.2,
-            "code": 60307,
-            "team_code": 36,
-            "next_gw_xp": 3.15
-          }
         },
         {
-          "player_id": 115,
-          "owners": 14,
-          "n_rivals": 23,
-          "ownership_pct": 60.9,
-          "effective_ownership_pct": 60.9,
+          "player_id": 399,
+          "owners": 0,
+          "n_rivals": 0,
+          "ownership_pct": 0.0,
+          "effective_ownership_pct": 0.0,
           "captain_eo_pct": 0.0,
           "player": {
-            "id": 115,
-            "name": "De Cuyper",
-            "team": "BHA",
-            "pos": "DEF",
-            "price": 5.3,
-            "code": 465730,
-            "team_code": 36,
-            "next_gw_xp": 2.4
-          }
-        },
-        {
-          "player_id": 12,
-          "owners": 12,
-          "n_rivals": 23,
-          "ownership_pct": 52.2,
-          "effective_ownership_pct": 56.5,
-          "captain_eo_pct": 4.3,
-          "player": {
-            "id": 12,
-            "name": "Saka",
-            "team": "ARS",
-            "pos": "MID",
-            "price": 9.6,
-            "code": 223340,
-            "team_code": 3,
-            "next_gw_xp": 5.81
-          }
-        },
-        {
-          "player_id": 109,
-          "owners": 9,
-          "n_rivals": 23,
-          "ownership_pct": 39.1,
-          "effective_ownership_pct": 39.1,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 109,
-            "name": "Verbruggen",
-            "team": "BHA",
-            "pos": "GKP",
-            "price": 4.6,
-            "code": 489639,
-            "team_code": 36,
-            "next_gw_xp": 1.85
-          }
-        },
-        {
-          "player_id": 154,
-          "owners": 7,
-          "n_rivals": 23,
-          "ownership_pct": 30.4,
-          "effective_ownership_pct": 30.4,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 154,
-            "name": "Palmer",
-            "team": "CHE",
-            "pos": "MID",
-            "price": 9.7,
-            "code": 244851,
-            "team_code": 8,
-            "next_gw_xp": 4.4
-          }
-        },
-        {
-          "player_id": 4,
-          "owners": 6,
-          "n_rivals": 23,
-          "ownership_pct": 26.1,
-          "effective_ownership_pct": 26.1,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 4,
-            "name": "Gabriel",
-            "team": "ARS",
-            "pos": "DEF",
-            "price": 7.9,
-            "code": 226597,
-            "team_code": 3,
-            "next_gw_xp": 5.25
-          }
-        },
-        {
-          "player_id": 388,
-          "owners": 6,
-          "n_rivals": 23,
-          "ownership_pct": 26.1,
-          "effective_ownership_pct": 26.1,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 388,
-            "name": "Guéhi",
-            "team": "MCI",
-            "pos": "DEF",
-            "price": 6.0,
-            "code": 209036,
-            "team_code": 43,
-            "next_gw_xp": 3.91
-          }
-        },
-        {
-          "player_id": 449,
-          "owners": 5,
-          "n_rivals": 23,
-          "ownership_pct": 21.7,
-          "effective_ownership_pct": 21.7,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 449,
-            "name": "Hall",
-            "team": "NEW",
-            "pos": "DEF",
-            "price": 5.3,
-            "code": 487838,
-            "team_code": 4,
-            "next_gw_xp": 4.85
-          }
-        },
-        {
-          "player_id": 397,
-          "owners": 4,
-          "n_rivals": 23,
-          "ownership_pct": 17.4,
-          "effective_ownership_pct": 21.7,
-          "captain_eo_pct": 4.3,
-          "player": {
-            "id": 397,
-            "name": "Semenyo",
+            "id": 399,
+            "name": "Cherki",
             "team": "MCI",
             "pos": "MID",
-            "price": 8.3,
-            "code": 437730,
+            "price": 8.0,
+            "code": 466052,
             "team_code": 43,
-            "next_gw_xp": 0.0
-          }
-        },
-        {
-          "player_id": 15,
-          "owners": 5,
-          "n_rivals": 23,
-          "ownership_pct": 21.7,
-          "effective_ownership_pct": 21.7,
-          "captain_eo_pct": 0.0,
-          "player": {
-            "id": 15,
-            "name": "Ødegaard",
-            "team": "ARS",
-            "pos": "MID",
-            "price": 6.8,
-            "code": 184029,
-            "team_code": 3,
-            "next_gw_xp": 4.39
+            "next_gw_xp": 2.93
           }
         }
       ],
-      "my_captain_eo_pct": 73.9,
+      "threats": [],
+      "my_captain_eo_pct": 0.0,
       "data_quality": {
-        "rivals": 23,
-        "with_picks": 23,
-        "coverage_pct": 100.0,
+        "rivals": 0,
+        "with_picks": 0,
+        "coverage_pct": 0.0,
         "cohort_truncated": false,
         "picks_source_event": 7,
         "statuses": [
-          "revealed"
+          "no_public_picks_yet"
         ]
       },
-      "rival_gaps": [
-        {
-          "entry_id": 3807533,
-          "name": "James Gosling",
-          "points_gap": -14.0,
-          "difference_mean": -5.12,
-          "difference_std": 9.13,
-          "p_above_after_gw": 0.2605,
-          "p_above_ci95": [
-            0.2417,
-            0.2802
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 392228,
-          "name": "Cassidy Day",
-          "points_gap": 0.0,
-          "difference_mean": -5.21,
-          "difference_std": 10.22,
-          "p_above_after_gw": 0.2855,
-          "p_above_ci95": [
-            0.2661,
-            0.3057
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3671505,
-          "name": "Harry Hill",
-          "points_gap": 7.0,
-          "difference_mean": 10.3,
-          "difference_std": 11.54,
-          "p_above_after_gw": 0.814,
-          "p_above_ci95": [
-            0.7964,
-            0.8304
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3678994,
-          "name": "Richard Palmer",
-          "points_gap": 13.0,
-          "difference_mean": 15.15,
-          "difference_std": 10.73,
-          "p_above_after_gw": 0.9085,
-          "p_above_ci95": [
-            0.8951,
-            0.9204
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 4072984,
-          "name": "Daire Carragher",
-          "points_gap": -20.0,
-          "difference_mean": -16.46,
-          "difference_std": 9.7,
-          "p_above_after_gw": 0.04,
-          "p_above_ci95": [
-            0.0323,
-            0.0495
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 6,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 1444956,
-          "name": "Archie Anderson",
-          "points_gap": -20.0,
-          "difference_mean": -21.91,
-          "difference_std": 11.64,
-          "p_above_after_gw": 0.0285,
-          "p_above_ci95": [
-            0.0221,
-            0.0367
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3846760,
-          "name": "Daniel Taylor",
-          "points_gap": 21.0,
-          "difference_mean": 24.62,
-          "difference_std": 11.45,
-          "p_above_after_gw": 0.985,
-          "p_above_ci95": [
-            0.9787,
-            0.9895
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3526777,
-          "name": "Mike Webber",
-          "points_gap": 32.0,
-          "difference_mean": 31.32,
-          "difference_std": 10.49,
-          "p_above_after_gw": 0.998,
-          "p_above_ci95": [
-            0.9949,
-            0.9992
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 2341315,
-          "name": "Richard Appleton",
-          "points_gap": 32.0,
-          "difference_mean": 33.63,
-          "difference_std": 10.73,
-          "p_above_after_gw": 0.9975,
-          "p_above_ci95": [
-            0.9942,
-            0.9989
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 5876996,
-          "name": "Oliver Woodward",
-          "points_gap": 33.0,
-          "difference_mean": 35.15,
-          "difference_std": 10.32,
-          "p_above_after_gw": 0.999,
-          "p_above_ci95": [
-            0.9964,
-            0.9997
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 6118958,
-          "name": "Harjinder Hayre",
-          "points_gap": 34.0,
-          "difference_mean": 40.5,
-          "difference_std": 10.08,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 1232046,
-          "name": "chris martyn",
-          "points_gap": 45.0,
-          "difference_mean": 48.37,
-          "difference_std": 10.19,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 4186615,
-          "name": "Finlay Ashburner",
-          "points_gap": 50.0,
-          "difference_mean": 52.67,
-          "difference_std": 14.74,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3266016,
-          "name": "arran wright",
-          "points_gap": 62.0,
-          "difference_mean": 64.6,
-          "difference_std": 11.89,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 7248283,
-          "name": "Niamh O'Riordan-Mitchell",
-          "points_gap": 66.0,
-          "difference_mean": 65.91,
-          "difference_std": 11.32,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 2209432,
-          "name": "Amar Sumaria",
-          "points_gap": 65.0,
-          "difference_mean": 67.78,
-          "difference_std": 10.26,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 2520259,
-          "name": "Simon Brumfitt",
-          "points_gap": 70.0,
-          "difference_mean": 69.78,
-          "difference_std": 9.86,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 6,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 8183866,
-          "name": "Matthew Sims",
-          "points_gap": 68.0,
-          "difference_mean": 71.46,
-          "difference_std": 13.12,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 7905520,
-          "name": "Rich Crowley",
-          "points_gap": 89.0,
-          "difference_mean": 90.53,
-          "difference_std": 11.04,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 8209075,
-          "name": "Joshua Knight",
-          "points_gap": 90.0,
-          "difference_mean": 96.48,
-          "difference_std": 13.58,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 3,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 1506291,
-          "name": "Jason Mercer",
-          "points_gap": 108.0,
-          "difference_mean": 111.67,
-          "difference_std": 15.14,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 3,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 4033143,
-          "name": "Tony Anderson",
-          "points_gap": 116.0,
-          "difference_mean": 119.34,
-          "difference_std": 16.28,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 2,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 6570312,
-          "name": "Neil Griffiths",
-          "points_gap": 147.0,
-          "difference_mean": 162.32,
-          "difference_std": 11.99,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 3,
-          "squad_inferred": false
-        }
-      ],
+      "rival_gaps": [],
       "rival_gaps_domain": {
         "horizon": "next_gameweek",
         "measures": "whether you are ahead of this manager once the next gameweek has been played, not at the end of the season",
@@ -1393,7 +944,7 @@
       },
       "differential_leverage": [],
       "differs_from_neutral": false,
-      "difference_reason": "",
+      "difference_reason": "rival squads are only partly known, so no departure is justified",
       "differentials_ranked_by": "next_gw_xp"
     }
   ],
@@ -1404,8 +955,7 @@
       "label": "Captain Mbeumo",
       "expected_points": 49.995,
       "p_target": {
-        "271619": 0.137,
-        "733241": 0.2605
+        "271619": 0.0
       }
     },
     {
@@ -1413,8 +963,7 @@
       "label": "Captain Calafiori",
       "expected_points": 49.936,
       "p_target": {
-        "271619": 0.1055,
-        "733241": 0.25
+        "271619": 0.0
       }
     },
     {
@@ -1422,8 +971,7 @@
       "label": "Captain Haaland",
       "expected_points": 49.201,
       "p_target": {
-        "271619": 0.0775,
-        "733241": 0.1805
+        "271619": 0.0
       }
     },
     {
@@ -1431,8 +979,7 @@
       "label": "Captain Raya",
       "expected_points": 49.136,
       "p_target": {
-        "271619": 0.0885,
-        "733241": 0.2275
+        "271619": 0.0
       }
     }
   ],
@@ -1445,8 +992,7 @@
         "label": "Captain Mbeumo",
         "expected_points": 49.995,
         "p_target": {
-          "271619": 0.137,
-          "733241": 0.2605
+          "271619": 0.0
         }
       }
     ],
@@ -1767,6 +1313,7 @@
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
     "Probabilities describe the next gameweek's football, not the rest of the season: rivals are assumed to keep their current squads.",
+    "Some rival squads are unknown and were modelled as a distribution rather than a team; see each league's coverage.",
     "Gaffer's multi-week mean projections are materially weaker than its one-week ones, so anything beyond the next gameweek is directional.",
     "Chip timing is not assessed for freehit: valuing those in a future gameweek needs a full budget-legal squad re-solve in that gameweek, which Gaffer does not run. They are published as candidates, never as advice to play one now.",
     "Chip timing was compared only over the gameweeks Gaffer projects (through GW13); bboost can still be played up to GW19, so the rest of the window is unassessed and nothing is recommended on the strength of a partial comparison.",
