@@ -1,25 +1,26 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-10-22T19:47:42+00:00",
+  "generated_at": "2026-10-22T23:08:57+00:00",
   "result": {
     "considered": 2,
     "new": 2,
     "duplicates": 0,
-    "suppressed": 0,
-    "delivered": 2,
+    "suppressed": 2,
+    "delivered": 0,
     "failed": 0,
     "dry_run": true,
     "alerts": [
       {
         "kind": "deadline",
         "title": "GW8 deadline tomorrow",
-        "body": "21.7 hours left. Check your transfer, captain and bench order.",
+        "body": "18.3 hours left. Check your transfer, captain and bench order.",
         "severity": "important",
         "event": 8,
         "deep_link": "#/overview",
         "dedupe_key": "deadline:4d3c46af079c",
-        "created_at": "2026-10-22T19:48:14+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-22T23:10:01+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       },
       {
         "kind": "league_swing",
@@ -29,8 +30,9 @@
         "event": 8,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:0d0dea4d815d",
-        "created_at": "2026-10-22T19:48:14+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-22T23:10:01+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       }
     ],
     "errors": []
@@ -52,7 +54,7 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 2
+      "suppressed": 2
     },
     "recent": [
       {
@@ -60,8 +62,8 @@
         "severity": "important",
         "title": "GW8 deadline tomorrow",
         "deep_link": "#/overview",
-        "created_at": "2026-10-22T19:48:14+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-22T23:10:01+00:00",
+        "state": "suppressed",
         "event": 8
       },
       {
@@ -69,8 +71,8 @@
         "severity": "info",
         "title": "A differential is winning you the week",
         "deep_link": "#/live",
-        "created_at": "2026-10-22T19:48:14+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-22T23:10:01+00:00",
+        "state": "suppressed",
         "event": 8
       }
     ]
