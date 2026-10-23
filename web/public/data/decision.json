@@ -2,20 +2,20 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-23T15:36:21.001466+00:00",
-    "window": "final_approach",
+    "generated_for": "2026-10-23T17:16:20.505606+00:00",
+    "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-23T17:30:00+00:00",
-        "in_hours": 1.9,
+        "in_hours": 0.2,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 1,
@@ -24,29 +24,28 @@
           "price": 6.1
         },
         "direction": "rise",
-        "percent": 88.2,
+        "percent": 101.8,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "124.7",
+            "projected_percent": "156.6",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "238.9",
+            "projected_percent": "379.0",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "357.8",
+            "projected_percent": "610.6",
             "likelihood": 5
           }
         ],
-        "certainty": "88% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": false,
         "owned": true,
-        "changes": "Raya may move 0.1m before the deadline"
+        "changes": "Raya's price moves 0.1m"
       },
       {
         "kind": "price_change_due",
@@ -58,21 +57,21 @@
           "price": 6.2
         },
         "direction": "rise",
-        "percent": 103.5,
+        "percent": 125.1,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "169.6",
+            "projected_percent": "205.7",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "376.5",
+            "projected_percent": "533.1",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "592.2",
+            "projected_percent": "874.2",
             "likelihood": 5
           }
         ],
@@ -85,35 +84,103 @@
         "kind": "price_change_near",
         "at": null,
         "player": {
+          "id": 249,
+          "name": "Barry",
+          "team": "EVE",
+          "price": 5.7
+        },
+        "direction": "fall",
+        "percent": -79.3,
+        "projections": [
+          {
+            "offset": 0,
+            "projected_percent": "-120.2",
+            "likelihood": -5
+          },
+          {
+            "offset": 1,
+            "projected_percent": "-286.5",
+            "likelihood": -5
+          },
+          {
+            "offset": 2,
+            "projected_percent": "-459.7",
+            "likelihood": -5
+          }
+        ],
+        "certainty": "79% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "in_this_move": false,
+        "owned": true,
+        "changes": "Barry may move 0.1m before the deadline"
+      },
+      {
+        "kind": "price_change_near",
+        "at": null,
+        "player": {
           "id": 330,
           "name": "Bogle",
           "team": "LEE",
           "price": 4.7
         },
         "direction": "rise",
-        "percent": 77.8,
+        "percent": 85.7,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "102.1",
+            "projected_percent": "115.9",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "178.2",
+            "projected_percent": "238.5",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "257.4",
+            "projected_percent": "366.3",
             "likelihood": 5
           }
         ],
-        "certainty": "78% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "86% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": false,
         "owned": true,
         "changes": "Bogle may move 0.1m before the deadline"
+      },
+      {
+        "kind": "price_change_near",
+        "at": null,
+        "player": {
+          "id": 391,
+          "name": "Gvardiol",
+          "team": "MCI",
+          "price": 5.8
+        },
+        "direction": "fall",
+        "percent": -71.7,
+        "projections": [
+          {
+            "offset": 0,
+            "projected_percent": "-108.5",
+            "likelihood": -5
+          },
+          {
+            "offset": 1,
+            "projected_percent": "-258.0",
+            "likelihood": -5
+          },
+          {
+            "offset": 2,
+            "projected_percent": "-413.8",
+            "likelihood": -5
+          }
+        ],
+        "certainty": "72% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "in_this_move": false,
+        "owned": true,
+        "changes": "Gvardiol may move 0.1m before the deadline"
       }
     ],
     "schedule_shape": [
@@ -176,16 +243,19 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "no money either way",
-    "reason": "no price change in this move is due",
-    "hours_to_deadline": 1.9,
-    "edge_points": 0.83,
+    "verdict": "money may be at stake",
+    "reason": "Barry, Gvardiol is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
+    "hours_to_deadline": 0.2,
+    "edge_points": 0.8,
     "edge_interval_type": "monte_carlo",
     "money_cost_of_waiting_m": 0.0,
     "detail": [],
-    "pending_price_changes": 1,
-    "near_price_changes": 2,
-    "near_at_risk_if_you_wait": [],
+    "pending_price_changes": 2,
+    "near_price_changes": 3,
+    "near_at_risk_if_you_wait": [
+      "Barry",
+      "Gvardiol"
+    ],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
   },
@@ -242,7 +312,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-23T15:35:58+00:00",
+  "generated_at": "2026-10-23T17:16:02+00:00",
   "gameweek": 8,
   "horizon": 6,
   "squad_state": {
@@ -438,7 +508,7 @@
       "next_gw_xp": 5.91,
       "confidence": 0.91,
       "horizon_xp": 34.2,
-      "owned_by": 77.3,
+      "owned_by": 77.4,
       "rationale": "Nailed forward with real underlying threat (0.94 xGI/90), on pens #1, in form (9.5) and despite a tough run.",
       "tags": [
         {
@@ -525,7 +595,7 @@
       "next_gw_xp": 5.42,
       "confidence": 0.9,
       "horizon_xp": 28.73,
-      "owned_by": 21.5,
+      "owned_by": 21.8,
       "rationale": "Nailed midfielder with real underlying threat (0.70 xGI/90), on pens #2, FK #2, corners #2, in form (8.0) and despite a tough run.",
       "tags": [
         {
@@ -609,7 +679,7 @@
         "next_gw_xp": 4.62,
         "confidence": 0.92,
         "horizon_xp": 25.02,
-        "owned_by": 45.2,
+        "owned_by": 45.5,
         "rationale": "Nailed keeper with strong clean-sheet odds and in form (6.0).",
         "tags": [
           {
@@ -688,7 +758,7 @@
         "next_gw_xp": 5.29,
         "confidence": 0.86,
         "horizon_xp": 28.28,
-        "owned_by": 54.6,
+        "owned_by": 54.8,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back and in form (7.5).",
         "tags": [
           {
@@ -838,7 +908,7 @@
         "next_gw_xp": 3.77,
         "confidence": 0.9,
         "horizon_xp": 22.96,
-        "owned_by": 10.7,
+        "owned_by": 10.8,
         "rationale": "Nailed defender with strong clean-sheet odds and a genuine attacking threat from the back.",
         "tags": [
           {
@@ -905,7 +975,7 @@
         "next_gw_xp": 3.76,
         "confidence": 0.9,
         "horizon_xp": 31.84,
-        "owned_by": 12.4,
+        "owned_by": 13.2,
         "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90), on FK #1, corners #1, in form (5.5) and a soft fixture run.",
         "tags": [
           {
@@ -988,7 +1058,7 @@
         "next_gw_xp": 5.42,
         "confidence": 0.9,
         "horizon_xp": 28.73,
-        "owned_by": 21.5,
+        "owned_by": 21.8,
         "rationale": "Nailed midfielder with real underlying threat (0.70 xGI/90), on pens #2, FK #2, corners #2, in form (8.0) and despite a tough run.",
         "tags": [
           {
@@ -1071,7 +1141,7 @@
         "next_gw_xp": 5.91,
         "confidence": 0.91,
         "horizon_xp": 34.2,
-        "owned_by": 77.3,
+        "owned_by": 77.4,
         "rationale": "Nailed forward with real underlying threat (0.94 xGI/90), on pens #1, in form (9.5) and despite a tough run.",
         "tags": [
           {
@@ -1158,7 +1228,7 @@
         "next_gw_xp": 3.21,
         "confidence": 0.87,
         "horizon_xp": 24.37,
-        "owned_by": 7.9,
+        "owned_by": 7.7,
         "rationale": "Nailed forward with real underlying threat (0.73 xGI/90) and on pens #1.",
         "tags": [
           {
@@ -1233,7 +1303,7 @@
         "next_gw_xp": 4.97,
         "confidence": 0.87,
         "horizon_xp": 23.04,
-        "owned_by": 7.5,
+        "owned_by": 7.4,
         "rationale": "Nailed midfielder with projected 5.0 pts next GW.",
         "tags": [
           {
@@ -1300,7 +1370,7 @@
         "next_gw_xp": 4.21,
         "confidence": 0.9,
         "horizon_xp": 23.85,
-        "owned_by": 73.6,
+        "owned_by": 73.8,
         "rationale": "Likely-starting forward (rotation risk) with real underlying threat (0.58 xGI/90) and in form (7.0).",
         "tags": [
           {
@@ -1375,7 +1445,7 @@
         "next_gw_xp": 3.97,
         "confidence": 0.92,
         "horizon_xp": 22.32,
-        "owned_by": 49.3,
+        "owned_by": 49.6,
         "rationale": "Nailed midfielder with real underlying threat (0.51 xGI/90) and in form (5.5).",
         "tags": [
           {
@@ -1519,7 +1589,7 @@
         "next_gw_xp": 3.96,
         "confidence": 0.91,
         "horizon_xp": 21.25,
-        "owned_by": 18.5,
+        "owned_by": 18.7,
         "rationale": "Nailed defender with strong clean-sheet odds and in form (6.5).",
         "tags": [
           {
@@ -1594,7 +1664,7 @@
         "next_gw_xp": 2.78,
         "confidence": 0.86,
         "horizon_xp": 16.15,
-        "owned_by": 38.9,
+        "owned_by": 39.2,
         "rationale": "Rotation/bench midfielder with real underlying threat (0.69 xGI/90), on FK #1, corners #1, in form (5.0) and despite a tough run.",
         "tags": [
           {
@@ -1681,7 +1751,7 @@
         "next_gw_xp": 1.56,
         "confidence": 0.83,
         "horizon_xp": 8.99,
-        "owned_by": 27.7,
+        "owned_by": 27.5,
         "rationale": "Rotation/bench defender with despite a tough run.",
         "tags": [
           {
@@ -1746,21 +1816,21 @@
       "chips_version": "chips-1.1",
       "recommendation": "hold",
       "gameweek": null,
-      "expected_gain": 12.27,
+      "expected_gain": 12.45,
       "use_threshold": 4.0,
       "alternatives": [
         {
           "chip": "freehit",
           "gameweek": 8,
-          "expected_gain": 12.27,
+          "expected_gain": 12.45,
           "ci95": [
-            11.53,
-            13.01
+            11.71,
+            13.2
           ],
-          "baseline_points": 52.59,
-          "with_chip_points": 64.86,
+          "baseline_points": 52.48,
+          "with_chip_points": 64.93,
           "horizon_gameweeks": 1,
-          "expected_gain_per_gameweek": 12.27,
+          "expected_gain_per_gameweek": 12.45,
           "assumptions": [
             "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
             "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1770,15 +1840,15 @@
         {
           "chip": "bboost",
           "gameweek": 8,
-          "expected_gain": 11.24,
+          "expected_gain": 10.99,
           "ci95": [
-            10.96,
-            11.52
+            10.71,
+            11.27
           ],
-          "baseline_points": 56.1,
-          "with_chip_points": 67.34,
+          "baseline_points": 56.08,
+          "with_chip_points": 67.07,
           "horizon_gameweeks": 1,
-          "expected_gain_per_gameweek": 11.24,
+          "expected_gain_per_gameweek": 10.99,
           "assumptions": [
             "Bench points are simulated under the same fixtures as the XI.",
             "Autosubs ARE modelled in the baseline: the gain is what the chip adds beyond the substitutions the rules make for free.",
@@ -1811,15 +1881,15 @@
       "candidate": {
         "chip": "freehit",
         "gameweek": 8,
-        "expected_gain": 12.27,
+        "expected_gain": 12.45,
         "ci95": [
-          11.53,
-          13.01
+          11.71,
+          13.2
         ],
-        "baseline_points": 52.59,
-        "with_chip_points": 64.86,
+        "baseline_points": 52.48,
+        "with_chip_points": 64.93,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 12.27,
+        "expected_gain_per_gameweek": 12.45,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -2046,7 +2116,7 @@
           }
         }
       },
-      "reason": "freehit projects +12.3 points in GW8, but Gaffer has not valued it in GW9-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 12 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW8-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+      "reason": "freehit projects +12.5 points in GW8, but Gaffer has not valued it in GW9-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 12 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW8-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
     },
     "league_note": "",
     "confidence": "medium",
@@ -2066,41 +2136,41 @@
           {
             "entry_id": 408467,
             "name": "Nat Uttley",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.013,
+            "d_expected_points": 0.799,
+            "d_p_above": 0.011,
             "d_p_above_ci95": [
-              -0.0047,
-              0.0307
+              -0.0069,
+              0.0289
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.273,
-            "p_above_after": 0.286,
-            "d_variance_of_gap": 0.522,
+            "p_above_before": 0.2625,
+            "p_above_after": 0.2735,
+            "d_variance_of_gap": -2.168,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1094262,
             "name": "Kevin Colling",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.0,
+            "d_expected_points": 0.799,
+            "d_p_above": 0.0005,
             "d_p_above_ci95": [
-              0.0,
-              0.0
+              -0.0005,
+              0.0015
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.9985,
-            "p_above_after": 0.9985,
-            "d_variance_of_gap": 13.194,
+            "p_above_before": 0.9995,
+            "p_above_after": 1.0,
+            "d_variance_of_gap": 12.259,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1711764,
             "name": "Hakan Duzel",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2110,14 +2180,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": -4.947,
+            "d_variance_of_gap": -3.677,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 8346723,
             "name": "Nat Stubbs",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2127,14 +2197,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 14.458,
+            "d_variance_of_gap": 12.771,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 7419334,
             "name": "Dylan Llyr Morgan",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2144,14 +2214,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 3.822,
+            "d_variance_of_gap": 5.475,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3557534,
             "name": "Jarek Ettl",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2161,7 +2231,7 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 8.612,
+            "d_variance_of_gap": 11.178,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           }
@@ -2179,179 +2249,179 @@
         "move_is_the_recommendation": false,
         "rivals": [
           {
-            "entry_id": 3807533,
-            "name": "James Gosling",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.028,
+            "entry_id": 4072984,
+            "name": "Daire Carragher",
+            "d_expected_points": 0.799,
+            "d_p_above": 0.021,
             "d_p_above_ci95": [
-              0.0066,
-              0.0494
+              0.0044,
+              0.0376
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.5055,
-            "p_above_after": 0.5335,
-            "d_variance_of_gap": 10.183,
+            "p_above_before": 0.171,
+            "p_above_after": 0.192,
+            "d_variance_of_gap": 3.338,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3678994,
             "name": "Richard Palmer",
-            "d_expected_points": 0.826,
-            "d_p_above": -0.0055,
+            "d_expected_points": 0.799,
+            "d_p_above": -0.007,
             "d_p_above_ci95": [
-              -0.0098,
-              -0.0012
+              -0.0111,
+              -0.0029
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": true,
-            "p_above_before": 0.995,
-            "p_above_after": 0.9895,
-            "d_variance_of_gap": 25.707,
+            "p_above_before": 0.9945,
+            "p_above_after": 0.9875,
+            "d_variance_of_gap": 29.081,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
-            "entry_id": 4072984,
-            "name": "Daire Carragher",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.0155,
+            "entry_id": 3807533,
+            "name": "James Gosling",
+            "d_expected_points": 0.799,
+            "d_p_above": 0.017,
             "d_p_above_ci95": [
-              -0.0012,
-              0.0322
+              -0.0035,
+              0.0375
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.177,
-            "p_above_after": 0.1925,
-            "d_variance_of_gap": 2.454,
+            "p_above_before": 0.5085,
+            "p_above_after": 0.5255,
+            "d_variance_of_gap": 11.175,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 392228,
             "name": "Cassidy Day",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.0155,
+            "d_expected_points": 0.799,
+            "d_p_above": 0.015,
             "d_p_above_ci95": [
-              -0.0021,
-              0.0331
+              -0.002,
+              0.032
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.751,
-            "p_above_after": 0.7665,
-            "d_variance_of_gap": 7.943,
+            "p_above_before": 0.742,
+            "p_above_after": 0.757,
+            "d_variance_of_gap": 10.198,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1444956,
             "name": "Archie Anderson",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.0025,
+            "d_expected_points": 0.799,
+            "d_p_above": 0.0105,
             "d_p_above_ci95": [
-              -0.0139,
-              0.0189
+              -0.0059,
+              0.0269
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
-            "p_above_before": 0.19,
-            "p_above_after": 0.1925,
-            "d_variance_of_gap": -4.944,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 5876996,
-            "name": "Oliver Woodward",
-            "d_expected_points": 0.826,
-            "d_p_above": -0.0015,
-            "d_p_above_ci95": [
-              -0.0032,
-              0.0002
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": false,
-            "p_above_before": 1.0,
-            "p_above_after": 0.9985,
-            "d_variance_of_gap": 14.023,
-            "variance_reduction_per_point_given_up": null,
-            "simulations": 2000
-          },
-          {
-            "entry_id": 3846760,
-            "name": "Daniel Taylor",
-            "d_expected_points": 0.826,
-            "d_p_above": -0.001,
-            "d_p_above_ci95": [
-              -0.0024,
-              0.0004
-            ],
-            "d_p_above_ci95_interval_type": "monte_carlo_paired",
-            "resolved": false,
-            "p_above_before": 1.0,
-            "p_above_after": 0.999,
-            "d_variance_of_gap": 4.371,
+            "p_above_before": 0.1775,
+            "p_above_after": 0.188,
+            "d_variance_of_gap": -1.112,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3671505,
             "name": "Harry Hill",
-            "d_expected_points": 0.826,
-            "d_p_above": -0.0005,
+            "d_expected_points": 0.799,
+            "d_p_above": -0.003,
             "d_p_above_ci95": [
-              -0.011,
-              0.01
+              -0.0132,
+              0.0072
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
             "p_above_before": 0.916,
-            "p_above_after": 0.9155,
-            "d_variance_of_gap": 8.612,
+            "p_above_after": 0.913,
+            "d_variance_of_gap": 9.286,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 3846760,
+            "name": "Daniel Taylor",
+            "d_expected_points": 0.799,
+            "d_p_above": -0.0005,
+            "d_p_above_ci95": [
+              -0.0022,
+              0.0012
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": false,
+            "p_above_before": 0.9995,
+            "p_above_after": 0.999,
+            "d_variance_of_gap": 2.713,
+            "variance_reduction_per_point_given_up": null,
+            "simulations": 2000
+          },
+          {
+            "entry_id": 5876996,
+            "name": "Oliver Woodward",
+            "d_expected_points": 0.799,
+            "d_p_above": -0.0005,
+            "d_p_above_ci95": [
+              -0.0027,
+              0.0017
+            ],
+            "d_p_above_ci95_interval_type": "monte_carlo_paired",
+            "resolved": false,
+            "p_above_before": 0.999,
+            "p_above_after": 0.9985,
+            "d_variance_of_gap": 16.711,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 2341315,
             "name": "Richard Appleton",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.0,
+            "d_expected_points": 0.799,
+            "d_p_above": -0.0005,
             "d_p_above_ci95": [
-              0.0,
-              0.0
+              -0.0015,
+              0.0005
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
             "p_above_before": 1.0,
-            "p_above_after": 1.0,
-            "d_variance_of_gap": -3.092,
+            "p_above_after": 0.9995,
+            "d_variance_of_gap": -3.399,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3526777,
             "name": "Mike Webber",
-            "d_expected_points": 0.826,
-            "d_p_above": 0.0,
+            "d_expected_points": 0.799,
+            "d_p_above": -0.0005,
             "d_p_above_ci95": [
-              0.0,
-              0.0
+              -0.0015,
+              0.0005
             ],
             "d_p_above_ci95_interval_type": "monte_carlo_paired",
             "resolved": false,
             "p_above_before": 1.0,
-            "p_above_after": 1.0,
-            "d_variance_of_gap": 7.093,
+            "p_above_after": 0.9995,
+            "d_variance_of_gap": 4.218,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 6118958,
             "name": "Harjinder Hayre",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2361,14 +2431,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": -3.916,
+            "d_variance_of_gap": -2.355,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1232046,
             "name": "chris martyn",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2378,14 +2448,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 3.288,
+            "d_variance_of_gap": 3.97,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 4186615,
             "name": "Finlay Ashburner",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2395,14 +2465,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 11.155,
+            "d_variance_of_gap": 18.265,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 8183866,
             "name": "Matthew Sims",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2412,14 +2482,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 11.172,
+            "d_variance_of_gap": 16.788,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 3266016,
             "name": "arran wright",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2429,14 +2499,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": -14.334,
+            "d_variance_of_gap": -17.646,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 2209432,
             "name": "Amar Sumaria",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2446,14 +2516,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 8.192,
+            "d_variance_of_gap": 9.135,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 7248283,
             "name": "Niamh O'Riordan-Mitchell",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2463,14 +2533,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 7.022,
+            "d_variance_of_gap": 10.787,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 2520259,
             "name": "Simon Brumfitt",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2480,14 +2550,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 9.347,
+            "d_variance_of_gap": 13.862,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 7905520,
             "name": "Rich Crowley",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2497,14 +2567,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 2.229,
+            "d_variance_of_gap": 1.71,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 8209075,
             "name": "Joshua Knight",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2514,14 +2584,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 9.952,
+            "d_variance_of_gap": 11.885,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 1506291,
             "name": "Jason Mercer",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2531,14 +2601,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 12.048,
+            "d_variance_of_gap": 14.166,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 4033143,
             "name": "Tony Anderson",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2548,14 +2618,14 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 17.732,
+            "d_variance_of_gap": 22.664,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           },
           {
             "entry_id": 6570312,
             "name": "Neil Griffiths",
-            "d_expected_points": 0.826,
+            "d_expected_points": 0.799,
             "d_p_above": 0.0,
             "d_p_above_ci95": [
               0.0,
@@ -2565,7 +2635,7 @@
             "resolved": false,
             "p_above_before": 1.0,
             "p_above_after": 1.0,
-            "d_variance_of_gap": 5.558,
+            "d_variance_of_gap": 6.293,
             "variance_reduction_per_point_given_up": null,
             "simulations": 2000
           }
@@ -2598,16 +2668,16 @@
       "of_xi": 11
     },
     "comparison": {
-      "move_expected": 55.78,
-      "hold_expected": 54.95,
-      "delta": 0.83,
+      "move_expected": 55.61,
+      "hold_expected": 54.81,
+      "delta": 0.8,
       "delta_ci95": [
-        0.51,
-        1.14
+        0.48,
+        1.12
       ],
-      "p_move_beats_hold": 0.504,
+      "p_move_beats_hold": 0.5,
       "simulations": 2000,
-      "short_term_delta": 0.83,
+      "short_term_delta": 0.8,
       "horizon_delta": -0.44,
       "hit_cost": 0,
       "delta_ci95_interval_type": "monte_carlo",
@@ -2669,21 +2739,21 @@
         {
           "option": "hold",
           "label": "make no transfer",
-          "expected": 54.95,
-          "beaten_by": 0.83
+          "expected": 54.81,
+          "beaten_by": 0.8
         }
       ],
       "margin": {
         "available": true,
-        "value": 0.83,
+        "value": 0.8,
         "unit": "expected points",
         "ci95": [
-          0.51,
-          1.14
+          0.48,
+          1.12
         ],
         "interval_type": "monte_carlo",
         "interval_means": "simulation error on the mean edge; it shrinks as more scenarios are drawn",
-        "p_beats_hold": 0.504,
+        "p_beats_hold": 0.5,
         "measured_in": "2000 shared fixture scenarios",
         "domain": "the next gameweek only",
         "realistic_range": [
@@ -2741,10 +2811,10 @@
           "rivals_unresolved": 6,
           "best_case": {
             "rival": "Nat Uttley",
-            "d_p_above": 0.013
+            "d_p_above": 0.011
           },
           "worst_case": {
-            "rival": "Kevin Colling",
+            "rival": "Hakan Duzel",
             "d_p_above": 0.0
           },
           "detail": "per-rival detail: get_league_strategy, or the League page"
@@ -2756,12 +2826,12 @@
           "rivals_measured": 23,
           "rivals_unresolved": 21,
           "best_case": {
-            "rival": "James Gosling",
-            "d_p_above": 0.028
+            "rival": "Daire Carragher",
+            "d_p_above": 0.021
           },
           "worst_case": {
             "rival": "Richard Palmer",
-            "d_p_above": -0.0055
+            "d_p_above": -0.007
           },
           "detail": "per-rival detail: get_league_strategy, or the League page"
         }
@@ -2785,7 +2855,7 @@
         "players_scored": 11,
         "of_xi": 11
       },
-      "content_hash": "9718f14b57d85829"
+      "content_hash": "ee1e3486ef89009c"
     }
   },
   "candidate_set": {
@@ -2876,7 +2946,7 @@
         "captain": 411,
         "vice": 427,
         "hit": 0,
-        "expectation": 54.95399856567383,
+        "expectation": 54.80699920654297,
         "distribution_ref": null,
         "scenario_set_id": "20260806:2000",
         "legality": []
@@ -2937,7 +3007,7 @@
         "captain": 411,
         "vice": 427,
         "hit": 0,
-        "expectation": 55.779998779296875,
+        "expectation": 55.60599899291992,
         "distribution_ref": null,
         "scenario_set_id": "20260806:2000",
         "legality": []
@@ -2980,21 +3050,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 12.27,
+    "expected_gain": 12.45,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "freehit",
         "gameweek": 8,
-        "expected_gain": 12.27,
+        "expected_gain": 12.45,
         "ci95": [
-          11.53,
-          13.01
+          11.71,
+          13.2
         ],
-        "baseline_points": 52.59,
-        "with_chip_points": 64.86,
+        "baseline_points": 52.48,
+        "with_chip_points": 64.93,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 12.27,
+        "expected_gain_per_gameweek": 12.45,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -3004,15 +3074,15 @@
       {
         "chip": "bboost",
         "gameweek": 8,
-        "expected_gain": 11.24,
+        "expected_gain": 10.99,
         "ci95": [
-          10.96,
-          11.52
+          10.71,
+          11.27
         ],
-        "baseline_points": 56.1,
-        "with_chip_points": 67.34,
+        "baseline_points": 56.08,
+        "with_chip_points": 67.07,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 11.24,
+        "expected_gain_per_gameweek": 10.99,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs ARE modelled in the baseline: the gain is what the chip adds beyond the substitutions the rules make for free.",
@@ -3045,15 +3115,15 @@
     "candidate": {
       "chip": "freehit",
       "gameweek": 8,
-      "expected_gain": 12.27,
+      "expected_gain": 12.45,
       "ci95": [
-        11.53,
-        13.01
+        11.71,
+        13.2
       ],
-      "baseline_points": 52.59,
-      "with_chip_points": 64.86,
+      "baseline_points": 52.48,
+      "with_chip_points": 64.93,
       "horizon_gameweeks": 1,
-      "expected_gain_per_gameweek": 12.27,
+      "expected_gain_per_gameweek": 12.45,
       "assumptions": [
         "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
         "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -3280,7 +3350,7 @@
         }
       }
     },
-    "reason": "freehit projects +12.3 points in GW8, but Gaffer has not valued it in GW9-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 12 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW8-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+    "reason": "freehit projects +12.5 points in GW8, but Gaffer has not valued it in GW9-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 12 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW8-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
   },
   "leagues": [
     {
@@ -3303,8 +3373,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-23T15:35:58+00:00",
-    "squad_retrieved_at": "2026-10-23T15:36:16+00:00",
+    "generated_at": "2026-10-23T17:16:02+00:00",
+    "squad_retrieved_at": "2026-10-23T17:16:15+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
