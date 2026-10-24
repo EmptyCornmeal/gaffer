@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-10-23T23:18:15+00:00",
+  "generated_at": "2026-10-24T01:39:04+00:00",
   "status": "Optimal",
   "mode": "transfer",
   "horizon": 6,
-  "total_expected": 181.49,
+  "total_expected": 181.53,
   "steps": [
     {
       "gw": 9,
-      "xi_expected": 44.69,
+      "xi_expected": 44.7,
       "free_transfers": 2,
       "hits": 3,
       "captain": {
@@ -89,15 +89,19 @@
         "price": 5.5,
         "code": 474120,
         "team_code": 40,
-        "next_gw_xp": 4.72,
+        "next_gw_xp": 4.74,
         "confidence": 0.73,
-        "horizon_xp": 24.94,
+        "horizon_xp": 25.05,
         "owned_by": 0.7,
-        "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
+        "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
         "tags": [
           {
             "label": "nailed",
             "kind": "good"
+          },
+          {
+            "label": "set-pieces",
+            "kind": "info"
           },
           {
             "label": "differential",
@@ -228,9 +232,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
@@ -304,6 +308,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -311,11 +390,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -375,77 +454,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -667,7 +675,7 @@
           "next_gw_xp": 2.05,
           "confidence": 0.86,
           "horizon_xp": 14.04,
-          "owned_by": 39.3,
+          "owned_by": 39.4,
           "rationale": "Rotation/bench midfielder with real underlying threat (0.69 xGI/90), on FK #1, corners #1 and despite a tough run.",
           "tags": [
             {
@@ -962,9 +970,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
@@ -1167,6 +1175,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -1174,11 +1257,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -1238,77 +1321,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -1965,7 +1977,7 @@
     },
     {
       "gw": 10,
-      "xi_expected": 46.01,
+      "xi_expected": 46.03,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -2336,9 +2348,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
@@ -2550,6 +2562,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -2557,11 +2644,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -2621,77 +2708,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -3347,7 +3363,7 @@
     },
     {
       "gw": 11,
-      "xi_expected": 48.79,
+      "xi_expected": 48.81,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -3429,15 +3445,19 @@
         "price": 5.5,
         "code": 474120,
         "team_code": 40,
-        "next_gw_xp": 4.72,
+        "next_gw_xp": 4.74,
         "confidence": 0.73,
-        "horizon_xp": 24.94,
+        "horizon_xp": 25.05,
         "owned_by": 0.7,
-        "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
+        "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
         "tags": [
           {
             "label": "nailed",
             "kind": "good"
+          },
+          {
+            "label": "set-pieces",
+            "kind": "info"
           },
           {
             "label": "differential",
@@ -3785,9 +3805,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
@@ -4003,6 +4023,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -4010,11 +4105,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -4074,77 +4169,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -4725,7 +4749,7 @@
     },
     {
       "gw": 12,
-      "xi_expected": 45.35,
+      "xi_expected": 45.37,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -5166,9 +5190,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
@@ -5375,6 +5399,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -5382,11 +5481,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -5446,77 +5545,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -6118,7 +6146,7 @@
     },
     {
       "gw": 13,
-      "xi_expected": 55.6,
+      "xi_expected": 55.57,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -6129,11 +6157,11 @@
         "price": 7.9,
         "code": 222531,
         "team_code": 17,
-        "next_gw_xp": 4.25,
+        "next_gw_xp": 4.24,
         "confidence": 0.91,
-        "horizon_xp": 24.96,
+        "horizon_xp": 24.88,
         "owned_by": 12.3,
-        "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+        "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
         "tags": [
           {
             "label": "nailed",
@@ -6572,9 +6600,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
@@ -6790,6 +6818,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -6797,11 +6900,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -6861,77 +6964,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -7524,7 +7556,7 @@
     },
     {
       "gw": 14,
-      "xi_expected": 50.61,
+      "xi_expected": 50.62,
       "free_transfers": 1,
       "hits": 0,
       "captain": {
@@ -7960,6 +7992,81 @@
           ]
         },
         {
+          "id": 591,
+          "name": "Enciso",
+          "team": "IPS",
+          "pos": "MID",
+          "price": 5.5,
+          "code": 474120,
+          "team_code": 40,
+          "next_gw_xp": 4.74,
+          "confidence": 0.73,
+          "horizon_xp": 25.05,
+          "owned_by": 0.7,
+          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90) and on FK #1.",
+          "tags": [
+            {
+              "label": "nailed",
+              "kind": "good"
+            },
+            {
+              "label": "set-pieces",
+              "kind": "info"
+            },
+            {
+              "label": "differential",
+              "kind": "info"
+            }
+          ],
+          "xmins_badge": {
+            "label": "NAILED",
+            "kind": "good",
+            "hint": "~81'"
+          },
+          "fixtures": [
+            {
+              "gw": 9,
+              "opp": "HUL",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 10,
+              "opp": "BOU",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 11,
+              "opp": "TOT",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            },
+            {
+              "gw": 12,
+              "opp": "AVL",
+              "home": true,
+              "difficulty": 4,
+              "att": 3,
+              "def": 4
+            },
+            {
+              "gw": 13,
+              "opp": "COV",
+              "home": false,
+              "difficulty": 2,
+              "att": 1,
+              "def": 2
+            }
+          ]
+        },
+        {
           "id": 480,
           "name": "Gibbs-White",
           "team": "NFO",
@@ -7967,11 +8074,11 @@
           "price": 7.9,
           "code": 222531,
           "team_code": 17,
-          "next_gw_xp": 4.25,
+          "next_gw_xp": 4.24,
           "confidence": 0.91,
-          "horizon_xp": 24.96,
+          "horizon_xp": 24.88,
           "owned_by": 12.3,
-          "rationale": "Nailed midfielder with real underlying threat (0.64 xGI/90) and on pens #1, FK #1.",
+          "rationale": "Nailed midfielder with real underlying threat (0.63 xGI/90) and on pens #1, FK #1.",
           "tags": [
             {
               "label": "nailed",
@@ -8031,77 +8138,6 @@
               "difficulty": 1,
               "att": 1,
               "def": 1
-            }
-          ]
-        },
-        {
-          "id": 591,
-          "name": "Enciso",
-          "team": "IPS",
-          "pos": "MID",
-          "price": 5.5,
-          "code": 474120,
-          "team_code": 40,
-          "next_gw_xp": 4.72,
-          "confidence": 0.73,
-          "horizon_xp": 24.94,
-          "owned_by": 0.7,
-          "rationale": "Nailed midfielder with real underlying threat (0.46 xGI/90).",
-          "tags": [
-            {
-              "label": "nailed",
-              "kind": "good"
-            },
-            {
-              "label": "differential",
-              "kind": "info"
-            }
-          ],
-          "xmins_badge": {
-            "label": "NAILED",
-            "kind": "good",
-            "hint": "~81'"
-          },
-          "fixtures": [
-            {
-              "gw": 9,
-              "opp": "HUL",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 10,
-              "opp": "BOU",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 11,
-              "opp": "TOT",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
-            },
-            {
-              "gw": 12,
-              "opp": "AVL",
-              "home": true,
-              "difficulty": 4,
-              "att": 3,
-              "def": 4
-            },
-            {
-              "gw": 13,
-              "opp": "COV",
-              "home": false,
-              "difficulty": 2,
-              "att": 1,
-              "def": 2
             }
           ]
         },
@@ -8565,9 +8601,9 @@
           "price": 4.0,
           "code": 216616,
           "team_code": 40,
-          "next_gw_xp": 4.53,
+          "next_gw_xp": 4.54,
           "confidence": 0.91,
-          "horizon_xp": 23.38,
+          "horizon_xp": 23.43,
           "owned_by": 2.8,
           "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (10.1/90 → +2 most weeks) and in form (5.3).",
           "tags": [
