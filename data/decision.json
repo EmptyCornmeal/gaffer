@@ -2,14 +2,14 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-25T08:51:32.907249+00:00",
+    "generated_for": "2026-10-25T10:31:59.548170+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-31T11:00:00+00:00",
-        "in_hours": 146.1,
+        "in_hours": 144.5,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
@@ -24,21 +24,21 @@
           "price": 4.6
         },
         "direction": "rise",
-        "percent": 105.9,
+        "percent": 107.7,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "123.8",
+            "projected_percent": "122.7",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "151.7",
+            "projected_percent": "149.0",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "179.6",
+            "projected_percent": "175.3",
             "likelihood": 5
           }
         ],
@@ -48,7 +48,7 @@
         "changes": "Konsa's price moves 0.1m"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 249,
@@ -57,29 +57,28 @@
           "price": 5.7
         },
         "direction": "fall",
-        "percent": -99.5,
+        "percent": -100.0,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-103.8",
+            "projected_percent": "-103.7",
             "likelihood": -5
           },
           {
             "offset": 1,
-            "projected_percent": "-110.4",
+            "projected_percent": "-110.2",
             "likelihood": -5
           },
           {
             "offset": 2,
-            "projected_percent": "-117.1",
+            "projected_percent": "-116.7",
             "likelihood": -5
           }
         ],
-        "certainty": "100% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": false,
         "owned": true,
-        "changes": "Barry may move 0.1m before the deadline"
+        "changes": "Barry sells for 0.1m less if you wait"
       },
       {
         "kind": "price_change_near",
@@ -91,22 +90,22 @@
           "price": 4.7
         },
         "direction": "rise",
-        "percent": 93.8,
+        "percent": 94.0,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "95.0",
+            "projected_percent": "95.8",
             "likelihood": 4
           },
           {
             "offset": 1,
-            "projected_percent": "96.8",
+            "projected_percent": "98.9",
             "likelihood": 4
           },
           {
             "offset": 2,
-            "projected_percent": "98.7",
-            "likelihood": 4
+            "projected_percent": "102.0",
+            "likelihood": 5
           }
         ],
         "certainty": "94% of the way, by FPL's own figure. NOT due, and no timing is implied",
@@ -125,22 +124,22 @@
           "price": 5.8
         },
         "direction": "fall",
-        "percent": -86.9,
+        "percent": -87.3,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-89.9",
+            "projected_percent": "-90.6",
             "likelihood": -3
           },
           {
             "offset": 1,
-            "projected_percent": "-94.6",
-            "likelihood": -3
+            "projected_percent": "-96.3",
+            "likelihood": -4
           },
           {
             "offset": 2,
-            "projected_percent": "-99.2",
-            "likelihood": -4
+            "projected_percent": "-102.0",
+            "likelihood": -5
           }
         ],
         "certainty": "87% of the way, by FPL's own figure. NOT due, and no timing is implied",
@@ -159,25 +158,25 @@
           "price": 15.7
         },
         "direction": "rise",
-        "percent": 77.3,
+        "percent": 77.8,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "81.7",
+            "projected_percent": "81.6",
             "likelihood": 3
           },
           {
             "offset": 1,
-            "projected_percent": "88.6",
+            "projected_percent": "88.2",
             "likelihood": 3
           },
           {
             "offset": 2,
-            "projected_percent": "95.5",
-            "likelihood": 4
+            "projected_percent": "94.9",
+            "likelihood": 3
           }
         ],
-        "certainty": "77% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "78% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": false,
         "owned": true,
@@ -252,17 +251,18 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "money may be at stake",
-    "reason": "Barry, Gvardiol is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
-    "hours_to_deadline": 146.1,
+    "verdict": "act",
+    "reason": "waiting costs 0.1m of team value on changes FPL says are already due",
+    "hours_to_deadline": 144.5,
     "edge_points": 2.66,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.0,
-    "detail": [],
-    "pending_price_changes": 1,
-    "near_price_changes": 4,
+    "money_cost_of_waiting_m": 0.1,
+    "detail": [
+      "Barry is due to fall and you own him: his selling price drops 0.1m while you wait"
+    ],
+    "pending_price_changes": 2,
+    "near_price_changes": 3,
     "near_at_risk_if_you_wait": [
-      "Barry",
       "Gvardiol"
     ],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
@@ -280,7 +280,7 @@
         "chance_of_playing": 75,
         "news": "Hip injury - 75% chance of playing",
         "news_added": "2026-10-24T18:30:08.735545+00:00",
-        "news_age_days": 0.6,
+        "news_age_days": 0.7,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -292,7 +292,7 @@
         "chance_of_playing": 75,
         "news": "Unspecified injury - 75% chance of playing",
         "news_added": "2026-10-24T16:30:09.687729+00:00",
-        "news_age_days": 0.7,
+        "news_age_days": 0.8,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -366,7 +366,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-25T08:50:30+00:00",
+  "generated_at": "2026-10-25T10:31:11+00:00",
   "gameweek": 9,
   "horizon": 6,
   "squad_state": {
@@ -715,7 +715,7 @@
         "next_gw_xp": 2.01,
         "confidence": 0.69,
         "horizon_xp": 13.64,
-        "owned_by": 73.2,
+        "owned_by": 73.1,
         "rationale": "Rotation/bench forward with real underlying threat (0.58 xGI/90) and but note: Unspecified injury - 75% chance of playing.",
         "tags": [
           {
@@ -796,7 +796,7 @@
         "next_gw_xp": 4.43,
         "confidence": 0.91,
         "horizon_xp": 25.07,
-        "owned_by": 6.8,
+        "owned_by": 6.9,
         "rationale": "Nailed defender with strong clean-sheet odds and a genuine attacking threat from the back.",
         "tags": [
           {
@@ -1169,7 +1169,7 @@
         "next_gw_xp": 4.43,
         "confidence": 0.91,
         "horizon_xp": 25.07,
-        "owned_by": 6.8,
+        "owned_by": 6.9,
         "rationale": "Nailed defender with strong clean-sheet odds and a genuine attacking threat from the back.",
         "tags": [
           {
@@ -3829,8 +3829,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-25T08:50:30+00:00",
-    "squad_retrieved_at": "2026-10-25T08:51:21+00:00",
+    "generated_at": "2026-10-25T10:31:11+00:00",
+    "squad_retrieved_at": "2026-10-25T10:31:50+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
