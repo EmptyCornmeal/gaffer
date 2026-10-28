@@ -1,12 +1,12 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-10-28T21:05:10+00:00",
+  "generated_at": "2026-10-28T23:06:00+00:00",
   "result": {
     "considered": 4,
     "new": 4,
     "duplicates": 0,
-    "suppressed": 0,
-    "delivered": 4,
+    "suppressed": 3,
+    "delivered": 1,
     "failed": 0,
     "dry_run": true,
     "alerts": [
@@ -18,7 +18,7 @@
         "event": 9,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:4682259ea7c4",
-        "created_at": "2026-10-28T21:05:28+00:00",
+        "created_at": "2026-10-28T23:06:29+00:00",
         "state": "dry_run"
       },
       {
@@ -29,8 +29,9 @@
         "event": 9,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:49c27ab63981",
-        "created_at": "2026-10-28T21:05:28+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-28T23:06:29+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       },
       {
         "kind": "availability",
@@ -40,8 +41,9 @@
         "event": 9,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:3d0426e4ddec",
-        "created_at": "2026-10-28T21:05:28+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-28T23:06:29+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       },
       {
         "kind": "league_swing",
@@ -51,8 +53,9 @@
         "event": 9,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:fd5a59b89040",
-        "created_at": "2026-10-28T21:05:28+00:00",
-        "state": "dry_run"
+        "created_at": "2026-10-28T23:06:29+00:00",
+        "state": "suppressed",
+        "reason": "quiet hours (Europe/London)"
       }
     ],
     "errors": []
@@ -74,7 +77,8 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 4
+      "dry_run": 1,
+      "suppressed": 3
     },
     "recent": [
       {
@@ -82,7 +86,7 @@
         "severity": "critical",
         "title": "João Pedro is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-28T21:05:28+00:00",
+        "created_at": "2026-10-28T23:06:29+00:00",
         "state": "dry_run",
         "event": 9
       },
@@ -91,8 +95,8 @@
         "severity": "important",
         "title": "Calafiori is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-28T21:05:28+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-28T23:06:29+00:00",
+        "state": "suppressed",
         "event": 9
       },
       {
@@ -100,8 +104,8 @@
         "severity": "important",
         "title": "Thomas is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-10-28T21:05:28+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-28T23:06:29+00:00",
+        "state": "suppressed",
         "event": 9
       },
       {
@@ -109,8 +113,8 @@
         "severity": "info",
         "title": "A differential is winning you the week",
         "deep_link": "#/live",
-        "created_at": "2026-10-28T21:05:28+00:00",
-        "state": "dry_run",
+        "created_at": "2026-10-28T23:06:29+00:00",
+        "state": "suppressed",
         "event": 9
       }
     ]
