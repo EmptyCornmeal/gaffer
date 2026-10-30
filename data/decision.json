@@ -2,50 +2,17 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-29T23:16:35.892844+00:00",
+    "generated_for": "2026-10-30T02:39:13.749344+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-31T11:00:00+00:00",
-        "in_hours": 35.7,
+        "in_hours": 32.3,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
-      },
-      {
-        "kind": "price_change_due",
-        "at": null,
-        "player": {
-          "id": 8,
-          "name": "Calafiori",
-          "team": "ARS",
-          "price": 6.0
-        },
-        "direction": "fall",
-        "percent": -105.6,
-        "projections": [
-          {
-            "offset": 0,
-            "projected_percent": "-106.7",
-            "likelihood": -5
-          },
-          {
-            "offset": 1,
-            "projected_percent": "-134.9",
-            "likelihood": -5
-          },
-          {
-            "offset": 2,
-            "projected_percent": "-163.2",
-            "likelihood": -5
-          }
-        ],
-        "certainty": "FPL says this change is due; it does not say when",
-        "in_this_move": true,
-        "owned": true,
-        "changes": "Calafiori sells for 0.1m less if you wait"
       },
       {
         "kind": "price_change_near",
@@ -57,21 +24,21 @@
           "price": 8.0
         },
         "direction": "rise",
-        "percent": 89.5,
+        "percent": 90.3,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "89.9",
+            "projected_percent": "94.1",
             "likelihood": 3
           },
           {
             "offset": 1,
-            "projected_percent": "98.2",
+            "projected_percent": "98.3",
             "likelihood": 4
           },
           {
             "offset": 2,
-            "projected_percent": "106.6",
+            "projected_percent": "102.5",
             "likelihood": 5
           }
         ],
@@ -80,6 +47,40 @@
         "in_this_move": true,
         "owned": true,
         "changes": "Rogers may move 0.1m before the deadline"
+      },
+      {
+        "kind": "price_change_near",
+        "at": null,
+        "player": {
+          "id": 68,
+          "name": "Tavernier",
+          "team": "BOU",
+          "price": 6.4
+        },
+        "direction": "rise",
+        "percent": 70.7,
+        "projections": [
+          {
+            "offset": 0,
+            "projected_percent": "85.0",
+            "likelihood": 3
+          },
+          {
+            "offset": 1,
+            "projected_percent": "101.1",
+            "likelihood": 5
+          },
+          {
+            "offset": 2,
+            "projected_percent": "117.2",
+            "likelihood": 5
+          }
+        ],
+        "certainty": "71% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "in_this_move": false,
+        "owned": true,
+        "changes": "Tavernier may move 0.1m before the deadline"
       }
     ],
     "schedule_shape": [
@@ -150,17 +151,15 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "waiting is cheaper",
-    "reason": "waiting saves 0.1m on changes FPL says are already due -- on money alone",
-    "hours_to_deadline": 35.7,
+    "verdict": "money may be at stake",
+    "reason": "Rogers is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
+    "hours_to_deadline": 32.3,
     "edge_points": 3.11,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": -0.1,
-    "detail": [
-      "Calafiori is due to fall: waiting saves 0.1m"
-    ],
-    "pending_price_changes": 1,
-    "near_price_changes": 1,
+    "money_cost_of_waiting_m": 0.0,
+    "detail": [],
+    "pending_price_changes": 0,
+    "near_price_changes": 2,
     "near_at_risk_if_you_wait": [
       "Rogers"
     ],
@@ -179,7 +178,7 @@
         "chance_of_playing": 75,
         "news": "Hip injury - 75% chance of playing",
         "news_added": "2026-10-24T18:30:08.735545+00:00",
-        "news_age_days": 5.2,
+        "news_age_days": 5.3,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -191,7 +190,7 @@
         "chance_of_playing": 0,
         "news": "Thigh injury - Unknown return date",
         "news_added": "2026-10-24T16:30:09.687729+00:00",
-        "news_age_days": 5.3,
+        "news_age_days": 5.4,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -203,7 +202,7 @@
         "chance_of_playing": 50,
         "news": "Calf injury - 50% chance of playing",
         "news_added": "2026-10-24T17:00:09.115906+00:00",
-        "news_age_days": 5.3,
+        "news_age_days": 5.4,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -272,7 +271,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-29T23:16:04+00:00",
+  "generated_at": "2026-10-30T02:37:33+00:00",
   "gameweek": 9,
   "horizon": 6,
   "squad_state": {
@@ -314,7 +313,7 @@
         "name": "Calafiori",
         "team": "ARS",
         "pos": "DEF",
-        "price": 6.0,
+        "price": 5.9,
         "code": 466075,
         "team_code": 3,
         "next_gw_xp": 1.7
@@ -532,13 +531,13 @@
         "name": "Calafiori",
         "team": "ARS",
         "pos": "DEF",
-        "price": 6.0,
+        "price": 5.9,
         "code": 466075,
         "team_code": 3,
         "next_gw_xp": 1.7,
         "confidence": 0.65,
         "horizon_xp": 14.21,
-        "owned_by": 50.2,
+        "owned_by": 50.1,
         "rationale": "Rotation/bench defender with in form (5.3) and but note: Hip injury - 75% chance of playing.",
         "tags": [
           {
@@ -617,7 +616,7 @@
         "next_gw_xp": 0.0,
         "confidence": 0.47,
         "horizon_xp": 0.0,
-        "owned_by": 60.0,
+        "owned_by": 59.6,
         "rationale": "Rotation/bench forward with real underlying threat (0.58 xGI/90) and but note: Thigh injury - Unknown return date.",
         "tags": [
           {
@@ -1165,7 +1164,7 @@
       "next_gw_xp": 5.38,
       "confidence": 0.9,
       "horizon_xp": 36.57,
-      "owned_by": 20.9,
+      "owned_by": 21.0,
       "rationale": "Nailed midfielder with real underlying threat (0.67 xGI/90), on FK #1, corners #1, in form (7.0) and a soft fixture run.",
       "tags": [
         {
@@ -1557,7 +1556,7 @@
         "next_gw_xp": 5.38,
         "confidence": 0.9,
         "horizon_xp": 36.57,
-        "owned_by": 20.9,
+        "owned_by": 21.0,
         "rationale": "Nailed midfielder with real underlying threat (0.67 xGI/90), on FK #1, corners #1, in form (7.0) and a soft fixture run.",
         "tags": [
           {
@@ -1715,7 +1714,7 @@
         "next_gw_xp": 3.21,
         "confidence": 0.86,
         "horizon_xp": 22.33,
-        "owned_by": 38.0,
+        "owned_by": 37.9,
         "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.71 xGI/90) and on FK #1, corners #1.",
         "tags": [
           {
@@ -2309,7 +2308,7 @@
         "next_gw_xp": 2.03,
         "confidence": 0.83,
         "horizon_xp": 14.78,
-        "owned_by": 26.7,
+        "owned_by": 26.6,
         "rationale": "Likely-starting defender (rotation risk) with projected 2.0 pts next GW.",
         "tags": [],
         "xmins_badge": {
@@ -3972,8 +3971,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-29T23:16:04+00:00",
-    "squad_retrieved_at": "2026-10-29T23:16:32+00:00",
+    "generated_at": "2026-10-30T02:37:33+00:00",
+    "squad_retrieved_at": "2026-10-30T02:39:09+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
