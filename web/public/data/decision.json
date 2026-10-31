@@ -2,83 +2,17 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-10-30T20:27:07.603088+00:00",
+    "generated_for": "2026-10-31T00:27:29.815423+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-10-31T11:00:00+00:00",
-        "in_hours": 14.5,
+        "in_hours": 10.5,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
-      },
-      {
-        "kind": "price_change_due",
-        "at": null,
-        "player": {
-          "id": 40,
-          "name": "Rogers",
-          "team": "CHE",
-          "price": 8.0
-        },
-        "direction": "rise",
-        "percent": 105.8,
-        "projections": [
-          {
-            "offset": 0,
-            "projected_percent": "110.4",
-            "likelihood": 5
-          },
-          {
-            "offset": 1,
-            "projected_percent": "141.0",
-            "likelihood": 5
-          },
-          {
-            "offset": 2,
-            "projected_percent": "171.6",
-            "likelihood": 5
-          }
-        ],
-        "certainty": "FPL says this change is due; it does not say when",
-        "in_this_move": true,
-        "owned": true,
-        "changes": "Rogers costs 0.1m more if you wait"
-      },
-      {
-        "kind": "price_change_due",
-        "at": null,
-        "player": {
-          "id": 68,
-          "name": "Tavernier",
-          "team": "BOU",
-          "price": 6.4
-        },
-        "direction": "rise",
-        "percent": 120.9,
-        "projections": [
-          {
-            "offset": 0,
-            "projected_percent": "136.0",
-            "likelihood": 5
-          },
-          {
-            "offset": 1,
-            "projected_percent": "234.7",
-            "likelihood": 5
-          },
-          {
-            "offset": 2,
-            "projected_percent": "333.3",
-            "likelihood": 5
-          }
-        ],
-        "certainty": "FPL says this change is due; it does not say when",
-        "in_this_move": false,
-        "owned": true,
-        "changes": "Tavernier's price moves 0.1m"
       }
     ],
     "schedule_shape": [
@@ -149,16 +83,14 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "act",
-    "reason": "waiting costs 0.1m of team value on changes FPL says are already due",
-    "hours_to_deadline": 14.5,
+    "verdict": "no money either way",
+    "reason": "no price change in this move is due",
+    "hours_to_deadline": 10.5,
     "edge_points": 3.21,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.1,
-    "detail": [
-      "Rogers is due to rise: waiting costs 0.1m"
-    ],
-    "pending_price_changes": 2,
+    "money_cost_of_waiting_m": 0.0,
+    "detail": [],
+    "pending_price_changes": 0,
     "near_price_changes": 0,
     "near_at_risk_if_you_wait": [],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
@@ -176,7 +108,7 @@
         "chance_of_playing": 75,
         "news": "Hip injury - 75% chance of playing",
         "news_added": "2026-10-24T18:30:08.735545+00:00",
-        "news_age_days": 6.1,
+        "news_age_days": 6.2,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -188,7 +120,7 @@
         "chance_of_playing": 0,
         "news": "Thigh injury - Unknown return date",
         "news_added": "2026-10-24T16:30:09.687729+00:00",
-        "news_age_days": 6.2,
+        "news_age_days": 6.3,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       },
@@ -200,7 +132,7 @@
         "chance_of_playing": 50,
         "news": "Calf injury - 50% chance of playing",
         "news_added": "2026-10-24T17:00:09.115906+00:00",
-        "news_age_days": 6.1,
+        "news_age_days": 6.3,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -269,7 +201,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-10-30T20:25:36+00:00",
+  "generated_at": "2026-10-31T00:27:10+00:00",
   "gameweek": 9,
   "horizon": 6,
   "squad_state": {
@@ -331,7 +263,7 @@
         "name": "Rogers",
         "team": "CHE",
         "pos": "MID",
-        "price": 8.0,
+        "price": 8.1,
         "code": 244850,
         "team_code": 8,
         "next_gw_xp": 2.97
@@ -341,7 +273,7 @@
         "name": "Tavernier",
         "team": "BOU",
         "pos": "MID",
-        "price": 6.4,
+        "price": 6.5,
         "code": 201658,
         "team_code": 91,
         "next_gw_xp": 5.38
@@ -458,13 +390,13 @@
         "name": "Rogers",
         "team": "CHE",
         "pos": "MID",
-        "price": 8.0,
+        "price": 8.1,
         "code": 244850,
         "team_code": 8,
         "next_gw_xp": 2.97,
         "confidence": 0.92,
         "horizon_xp": 20.53,
-        "owned_by": 50.6,
+        "owned_by": 50.7,
         "rationale": "Nailed midfielder with real underlying threat (0.45 xGI/90).",
         "tags": [
           {
@@ -535,7 +467,7 @@
         "next_gw_xp": 1.7,
         "confidence": 0.65,
         "horizon_xp": 14.21,
-        "owned_by": 48.5,
+        "owned_by": 48.0,
         "rationale": "Rotation/bench defender with in form (5.3) and but note: Hip injury - 75% chance of playing.",
         "tags": [
           {
@@ -614,7 +546,7 @@
         "next_gw_xp": 0.0,
         "confidence": 0.47,
         "horizon_xp": 0.0,
-        "owned_by": 53.0,
+        "owned_by": 51.1,
         "rationale": "Rotation/bench forward with real underlying threat (0.58 xGI/90) and but note: Thigh injury - Unknown return date.",
         "tags": [
           {
@@ -693,7 +625,7 @@
         "next_gw_xp": 1.87,
         "confidence": 0.48,
         "horizon_xp": 10.72,
-        "owned_by": 8.8,
+        "owned_by": 8.6,
         "rationale": "Rotation/bench defender with elite defensive volume (10.5/90 → +2 most weeks) and but note: Calf injury - 50% chance of playing.",
         "tags": [
           {
@@ -770,7 +702,7 @@
         "next_gw_xp": 4.56,
         "confidence": 0.75,
         "horizon_xp": 30.28,
-        "owned_by": 1.7,
+        "owned_by": 1.9,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (5.3) and a soft fixture run.",
         "tags": [
           {
@@ -853,7 +785,7 @@
         "next_gw_xp": 4.54,
         "confidence": 0.88,
         "horizon_xp": 29.45,
-        "owned_by": 2.4,
+        "owned_by": 2.5,
         "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (11.1/90 → +2 most weeks), in form (6.7) and a soft fixture run.",
         "tags": [
           {
@@ -1156,13 +1088,13 @@
       "name": "Tavernier",
       "team": "BOU",
       "pos": "MID",
-      "price": 6.4,
+      "price": 6.5,
       "code": 201658,
       "team_code": 91,
       "next_gw_xp": 5.38,
       "confidence": 0.9,
       "horizon_xp": 36.57,
-      "owned_by": 23.4,
+      "owned_by": 24.1,
       "rationale": "Nailed midfielder with real underlying threat (0.67 xGI/90), on FK #1, corners #1, in form (7.0) and a soft fixture run.",
       "tags": [
         {
@@ -1317,7 +1249,7 @@
         "next_gw_xp": 4.56,
         "confidence": 0.75,
         "horizon_xp": 30.28,
-        "owned_by": 1.7,
+        "owned_by": 1.9,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (5.3) and a soft fixture run.",
         "tags": [
           {
@@ -1400,7 +1332,7 @@
         "next_gw_xp": 4.54,
         "confidence": 0.88,
         "horizon_xp": 29.45,
-        "owned_by": 2.4,
+        "owned_by": 2.5,
         "rationale": "Nailed defender with strong clean-sheet odds, elite defensive volume (11.1/90 → +2 most weeks), in form (6.7) and a soft fixture run.",
         "tags": [
           {
@@ -1548,13 +1480,13 @@
         "name": "Tavernier",
         "team": "BOU",
         "pos": "MID",
-        "price": 6.4,
+        "price": 6.5,
         "code": 201658,
         "team_code": 91,
         "next_gw_xp": 5.38,
         "confidence": 0.9,
         "horizon_xp": 36.57,
-        "owned_by": 23.4,
+        "owned_by": 24.1,
         "rationale": "Nailed midfielder with real underlying threat (0.67 xGI/90), on FK #1, corners #1, in form (7.0) and a soft fixture run.",
         "tags": [
           {
@@ -1712,7 +1644,7 @@
         "next_gw_xp": 3.21,
         "confidence": 0.86,
         "horizon_xp": 22.33,
-        "owned_by": 37.5,
+        "owned_by": 37.3,
         "rationale": "Likely-starting midfielder (rotation risk) with real underlying threat (0.71 xGI/90) and on FK #1, corners #1.",
         "tags": [
           {
@@ -2085,7 +2017,7 @@
         "next_gw_xp": 3.38,
         "confidence": 0.92,
         "horizon_xp": 25.88,
-        "owned_by": 45.6,
+        "owned_by": 45.5,
         "rationale": "Nailed keeper with strong clean-sheet odds and in form (6.3).",
         "tags": [
           {
@@ -2231,7 +2163,7 @@
         "next_gw_xp": 2.99,
         "confidence": 0.85,
         "horizon_xp": 23.13,
-        "owned_by": 45.7,
+        "owned_by": 45.6,
         "rationale": "Nailed midfielder with real underlying threat (0.47 xGI/90) and on pens #1, FK #1, corners #1.",
         "tags": [
           {
@@ -3234,11 +3166,11 @@
     "executability": {
       "affordable": true,
       "bank_before": 23,
-      "bank_after": 59,
+      "bank_after": 60,
       "bank_before_m": 2.3,
-      "bank_after_m": 5.9,
+      "bank_after_m": 6.0,
       "cost_m": 21.7,
-      "recouped_m": 25.3,
+      "recouped_m": 25.4,
       "free_transfers_before": 2,
       "free_transfers_after": 1,
       "paid_transfers": 2,
@@ -3373,7 +3305,7 @@
         "free_transfers_before": 2,
         "free_transfers_after": 1,
         "bank_before": 23,
-        "bank_after": 59,
+        "bank_after": 60,
         "affordable": true,
         "note": ""
       },
@@ -3455,7 +3387,7 @@
         "players_scored": 11,
         "of_xi": 11
       },
-      "content_hash": "d6cb2e7468b16375"
+      "content_hash": "79255da6f9544874"
     }
   },
   "candidate_set": {
@@ -3969,8 +3901,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-10-30T20:25:36+00:00",
-    "squad_retrieved_at": "2026-10-30T20:26:59+00:00",
+    "generated_at": "2026-10-31T00:27:10+00:00",
+    "squad_retrieved_at": "2026-10-31T00:27:25+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
