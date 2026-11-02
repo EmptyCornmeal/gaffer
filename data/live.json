@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 9,
-  "as_of": "2026-11-02T20:14:08+00:00",
+  "as_of": "2026-11-02T22:15:10+00:00",
   "fixtures": [
     {
       "id": 81,
@@ -88,10 +88,10 @@
       "event": 9,
       "team_h": 17,
       "team_a": 9,
-      "state": "live",
-      "minutes": 8,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-02T20:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 90,
@@ -107,28 +107,27 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 9,
-      "live": 1
+      "awaiting_bonus": 10
     },
     "all_finished": false,
-    "bonus_final": false
+    "bonus_final": true
   },
   "available": true,
   "unavailable_reason": null,
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 43,
+    "confirmed": 52,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
-    "current": 43,
-    "projected": 43.0,
+    "current": 52,
+    "projected": 52.0,
     "bench_points": 3,
     "players_played": 13,
     "players_yet_to_play": 0,
     "hits": 0,
     "season_total_before": 552,
-    "season_total_projected": 595.0,
+    "season_total_projected": 604.0,
     "autosubs": {
       "xi": [
         1,
@@ -154,7 +153,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -269,16 +268,16 @@
     },
     {
       "id": 249,
-      "minutes": 12,
-      "confirmed": 1,
+      "minutes": 79,
+      "confirmed": 9,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 1.0,
+      "total": 9.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Barry",
       "pos": "FWD",
@@ -341,16 +340,16 @@
     },
     {
       "id": 453,
-      "minutes": 12,
-      "confirmed": 1,
+      "minutes": 90,
+      "confirmed": 2,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 1.0,
+      "total": 2.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Barnes",
       "pos": "MID",
@@ -435,9 +434,9 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 604,
-      "projected": 604.0,
-      "gw_points": 46,
+      "current": 605,
+      "projected": 605.0,
+      "gw_points": 47,
       "yet_to_play": 0,
       "provisional_position": 1
     },
@@ -445,9 +444,9 @@
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 595,
-      "projected": 595.0,
-      "gw_points": 43,
+      "current": 604,
+      "projected": 604.0,
+      "gw_points": 52,
       "yet_to_play": 0,
       "provisional_position": 2
     },
@@ -475,9 +474,9 @@
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "you": false,
-      "current": 527,
-      "projected": 527.0,
-      "gw_points": 43,
+      "current": 528,
+      "projected": 528.0,
+      "gw_points": 44,
       "yet_to_play": 0,
       "provisional_position": 5
     },
@@ -507,7 +506,7 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "provisional_position": 1,
-      "gw_points": 46,
+      "gw_points": 47,
       "hits": 0,
       "yet_to_play": 0,
       "autosubs": {
@@ -535,7 +534,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -567,12 +566,12 @@
           "element": 449,
           "name": "Hall",
           "pos": "DEF",
-          "minutes": 12,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -765,7 +764,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -941,8 +940,8 @@
           "element": 229,
           "name": "Tarkowski",
           "pos": "DEF",
-          "minutes": 12,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1207,7 +1206,7 @@
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "provisional_position": 5,
-      "gw_points": 43,
+      "gw_points": 44,
       "hits": 0,
       "yet_to_play": 0,
       "autosubs": {
@@ -1239,7 +1238,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1259,12 +1258,12 @@
           "element": 449,
           "name": "Hall",
           "pos": "DEF",
-          "minutes": 12,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -1926,9 +1925,9 @@
   ],
   "me": {
     "entry_id": 1066421,
-    "current": 595,
-    "projected": 595.0,
-    "gw_points": 43,
+    "current": 604,
+    "projected": 604.0,
+    "gw_points": 52,
     "yet_to_play": 0,
     "provisional_position": 2,
     "substitutions": {
@@ -1956,26 +1955,26 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
   "largest_swing": {
-    "player_id": 4,
-    "name": "Gabriel",
-    "swing": 6,
+    "player_id": 249,
+    "name": "Barry",
+    "swing": 9,
     "in_your_xi": true,
     "against": 408467,
     "note": "a differential you own"
   },
   "separation": {
-    "confirmed": 43,
+    "confirmed": 52,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-11-02T20:14:08+00:00",
+  "generated_at": "2026-11-02T22:15:10+00:00",
   "season": "2026-27"
 }
