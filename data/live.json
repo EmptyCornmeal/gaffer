@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 10,
-  "as_of": "2026-11-06T21:17:02+00:00",
+  "as_of": "2026-11-06T23:37:57+00:00",
   "fixtures": [
     {
       "id": 91,
@@ -38,10 +38,10 @@
       "event": 10,
       "team_h": 9,
       "team_a": 7,
-      "state": "live",
-      "minutes": 51,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-06T20:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 95,
@@ -107,28 +107,28 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "live": 1,
+      "awaiting_bonus": 1,
       "scheduled": 9
     },
     "all_finished": false,
-    "bonus_final": false
+    "bonus_final": true
   },
   "available": true,
   "unavailable_reason": null,
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 1,
+    "confirmed": 16,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
-    "current": 1,
-    "projected": 1.0,
+    "current": 16,
+    "projected": 16.0,
     "bench_points": 0,
     "players_played": 1,
-    "players_yet_to_play": 14,
+    "players_yet_to_play": 13,
     "hits": 0,
     "season_total_before": 604,
-    "season_total_projected": 605.0,
+    "season_total_projected": 620.0,
     "autosubs": {
       "xi": [
         1,
@@ -287,16 +287,16 @@
     },
     {
       "id": 249,
-      "minutes": 56,
-      "confirmed": 1,
+      "minutes": 90,
+      "confirmed": 16,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 1.0,
+      "total": 16.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Barry",
       "pos": "FWD",
@@ -365,10 +365,10 @@
       "predicted": 0.0,
       "total": 0.0,
       "played": false,
-      "finished": false,
-      "yet_to_play": true,
+      "finished": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Thomas",
       "pos": "DEF",
@@ -435,10 +435,10 @@
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 605,
-      "projected": 605.0,
-      "gw_points": 1,
-      "yet_to_play": 14,
+      "current": 620,
+      "projected": 620.0,
+      "gw_points": 16,
+      "yet_to_play": 13,
       "provisional_position": 1
     },
     {
@@ -455,9 +455,9 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 540,
-      "projected": 540.0,
-      "gw_points": -15,
+      "current": 541,
+      "projected": 541.0,
+      "gw_points": -14,
       "yet_to_play": 14,
       "provisional_position": 3
     },
@@ -738,7 +738,7 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "provisional_position": 3,
-      "gw_points": -15,
+      "gw_points": -14,
       "hits": 16,
       "yet_to_play": 14,
       "autosubs": {
@@ -812,12 +812,12 @@
           "element": 229,
           "name": "Tarkowski",
           "pos": "DEF",
-          "minutes": 56,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -1168,8 +1168,8 @@
           "element": 183,
           "name": "Rudoni",
           "pos": "MID",
-          "minutes": 56,
-          "confirmed": 1,
+          "minutes": 85,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1624,7 +1624,7 @@
           "element": 175,
           "name": "van Ewijk",
           "pos": "DEF",
-          "minutes": 56,
+          "minutes": 90,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1907,10 +1907,10 @@
   ],
   "me": {
     "entry_id": 1066421,
-    "current": 605,
-    "projected": 605.0,
-    "gw_points": 1,
-    "yet_to_play": 14,
+    "current": 620,
+    "projected": 620.0,
+    "gw_points": 16,
+    "yet_to_play": 13,
     "provisional_position": 1,
     "substitutions": {
       "xi": [
@@ -1944,19 +1944,19 @@
   "largest_swing": {
     "player_id": 249,
     "name": "Barry",
-    "swing": 1,
+    "swing": 16,
     "in_your_xi": true,
     "against": 408467,
     "note": "a differential you own"
   },
   "separation": {
-    "confirmed": 1,
+    "confirmed": 16,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-11-06T21:17:02+00:00",
+  "generated_at": "2026-11-06T23:37:57+00:00",
   "season": "2026-27"
 }
