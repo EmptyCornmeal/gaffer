@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-11-08T15:13:02+00:00",
+  "generated_at": "2026-11-08T16:53:37+00:00",
   "gameweek": 11,
   "gameweeks_remaining": 28,
   "simulation": {
@@ -13,7 +13,7 @@
     "model_version": "heuristic-0.6",
     "gameweek": 11,
     "fixtures": 20,
-    "players": 500,
+    "players": 501,
     "assumptions": [
       "One uniform per attacking side: its goals, the opposing clean sheet and every conceded count are monotone reads of one draw.",
       "Every term's mean is the projection's own term, so the scenario mean IS the published expected points up to sampling error.",
@@ -63,7 +63,7 @@
         "price": 8.2,
         "code": 244850,
         "team_code": 8,
-        "next_gw_xp": 3.92
+        "next_gw_xp": 3.98
       },
       {
         "id": 68,
@@ -73,7 +73,7 @@
         "price": 6.7,
         "code": 201658,
         "team_code": 91,
-        "next_gw_xp": 7.13
+        "next_gw_xp": 7.03
       },
       {
         "id": 79,
@@ -83,7 +83,7 @@
         "price": 6.5,
         "code": 444102,
         "team_code": 91,
-        "next_gw_xp": 5.75
+        "next_gw_xp": 5.72
       },
       {
         "id": 124,
@@ -93,7 +93,7 @@
         "price": 6.3,
         "code": 60307,
         "team_code": 36,
-        "next_gw_xp": 5.71
+        "next_gw_xp": 5.67
       },
       {
         "id": 249,
@@ -204,10 +204,10 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first_after_gw": 0.968,
-        "p_target_after_gw": 0.968,
+        "p_first_after_gw": 0.631,
+        "p_target_after_gw": 0.631,
         "target_position": 1,
-        "expected_position_after_gw": 1.03,
+        "expected_position_after_gw": 1.37,
         "domain": {
           "horizon": "next_gameweek",
           "gameweek": null,
@@ -215,7 +215,7 @@
           "rivals_assumed": "rivals keep their current squads"
         },
         "simulations": 2000,
-        "ci95_halfwidth": 0.0077,
+        "ci95_halfwidth": 0.0211,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -275,7 +275,7 @@
             "price": 8.2,
             "code": 244850,
             "team_code": 8,
-            "next_gw_xp": 3.92
+            "next_gw_xp": 3.98
           }
         },
         {
@@ -311,7 +311,7 @@
             "price": 6.3,
             "code": 60307,
             "team_code": 36,
-            "next_gw_xp": 5.71
+            "next_gw_xp": 5.67
           }
         },
         {
@@ -405,7 +405,7 @@
             "price": 9.2,
             "code": 219168,
             "team_code": 14,
-            "next_gw_xp": 4.23
+            "next_gw_xp": 4.38
           }
         },
         {
@@ -423,7 +423,7 @@
             "price": 5.4,
             "code": 465730,
             "team_code": 36,
-            "next_gw_xp": 6.6
+            "next_gw_xp": 6.81
           }
         },
         {
@@ -441,7 +441,7 @@
             "price": 9.8,
             "code": 244851,
             "team_code": 8,
-            "next_gw_xp": 4.4
+            "next_gw_xp": 4.36
           }
         },
         {
@@ -477,7 +477,7 @@
             "price": 7.1,
             "code": 517052,
             "team_code": 7,
-            "next_gw_xp": 2.63
+            "next_gw_xp": 4.04
           }
         },
         {
@@ -531,7 +531,7 @@
             "price": 11.6,
             "code": 141746,
             "team_code": 1,
-            "next_gw_xp": 2.1
+            "next_gw_xp": 3.42
           }
         },
         {
@@ -567,7 +567,7 @@
             "price": 5.1,
             "code": 606702,
             "team_code": 14,
-            "next_gw_xp": 4.09
+            "next_gw_xp": 3.98
           }
         }
       ],
@@ -586,13 +586,13 @@
         {
           "entry_id": 408467,
           "name": "Nat Uttley",
-          "points_gap": 23.0,
-          "difference_mean": 23.16,
-          "difference_std": 12.41,
-          "p_above_after_gw": 0.9625,
+          "points_gap": 4.0,
+          "difference_mean": 3.71,
+          "difference_std": 12.78,
+          "p_above_after_gw": 0.608,
           "p_above_ci95": [
-            0.9532,
-            0.97
+            0.5864,
+            0.6292
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -600,27 +600,11 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 1711764,
-          "name": "Hakan Duzel",
-          "points_gap": 86.0,
-          "difference_mean": 85.36,
-          "difference_std": 7.56,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 8,
-          "squad_inferred": false
-        },
-        {
           "entry_id": 1094262,
           "name": "Kevin Colling",
-          "points_gap": 80.0,
-          "difference_mean": 85.55,
-          "difference_std": 15.56,
+          "points_gap": 52.0,
+          "difference_mean": 55.43,
+          "difference_std": 15.88,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -632,11 +616,27 @@
           "squad_inferred": false
         },
         {
+          "entry_id": 1711764,
+          "name": "Hakan Duzel",
+          "points_gap": 80.0,
+          "difference_mean": 76.66,
+          "difference_std": 7.99,
+          "p_above_after_gw": 1.0,
+          "p_above_ci95": [
+            0.9981,
+            1.0
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 8,
+          "squad_inferred": false
+        },
+        {
           "entry_id": 8346723,
           "name": "Nat Stubbs",
-          "points_gap": 97.0,
-          "difference_mean": 99.61,
-          "difference_std": 11.33,
+          "points_gap": 87.0,
+          "difference_mean": 87.75,
+          "difference_std": 11.58,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -650,9 +650,9 @@
         {
           "entry_id": 7419334,
           "name": "Dylan Llyr Morgan",
-          "points_gap": 170.0,
-          "difference_mean": 186.48,
-          "difference_std": 12.37,
+          "points_gap": 168.0,
+          "difference_mean": 182.95,
+          "difference_std": 12.41,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -666,9 +666,9 @@
         {
           "entry_id": 3557534,
           "name": "Jarek Ettl",
-          "points_gap": 210.0,
-          "difference_mean": 237.87,
-          "difference_std": 14.25,
+          "points_gap": 206.0,
+          "difference_mean": 232.44,
+          "difference_std": 14.66,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -688,26 +688,26 @@
       "differential_leverage": [
         {
           "player_id": 391,
-          "leverage_points": 1.024,
-          "leverage_spread_across_rivals": 0.26,
-          "correlation_with_gap": 0.298,
-          "own_std": 3.432,
+          "leverage_points": 1.044,
+          "leverage_spread_across_rivals": 0.235,
+          "correlation_with_gap": 0.307,
+          "own_std": 3.406,
           "captained": false
         },
         {
           "player_id": 249,
-          "leverage_points": 0.984,
-          "leverage_spread_across_rivals": 0.217,
-          "correlation_with_gap": 0.299,
-          "own_std": 3.293,
+          "leverage_points": 1.022,
+          "leverage_spread_across_rivals": 0.24,
+          "correlation_with_gap": 0.295,
+          "own_std": 3.465,
           "captained": false
         },
         {
           "player_id": 453,
-          "leverage_points": 0.256,
-          "leverage_spread_across_rivals": 0.194,
-          "correlation_with_gap": 0.122,
-          "own_std": 2.102,
+          "leverage_points": 0.285,
+          "leverage_spread_across_rivals": 0.161,
+          "correlation_with_gap": 0.139,
+          "own_std": 2.054,
           "captained": false
         }
       ],
@@ -724,14 +724,14 @@
       "target_position": 3,
       "posture": {
         "stance": "neutral",
-        "reason": "within 9 points with 28 GW(s) left: expected points is the right objective",
+        "reason": "within 20 points with 28 GW(s) left: expected points is the right objective",
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first_after_gw": 0.283,
-        "p_target_after_gw": 0.9935,
+        "p_first_after_gw": 0.05,
+        "p_target_after_gw": 0.937,
         "target_position": 3,
-        "expected_position_after_gw": 1.83,
+        "expected_position_after_gw": 2.54,
         "domain": {
           "horizon": "next_gameweek",
           "gameweek": null,
@@ -739,7 +739,7 @@
           "rivals_assumed": "rivals keep their current squads"
         },
         "simulations": 2000,
-        "ci95_halfwidth": 0.0035,
+        "ci95_halfwidth": 0.0106,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -781,7 +781,7 @@
             "price": 8.2,
             "code": 244850,
             "team_code": 8,
-            "next_gw_xp": 3.92
+            "next_gw_xp": 3.98
           }
         },
         {
@@ -799,7 +799,7 @@
             "price": 6.3,
             "code": 60307,
             "team_code": 36,
-            "next_gw_xp": 5.71
+            "next_gw_xp": 5.67
           }
         },
         {
@@ -857,7 +857,7 @@
             "price": 5.4,
             "code": 465730,
             "team_code": 36,
-            "next_gw_xp": 6.6
+            "next_gw_xp": 6.81
           }
         },
         {
@@ -893,7 +893,7 @@
             "price": 7.1,
             "code": 517052,
             "team_code": 7,
-            "next_gw_xp": 2.63
+            "next_gw_xp": 4.04
           }
         },
         {
@@ -911,7 +911,7 @@
             "price": 9.8,
             "code": 244851,
             "team_code": 8,
-            "next_gw_xp": 4.4
+            "next_gw_xp": 4.36
           }
         },
         {
@@ -929,7 +929,7 @@
             "price": 4.6,
             "code": 489639,
             "team_code": 36,
-            "next_gw_xp": 4.39
+            "next_gw_xp": 4.4
           }
         },
         {
@@ -947,7 +947,7 @@
             "price": 9.2,
             "code": 219168,
             "team_code": 14,
-            "next_gw_xp": 4.23
+            "next_gw_xp": 4.38
           }
         },
         {
@@ -983,7 +983,7 @@
             "price": 7.9,
             "code": 446008,
             "team_code": 1,
-            "next_gw_xp": 2.51
+            "next_gw_xp": 3.47
           }
         },
         {
@@ -1019,7 +1019,7 @@
             "price": 6.2,
             "code": 614071,
             "team_code": 7,
-            "next_gw_xp": 2.13
+            "next_gw_xp": 3.48
           }
         }
       ],
@@ -1036,15 +1036,31 @@
       },
       "rival_gaps": [
         {
+          "entry_id": 3807533,
+          "name": "James Gosling",
+          "points_gap": 4.0,
+          "difference_mean": -1.47,
+          "difference_std": 12.08,
+          "p_above_after_gw": 0.437,
+          "p_above_ci95": [
+            0.4154,
+            0.4588
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 5,
+          "squad_inferred": false
+        },
+        {
           "entry_id": 392228,
           "name": "Cassidy Day",
-          "points_gap": -9.0,
-          "difference_mean": -5.89,
-          "difference_std": 11.96,
-          "p_above_after_gw": 0.2825,
+          "points_gap": -20.0,
+          "difference_mean": -19.42,
+          "difference_std": 12.53,
+          "p_above_after_gw": 0.0575,
           "p_above_ci95": [
-            0.2632,
-            0.3026
+            0.0481,
+            0.0686
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1052,15 +1068,15 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 3807533,
-          "name": "James Gosling",
-          "points_gap": 17.0,
-          "difference_mean": 12.37,
-          "difference_std": 11.59,
-          "p_above_after_gw": 0.8515,
+          "entry_id": 3846760,
+          "name": "Daniel Taylor",
+          "points_gap": 22.0,
+          "difference_mean": 19.59,
+          "difference_std": 12.16,
+          "p_above_after_gw": 0.9455,
           "p_above_ci95": [
-            0.8352,
-            0.8664
+            0.9347,
+            0.9546
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1070,13 +1086,13 @@
         {
           "entry_id": 1444956,
           "name": "Archie Anderson",
-          "points_gap": 28.0,
-          "difference_mean": 32.5,
-          "difference_std": 12.09,
-          "p_above_after_gw": 0.992,
+          "points_gap": 23.0,
+          "difference_mean": 25.94,
+          "difference_std": 12.36,
+          "p_above_after_gw": 0.975,
           "p_above_ci95": [
-            0.987,
-            0.9951
+            0.9672,
+            0.981
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1086,13 +1102,13 @@
         {
           "entry_id": 3671505,
           "name": "Harry Hill",
-          "points_gap": 34.0,
-          "difference_mean": 38.09,
-          "difference_std": 13.08,
-          "p_above_after_gw": 0.9985,
+          "points_gap": 25.0,
+          "difference_mean": 28.72,
+          "difference_std": 13.65,
+          "p_above_after_gw": 0.983,
           "p_above_ci95": [
-            0.9956,
-            0.9995
+            0.9763,
+            0.9878
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1102,29 +1118,13 @@
         {
           "entry_id": 4072984,
           "name": "Daire Carragher",
-          "points_gap": 35.0,
-          "difference_mean": 38.21,
-          "difference_std": 12.51,
-          "p_above_after_gw": 0.9985,
+          "points_gap": 33.0,
+          "difference_mean": 35.72,
+          "difference_std": 12.81,
+          "p_above_after_gw": 0.996,
           "p_above_ci95": [
-            0.9956,
-            0.9995
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3846760,
-          "name": "Daniel Taylor",
-          "points_gap": 44.0,
-          "difference_mean": 43.4,
-          "difference_std": 11.63,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
+            0.9921,
+            0.998
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1134,13 +1134,13 @@
         {
           "entry_id": 2341315,
           "name": "Richard Appleton",
-          "points_gap": 59.0,
-          "difference_mean": 56.52,
-          "difference_std": 11.3,
-          "p_above_after_gw": 1.0,
+          "points_gap": 45.0,
+          "difference_mean": 40.93,
+          "difference_std": 11.95,
+          "p_above_after_gw": 0.999,
           "p_above_ci95": [
-            0.9981,
-            1.0
+            0.9964,
+            0.9997
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1150,9 +1150,9 @@
         {
           "entry_id": 3678994,
           "name": "Richard Palmer",
-          "points_gap": 55.0,
-          "difference_mean": 66.23,
-          "difference_std": 12.42,
+          "points_gap": 47.0,
+          "difference_mean": 55.08,
+          "difference_std": 12.7,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1164,43 +1164,11 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 1232046,
-          "name": "chris martyn",
-          "points_gap": 68.0,
-          "difference_mean": 69.55,
-          "difference_std": 11.66,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 3526777,
-          "name": "Mike Webber",
-          "points_gap": 63.0,
-          "difference_mean": 75.03,
-          "difference_std": 12.9,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 3,
-          "squad_inferred": false
-        },
-        {
           "entry_id": 3266016,
           "name": "arran wright",
-          "points_gap": 80.0,
-          "difference_mean": 76.88,
-          "difference_std": 12.4,
+          "points_gap": 63.0,
+          "difference_mean": 58.3,
+          "difference_std": 12.71,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1212,15 +1180,15 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 5876996,
-          "name": "Oliver Woodward",
-          "points_gap": 71.0,
-          "difference_mean": 82.08,
-          "difference_std": 13.27,
-          "p_above_after_gw": 1.0,
+          "entry_id": 3526777,
+          "name": "Mike Webber",
+          "points_gap": 53.0,
+          "difference_mean": 62.11,
+          "difference_std": 13.63,
+          "p_above_after_gw": 0.9995,
           "p_above_ci95": [
-            0.9981,
-            1.0
+            0.9972,
+            0.9999
           ],
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
@@ -1228,27 +1196,11 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 4186615,
-          "name": "Finlay Ashburner",
-          "points_gap": 85.0,
-          "difference_mean": 88.79,
-          "difference_std": 16.17,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 5,
-          "squad_inferred": false
-        },
-        {
           "entry_id": 6118958,
           "name": "Harjinder Hayre",
-          "points_gap": 74.0,
-          "difference_mean": 90.95,
-          "difference_std": 12.89,
+          "points_gap": 47.0,
+          "difference_mean": 62.67,
+          "difference_std": 13.26,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1260,11 +1212,59 @@
           "squad_inferred": false
         },
         {
+          "entry_id": 1232046,
+          "name": "chris martyn",
+          "points_gap": 65.0,
+          "difference_mean": 64.83,
+          "difference_std": 11.84,
+          "p_above_after_gw": 1.0,
+          "p_above_ci95": [
+            0.9981,
+            1.0
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 5,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 4186615,
+          "name": "Finlay Ashburner",
+          "points_gap": 66.0,
+          "difference_mean": 67.57,
+          "difference_std": 16.44,
+          "p_above_after_gw": 0.9995,
+          "p_above_ci95": [
+            0.9972,
+            0.9999
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 5,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 5876996,
+          "name": "Oliver Woodward",
+          "points_gap": 59.0,
+          "difference_mean": 68.48,
+          "difference_std": 13.83,
+          "p_above_after_gw": 1.0,
+          "p_above_ci95": [
+            0.9981,
+            1.0
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 3,
+          "squad_inferred": false
+        },
+        {
           "entry_id": 7248283,
           "name": "Niamh O'Riordan-Mitchell",
-          "points_gap": 96.0,
-          "difference_mean": 96.47,
-          "difference_std": 9.38,
+          "points_gap": 86.0,
+          "difference_mean": 84.88,
+          "difference_std": 9.89,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1278,9 +1278,9 @@
         {
           "entry_id": 8183866,
           "name": "Matthew Sims",
-          "points_gap": 102.0,
-          "difference_mean": 98.58,
-          "difference_std": 9.66,
+          "points_gap": 90.0,
+          "difference_mean": 86.31,
+          "difference_std": 9.83,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1292,11 +1292,27 @@
           "squad_inferred": false
         },
         {
+          "entry_id": 1506291,
+          "name": "Jason Mercer",
+          "points_gap": 93.0,
+          "difference_mean": 98.96,
+          "difference_std": 17.14,
+          "p_above_after_gw": 1.0,
+          "p_above_ci95": [
+            0.9981,
+            1.0
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 3,
+          "squad_inferred": false
+        },
+        {
           "entry_id": 2520259,
           "name": "Simon Brumfitt",
-          "points_gap": 101.0,
-          "difference_mean": 106.92,
-          "difference_std": 10.13,
+          "points_gap": 96.0,
+          "difference_mean": 99.05,
+          "difference_std": 10.5,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1310,9 +1326,25 @@
         {
           "entry_id": 7905520,
           "name": "Rich Crowley",
-          "points_gap": 114.0,
-          "difference_mean": 122.86,
-          "difference_std": 11.61,
+          "points_gap": 101.0,
+          "difference_mean": 108.03,
+          "difference_std": 12.13,
+          "p_above_after_gw": 1.0,
+          "p_above_ci95": [
+            0.9981,
+            1.0
+          ],
+          "p_above_ci95_interval_type": "monte_carlo",
+          "simulations": 2000,
+          "squad_overlap": 4,
+          "squad_inferred": false
+        },
+        {
+          "entry_id": 8209075,
+          "name": "Joshua Knight",
+          "points_gap": 124.0,
+          "difference_mean": 125.03,
+          "difference_std": 14.35,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1326,9 +1358,9 @@
         {
           "entry_id": 2209432,
           "name": "Amar Sumaria",
-          "points_gap": 106.0,
-          "difference_mean": 124.25,
-          "difference_std": 11.22,
+          "points_gap": 110.0,
+          "difference_mean": 126.97,
+          "difference_std": 11.38,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1340,11 +1372,11 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 1506291,
-          "name": "Jason Mercer",
-          "points_gap": 116.0,
-          "difference_mean": 124.45,
-          "difference_std": 16.5,
+          "entry_id": 6570312,
+          "name": "Neil Griffiths",
+          "points_gap": 157.0,
+          "difference_mean": 166.17,
+          "difference_std": 12.67,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1356,27 +1388,11 @@
           "squad_inferred": false
         },
         {
-          "entry_id": 8209075,
-          "name": "Joshua Knight",
-          "points_gap": 132.0,
-          "difference_mean": 133.3,
-          "difference_std": 14.16,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 4,
-          "squad_inferred": false
-        },
-        {
           "entry_id": 4033143,
           "name": "Tony Anderson",
-          "points_gap": 155.0,
-          "difference_mean": 175.63,
-          "difference_std": 16.38,
+          "points_gap": 160.0,
+          "difference_mean": 179.77,
+          "difference_std": 16.79,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1385,22 +1401,6 @@
           "p_above_ci95_interval_type": "monte_carlo",
           "simulations": 2000,
           "squad_overlap": 1,
-          "squad_inferred": false
-        },
-        {
-          "entry_id": 6570312,
-          "name": "Neil Griffiths",
-          "points_gap": 167.0,
-          "difference_mean": 177.23,
-          "difference_std": 12.29,
-          "p_above_after_gw": 1.0,
-          "p_above_ci95": [
-            0.9981,
-            1.0
-          ],
-          "p_above_ci95_interval_type": "monte_carlo",
-          "simulations": 2000,
-          "squad_overlap": 3,
           "squad_inferred": false
         }
       ],
@@ -1412,10 +1412,10 @@
       "differential_leverage": [
         {
           "player_id": 453,
-          "leverage_points": 0.204,
-          "leverage_spread_across_rivals": 0.117,
-          "correlation_with_gap": 0.097,
-          "own_std": 2.102,
+          "leverage_points": 0.205,
+          "leverage_spread_across_rivals": 0.106,
+          "correlation_with_gap": 0.1,
+          "own_std": 2.054,
           "captained": false
         }
       ],
@@ -1429,37 +1429,37 @@
     {
       "key": "captain:68",
       "label": "Captain Tavernier",
-      "expected_points": 59.31,
+      "expected_points": 58.833,
       "p_target": {
-        "271619": 0.968,
-        "733241": 0.99
+        "271619": 0.6585,
+        "733241": 0.9195
       }
     },
     {
       "key": "captain:411",
       "label": "Captain Haaland",
-      "expected_points": 58.003,
+      "expected_points": 57.706,
       "p_target": {
-        "271619": 0.968,
-        "733241": 0.9935
+        "271619": 0.631,
+        "733241": 0.937
       }
     },
     {
       "key": "captain:79",
       "label": "Captain Evanilson",
-      "expected_points": 57.819,
+      "expected_points": 57.47,
       "p_target": {
-        "271619": 0.958,
-        "733241": 0.988
+        "271619": 0.607,
+        "733241": 0.8945
       }
     },
     {
       "key": "captain:124",
       "label": "Captain Groß",
-      "expected_points": 57.805,
+      "expected_points": 57.437,
       "p_target": {
-        "271619": 0.969,
-        "733241": 0.9885
+        "271619": 0.6315,
+        "733241": 0.919
       }
     }
   ],
@@ -1470,28 +1470,19 @@
       {
         "key": "captain:68",
         "label": "Captain Tavernier",
-        "expected_points": 59.31,
+        "expected_points": 58.833,
         "p_target": {
-          "271619": 0.968,
-          "733241": 0.99
+          "271619": 0.6585,
+          "733241": 0.9195
         }
       },
       {
         "key": "captain:411",
         "label": "Captain Haaland",
-        "expected_points": 58.003,
+        "expected_points": 57.706,
         "p_target": {
-          "271619": 0.968,
-          "733241": 0.9935
-        }
-      },
-      {
-        "key": "captain:124",
-        "label": "Captain Groß",
-        "expected_points": 57.805,
-        "p_target": {
-          "271619": 0.969,
-          "733241": 0.9885
+          "271619": 0.631,
+          "733241": 0.937
         }
       }
     ],
@@ -1507,21 +1498,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 13.47,
+    "expected_gain": 13.15,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "freehit",
         "gameweek": 11,
-        "expected_gain": 13.47,
+        "expected_gain": 13.15,
         "ci95": [
-          12.79,
-          14.16
+          12.44,
+          13.86
         ],
-        "baseline_points": 58.0,
-        "with_chip_points": 71.47,
+        "baseline_points": 57.71,
+        "with_chip_points": 70.86,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 13.47,
+        "expected_gain_per_gameweek": 13.15,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1531,15 +1522,15 @@
       {
         "chip": "bboost",
         "gameweek": 11,
-        "expected_gain": 9.83,
+        "expected_gain": 9.87,
         "ci95": [
-          9.57,
-          10.1
+          9.62,
+          10.12
         ],
-        "baseline_points": 59.29,
-        "with_chip_points": 69.12,
+        "baseline_points": 59.03,
+        "with_chip_points": 68.9,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 9.83,
+        "expected_gain_per_gameweek": 9.87,
         "assumptions": [
           "Bench points are simulated under the same fixtures as the XI.",
           "Autosubs ARE modelled in the baseline: the gain is what the chip adds beyond the substitutions the rules make for free.",
@@ -1572,15 +1563,15 @@
     "candidate": {
       "chip": "freehit",
       "gameweek": 11,
-      "expected_gain": 13.47,
+      "expected_gain": 13.15,
       "ci95": [
-        12.79,
-        14.16
+        12.44,
+        13.86
       ],
-      "baseline_points": 58.0,
-      "with_chip_points": 71.47,
+      "baseline_points": 57.71,
+      "with_chip_points": 70.86,
       "horizon_gameweeks": 1,
-      "expected_gain_per_gameweek": 13.47,
+      "expected_gain_per_gameweek": 13.15,
       "assumptions": [
         "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
         "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1783,7 +1774,7 @@
         }
       }
     },
-    "reason": "freehit projects +13.5 points in GW11, but Gaffer has not valued it in GW12-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 9 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW11-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+    "reason": "freehit projects +13.1 points in GW11, but Gaffer has not valued it in GW12-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 9 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW11-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",

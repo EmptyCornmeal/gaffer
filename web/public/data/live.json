@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 10,
-  "as_of": "2026-11-08T15:13:02+00:00",
+  "as_of": "2026-11-08T16:53:37+00:00",
   "fixtures": [
     {
       "id": 91,
@@ -18,20 +18,20 @@
       "event": 10,
       "team_h": 5,
       "team_a": 4,
-      "state": "live",
-      "minutes": 49,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-08T14:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 93,
       "event": 10,
       "team_h": 8,
       "team_a": 14,
-      "state": "live",
-      "minutes": 50,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-08T14:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 94,
@@ -58,10 +58,10 @@
       "event": 10,
       "team_h": 12,
       "team_a": 3,
-      "state": "live",
-      "minutes": 54,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-08T14:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 97,
@@ -78,8 +78,8 @@
       "event": 10,
       "team_h": 16,
       "team_a": 2,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "live",
+      "minutes": 19,
       "kickoff": "2026-11-08T16:30:00+00:00",
       "bonus_final": false
     },
@@ -98,19 +98,17 @@
       "event": 10,
       "team_h": 20,
       "team_a": 6,
-      "state": "half_time",
-      "minutes": 45,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-08T14:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     }
   ],
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 5,
-      "live": 3,
-      "half_time": 1,
-      "scheduled": 1
+      "awaiting_bonus": 9,
+      "live": 1
     },
     "all_finished": false,
     "bonus_final": false
@@ -120,17 +118,17 @@
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 62,
+    "confirmed": 68,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
-    "current": 62,
-    "projected": 62.0,
+    "current": 68,
+    "projected": 68.0,
     "bench_points": 22,
     "players_played": 14,
     "players_yet_to_play": 0,
     "hits": 0,
     "season_total_before": 604,
-    "season_total_projected": 666.0,
+    "season_total_projected": 672.0,
     "autosubs": {
       "xi": [
         1,
@@ -156,7 +154,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -217,16 +215,16 @@
     },
     {
       "id": 40,
-      "minutes": 45,
-      "confirmed": 1,
+      "minutes": 90,
+      "confirmed": 2,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 1.0,
+      "total": 2.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "half_time"
+        "awaiting_bonus"
       ],
       "name": "Rogers",
       "pos": "MID",
@@ -235,16 +233,16 @@
     },
     {
       "id": 68,
-      "minutes": 54,
-      "confirmed": 0,
+      "minutes": 90,
+      "confirmed": 3,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
+      "total": 3.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Tavernier",
       "pos": "MID",
@@ -253,16 +251,16 @@
     },
     {
       "id": 79,
-      "minutes": 54,
-      "confirmed": 8,
+      "minutes": 84,
+      "confirmed": 9,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 8.0,
+      "total": 9.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Evanilson",
       "pos": "FWD",
@@ -271,16 +269,16 @@
     },
     {
       "id": 124,
-      "minutes": 49,
-      "confirmed": 9,
+      "minutes": 90,
+      "confirmed": 10,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 9.0,
+      "total": 10.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Groß",
       "pos": "MID",
@@ -437,9 +435,9 @@
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 666,
-      "projected": 666.0,
-      "gw_points": 62,
+      "current": 672,
+      "projected": 672.0,
+      "gw_points": 68,
       "yet_to_play": 0,
       "provisional_position": 1
     },
@@ -447,9 +445,9 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 643,
-      "projected": 643.0,
-      "gw_points": 38,
+      "current": 668,
+      "projected": 668.0,
+      "gw_points": 63,
       "yet_to_play": 0,
       "provisional_position": 2
     },
@@ -457,50 +455,50 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 586,
-      "projected": 586.0,
-      "gw_points": 31,
-      "yet_to_play": 1,
+      "current": 622,
+      "projected": 622.0,
+      "gw_points": 67,
+      "yet_to_play": 0,
       "provisional_position": 3
     },
     {
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "you": false,
-      "current": 580,
-      "projected": 580.0,
-      "gw_points": 47,
-      "yet_to_play": 2,
+      "current": 594,
+      "projected": 594.0,
+      "gw_points": 61,
+      "yet_to_play": 0,
       "provisional_position": 4
     },
     {
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "you": false,
-      "current": 569,
-      "projected": 569.0,
-      "gw_points": 41,
-      "yet_to_play": 2,
+      "current": 587,
+      "projected": 587.0,
+      "gw_points": 59,
+      "yet_to_play": 0,
       "provisional_position": 5
     },
     {
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 497,
-      "projected": 497.0,
-      "gw_points": 27,
-      "yet_to_play": 2,
+      "current": 506,
+      "projected": 506.0,
+      "gw_points": 36,
+      "yet_to_play": 0,
       "provisional_position": 6
     },
     {
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "you": false,
-      "current": 456,
-      "projected": 456.0,
-      "gw_points": 11,
-      "yet_to_play": 4,
+      "current": 469,
+      "projected": 469.0,
+      "gw_points": 24,
+      "yet_to_play": 0,
       "provisional_position": 7
     }
   ],
@@ -509,7 +507,7 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "provisional_position": 2,
-      "gw_points": 38,
+      "gw_points": 63,
       "hits": 0,
       "yet_to_play": 0,
       "autosubs": {
@@ -537,7 +535,7 @@
         "captain": 379,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -581,60 +579,60 @@
           "element": 115,
           "name": "De Cuyper",
           "pos": "DEF",
-          "minutes": 49,
-          "confirmed": 1,
+          "minutes": 81,
+          "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 6,
           "yet_to_play": false
         },
         {
           "element": 68,
           "name": "Tavernier",
           "pos": "MID",
-          "minutes": 54,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
+          "product": 3,
           "yet_to_play": false
         },
         {
           "element": 124,
           "name": "Groß",
           "pos": "MID",
-          "minutes": 49,
-          "confirmed": 9,
+          "minutes": 90,
+          "confirmed": 10,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 9,
+          "product": 10,
           "yet_to_play": false
         },
         {
           "element": 40,
           "name": "Rogers",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
           "element": 154,
           "name": "Palmer",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -653,12 +651,12 @@
           "element": 379,
           "name": "Isak",
           "pos": "FWD",
-          "minutes": 50,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 8,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 2,
-          "product": 2,
+          "product": 16,
           "yet_to_play": false
         },
         {
@@ -677,8 +675,8 @@
           "element": 109,
           "name": "Verbruggen",
           "pos": "GKP",
-          "minutes": 49,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -689,7 +687,7 @@
           "element": 565,
           "name": "M.Sangaré",
           "pos": "MID",
-          "minutes": 49,
+          "minutes": 58,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -713,8 +711,8 @@
           "element": 305,
           "name": "Davis",
           "pos": "DEF",
-          "minutes": 54,
-          "confirmed": -2,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -740,9 +738,9 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "provisional_position": 3,
-      "gw_points": 31,
+      "gw_points": 67,
       "hits": 16,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -802,12 +800,12 @@
           "element": 115,
           "name": "De Cuyper",
           "pos": "DEF",
-          "minutes": 49,
-          "confirmed": 1,
+          "minutes": 81,
+          "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 6,
           "yet_to_play": false
         },
         {
@@ -826,12 +824,12 @@
           "element": 362,
           "name": "Jacquet",
           "pos": "DEF",
-          "minutes": 50,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 4,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 4,
           "yet_to_play": false
         },
         {
@@ -850,72 +848,72 @@
           "element": 154,
           "name": "Palmer",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
           "element": 40,
           "name": "Rogers",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
           "element": 379,
           "name": "Isak",
           "pos": "FWD",
-          "minutes": 50,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 8,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 2,
-          "product": 2,
+          "product": 16,
           "yet_to_play": false
         },
         {
           "element": 79,
           "name": "Evanilson",
           "pos": "FWD",
-          "minutes": 54,
-          "confirmed": 8,
+          "minutes": 84,
+          "confirmed": 9,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 8,
+          "product": 9,
           "yet_to_play": false
         },
         {
           "element": 166,
           "name": "N.Jackson",
           "pos": "FWD",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 20,
+          "confirmed": 7,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 7,
+          "yet_to_play": false
         },
         {
           "element": 57,
           "name": "Petrović",
           "pos": "GKP",
-          "minutes": 54,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -934,19 +932,19 @@
           "element": 68,
           "name": "Tavernier",
           "pos": "MID",
-          "minutes": 54,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
+          "product": 3,
           "yet_to_play": false
         },
         {
           "element": 94,
           "name": "Schade",
           "pos": "MID",
-          "minutes": 49,
+          "minutes": 90,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -978,9 +976,9 @@
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "provisional_position": 4,
-      "gw_points": 47,
+      "gw_points": 61,
       "hits": 0,
-      "yet_to_play": 2,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -1026,7 +1024,7 @@
           "element": 566,
           "name": "Silva",
           "pos": "DEF",
-          "minutes": 54,
+          "minutes": 90,
           "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
@@ -1062,31 +1060,19 @@
           "element": 68,
           "name": "Tavernier",
           "pos": "MID",
-          "minutes": 54,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
+          "product": 3,
           "yet_to_play": false
         },
         {
           "element": 53,
           "name": "Manzambi",
           "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
-          "provisional": 0,
-          "predicted": 0.0,
-          "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
-        },
-        {
-          "element": 40,
-          "name": "Rogers",
-          "pos": "MID",
-          "minutes": 45,
+          "minutes": 20,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1095,10 +1081,34 @@
           "yet_to_play": false
         },
         {
+          "element": 40,
+          "name": "Rogers",
+          "pos": "MID",
+          "minutes": 90,
+          "confirmed": 2,
+          "provisional": 0,
+          "predicted": 0.0,
+          "multiplier": 1,
+          "product": 2,
+          "yet_to_play": false
+        },
+        {
           "element": 124,
           "name": "Groß",
           "pos": "MID",
-          "minutes": 49,
+          "minutes": 90,
+          "confirmed": 10,
+          "provisional": 0,
+          "predicted": 0.0,
+          "multiplier": 1,
+          "product": 10,
+          "yet_to_play": false
+        },
+        {
+          "element": 79,
+          "name": "Evanilson",
+          "pos": "FWD",
+          "minutes": 84,
           "confirmed": 9,
           "provisional": 0,
           "predicted": 0.0,
@@ -1107,28 +1117,16 @@
           "yet_to_play": false
         },
         {
-          "element": 79,
-          "name": "Evanilson",
-          "pos": "FWD",
-          "minutes": 54,
-          "confirmed": 8,
-          "provisional": 0,
-          "predicted": 0.0,
-          "multiplier": 1,
-          "product": 8,
-          "yet_to_play": false
-        },
-        {
           "element": 166,
           "name": "N.Jackson",
           "pos": "FWD",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 20,
+          "confirmed": 7,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 7,
+          "yet_to_play": false
         },
         {
           "element": 411,
@@ -1146,8 +1144,8 @@
           "element": 109,
           "name": "Verbruggen",
           "pos": "GKP",
-          "minutes": 49,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1158,8 +1156,8 @@
           "element": 504,
           "name": "Vuskovic",
           "pos": "DEF",
-          "minutes": 49,
-          "confirmed": 5,
+          "minutes": 90,
+          "confirmed": 12,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1204,9 +1202,9 @@
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "provisional_position": 5,
-      "gw_points": 41,
+      "gw_points": 59,
       "hits": 0,
-      "yet_to_play": 2,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -1264,12 +1262,12 @@
           "element": 115,
           "name": "De Cuyper",
           "pos": "DEF",
-          "minutes": 49,
-          "confirmed": 1,
+          "minutes": 81,
+          "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 6,
           "yet_to_play": false
         },
         {
@@ -1288,48 +1286,48 @@
           "element": 70,
           "name": "Kluivert",
           "pos": "MID",
-          "minutes": 54,
-          "confirmed": 1,
+          "minutes": 67,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 3,
           "yet_to_play": false
         },
         {
           "element": 124,
           "name": "Groß",
           "pos": "MID",
-          "minutes": 49,
-          "confirmed": 9,
+          "minutes": 90,
+          "confirmed": 10,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 9,
+          "product": 10,
           "yet_to_play": false
         },
         {
           "element": 40,
           "name": "Rogers",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
           "element": 367,
           "name": "Gakpo",
           "pos": "MID",
-          "minutes": 50,
-          "confirmed": 1,
+          "minutes": 75,
+          "confirmed": 3,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 3,
           "yet_to_play": false
         },
         {
@@ -1360,13 +1358,13 @@
           "element": 166,
           "name": "N.Jackson",
           "pos": "FWD",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 20,
+          "confirmed": 7,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 7,
+          "yet_to_play": false
         },
         {
           "element": 111,
@@ -1378,13 +1376,13 @@
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 565,
           "name": "M.Sangaré",
           "pos": "MID",
-          "minutes": 49,
+          "minutes": 58,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1408,8 +1406,8 @@
           "element": 304,
           "name": "O'Shea",
           "pos": "DEF",
-          "minutes": 54,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1434,9 +1432,9 @@
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "provisional_position": 6,
-      "gw_points": 27,
+      "gw_points": 36,
       "hits": 0,
-      "yet_to_play": 2,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -1447,18 +1445,18 @@
           557,
           40,
           426,
-          175,
+          605,
           411,
           346
         ],
         "bench": [
           496,
-          605,
           397,
+          175,
           272
         ],
         "subs_in": [
-          175
+          605
         ],
         "subs_out": [
           397
@@ -1486,12 +1484,12 @@
           "element": 358,
           "name": "Kerkez",
           "pos": "DEF",
-          "minutes": 50,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -1546,31 +1544,31 @@
           "element": 40,
           "name": "Rogers",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
           "element": 426,
           "name": "B.Fernandes",
           "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 20,
+          "confirmed": 7,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 7,
+          "yet_to_play": false
         },
         {
-          "element": 175,
-          "name": "van Ewijk",
-          "pos": "DEF",
-          "minutes": 90,
+          "element": 605,
+          "name": "Yalcouyé",
+          "pos": "MID",
+          "minutes": 1,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1615,8 +1613,8 @@
           "yet_to_play": false
         },
         {
-          "element": 605,
-          "name": "Yalcouyé",
+          "element": 397,
+          "name": "Semenyo",
           "pos": "MID",
           "minutes": 0,
           "confirmed": 0,
@@ -1624,14 +1622,14 @@
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
-          "element": 397,
-          "name": "Semenyo",
-          "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "element": 175,
+          "name": "van Ewijk",
+          "pos": "DEF",
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1658,7 +1656,6 @@
         68,
         79,
         124,
-        175,
         249,
         282,
         346,
@@ -1667,16 +1664,17 @@
         426,
         453,
         502,
-        557
+        557,
+        605
       ]
     },
     {
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "provisional_position": 7,
-      "gw_points": 11,
+      "gw_points": 24,
       "hits": 0,
-      "yet_to_play": 4,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           82,
@@ -1686,19 +1684,25 @@
           426,
           154,
           260,
-          212,
+          387,
           411,
           106,
-          165
+          329
         ],
         "bench": [
           58,
-          387,
+          212,
           289,
+          165
+        ],
+        "subs_in": [
+          387,
           329
         ],
-        "subs_in": [],
-        "subs_out": [],
+        "subs_out": [
+          212,
+          165
+        ],
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
@@ -1710,24 +1714,24 @@
           "element": 82,
           "name": "Kelleher",
           "pos": "GKP",
-          "minutes": 49,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
+          "product": 2,
           "yet_to_play": false
         },
         {
           "element": 304,
           "name": "O'Shea",
           "pos": "DEF",
-          "minutes": 54,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
+          "product": 1,
           "yet_to_play": false
         },
         {
@@ -1758,24 +1762,24 @@
           "element": 426,
           "name": "B.Fernandes",
           "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 20,
+          "confirmed": 7,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 7,
+          "yet_to_play": false
         },
         {
           "element": 154,
           "name": "Palmer",
           "pos": "MID",
-          "minutes": 45,
-          "confirmed": 1,
+          "minutes": 90,
+          "confirmed": 2,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 1,
+          "product": 2,
           "yet_to_play": false
         },
         {
@@ -1791,16 +1795,16 @@
           "yet_to_play": false
         },
         {
-          "element": 212,
-          "name": "Hughes",
-          "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "element": 387,
+          "name": "O'Reilly",
+          "pos": "DEF",
+          "minutes": 45,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 411,
@@ -1827,16 +1831,16 @@
           "yet_to_play": false
         },
         {
-          "element": 165,
-          "name": "João Pedro",
-          "pos": "FWD",
-          "minutes": 0,
-          "confirmed": 0,
+          "element": 329,
+          "name": "Rodon",
+          "pos": "DEF",
+          "minutes": 1,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 58,
@@ -1848,14 +1852,14 @@
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
-          "element": 387,
-          "name": "O'Reilly",
-          "pos": "DEF",
-          "minutes": 45,
-          "confirmed": 1,
+          "element": 212,
+          "name": "Hughes",
+          "pos": "MID",
+          "minutes": 0,
+          "confirmed": 0,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1875,11 +1879,11 @@
           "yet_to_play": false
         },
         {
-          "element": 329,
-          "name": "Rodon",
-          "pos": "DEF",
-          "minutes": 1,
-          "confirmed": 1,
+          "element": 165,
+          "name": "João Pedro",
+          "pos": "FWD",
+          "minutes": 0,
+          "confirmed": 0,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1898,13 +1902,13 @@
         106,
         124,
         154,
-        165,
-        212,
         249,
         260,
         279,
         282,
         304,
+        329,
+        387,
         391,
         426,
         453
@@ -1913,9 +1917,9 @@
   ],
   "me": {
     "entry_id": 1066421,
-    "current": 666,
-    "projected": 666.0,
-    "gw_points": 62,
+    "current": 672,
+    "projected": 672.0,
+    "gw_points": 68,
     "yet_to_play": 0,
     "provisional_position": 1,
     "substitutions": {
@@ -1943,7 +1947,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -1956,13 +1960,13 @@
     "note": "a differential you own"
   },
   "separation": {
-    "confirmed": 62,
+    "confirmed": 68,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-11-08T15:13:02+00:00",
+  "generated_at": "2026-11-08T16:53:37+00:00",
   "season": "2026-27"
 }
