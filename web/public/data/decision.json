@@ -2,14 +2,14 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-11-08T06:51:12.455835+00:00",
+    "generated_for": "2026-11-08T08:20:30.962177+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-11-21T11:00:00+00:00",
-        "in_hours": 316.1,
+        "in_hours": 314.7,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
@@ -24,21 +24,21 @@
           "price": 6.2
         },
         "direction": "rise",
-        "percent": 73.0,
+        "percent": 73.1,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "74.4",
+            "projected_percent": "75.1",
             "likelihood": 3
           },
           {
             "offset": 1,
-            "projected_percent": "76.3",
+            "projected_percent": "78.1",
             "likelihood": 3
           },
           {
             "offset": 2,
-            "projected_percent": "78.3",
+            "projected_percent": "81.1",
             "likelihood": 3
           }
         ],
@@ -49,7 +49,7 @@
         "changes": "Raya may move 0.1m before the deadline"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 112,
@@ -58,29 +58,28 @@
           "price": 5.0
         },
         "direction": "rise",
-        "percent": 99.6,
+        "percent": 100.6,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "108.1",
+            "projected_percent": "111.4",
             "likelihood": 5
           },
           {
             "offset": 1,
-            "projected_percent": "119.8",
+            "projected_percent": "127.8",
             "likelihood": 5
           },
           {
             "offset": 2,
-            "projected_percent": "131.5",
+            "projected_percent": "144.2",
             "likelihood": 5
           }
         ],
-        "certainty": "100% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": true,
         "owned": false,
-        "changes": "Van Hecke may move 0.1m before the deadline"
+        "changes": "Van Hecke costs 0.1m more if you wait"
       },
       {
         "kind": "price_change_near",
@@ -92,25 +91,25 @@
           "price": 5.7
         },
         "direction": "fall",
-        "percent": -73.9,
+        "percent": -75.1,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-84.7",
+            "projected_percent": "-88.4",
             "likelihood": -3
           },
           {
             "offset": 1,
-            "projected_percent": "-99.4",
-            "likelihood": -4
+            "projected_percent": "-108.5",
+            "likelihood": -5
           },
           {
             "offset": 2,
-            "projected_percent": "-114.2",
+            "projected_percent": "-128.7",
             "likelihood": -5
           }
         ],
-        "certainty": "74% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "75% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": false,
         "owned": true,
@@ -126,21 +125,21 @@
           "price": 7.9
         },
         "direction": "fall",
-        "percent": -75.2,
+        "percent": -75.0,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-73.5",
+            "projected_percent": "-72.2",
             "likelihood": -3
           },
           {
             "offset": 1,
-            "projected_percent": "-71.2",
+            "projected_percent": "-68.1",
             "likelihood": -3
           },
           {
             "offset": 2,
-            "projected_percent": "-68.9",
+            "projected_percent": "-64.0",
             "likelihood": -3
           }
         ],
@@ -227,20 +226,21 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "money may be at stake",
-    "reason": "Cherki, Gvardiol, Raya, Van Hecke is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
-    "hours_to_deadline": 316.1,
+    "verdict": "act",
+    "reason": "waiting costs 0.1m of team value on changes FPL says are already due",
+    "hours_to_deadline": 314.7,
     "edge_points": 7.27,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.0,
-    "detail": [],
-    "pending_price_changes": 0,
-    "near_price_changes": 4,
+    "money_cost_of_waiting_m": 0.1,
+    "detail": [
+      "Van Hecke is due to rise: waiting costs 0.1m"
+    ],
+    "pending_price_changes": 1,
+    "near_price_changes": 3,
     "near_at_risk_if_you_wait": [
       "Cherki",
       "Gvardiol",
-      "Raya",
-      "Van Hecke"
+      "Raya"
     ],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
@@ -269,7 +269,7 @@
         "chance_of_playing": 75,
         "news": "Unspecified injury - 75% chance of playing",
         "news_added": "2026-11-07T21:30:08.752464+00:00",
-        "news_age_days": 0.4,
+        "news_age_days": 0.5,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -344,7 +344,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-11-08T06:49:48+00:00",
+  "generated_at": "2026-11-08T08:20:09+00:00",
   "gameweek": 11,
   "horizon": 6,
   "squad_state": {
@@ -770,7 +770,7 @@
         "next_gw_xp": 6.64,
         "confidence": 0.91,
         "horizon_xp": 29.83,
-        "owned_by": 13.5,
+        "owned_by": 13.6,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (6.6) and a soft fixture run.",
         "tags": [
           {
@@ -850,7 +850,7 @@
       "next_gw_xp": 6.64,
       "confidence": 0.91,
       "horizon_xp": 29.83,
-      "owned_by": 13.5,
+      "owned_by": 13.6,
       "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (6.6) and a soft fixture run.",
       "tags": [
         {
@@ -1088,7 +1088,7 @@
         "next_gw_xp": 6.64,
         "confidence": 0.91,
         "horizon_xp": 29.83,
-        "owned_by": 13.5,
+        "owned_by": 13.6,
         "rationale": "Nailed defender with strong clean-sheet odds, a genuine attacking threat from the back, in form (6.6) and a soft fixture run.",
         "tags": [
           {
@@ -1986,7 +1986,7 @@
         "next_gw_xp": 2.92,
         "confidence": 0.63,
         "horizon_xp": 16.23,
-        "owned_by": 24.8,
+        "owned_by": 24.7,
         "rationale": "Likely-starting defender (rotation risk) with strong clean-sheet odds, a genuine attacking threat from the back and but note: Unspecified injury - 75% chance of playing.",
         "tags": [
           {
@@ -3661,8 +3661,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-11-08T06:49:48+00:00",
-    "squad_retrieved_at": "2026-11-08T06:51:05+00:00",
+    "generated_at": "2026-11-08T08:20:09+00:00",
+    "squad_retrieved_at": "2026-11-08T08:20:26+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
