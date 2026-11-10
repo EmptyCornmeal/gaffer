@@ -2,14 +2,14 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-11-10T08:30:17.195870+00:00",
+    "generated_for": "2026-11-10T10:52:15.642234+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-11-21T11:00:00+00:00",
-        "in_hours": 266.5,
+        "in_hours": 264.1,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
@@ -24,7 +24,7 @@
           "price": 6.2
         },
         "direction": "rise",
-        "percent": 85.3,
+        "percent": 85.6,
         "projections": [
           {
             "offset": 0,
@@ -33,16 +33,16 @@
           },
           {
             "offset": 1,
-            "projected_percent": "89.0",
+            "projected_percent": "89.1",
             "likelihood": 3
           },
           {
             "offset": 2,
-            "projected_percent": "91.2",
+            "projected_percent": "91.3",
             "likelihood": 3
           }
         ],
-        "certainty": "85% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "86% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": true,
         "owned": true,
@@ -58,32 +58,32 @@
           "price": 4.8
         },
         "direction": "rise",
-        "percent": 79.2,
+        "percent": 80.0,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "84.4",
+            "projected_percent": "84.0",
             "likelihood": 3
           },
           {
             "offset": 1,
-            "projected_percent": "92.3",
+            "projected_percent": "91.3",
             "likelihood": 3
           },
           {
             "offset": 2,
-            "projected_percent": "100.2",
-            "likelihood": 5
+            "projected_percent": "98.6",
+            "likelihood": 4
           }
         ],
-        "certainty": "79% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "80% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": true,
         "owned": true,
         "changes": "Konsa may move 0.1m before the deadline"
       },
       {
-        "kind": "price_change_near",
+        "kind": "price_change_due",
         "at": null,
         "player": {
           "id": 109,
@@ -92,7 +92,7 @@
           "price": 4.6
         },
         "direction": "rise",
-        "percent": 99.9,
+        "percent": 100.2,
         "projections": [
           {
             "offset": 0,
@@ -106,15 +106,14 @@
           },
           {
             "offset": 2,
-            "projected_percent": "105.2",
+            "projected_percent": "105.1",
             "likelihood": 5
           }
         ],
-        "certainty": "100% of the way, by FPL's own figure. NOT due, and no timing is implied",
-        "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
+        "certainty": "FPL says this change is due; it does not say when",
         "in_this_move": true,
         "owned": false,
-        "changes": "Verbruggen may move 0.1m before the deadline"
+        "changes": "Verbruggen costs 0.1m more if you wait"
       },
       {
         "kind": "price_change_near",
@@ -126,21 +125,21 @@
           "price": 6.1
         },
         "direction": "fall",
-        "percent": -75.5,
+        "percent": -75.9,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-77.5",
+            "projected_percent": "-77.8",
             "likelihood": -3
           },
           {
             "offset": 1,
-            "projected_percent": "-80.7",
+            "projected_percent": "-81.1",
             "likelihood": -3
           },
           {
             "offset": 2,
-            "projected_percent": "-83.9",
+            "projected_percent": "-84.5",
             "likelihood": -3
           }
         ],
@@ -227,20 +226,21 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "money may be at stake",
-    "reason": "Barnes, Konsa, Raya, Verbruggen is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
-    "hours_to_deadline": 266.5,
+    "verdict": "act",
+    "reason": "waiting costs 0.1m of team value on changes FPL says are already due",
+    "hours_to_deadline": 264.1,
     "edge_points": 2.6,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.0,
-    "detail": [],
-    "pending_price_changes": 0,
-    "near_price_changes": 4,
+    "money_cost_of_waiting_m": 0.1,
+    "detail": [
+      "Verbruggen is due to rise: waiting costs 0.1m"
+    ],
+    "pending_price_changes": 1,
+    "near_price_changes": 3,
     "near_at_risk_if_you_wait": [
       "Barnes",
       "Konsa",
-      "Raya",
-      "Verbruggen"
+      "Raya"
     ],
     "no_exchange_rate": "Money and points are reported separately and deliberately not combined: 0.1m of team value has no fixed worth in expected points, and inventing a rate to produce one number would be a made-up precision.",
     "missing_term": "The football information -- team news, press conferences, predicted lineups -- is NOT in this comparison, and on most weeks it is the larger term. See the calendar's `does_not_cover`."
@@ -257,7 +257,7 @@
         "chance_of_playing": 50,
         "news": "Calf injury - 50% chance of playing",
         "news_added": "2026-10-24T17:00:09.115906+00:00",
-        "news_age_days": 16.6,
+        "news_age_days": 16.7,
         "matches_since_news": 2,
         "outdated_by_a_match": true
       },
@@ -269,7 +269,7 @@
         "chance_of_playing": 75,
         "news": "Unspecified injury - 75% chance of playing",
         "news_added": "2026-11-07T21:30:08.752464+00:00",
-        "news_age_days": 2.5,
+        "news_age_days": 2.6,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -285,7 +285,7 @@
         "chance_of_playing": 50,
         "news": "Calf injury - 50% chance of playing",
         "news_added": "2026-10-24T17:00:09.115906+00:00",
-        "news_age_days": 16.6,
+        "news_age_days": 16.7,
         "matches_since_news": 2,
         "outdated_by_a_match": true
       }
@@ -344,7 +344,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-11-10T08:29:52+00:00",
+  "generated_at": "2026-11-10T10:50:59+00:00",
   "gameweek": 11,
   "horizon": 6,
   "squad_state": {
@@ -4045,8 +4045,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-11-10T08:29:52+00:00",
-    "squad_retrieved_at": "2026-11-10T08:30:12+00:00",
+    "generated_at": "2026-11-10T10:50:59+00:00",
+    "squad_retrieved_at": "2026-11-10T10:52:06+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
