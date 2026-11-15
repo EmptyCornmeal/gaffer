@@ -2,14 +2,14 @@
   "weekly_version": "weekly-1.0",
   "calendar": {
     "calendar_version": "calendar-1",
-    "generated_for": "2026-11-14T22:36:34.432409+00:00",
+    "generated_for": "2026-11-15T00:18:35.811398+00:00",
     "window": "idle",
     "scope": "the reader's own squad and the players in this recommendation, not the whole player list",
     "events": [
       {
         "kind": "deadline",
         "at": "2026-11-21T11:00:00+00:00",
-        "in_hours": 156.4,
+        "in_hours": 154.7,
         "passed": false,
         "certainty": "published",
         "changes": "everything: after this the squad is locked for the gameweek"
@@ -24,62 +24,29 @@
           "price": 6.2
         },
         "direction": "rise",
-        "percent": 92.5,
+        "percent": 92.6,
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "92.6",
-            "likelihood": 3
-          },
-          {
-            "offset": 1,
             "projected_percent": "92.8",
             "likelihood": 3
           },
           {
-            "offset": 2,
+            "offset": 1,
             "projected_percent": "93.1",
+            "likelihood": 3
+          },
+          {
+            "offset": 2,
+            "projected_percent": "93.3",
             "likelihood": 3
           }
         ],
-        "certainty": "92% of the way, by FPL's own figure. NOT due, and no timing is implied",
+        "certainty": "93% of the way, by FPL's own figure. NOT due, and no timing is implied",
         "threshold_is_policy": "reported from 70%, a declared presentation choice, not a fitted or published threshold",
         "in_this_move": true,
         "owned": true,
         "changes": "Raya may move 0.1m before the deadline"
-      },
-      {
-        "kind": "price_change_due",
-        "at": null,
-        "player": {
-          "id": 31,
-          "name": "Konsa",
-          "team": "ARS",
-          "price": 4.8
-        },
-        "direction": "rise",
-        "percent": 101.4,
-        "projections": [
-          {
-            "offset": 0,
-            "projected_percent": "101.5",
-            "likelihood": 5
-          },
-          {
-            "offset": 1,
-            "projected_percent": "103.4",
-            "likelihood": 5
-          },
-          {
-            "offset": 2,
-            "projected_percent": "105.2",
-            "likelihood": 5
-          }
-        ],
-        "certainty": "FPL says this change is due; it does not say when",
-        "in_this_move": true,
-        "owned": true,
-        "changes": "Konsa costs 0.1m more if you wait"
       },
       {
         "kind": "price_change_near",
@@ -95,17 +62,17 @@
         "projections": [
           {
             "offset": 0,
-            "projected_percent": "-87.6",
+            "projected_percent": "-88.1",
             "likelihood": -3
           },
           {
             "offset": 1,
-            "projected_percent": "-88.3",
+            "projected_percent": "-88.6",
             "likelihood": -3
           },
           {
             "offset": 2,
-            "projected_percent": "-89.1",
+            "projected_percent": "-89.0",
             "likelihood": -3
           }
         ],
@@ -192,16 +159,14 @@
   "wait_vs_act": {
     "kind": "comparison",
     "not_an_evpi": "This does not price the information and does not compute an optimal time to act. It puts the edge beside what is pending and reports both in their own units.",
-    "verdict": "act",
-    "reason": "waiting costs 0.1m of team value on changes FPL says are already due",
-    "hours_to_deadline": 156.4,
+    "verdict": "money may be at stake",
+    "reason": "Barnes, Raya is close to a price change by FPL's own figure but is not due, and no timing can be derived -- so this is a risk of waiting, not a cost of it",
+    "hours_to_deadline": 154.7,
     "edge_points": 2.69,
     "edge_interval_type": "monte_carlo",
-    "money_cost_of_waiting_m": 0.1,
-    "detail": [
-      "Konsa is due to rise: waiting costs 0.1m"
-    ],
-    "pending_price_changes": 1,
+    "money_cost_of_waiting_m": 0.0,
+    "detail": [],
+    "pending_price_changes": 0,
     "near_price_changes": 2,
     "near_at_risk_if_you_wait": [
       "Barnes",
@@ -222,7 +187,7 @@
         "chance_of_playing": 50,
         "news": "Calf injury - 50% chance of playing",
         "news_added": "2026-10-24T17:00:09.115906+00:00",
-        "news_age_days": 21.2,
+        "news_age_days": 21.3,
         "matches_since_news": 2,
         "outdated_by_a_match": true
       },
@@ -234,7 +199,7 @@
         "chance_of_playing": 75,
         "news": "Unspecified injury - 75% chance of playing",
         "news_added": "2026-11-07T21:30:08.752464+00:00",
-        "news_age_days": 7.0,
+        "news_age_days": 7.1,
         "matches_since_news": 0,
         "outdated_by_a_match": false
       }
@@ -250,7 +215,7 @@
         "chance_of_playing": 50,
         "news": "Calf injury - 50% chance of playing",
         "news_added": "2026-10-24T17:00:09.115906+00:00",
-        "news_age_days": 21.2,
+        "news_age_days": 21.3,
         "matches_since_news": 2,
         "outdated_by_a_match": true
       }
@@ -309,7 +274,7 @@
     "not_a_projection": "every warning here is read off the published fixture list and the squad as it stands. Nothing is forecast."
   },
   "decision_version": "decision-1.0",
-  "generated_at": "2026-11-14T22:36:07+00:00",
+  "generated_at": "2026-11-15T00:16:45+00:00",
   "gameweek": 11,
   "horizon": 6,
   "squad_state": {
@@ -361,7 +326,7 @@
         "name": "Konsa",
         "team": "ARS",
         "pos": "DEF",
-        "price": 4.8,
+        "price": 4.9,
         "code": 199798,
         "team_code": 3,
         "next_gw_xp": 3.93
@@ -577,7 +542,7 @@
         "name": "Konsa",
         "team": "ARS",
         "pos": "DEF",
-        "price": 4.8,
+        "price": 4.9,
         "code": 199798,
         "team_code": 3,
         "next_gw_xp": 3.93,
@@ -3291,11 +3256,11 @@
     "executability": {
       "affordable": true,
       "bank_before": 14,
-      "bank_after": 13,
+      "bank_after": 14,
       "bank_before_m": 1.4,
-      "bank_after_m": 1.3,
+      "bank_after_m": 1.4,
       "cost_m": 20.4,
-      "recouped_m": 20.3,
+      "recouped_m": 20.4,
       "free_transfers_before": 2,
       "free_transfers_after": 1,
       "paid_transfers": 2,
@@ -3430,7 +3395,7 @@
         "free_transfers_before": 2,
         "free_transfers_after": 1,
         "bank_before": 14,
-        "bank_after": 13,
+        "bank_after": 14,
         "affordable": true,
         "note": ""
       },
@@ -3512,7 +3477,7 @@
         "players_scored": 11,
         "of_xi": 11
       },
-      "content_hash": "a904dc27230a6338"
+      "content_hash": "1cbc623b9ce1fe3f"
     }
   },
   "candidate_set": {
@@ -4010,8 +3975,8 @@
     }
   ],
   "freshness": {
-    "generated_at": "2026-11-14T22:36:07+00:00",
-    "squad_retrieved_at": "2026-11-14T22:36:30+00:00",
+    "generated_at": "2026-11-15T00:16:45+00:00",
+    "squad_retrieved_at": "2026-11-15T00:18:31+00:00",
     "bank_source": "entry_picks",
     "free_transfers_source": "derived_from_entry_history",
     "selling_price_confidence": "exact"
