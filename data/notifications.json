@@ -1,15 +1,26 @@
 {
   "notify_version": "notify-1.0",
-  "generated_at": "2026-11-20T08:08:01+00:00",
+  "generated_at": "2026-11-20T11:08:56+00:00",
   "result": {
-    "considered": 3,
-    "new": 3,
+    "considered": 4,
+    "new": 4,
     "duplicates": 0,
     "suppressed": 0,
-    "delivered": 3,
+    "delivered": 4,
     "failed": 0,
     "dry_run": true,
     "alerts": [
+      {
+        "kind": "deadline",
+        "title": "GW11 deadline tomorrow",
+        "body": "23.8 hours left. Check your transfer, captain and bench order.",
+        "severity": "important",
+        "event": 11,
+        "deep_link": "#/overview",
+        "dedupe_key": "deadline:ead61789659c",
+        "created_at": "2026-11-20T11:09:17+00:00",
+        "state": "dry_run"
+      },
       {
         "kind": "availability",
         "title": "Thomas is flagged",
@@ -18,7 +29,7 @@
         "event": 11,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:e0a57e39ff97",
-        "created_at": "2026-11-20T08:09:55+00:00",
+        "created_at": "2026-11-20T11:09:17+00:00",
         "state": "dry_run"
       },
       {
@@ -29,7 +40,7 @@
         "event": 11,
         "deep_link": "#/my-team",
         "dedupe_key": "availability:80b9f3739d92",
-        "created_at": "2026-11-20T08:09:55+00:00",
+        "created_at": "2026-11-20T11:09:17+00:00",
         "state": "dry_run"
       },
       {
@@ -40,7 +51,7 @@
         "event": 11,
         "deep_link": "#/live",
         "dedupe_key": "league_swing:3dcdb4e77fe8",
-        "created_at": "2026-11-20T08:09:55+00:00",
+        "created_at": "2026-11-20T11:09:17+00:00",
         "state": "dry_run"
       }
     ],
@@ -63,15 +74,24 @@
       "end": "07:30:00"
     },
     "by_state": {
-      "dry_run": 3
+      "dry_run": 4
     },
     "recent": [
+      {
+        "kind": "deadline",
+        "severity": "important",
+        "title": "GW11 deadline tomorrow",
+        "deep_link": "#/overview",
+        "created_at": "2026-11-20T11:09:17+00:00",
+        "state": "dry_run",
+        "event": 11
+      },
       {
         "kind": "availability",
         "severity": "important",
         "title": "Thomas is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-11-20T08:09:55+00:00",
+        "created_at": "2026-11-20T11:09:17+00:00",
         "state": "dry_run",
         "event": 11
       },
@@ -80,7 +100,7 @@
         "severity": "important",
         "title": "Gvardiol is flagged",
         "deep_link": "#/my-team",
-        "created_at": "2026-11-20T08:09:55+00:00",
+        "created_at": "2026-11-20T11:09:17+00:00",
         "state": "dry_run",
         "event": 11
       },
@@ -89,7 +109,7 @@
         "severity": "info",
         "title": "A differential is winning you the week",
         "deep_link": "#/live",
-        "created_at": "2026-11-20T08:09:55+00:00",
+        "created_at": "2026-11-20T11:09:17+00:00",
         "state": "dry_run",
         "event": 11
       }
