@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 11,
-  "as_of": "2026-11-21T17:19:55+00:00",
+  "as_of": "2026-11-21T19:41:00+00:00",
   "fixtures": [
     {
       "id": 101,
@@ -88,10 +88,10 @@
       "event": 11,
       "team_h": 17,
       "team_a": 1,
-      "state": "scheduled",
-      "minutes": 0,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-21T17:30:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 110,
@@ -107,8 +107,8 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 6,
-      "scheduled": 4
+      "awaiting_bonus": 7,
+      "scheduled": 3
     },
     "all_finished": false,
     "bonus_final": true
@@ -118,17 +118,17 @@
   "active_chip": null,
   "squad": {
     "entry_id": 1066421,
-    "confirmed": 32,
+    "confirmed": 35,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
-    "current": 32,
-    "projected": 32.0,
-    "bench_points": 5,
-    "players_played": 8,
-    "players_yet_to_play": 7,
+    "current": 35,
+    "projected": 35.0,
+    "bench_points": 12,
+    "players_played": 12,
+    "players_yet_to_play": 3,
     "hits": 0,
     "season_total_before": 672,
-    "season_total_projected": 704.0,
+    "season_total_projected": 707.0,
     "autosubs": {
       "xi": [
         1,
@@ -161,16 +161,16 @@
   "players": [
     {
       "id": 1,
-      "minutes": 0,
-      "confirmed": 0,
+      "minutes": 69,
+      "confirmed": 1,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
-      "finished": false,
-      "yet_to_play": true,
+      "total": 1.0,
+      "played": true,
+      "finished": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "awaiting_bonus"
       ],
       "name": "Raya",
       "pos": "GKP",
@@ -179,16 +179,16 @@
     },
     {
       "id": 4,
-      "minutes": 0,
-      "confirmed": 0,
+      "minutes": 90,
+      "confirmed": 1,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
-      "finished": false,
-      "yet_to_play": true,
+      "total": 1.0,
+      "played": true,
+      "finished": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "awaiting_bonus"
       ],
       "name": "Gabriel",
       "pos": "DEF",
@@ -197,16 +197,16 @@
     },
     {
       "id": 31,
-      "minutes": 0,
-      "confirmed": 0,
+      "minutes": 90,
+      "confirmed": 1,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
-      "finished": false,
-      "yet_to_play": true,
+      "total": 1.0,
+      "played": true,
+      "finished": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "awaiting_bonus"
       ],
       "name": "Konsa",
       "pos": "DEF",
@@ -395,16 +395,16 @@
     },
     {
       "id": 453,
-      "minutes": 0,
-      "confirmed": 0,
+      "minutes": 90,
+      "confirmed": 7,
       "provisional": 0,
       "predicted": 0.0,
-      "total": 0.0,
-      "played": false,
-      "finished": false,
-      "yet_to_play": true,
+      "total": 7.0,
+      "played": true,
+      "finished": true,
+      "yet_to_play": false,
       "fixture_states": [
-        "scheduled"
+        "awaiting_bonus"
       ],
       "name": "Barnes",
       "pos": "MID",
@@ -435,60 +435,60 @@
       "entry_id": 1066421,
       "name": "You",
       "you": true,
-      "current": 704,
-      "projected": 704.0,
-      "gw_points": 32,
-      "yet_to_play": 7,
+      "current": 707,
+      "projected": 707.0,
+      "gw_points": 35,
+      "yet_to_play": 3,
       "provisional_position": 1
     },
     {
       "entry_id": 408467,
       "name": "Nat Uttley",
       "you": false,
-      "current": 689,
-      "projected": 689.0,
-      "gw_points": 21,
-      "yet_to_play": 10,
+      "current": 692,
+      "projected": 692.0,
+      "gw_points": 24,
+      "yet_to_play": 7,
       "provisional_position": 2
     },
     {
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "you": false,
-      "current": 679,
-      "projected": 679.0,
-      "gw_points": 37,
-      "yet_to_play": 8,
+      "current": 680,
+      "projected": 680.0,
+      "gw_points": 38,
+      "yet_to_play": 5,
       "provisional_position": 3
     },
     {
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "you": false,
-      "current": 649,
-      "projected": 649.0,
-      "gw_points": 50,
-      "yet_to_play": 6,
+      "current": 652,
+      "projected": 652.0,
+      "gw_points": 53,
+      "yet_to_play": 3,
       "provisional_position": 4
     },
     {
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "you": false,
-      "current": 620,
-      "projected": 620.0,
-      "gw_points": 29,
-      "yet_to_play": 9,
+      "current": 623,
+      "projected": 623.0,
+      "gw_points": 32,
+      "yet_to_play": 5,
       "provisional_position": 5
     },
     {
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "you": false,
-      "current": 529,
-      "projected": 529.0,
-      "gw_points": 20,
-      "yet_to_play": 7,
+      "current": 532,
+      "projected": 532.0,
+      "gw_points": 23,
+      "yet_to_play": 4,
       "provisional_position": 6
     },
     {
@@ -507,9 +507,9 @@
       "entry_id": 408467,
       "name": "Nat Uttley",
       "provisional_position": 2,
-      "gw_points": 21,
+      "gw_points": 24,
       "hits": 0,
-      "yet_to_play": 10,
+      "yet_to_play": 7,
       "autosubs": {
         "xi": [
           1,
@@ -543,37 +543,37 @@
           "element": 1,
           "name": "Raya",
           "pos": "GKP",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 69,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 8,
           "name": "Calafiori",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 31,
           "name": "Konsa",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 115,
@@ -736,9 +736,9 @@
       "entry_id": 1094262,
       "name": "Kevin Colling",
       "provisional_position": 3,
-      "gw_points": 37,
+      "gw_points": 38,
       "hits": 0,
-      "yet_to_play": 8,
+      "yet_to_play": 5,
       "autosubs": {
         "xi": [
           57,
@@ -796,13 +796,13 @@
           "element": 4,
           "name": "Gabriel",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 362,
@@ -904,13 +904,13 @@
           "element": 1,
           "name": "Raya",
           "pos": "GKP",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 69,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 356,
@@ -940,13 +940,13 @@
           "element": 15,
           "name": "Ødegaard",
           "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 5,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         }
       ],
       "differential": [
@@ -970,9 +970,9 @@
       "entry_id": 1711764,
       "name": "Hakan Duzel",
       "provisional_position": 4,
-      "gw_points": 50,
+      "gw_points": 53,
       "hits": 0,
-      "yet_to_play": 6,
+      "yet_to_play": 3,
       "autosubs": {
         "xi": [
           1,
@@ -1008,13 +1008,13 @@
           "element": 1,
           "name": "Raya",
           "pos": "GKP",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 69,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 504,
@@ -1032,25 +1032,25 @@
           "element": 31,
           "name": "Konsa",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 4,
           "name": "Gabriel",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 68,
@@ -1200,9 +1200,9 @@
       "entry_id": 8346723,
       "name": "Nat Stubbs",
       "provisional_position": 5,
-      "gw_points": 29,
+      "gw_points": 32,
       "hits": 0,
-      "yet_to_play": 9,
+      "yet_to_play": 5,
       "autosubs": {
         "xi": [
           1,
@@ -1236,25 +1236,25 @@
           "element": 1,
           "name": "Raya",
           "pos": "GKP",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 69,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 31,
           "name": "Konsa",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 115,
@@ -1272,13 +1272,13 @@
           "element": 4,
           "name": "Gabriel",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 70,
@@ -1392,13 +1392,13 @@
           "element": 449,
           "name": "Hall",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
           "element": 304,
@@ -1430,9 +1430,9 @@
       "entry_id": 7419334,
       "name": "Dylan Llyr Morgan",
       "provisional_position": 6,
-      "gw_points": 20,
+      "gw_points": 23,
       "hits": 0,
-      "yet_to_play": 7,
+      "yet_to_play": 4,
       "autosubs": {
         "xi": [
           1,
@@ -1470,13 +1470,13 @@
           "element": 1,
           "name": "Raya",
           "pos": "GKP",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 69,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 358,
@@ -1494,13 +1494,13 @@
           "element": 8,
           "name": "Calafiori",
           "pos": "DEF",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 502,
@@ -1530,13 +1530,13 @@
           "element": 557,
           "name": "Tzolis",
           "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 20,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
+          "product": 1,
+          "yet_to_play": false
         },
         {
           "element": 40,
@@ -1915,10 +1915,10 @@
   ],
   "me": {
     "entry_id": 1066421,
-    "current": 704,
-    "projected": 704.0,
-    "gw_points": 32,
-    "yet_to_play": 7,
+    "current": 707,
+    "projected": 707.0,
+    "gw_points": 35,
+    "yet_to_play": 3,
     "provisional_position": 1,
     "substitutions": {
       "xi": [
@@ -1958,13 +1958,13 @@
     "note": "a differential you own"
   },
   "separation": {
-    "confirmed": 32,
+    "confirmed": 35,
     "provisional_bonus": 0,
     "predicted_remaining": 0.0,
     "note": "Provisional bonus is computed from live BPS and changes until each match is finalised. It is not confirmed."
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-11-21T17:19:55+00:00",
+  "generated_at": "2026-11-21T19:41:00+00:00",
   "season": "2026-27"
 }
