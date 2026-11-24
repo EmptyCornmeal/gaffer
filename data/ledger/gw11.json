@@ -317,5 +317,50 @@
       }
     }
   ],
-  "scored": null
+  "scored": {
+    "scored_at": "2026-11-24T15:28:52+00:00",
+    "results": [
+      {
+        "method": "gaffer",
+        "label": "Gaffer, next gameweek",
+        "actual_xi_points": 57,
+        "projected_xi_points": 70.32,
+        "error": -13.32,
+        "xi_players_who_played": 11
+      },
+      {
+        "method": "gaffer_horizon",
+        "label": "Gaffer, 5-gameweek value",
+        "actual_xi_points": 54,
+        "projected_xi_points": 67.38,
+        "error": -13.38,
+        "xi_players_who_played": 11
+      },
+      {
+        "method": "template",
+        "label": "The most-owned legal squad",
+        "actual_xi_points": 40,
+        "projected_xi_points": 61.83,
+        "error": -21.83,
+        "xi_players_who_played": 11
+      },
+      {
+        "method": "naive_ppg",
+        "label": "Last season's points per game",
+        "actual_xi_points": 37,
+        "projected_xi_points": 56.32,
+        "error": -19.32,
+        "xi_players_who_played": 10
+      },
+      {
+        "method": "random",
+        "label": "A legal squad at random",
+        "actual_xi_points": 10,
+        "projected_xi_points": 13.7,
+        "error": -3.7,
+        "xi_players_who_played": 5
+      }
+    ],
+    "caveat": "One gameweek is one sample. This ordering is not evidence that any method is better than any other; it is one observation, and it is only worth anything accumulated over a season."
+  }
 }
