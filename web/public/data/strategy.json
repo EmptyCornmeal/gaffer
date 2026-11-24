@@ -3,7 +3,7 @@
   "league_version": "league-1.0",
   "multileague_version": "multileague-1.0",
   "chips_version": "chips-1.1",
-  "generated_at": "2026-11-24T02:41:29+00:00",
+  "generated_at": "2026-11-24T04:42:19+00:00",
   "gameweek": 12,
   "gameweeks_remaining": 27,
   "simulation": {
@@ -204,8 +204,8 @@
         "variance_preference": 0.0
       },
       "placing": {
-        "p_first_after_gw": 0.1945,
-        "p_target_after_gw": 0.1945,
+        "p_first_after_gw": 0.1955,
+        "p_target_after_gw": 0.1955,
         "target_position": 1,
         "expected_position_after_gw": 1.93,
         "domain": {
@@ -215,7 +215,7 @@
           "rivals_assumed": "rivals keep their current squads"
         },
         "simulations": 2000,
-        "ci95_halfwidth": 0.0173,
+        "ci95_halfwidth": 0.0174,
         "basis": "shared fixture scenarios",
         "available": true,
         "rival_coverage_pct": 100.0,
@@ -639,8 +639,8 @@
           "entry_id": 1094262,
           "name": "Kevin Colling",
           "points_gap": 21.0,
-          "difference_mean": 14.1,
-          "difference_std": 13.92,
+          "difference_mean": 14.11,
+          "difference_std": 13.91,
           "p_above_after_gw": 0.846,
           "p_above_ci95": [
             0.8295,
@@ -703,8 +703,8 @@
           "entry_id": 3557534,
           "name": "Jarek Ettl",
           "points_gap": 213.0,
-          "difference_mean": 229.36,
-          "difference_std": 13.29,
+          "difference_mean": 229.35,
+          "difference_std": 13.28,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -724,9 +724,9 @@
       "differential_leverage": [
         {
           "player_id": 249,
-          "leverage_points": 0.743,
-          "leverage_spread_across_rivals": 0.11,
-          "correlation_with_gap": 0.266,
+          "leverage_points": 0.739,
+          "leverage_spread_across_rivals": 0.112,
+          "correlation_with_gap": 0.265,
           "own_std": 2.791,
           "captained": false
         },
@@ -1142,8 +1142,8 @@
           "entry_id": 3526777,
           "name": "Mike Webber",
           "points_gap": 54.0,
-          "difference_mean": 55.01,
-          "difference_std": 13.53,
+          "difference_mean": 54.97,
+          "difference_std": 13.5,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1158,7 +1158,7 @@
           "entry_id": 3678994,
           "name": "Richard Palmer",
           "points_gap": 51.0,
-          "difference_mean": 57.07,
+          "difference_mean": 57.03,
           "difference_std": 13.33,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
@@ -1174,8 +1174,8 @@
           "entry_id": 4072984,
           "name": "Daire Carragher",
           "points_gap": 48.0,
-          "difference_mean": 58.28,
-          "difference_std": 12.06,
+          "difference_mean": 58.29,
+          "difference_std": 12.1,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1334,8 +1334,8 @@
           "entry_id": 2209432,
           "name": "Amar Sumaria",
           "points_gap": 119.0,
-          "difference_mean": 136.98,
-          "difference_std": 11.11,
+          "difference_mean": 136.94,
+          "difference_std": 11.12,
           "p_above_after_gw": 1.0,
           "p_above_ci95": [
             0.9981,
@@ -1413,7 +1413,7 @@
       "label": "Captain Tavernier",
       "expected_points": 50.396,
       "p_target": {
-        "271619": 0.2915,
+        "271619": 0.291,
         "733241": 0.926
       }
     },
@@ -1422,7 +1422,7 @@
       "label": "Captain Evanilson",
       "expected_points": 49.23,
       "p_target": {
-        "271619": 0.238,
+        "271619": 0.2405,
         "733241": 0.911
       }
     },
@@ -1431,7 +1431,7 @@
       "label": "Captain Silva",
       "expected_points": 49.217,
       "p_target": {
-        "271619": 0.2515,
+        "271619": 0.2535,
         "733241": 0.8985
       }
     },
@@ -1440,7 +1440,7 @@
       "label": "Captain Haaland",
       "expected_points": 47.71,
       "p_target": {
-        "271619": 0.1945,
+        "271619": 0.1955,
         "733241": 0.916
       }
     }
@@ -1454,7 +1454,7 @@
         "label": "Captain Tavernier",
         "expected_points": 50.396,
         "p_target": {
-          "271619": 0.2915,
+          "271619": 0.291,
           "733241": 0.926
         }
       }
@@ -1471,21 +1471,21 @@
     "chips_version": "chips-1.1",
     "recommendation": "hold",
     "gameweek": null,
-    "expected_gain": 22.13,
+    "expected_gain": 22.02,
     "use_threshold": 4.0,
     "alternatives": [
       {
         "chip": "freehit",
         "gameweek": 12,
-        "expected_gain": 22.13,
+        "expected_gain": 22.02,
         "ci95": [
-          21.44,
-          22.81
+          21.34,
+          22.7
         ],
         "baseline_points": 47.71,
-        "with_chip_points": 69.84,
+        "with_chip_points": 69.73,
         "horizon_gameweeks": 1,
-        "expected_gain_per_gameweek": 22.13,
+        "expected_gain_per_gameweek": 22.02,
         "assumptions": [
           "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
           "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1536,15 +1536,15 @@
     "candidate": {
       "chip": "freehit",
       "gameweek": 12,
-      "expected_gain": 22.13,
+      "expected_gain": 22.02,
       "ci95": [
-        21.44,
-        22.81
+        21.34,
+        22.7
       ],
       "baseline_points": 47.71,
-      "with_chip_points": 69.84,
+      "with_chip_points": 69.73,
       "horizon_gameweeks": 1,
-      "expected_gain_per_gameweek": 22.13,
+      "expected_gain_per_gameweek": 22.02,
       "assumptions": [
         "The Free Hit squad reverts after this gameweek: the gain is one week only and no player is retained.",
         "The comparison squad is a real budget-legal solve, not the strongest XI in the game.",
@@ -1739,7 +1739,7 @@
         }
       }
     },
-    "reason": "freehit projects +22.1 points in GW12, but Gaffer has not valued it in GW13-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 8 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW12-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
+    "reason": "freehit projects +22.0 points in GW12, but Gaffer has not valued it in GW13-GW19, so it cannot say this is the gameweek to spend it. Published as a candidate, not a recommendation — a chip you can only play once is a WHEN decision, and the WHEN has not been assessed. expires after GW19, 8 gameweek(s) from now, and the published calendar shows NO double and NO blank anywhere in GW12-GW19. Holding for one is a bet on a fixture that does not yet exist; postponements historically create them after these chips have expired."
   },
   "limitations": [
     "All probabilities come from 2000 shared fixture scenarios (seed 20260806); they carry simulation error of roughly 1.1 percentage points.",
