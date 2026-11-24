@@ -1,7 +1,7 @@
 {
   "live_version": "live-1.0",
   "gameweek": 11,
-  "as_of": "2026-11-23T21:39:37+00:00",
+  "as_of": "2026-11-24T00:00:27+00:00",
   "fixtures": [
     {
       "id": 101,
@@ -28,10 +28,10 @@
       "event": 11,
       "team_h": 4,
       "team_a": 9,
-      "state": "live",
-      "minutes": 65,
+      "state": "awaiting_bonus",
+      "minutes": 90,
       "kickoff": "2026-11-23T20:00:00+00:00",
-      "bonus_final": false
+      "bonus_final": true
     },
     {
       "id": 104,
@@ -107,11 +107,10 @@
   "fixture_summary": {
     "total": 10,
     "by_state": {
-      "awaiting_bonus": 9,
-      "live": 1
+      "awaiting_bonus": 10
     },
     "all_finished": false,
-    "bonus_final": false
+    "bonus_final": true
   },
   "available": true,
   "unavailable_reason": null,
@@ -154,7 +153,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -293,10 +292,10 @@
       "predicted": 0.0,
       "total": 2.0,
       "played": true,
-      "finished": false,
+      "finished": true,
       "yet_to_play": false,
       "fixture_states": [
-        "live"
+        "awaiting_bonus"
       ],
       "name": "Barry",
       "pos": "FWD",
@@ -438,7 +437,7 @@
       "current": 721,
       "projected": 721.0,
       "gw_points": 53,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "provisional_position": 1
     },
     {
@@ -478,7 +477,7 @@
       "current": 629,
       "projected": 629.0,
       "gw_points": 38,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "provisional_position": 5
     },
     {
@@ -495,10 +494,10 @@
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "you": false,
-      "current": 505,
-      "projected": 505.0,
-      "gw_points": 33,
-      "yet_to_play": 1,
+      "current": 506,
+      "projected": 506.0,
+      "gw_points": 34,
+      "yet_to_play": 0,
       "provisional_position": 7
     }
   ],
@@ -509,7 +508,7 @@
       "provisional_position": 1,
       "gw_points": 53,
       "hits": 0,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -535,7 +534,7 @@
         "captain": 379,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -711,13 +710,13 @@
           "element": 565,
           "name": "M.Sangaré",
           "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "minutes": 8,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         }
       ],
       "differential": [
@@ -764,7 +763,7 @@
         "captain": 166,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -844,7 +843,7 @@
           "element": 94,
           "name": "Schade",
           "pos": "MID",
-          "minutes": 5,
+          "minutes": 24,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -929,7 +928,7 @@
           "name": "Tarkowski",
           "pos": "DEF",
           "minutes": 39,
-          "confirmed": -3,
+          "confirmed": -4,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1202,7 +1201,7 @@
       "provisional_position": 5,
       "gw_points": 38,
       "hits": 0,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           1,
@@ -1212,19 +1211,19 @@
           70,
           124,
           40,
-          449,
+          565,
           346,
           411,
           166
         ],
         "bench": [
           111,
-          565,
           367,
+          449,
           304
         ],
         "subs_in": [
-          449
+          565
         ],
         "subs_out": [
           367
@@ -1232,7 +1231,7 @@
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1321,10 +1320,10 @@
           "yet_to_play": false
         },
         {
-          "element": 449,
-          "name": "Hall",
-          "pos": "DEF",
-          "minutes": 90,
+          "element": 565,
+          "name": "M.Sangaré",
+          "pos": "MID",
+          "minutes": 8,
           "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
@@ -1381,8 +1380,8 @@
           "yet_to_play": false
         },
         {
-          "element": 565,
-          "name": "M.Sangaré",
+          "element": 367,
+          "name": "Gakpo",
           "pos": "MID",
           "minutes": 0,
           "confirmed": 0,
@@ -1390,14 +1389,14 @@
           "predicted": 0.0,
           "multiplier": 0,
           "product": 0,
-          "yet_to_play": true
+          "yet_to_play": false
         },
         {
-          "element": 367,
-          "name": "Gakpo",
-          "pos": "MID",
-          "minutes": 0,
-          "confirmed": 0,
+          "element": 449,
+          "name": "Hall",
+          "pos": "DEF",
+          "minutes": 90,
+          "confirmed": 1,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1426,7 +1425,7 @@
         249,
         346,
         399,
-        449,
+        565,
         566
       ]
     },
@@ -1674,9 +1673,9 @@
       "entry_id": 3557534,
       "name": "Jarek Ettl",
       "provisional_position": 7,
-      "gw_points": 33,
+      "gw_points": 34,
       "hits": 0,
-      "yet_to_play": 1,
+      "yet_to_play": 0,
       "autosubs": {
         "xi": [
           82,
@@ -1688,27 +1687,29 @@
           260,
           387,
           411,
-          106,
-          289
+          289,
+          329
         ],
         "bench": [
           58,
           212,
-          165,
-          329
+          106,
+          165
         ],
         "subs_in": [
           387,
-          289
+          289,
+          329
         ],
         "subs_out": [
           212,
+          106,
           165
         ],
         "captain": 411,
         "captain_source": "captain",
         "multiplier": 2,
-        "provisional": true,
+        "provisional": false,
         "notes": []
       },
       "players": [
@@ -1716,7 +1717,7 @@
           "element": 82,
           "name": "Kelleher",
           "pos": "GKP",
-          "minutes": 71,
+          "minutes": 90,
           "confirmed": 6,
           "provisional": 0,
           "predicted": 0.0,
@@ -1821,18 +1822,6 @@
           "yet_to_play": false
         },
         {
-          "element": 106,
-          "name": "Thiago",
-          "pos": "FWD",
-          "minutes": 0,
-          "confirmed": 0,
-          "provisional": 0,
-          "predicted": 0.0,
-          "multiplier": 1,
-          "product": 0,
-          "yet_to_play": true
-        },
-        {
           "element": 289,
           "name": "Crooks",
           "pos": "MID",
@@ -1842,6 +1831,18 @@
           "predicted": 0.0,
           "multiplier": 1,
           "product": 3,
+          "yet_to_play": false
+        },
+        {
+          "element": 329,
+          "name": "Rodon",
+          "pos": "DEF",
+          "minutes": 4,
+          "confirmed": 1,
+          "provisional": 0,
+          "predicted": 0.0,
+          "multiplier": 1,
+          "product": 1,
           "yet_to_play": false
         },
         {
@@ -1869,8 +1870,8 @@
           "yet_to_play": false
         },
         {
-          "element": 165,
-          "name": "João Pedro",
+          "element": 106,
+          "name": "Thiago",
           "pos": "FWD",
           "minutes": 0,
           "confirmed": 0,
@@ -1881,11 +1882,11 @@
           "yet_to_play": false
         },
         {
-          "element": 329,
-          "name": "Rodon",
-          "pos": "DEF",
-          "minutes": 4,
-          "confirmed": 1,
+          "element": 165,
+          "name": "João Pedro",
+          "pos": "FWD",
+          "minutes": 0,
+          "confirmed": 0,
           "provisional": 0,
           "predicted": 0.0,
           "multiplier": 0,
@@ -1901,7 +1902,6 @@
         68,
         79,
         82,
-        106,
         124,
         154,
         249,
@@ -1910,6 +1910,7 @@
         282,
         289,
         304,
+        329,
         387,
         399,
         426,
@@ -1949,7 +1950,7 @@
       "captain": 411,
       "captain_source": "captain",
       "multiplier": 2,
-      "provisional": true,
+      "provisional": false,
       "notes": []
     }
   },
@@ -1969,6 +1970,6 @@
   },
   "baseline_source": "entry_history",
   "incomplete": null,
-  "generated_at": "2026-11-23T21:39:37+00:00",
+  "generated_at": "2026-11-24T00:00:27+00:00",
   "season": "2026-27"
 }
